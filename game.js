@@ -22,7 +22,7 @@ themeButtons.forEach(btn=>btn.addEventListener("click",()=>applyPanelTheme(btn.d
 applyPanelTheme(panelTheme);
 
 /* === Ranking online con Firebase === */
-const GAME_VERSION="v9-no-custom-wave-ranking";
+const GAME_VERSION="v10-boss-weights";
 const PLAYER_NAME_KEY="gatitos_player_name";
 const firebaseConfig={
   apiKey:"AIzaSyD2DJyvaXseXX2ZNZrUCmjXqa1fYytanRA",
@@ -206,7 +206,9 @@ let doneFusionPairs={};
 let bossVictoryAlreadyShown=false;
 let dogRelaxTime=0;
 let enemyIntroSeen={};
-let finalChoiceLocked=false;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
+let finalChoiceLocked=false;
+let demonSpawnPressure=0;
+perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
 
 const upgrades={fireRate:1,fishSpeed:1,damage:1,moveSpeed:1,maxLife:100,bigFishChance:0,doubleFishChance:0,pierceChance:0,fishSize:1,catSlow:0,healOnWave:8,lifeSteal:0,xpBoost:1,boomerangChance:0,shield:false,shieldLevel:0,autoFire:false,autoFireLevel:0,critChance:0,zoomies:false,zoomiesHyper:false,zoomiesCannon:false,zoomiesCrit:false,aimAssist:false,moralSupport:false,darkPact:false,catInstinct:false,boyfriendDog:false,boyfriendDogSpirit:false,boyfriendDogReturned:false,bigCursor:false,coinMagnetRange:0,combatAI:false,assistedShot:false,perfectAim:false,moraleFire:false,braveHeart:false,reflexBurst:false,valorCasa:false,cursedInstinct:false,fusionBonusPower:0,sevenLives:false,holdShoot:false};
 const upgradeLevels={moveSpeed:0,fireRate:0,fishSpeed:0,bigFish:0,doubleFish:0,pierce:0,damage:0,catSlow:0,healOnWave:0,fishSize:0,maxLife:0,lifeSteal:0,xpBoost:0,boomerang:0,shield:0,coinMagnet:0,omniBurst:0,yarnBounce:0,autoFire:0,critChance:0};
@@ -508,7 +510,7 @@ const initialWave=Math.max(1,Math.floor(startAtWave||1));
 runStartWave=initialWave;
 rankingEligibleThisRun=initialWave===1;
 rankingDisabledReason=rankingEligibleThisRun?"":`Ranking desactivado: la partida empezó en ronda ${initialWave}.`;
-score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=0;lastAutoShot=0;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=initialWave;spawnCooldown=0;life=upgrades.maxLife;level=initialWave;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();bossVictoryAlreadyShown=false;dogRelaxTime=0;enemyIntroSeen={};finalChoiceLocked=false;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
+score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=0;lastAutoShot=0;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=initialWave;spawnCooldown=0;life=upgrades.maxLife;level=initialWave;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();bossVictoryAlreadyShown=false;dogRelaxTime=0;enemyIntroSeen={};finalChoiceLocked=false;demonSpawnPressure=0;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
 demonOrbs.length=0;yarnBalls.length=0;powerStars.length=0;shockwaves.length=0;sparkles.length=0;tunaDrops.length=0;
 player.x=canvas.width/2;player.y=canvas.height/2;player.angle=0;player.shootAnim=0;player.hurtAnim=0;dogCompanion.x=player.x-50;dogCompanion.y=player.y+45;dogCompanion.shootCooldown=0;
 fishes.length=0;cats.length=0;hearts.length=0;smokes.length=0;floatingTexts.length=0;pawPrints.length=0;quacks.length=0;coinsDrops.length=0;dogBones.length=0;demonOrbs.length=0;yarnBalls.length=0;shockwaves.length=0;sparkles.length=0;
@@ -885,16 +887,73 @@ function getPendingBossTypes(){
 }
 function isBossTypeAllowedNow(type){
   if(type!=="demon")return true;
-  return (upgrades.boyfriendDog&&!dogKidnapped&&wave>=15)||(!upgrades.boyfriendDog&&wave>=20)||forceDemonNextBoss;
+
+  // Primer jefe: nunca demonio. La ronda 5 debe ser una pelea normal y balanceada.
+  if(wave<=5)return false;
+
+  const hasDogFusion=upgrades.boyfriendDog&&!dogKidnapped&&!dogSacrificeUsed;
+
+  // Con la fusión del perro, el demonio puede aparecer antes y con mucho más peso.
+  if(hasDogFusion)return wave>=10;
+  if(forceDemonNextBoss)return wave>=10;
+
+  // Sin perro, el demonio aparece como jefe tardío.
+  return wave>=20;
+}
+function weightedRandomBoss(weightedList){
+  const valid=weightedList.filter(item=>item.weight>0);
+  if(!valid.length)return null;
+
+  const total=valid.reduce((sum,item)=>sum+item.weight,0);
+  let roll=Math.random()*total;
+
+  for(const item of valid){
+    roll-=item.weight;
+    if(roll<=0)return item.type;
+  }
+
+  return valid[valid.length-1].type;
 }
 function chooseNextBossType(types){
-  const pending=getPendingBossTypes().filter(t=>types.includes(t)&&isBossTypeAllowedNow(t));
-  if(pending.length){
-    const nonRepeat=pending.filter(t=>t!==lastBossType);
-    return (nonRepeat.length?nonRepeat:pending)[0];
-  }
   const valid=types.filter(t=>isBossTypeAllowedNow(t));
-  return valid[Math.floor(Math.random()*valid.length)]||types[0]||"giantCat";
+
+  if(!valid.length)return types.find(t=>t!=="demon")||"giantCat";
+
+  const pending=getPendingBossTypes();
+  const hasDogFusion=upgrades.boyfriendDog&&!dogKidnapped&&!dogSacrificeUsed;
+  const allBossesDefeated=pending.length===0;
+
+  const weighted=valid.map(type=>{
+    let weight=1;
+
+    // Los jefes que todavía no han salido pesan más, pero no fuerzan un orden fijo.
+    if(pending.includes(type))weight+=4;
+
+    // Repetir el mismo jefe seguido es posible, pero muy raro.
+    if(type===lastBossType)weight*=0.08;
+
+    if(type==="demon"){
+      if(wave<=5)return{type,weight:0};
+
+      if(hasDogFusion){
+        // Mucha probabilidad al tener perro, y cada boss fallido aumenta presión.
+        weight+=8+demonSpawnPressure*7;
+      }else if(forceDemonNextBoss){
+        weight+=5+demonSpawnPressure*4;
+      }else{
+        weight+=wave>=20?1.5:0;
+      }
+
+      if(pending.includes("demon"))weight+=3;
+    }
+
+    // Una vez derrotados todos, vuelve a ser más libre, evitando repetir demasiado.
+    if(allBossesDefeated)weight=type===lastBossType?0.12:1;
+
+    return{type,weight};
+  });
+
+  return weightedRandomBoss(weighted)||valid[Math.floor(Math.random()*valid.length)]||"giantCat";
 }
 function getUpcomingFusionHints(limit=3){
   const hints=[];
@@ -958,22 +1017,25 @@ function activateDogRescueRelax(){
 function isDogRelaxActive(){return dogRelaxTime>0}
 
 function spawnBoss(){
-let types=["giantCat","duck","seal"].filter(t=>t!==lastBossType);
+let types=["giantCat","duck","seal"];
 
-const demonReady=(upgrades.boyfriendDog&&!dogKidnapped&&wave>=15)||(!upgrades.boyfriendDog&&wave>=20);
-if(demonReady&&lastBossType!=="demon"){
-types.push("demon");
+if(isBossTypeAllowedNow("demon")){
+  types.push("demon");
 }
 
-let type;
-if(forceDemonNextBoss&&!dogKidnapped){
-  type="demon";
+let type=chooseNextBossType(types);
+const hasDogFusion=upgrades.boyfriendDog&&!dogKidnapped&&!dogSacrificeUsed;
+
+if(type==="demon"){
+  demonSpawnPressure=0;
   forceDemonNextBoss=false;
-}else{
-  type=chooseNextBossType(types);
+}else if(hasDogFusion&&wave>5){
+  // Si tienes perro y no sale demonio, la siguiente batalla de jefe sube su probabilidad.
+  demonSpawnPressure++;
 }
+
 lastBossType=type;
-const hpScale=1+wave*.12;
+const hpScale=wave<=5?1.05:1+wave*.10;
 
 if(type==="demon"){
 const hasDog=upgrades.boyfriendDog&&!dogSacrificeUsed;
@@ -2196,7 +2258,7 @@ if(pair==="aimAssist+catInstinct"){upgrades.reflexBurst=true;floatingTexts.push(
 if(pair==="catInstinct+moralSupport"){upgrades.valorCasa=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🏠 Valor de casa",life:1.8,maxLife:1.8,big:false})}
 if(pair==="catInstinct+darkPact"){upgrades.cursedInstinct=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🖤 Instinto maldito",life:1.8,maxLife:1.8,big:false})}
 if(pair==="catInstinct+maxLife"){upgrades.sevenLives=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🐱 Siete vidas de gato",life:2,maxLife:2,big:false})}
-if(pair==="darkPact+moralSupport"){upgrades.boyfriendDog=true;upgrades.boyfriendDogSpirit=false;dogSacrificeUsed=false;forceDemonNextBoss=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🐶 Tu novio ha hecho este juego",life:2.3,maxLife:2.3,big:false});floatingTexts.push({x:player.x,y:player.y-125,text:"😈 El próximo jefe será el demonio",life:2,maxLife:2,big:false})}
+if(pair==="darkPact+moralSupport"){upgrades.boyfriendDog=true;upgrades.boyfriendDogSpirit=false;dogSacrificeUsed=false;forceDemonNextBoss=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🐶 Tu novio ha hecho este juego",life:2.3,maxLife:2.3,big:false});floatingTexts.push({x:player.x,y:player.y-125,text:"😈 El demonio te está buscando...",life:2,maxLife:2,big:false})}
 if(pair==="moveSpeed+zoomies"){upgrades.zoomiesHyper=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🐱💨 Hiperactividad",life:1.8,maxLife:1.8,big:false})}
 if(pair==="fireRate+zoomies"||pair==="autoFire+zoomies"){upgrades.zoomiesCannon=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🐱💨 Modo cañón",life:1.8,maxLife:1.8,big:false})}
 if(pair==="critChance+zoomies"||pair==="autoFire+critChance"){upgrades.zoomiesCrit=true;floatingTexts.push({x:player.x,y:player.y-95,text:"💥 Subidón crítico",life:1.8,maxLife:1.8,big:false})}
