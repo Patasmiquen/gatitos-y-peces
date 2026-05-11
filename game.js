@@ -36,6 +36,9 @@ let rankingDb=null;
 let firebaseReady=false;
 let currentPlayerName="";
 let lastScoreUploadKey="";
+let rankingEligibleThisRun=true;
+let rankingDisabledReason="";
+const uploadingScoreKeys=new Set();
 function initRanking(){
   try{
     if(window.firebase&&firebaseConfig?.projectId){
@@ -78,15 +81,35 @@ function renderRankingList(el,items){
     return `<div class="onlineRankRow ${isMe?"me":""}"><div class="onlineRankPos">${medal}</div><div class="onlineRankName">${safeName}</div><div class="onlineRankScore">${total}</div><div class="onlineRankMeta">${escapeHtml(meta)}</div></div>`;
   }).join("");
 }
+function getScoreIdentityKey(data){
+  return `${cleanPlayerName(data?.name)||"Jugador"}|${Number(data?.score||0)}|${Number(data?.wave||0)}|${Number(data?.level||0)}|${Number(data?.bosses||0)}|${Number(data?.impacts||0)}`;
+}
+function scoreDocIdFromKey(key){
+  let h=2166136261;
+  for(let i=0;i<key.length;i++){
+    h^=key.charCodeAt(i);
+    h=Math.imul(h,16777619);
+  }
+  return "score_"+(h>>>0).toString(36);
+}
+function dedupeScoreRows(rows){
+  const seen=new Set();
+  return (rows||[]).filter(row=>{
+    const key=getScoreIdentityKey(row);
+    if(seen.has(key))return false;
+    seen.add(key);
+    return true;
+  });
+}
 async function loadOnlineRanking(targetEls=[startRankingList]){
   initRanking();
   targetEls.forEach(el=>{if(el)el.innerHTML='<div class="onlineRankStatus">Cargando ranking...</div>';});
   if(!firebaseReady||!rankingDb){targetEls.forEach(el=>renderRankingList(el,[]));return;}
   try{
-    const snap=await rankingDb.collection("scores").orderBy("score","desc").limit(10).get();
+    const snap=await rankingDb.collection("scores").orderBy("score","desc").limit(20).get();
     const rows=[];
     snap.forEach(doc=>rows.push(doc.data()));
-    targetEls.forEach(el=>renderRankingList(el,rows));
+    targetEls.forEach(el=>renderRankingList(el,dedupeScoreRows(rows).slice(0,10)));
   }catch(e){
     console.warn("No se pudo cargar ranking",e);
     targetEls.forEach(el=>{if(el)el.innerHTML='<div class="onlineRankStatus">No se pudo cargar el ranking. Revisa reglas/conexión.</div>';});
@@ -94,6 +117,11 @@ async function loadOnlineRanking(targetEls=[startRankingList]){
 }
 async function submitOnlineScore(finalScore, statusEl, rankingEl){
   initRanking();
+  if(!rankingEligibleThisRun){
+    setOnlineStatus(statusEl,rankingDisabledReason||"Ranking desactivado para esta partida.","error");
+    await loadOnlineRanking([startRankingList,rankingEl].filter(Boolean));
+    return;
+  }
   const name=savePlayerName(getPlayerName()||"Jugador");
   if(!firebaseReady||!rankingDb){setOnlineStatus(statusEl,"Ranking online no disponible en este momento.","error");return;}
   const data={
@@ -106,17 +134,31 @@ async function submitOnlineScore(finalScore, statusEl, rankingEl){
     version:GAME_VERSION,
     createdAt:firebase.firestore.FieldValue.serverTimestamp()
   };
-  const uploadKey=`${data.name}|${data.score}|${data.wave}|${data.level}|${data.bosses}|${data.impacts}`;
-  if(uploadKey===lastScoreUploadKey){setOnlineStatus(statusEl,"Puntuación ya enviada al ranking.","ok");return;}
+  const uploadKey=getScoreIdentityKey(data);
+  const scoreDocId=scoreDocIdFromKey(uploadKey);
+  if(uploadKey===lastScoreUploadKey||uploadingScoreKeys.has(uploadKey)){
+    setOnlineStatus(statusEl,"Puntuación ya enviada al ranking.","ok");
+    return;
+  }
+  uploadingScoreKeys.add(uploadKey);
   try{
     setOnlineStatus(statusEl,"Subiendo puntuación al ranking online...","info");
-    await rankingDb.collection("scores").add(data);
-    lastScoreUploadKey=uploadKey;
-    setOnlineStatus(statusEl,"Puntuación guardada en el ranking online 💖","ok");
+    const scoreRef=rankingDb.collection("scores").doc(scoreDocId);
+    const existing=await scoreRef.get();
+    if(existing.exists){
+      lastScoreUploadKey=uploadKey;
+      setOnlineStatus(statusEl,"Puntuación ya enviada al ranking.","ok");
+    }else{
+      await scoreRef.set(data);
+      lastScoreUploadKey=uploadKey;
+      setOnlineStatus(statusEl,"Puntuación guardada en el ranking online 💖","ok");
+    }
     await loadOnlineRanking([startRankingList,rankingEl].filter(Boolean));
   }catch(e){
     console.warn("No se pudo subir puntuación",e);
     setOnlineStatus(statusEl,"No se pudo guardar online. Revisa que las reglas estén publicadas.","error");
+  }finally{
+    uploadingScoreKeys.delete(uploadKey);
   }
 }
 if(playerNameInput){
@@ -456,7 +498,10 @@ return need;
 function restart(startAtWave=1){
 stopPowerStarLoop();
 resetUpgrades();
-score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=0;lastAutoShot=0;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=Math.max(1,Math.floor(startAtWave||1));spawnCooldown=0;life=upgrades.maxLife;level=Math.max(1,Math.floor(startAtWave||1));xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();bossVictoryAlreadyShown=false;dogRelaxTime=0;enemyIntroSeen={};finalChoiceLocked=false;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
+const initialWave=Math.max(1,Math.floor(startAtWave||1));
+rankingEligibleThisRun=initialWave===1;
+rankingDisabledReason=rankingEligibleThisRun?"":`Ranking desactivado: la partida empezó en ronda ${initialWave}.`;
+score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=0;lastAutoShot=0;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=initialWave;spawnCooldown=0;life=upgrades.maxLife;level=initialWave;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();bossVictoryAlreadyShown=false;dogRelaxTime=0;enemyIntroSeen={};finalChoiceLocked=false;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
 demonOrbs.length=0;yarnBalls.length=0;powerStars.length=0;shockwaves.length=0;sparkles.length=0;tunaDrops.length=0;
 player.x=canvas.width/2;player.y=canvas.height/2;player.angle=0;player.shootAnim=0;player.hurtAnim=0;dogCompanion.x=player.x-50;dogCompanion.y=player.y+45;dogCompanion.shootCooldown=0;
 fishes.length=0;cats.length=0;hearts.length=0;smokes.length=0;floatingTexts.length=0;pawPrints.length=0;quacks.length=0;coinsDrops.length=0;dogBones.length=0;demonOrbs.length=0;yarnBalls.length=0;shockwaves.length=0;sparkles.length=0;
