@@ -22,7 +22,7 @@ themeButtons.forEach(btn=>btn.addEventListener("click",()=>applyPanelTheme(btn.d
 applyPanelTheme(panelTheme);
 
 /* === Ranking online con Firebase === */
-const GAME_VERSION="v8-online";
+const GAME_VERSION="v9-no-custom-wave-ranking";
 const PLAYER_NAME_KEY="gatitos_player_name";
 const firebaseConfig={
   apiKey:"AIzaSyD2DJyvaXseXX2ZNZrUCmjXqa1fYytanRA",
@@ -38,6 +38,7 @@ let currentPlayerName="";
 let lastScoreUploadKey="";
 let rankingEligibleThisRun=true;
 let rankingDisabledReason="";
+let runStartWave=1;
 const uploadingScoreKeys=new Set();
 function initRanking(){
   try{
@@ -117,8 +118,13 @@ async function loadOnlineRanking(targetEls=[startRankingList]){
 }
 async function submitOnlineScore(finalScore, statusEl, rankingEl){
   initRanking();
-  if(!rankingEligibleThisRun){
-    setOnlineStatus(statusEl,rankingDisabledReason||"Ranking desactivado para esta partida.","error");
+
+  const playedFromWave=Math.max(1,Math.floor(Number(runStartWave)||1));
+  const inputWave=Math.max(1,Math.floor(Number(startWaveInput?.value)||1));
+
+  if(playedFromWave!==1||!rankingEligibleThisRun){
+    const disabledMsg=rankingDisabledReason||`Ranking desactivado: la partida empezó en ronda ${playedFromWave!==1?playedFromWave:inputWave}.`;
+    setOnlineStatus(statusEl,disabledMsg,"error");
     await loadOnlineRanking([startRankingList,rankingEl].filter(Boolean));
     return;
   }
@@ -499,6 +505,7 @@ function restart(startAtWave=1){
 stopPowerStarLoop();
 resetUpgrades();
 const initialWave=Math.max(1,Math.floor(startAtWave||1));
+runStartWave=initialWave;
 rankingEligibleThisRun=initialWave===1;
 rankingDisabledReason=rankingEligibleThisRun?"":`Ranking desactivado: la partida empezó en ronda ${initialWave}.`;
 score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=0;lastAutoShot=0;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=initialWave;spawnCooldown=0;life=upgrades.maxLife;level=initialWave;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();bossVictoryAlreadyShown=false;dogRelaxTime=0;enemyIntroSeen={};finalChoiceLocked=false;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
