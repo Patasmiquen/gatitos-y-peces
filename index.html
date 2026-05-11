@@ -151,6 +151,10 @@
 </div>
 <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
-<script src="game.js?v=12-boss-weights"></script>
+<script>
+  const gameScript = document.createElement("script");
+  gameScript.src = "game.js?v=" + Date.now();
+  document.body.appendChild(gameScript);
+</script>
 </body>
 </html>

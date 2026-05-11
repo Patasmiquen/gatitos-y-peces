@@ -21,8 +21,33 @@ themeButtons.forEach(btn=>btn.addEventListener("click",()=>applyPanelTheme(btn.d
 
 applyPanelTheme(panelTheme);
 
+function clampStartWaveInput(){
+  if(!startWaveInput)return 1;
+
+  const value=parseInt(startWaveInput.value||"1",10);
+
+  if(!Number.isFinite(value)){
+    startWaveInput.value="1";
+    return 1;
+  }
+
+  const clamped=Math.max(1,Math.min(50,value));
+  startWaveInput.value=String(clamped);
+  return clamped;
+}
+
+if(startWaveInput){
+  startWaveInput.addEventListener("change",clampStartWaveInput);
+  startWaveInput.addEventListener("blur",clampStartWaveInput);
+  startWaveInput.addEventListener("input",()=>{
+    const value=parseInt(startWaveInput.value,10);
+    if(Number.isFinite(value)&&value>50)startWaveInput.value="50";
+    if(Number.isFinite(value)&&value<1)startWaveInput.value="1";
+  });
+}
+
 /* === Ranking online con Firebase === */
-const GAME_VERSION="v10-boss-weights";
+const GAME_VERSION="v13-boss-weights-clamp";
 const PLAYER_NAME_KEY="gatitos_player_name";
 const firebaseConfig={
   apiKey:"AIzaSyD2DJyvaXseXX2ZNZrUCmjXqa1fYytanRA",
@@ -359,7 +384,7 @@ function getAudioCtx(){if(!audioCtx)audioCtx=new(window.AudioContext||window.web
 function playCuteMeow(){const ac=getAudioCtx(),g=ac.createGain();g.gain.setValueAtTime(.045,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.34);g.connect(ac.destination);const o1=ac.createOscillator();o1.type="sine";o1.frequency.setValueAtTime(760+Math.random()*60,ac.currentTime);o1.frequency.exponentialRampToValueAtTime(520+Math.random()*40,ac.currentTime+.14);o1.connect(g);o1.start();o1.stop(ac.currentTime+.16);const o2=ac.createOscillator();o2.type="triangle";o2.frequency.setValueAtTime(470+Math.random()*40,ac.currentTime+.13);o2.frequency.exponentialRampToValueAtTime(330+Math.random()*30,ac.currentTime+.34);o2.connect(g);o2.start(ac.currentTime+.12);o2.stop(ac.currentTime+.36)}
 function playFishSound(type="bloop"){const ac=getAudioCtx(),o=ac.createOscillator(),g=ac.createGain();if(type==="fiu"){o.type="sine";o.frequency.setValueAtTime(900,ac.currentTime);o.frequency.exponentialRampToValueAtTime(360,ac.currentTime+.18);g.gain.setValueAtTime(.023,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.2)}else{o.type="sine";o.frequency.setValueAtTime(260+Math.random()*80,ac.currentTime);o.frequency.exponentialRampToValueAtTime(190+Math.random()*60,ac.currentTime+.11);g.gain.setValueAtTime(.021,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.13)}o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+.22)}
 function startGame(){
-  const chosenWave=Math.max(1,Math.min(50,parseInt(startWaveInput?.value||"1",10)||1));
+  const chosenWave=clampStartWaveInput();
   gameStarted=true;
   startPanel.style.display="none";
   restart(chosenWave);
