@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gatitos &amp; Peces</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="startPanel">
+<div id="startBox">
+<h1>🐾 Gatitos &amp; Peces 🐟</h1>
+<p>Los gatitos vienen corriendo a por ti porque quieren mimos intensos. Tu misión es lanzarles pececitos mágicos para calmarlos y ganar experiencia.</p>
+<p>Sobrevive a rondas, derrota jefes, esquiva avalanchas de gatitos y protege a tu perro del demonio oscuro.</p>
+<details id="howToPlay">
+<summary>📖 Cómo jugar</summary>
+<div class="controls">
+<div>🎮 <b>WASD</b>: moverse</div>
+<div>🐟 <b>Click izquierdo</b>: lanzar peces</div>
+<div>⭐ <b>Subir nivel / terminar ronda</b>: elige una mejora</div>
+<div>🪙 <b>Cada jefe</b>: se abre la tienda para gastar monedas</div>
+<div>🔮 <b>5 monedas + 2 mejoras compatibles</b>: fusionar mejoras compatibles</div>
+<div>👑 <b>Cada 5 rondas</b>: jefe aleatorio</div>
+<div>⏸️ <b>Espacio</b>: pausa y menú de mejoras</div>
+<div>⭐ <b>Estrella rara</b>: invulnerabilidad y velocidad durante 10s</div>
+</div>
+</details>
+<div id="playerSetup">
+<label for="playerNameInput">Tu nombre para el ranking:</label>
+<input id="playerNameInput" maxlength="16" type="text" placeholder="Escribe tu nombre" autocomplete="nickname"/>
+<div id="nameWarning"></div>
+</div>
+<div id="startOptions"><label for="startWaveInput">Empezar en ronda:</label><input id="startWaveInput" max="50" min="1" type="number" value="1"/></div>
+<div id="themeOptions" class="themeOptions" aria-label="Tema visual de menús">
+  <span>Interfaz:</span>
+  <button type="button" class="themeChoice active" data-theme="light">Claro</button>
+  <button type="button" class="themeChoice" data-theme="dark">Oscuro</button>
+</div>
+<div class="onlineRankBox" id="startRankingBox">
+  <div class="onlineRankTitle"><span>🏆 Ranking online</span><button class="onlineRankRefresh" id="refreshRankingBtn" type="button">Actualizar</button></div>
+  <div class="onlineRankList" id="startRankingList"><div class="onlineRankStatus">Cargando ranking...</div></div>
+</div>
+<br/>
+<button id="startButton">Empezar 💖</button>
+</div>
+</div>
+<div id="hud">
+<div>❤️ Vida: <span id="life">100</span></div>
+<div class="barBox"><div class="barFill" id="lifeBar"></div></div>
+<div>⭐ Nivel: <span id="level">1</span> · EXP: <span id="xp">0</span>/<span id="xpNeed">5</span></div>
+<div class="barBox"><div class="barFill" id="xpBar"></div></div>
+<div>🌊 Ronda: <span id="wave">1</span> · Tiempo: <span id="timeLeft">10</span>s</div>
+<div class="barBox"><div class="barFill" id="timeBar"></div></div>
+<div>🪙 Monedas: <span id="coins">0</span></div>
+<div class="hudOptionalStat">🐱 Gatitos mimados: <span id="score">0</span></div>
+<div class="hudOptionalStat">🐟 Impactos: <span id="shots">0</span></div>
+</div>
+<div id="objectivePanel"><div id="objectiveMain">🎯 Objetivo: Sobrevive</div><div id="objectiveFusion">🔮 Fusiones próximas: buscando...</div></div>
+<div id="help">WASD: moverse · Click izquierdo: lanzar peces · Espacio: pausa</div>
+<button id="adminToggle" type="button">ADMIN 🔒</button>
+<div id="adminPanel">
+  <h3>🛠️ Modo admin <span id="adminStateTag" class="adminMini">bloqueado</span></h3>
+  <p>Panel de pruebas. Se desbloquea al completar todas las mejoras/fusiones o escribiendo la contraseña.</p>
+  <div id="adminLock" class="adminBox">
+    <div class="adminBoxTitle">Desbloqueo</div>
+    <div class="adminRow"><label>Clave:</label><input id="adminPassword" type="password" placeholder="Contraseña" autocomplete="off"/><button class="adminButton gold" id="adminUnlockBtn">Desbloquear</button></div>
+    <div class="adminMini">También se desbloquea automáticamente al pasarte el juego completo.</div>
+  </div>
+  <div id="adminTools">
+    <div class="adminBox">
+      <div class="adminBoxTitle">Mejoras precisas</div>
+      <div class="adminRow"><label>Mejora:</label><select id="adminUpgradeSelect"></select><input id="adminUpgradeAmount" min="1" max="99" type="number" value="1"/><button class="adminButton" id="adminGiveUpgrade">Añadir</button><button class="adminButton secondary" id="adminMaxUpgrade">Max</button></div>
+      <div class="adminRow"><label>Única:</label><select id="adminUniqueSelect"></select><button class="adminButton" id="adminGiveUnique">Dar única</button></div>
+      <div class="adminRow"><button class="adminButton gold" id="adminMaxAll">Maxear todo</button><button class="adminButton dark" id="adminCompleteAll">Completar fusiones</button></div>
+    </div>
+    <div class="adminBox">
+      <div class="adminBoxTitle">Partida</div>
+      <div class="adminRow"><label>Monedas:</label><input id="adminCoinAmount" min="1" max="9999" type="number" value="25"/><button class="adminButton secondary" id="adminCoins">Añadir</button><button class="adminButton gold" id="adminOpenShop">Abrir tienda</button></div>
+      <div class="adminRow"><label>Nivel:</label><input id="adminLevelAmount" min="1" max="50" type="number" value="1"/><button class="adminButton secondary" id="adminLevel">Subir</button></div>
+      <div class="adminRow"><label>Ronda:</label><input id="adminWaveValue" min="1" max="999" type="number" value="1"/><button class="adminButton dark" id="adminSetWave">Poner ronda</button></div>
+      <div class="adminRow"><button class="adminButton" id="adminHeal">Curar vida</button><button class="adminButton danger" id="adminHurt">Quitar 25 vida</button></div>
+    </div>
+    <div class="adminBox">
+      <div class="adminBoxTitle">Eventos y enemigos</div>
+      <div class="adminRow"><button class="adminButton dark" id="adminBoss">Invocar jefe</button><button class="adminButton dark" id="adminDemon">Invocar demonio</button></div>
+      <div class="adminRow"><button class="adminButton" id="adminAvalanche">Forzar avalancha</button><button class="adminButton" id="adminStar">Dar estrella</button></div>
+      <div class="adminRow"><button class="adminButton dark" id="adminGiveDog">Dar perro</button><button class="adminButton danger" id="adminClearEnemies">Limpiar enemigos</button></div>
+    </div>
+  </div>
+  <div id="adminLog">Modo admin bloqueado.</div>
+</div>
+
+<div id="message"></div>
+<div id="perfNotice" class="perfNotice">Modo ligero activo</div>
+<div id="levelUpPanel">
+<div id="levelUpBox">
+<h2 id="upgradeTitle">⭐ ¡Subiste de nivel!</h2>
+<div id="levelUpPhrase">Muy bien, mi amor 💖</div>
+<p id="upgradeSubtitle">Elige una mejora gatuna</p>
+<div id="upgradeCards"></div>
+<button id="fusionBackBtn">← Volver</button>
+</div>
+</div>
+<div id="pausePanel">
+<div id="pauseBox">
+<h2>⏸️ Pausa</h2>
+<div id="pauseRecordBadge">🏆 ¡Récord personal!</div>
+<div id="pauseStats"></div>
+<p style="margin-bottom:10px;color:#ffd6e7;font-weight:bold">Tus mejoras actuales</p>
+<div id="pauseUpgradesList"></div>
+<div id="pauseButtons">
+<button class="pauseButton" id="resumeButton">Continuar</button>
+<button class="pauseButton secondary" id="restartButton">Reiniciar</button>
+<button class="pauseButton menuButton" id="menuButton">Volver al menú</button>
+</div>
+</div>
+</div>
+
+<div id="victoryPanel">
+<div id="victoryBox">
+<div id="victoryStars">🌟⭐🌟⭐🌟</div>
+<h1>🏆 ¡Victoria!</h1>
+<div class="victoryMsg"><span class="vLine vMain">Lo has hecho muy bien, mi amor 💖</span><span class="vLine vSub">¡Eres la mejor! ✨</span></div>
+<div id="victoryScoreArea"></div>
+<div id="victoryOnlineStatus" class="onlineSubmitStatus">Ranking online pendiente...</div>
+<div class="onlineRankBox"><div class="onlineRankTitle"><span>🏆 Top online</span></div><div class="onlineRankList" id="victoryRankingList"><div class="onlineRankStatus">Cargando ranking...</div></div></div>
+<div class="victoryButtons">
+<button class="victoryBtn finish" id="victoryFinish">Terminar aquí 🌸</button>
+<button class="victoryBtn continue" id="victoryContinue">Seguir jugando 🐾</button>
+</div>
+</div>
+</div>
+<div id="gameOverPanel">
+<div id="gameOverBox">
+<div id="gameOverRankEmoji" class="scoreRank">💀</div>
+<h1>💀 Game Over</h1>
+<div id="gameOverRankLabel" class="rankLabel"></div>
+<div class="scoreTotal" id="gameOverTotal">0</div>
+<div style="font-size:13px;color:#ffb3c1;margin-bottom:4px">puntos finales</div>
+<div class="scoreBreakdown" id="gameOverBreakdown"></div>
+<div id="gameOverOnlineStatus" class="onlineSubmitStatus">Ranking online pendiente...</div>
+<div class="onlineRankBox"><div class="onlineRankTitle"><span>🏆 Top online</span></div><div class="onlineRankList" id="gameOverRankingList"><div class="onlineRankStatus">Cargando ranking...</div></div></div>
+<button class="victoryBtn finish" id="gameOverRestart" style="margin-top:12px;background:#c92a2a;color:#fff">Jugar otra vez 🐱</button>
+<button class="victoryBtn continue" id="gameOverMenu" style="margin-top:12px;background:#4cc9f0;color:#fff">Volver al menú 🏠</button>
+</div>
+</div>
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
