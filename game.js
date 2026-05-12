@@ -47,7 +47,7 @@ if(startWaveInput){
 }
 
 /* === Ranking online con Firebase === */
-const GAME_VERSION="v13-boss-weights-clamp";
+const GAME_VERSION="v15-fusion-progress-fix";
 const PLAYER_NAME_KEY="gatitos_player_name";
 const firebaseConfig={
   apiKey:"AIzaSyD2DJyvaXseXX2ZNZrUCmjXqa1fYytanRA",
@@ -228,6 +228,7 @@ let dogSacrificeUsed=false;
 let yarnTargetCounter=1;
 let fusedUpgradeNames={};
 let doneFusionPairs={};
+let fusionProgressLevels={};
 let bossVictoryAlreadyShown=false;
 let dogRelaxTime=0;
 let enemyIntroSeen={};
@@ -518,7 +519,7 @@ if(gameOverMenuBtn)gameOverMenuBtn.addEventListener("click",returnToMainMenu);
 
 function resetUpgrades(){
 Object.assign(upgrades,{fireRate:1,fishSpeed:1,damage:1,moveSpeed:1,maxLife:100,bigFishChance:0,doubleFishChance:0,pierceChance:0,fishSize:1,catSlow:0,healOnWave:8,lifeSteal:0,xpBoost:1,boomerangChance:0,shield:false,shieldLevel:0,autoFire:false,autoFireLevel:0,critChance:0,zoomies:false,zoomiesHyper:false,zoomiesCannon:false,zoomiesCrit:false,aimAssist:false,moralSupport:false,darkPact:false,catInstinct:false,boyfriendDog:false,boyfriendDogSpirit:false,boyfriendDogReturned:false,bigCursor:false,coinMagnetRange:0,combatAI:false,assistedShot:false,perfectAim:false,moraleFire:false,braveHeart:false,reflexBurst:false,valorCasa:false,cursedInstinct:false,fusionBonusPower:0,sevenLives:false,holdShoot:false});
-Object.keys(upgradeLevels).forEach(k=>upgradeLevels[k]=0);Object.keys(upgradeMaxLevels).forEach(k=>upgradeMaxLevels[k]=5);Object.keys(fusedBaseLevels).forEach(k=>delete fusedBaseLevels[k]);fusedUpgradeNames={};doneFusionPairs={};
+Object.keys(upgradeLevels).forEach(k=>upgradeLevels[k]=0);Object.keys(upgradeMaxLevels).forEach(k=>upgradeMaxLevels[k]=5);Object.keys(fusedBaseLevels).forEach(k=>delete fusedBaseLevels[k]);fusedUpgradeNames={};doneFusionPairs={};fusionProgressLevels={};
 }
 
 function getXpNeedForLevel(targetLevel){
@@ -594,6 +595,8 @@ function applyFusionPairSilently(a,b){
       upgradeMaxLevels[k]=5;
     }
   });
+  fusionProgressLevels[pair]=0;
+  setFusionProgress(pair,0);
   applyFusionBonus(pair,a,b);
   fusedUpgradeNames[a]=fusionName;
   fusedUpgradeNames[b]=fusionName;
@@ -1236,18 +1239,44 @@ function getFusionRepresentativeKey(pair){
   const scalable=parts.filter(k=>Object.prototype.hasOwnProperty.call(upgradeLevels,k));
   return scalable[0]||parts[0];
 }
+function getFusionProgress(pair){
+  pair=sortedPair(...String(pair||"").split("+"));
+  const rep=getFusionRepresentativeKey(pair);
+  const stored=Number(fusionProgressLevels[pair]||0);
+  const repLevel=Object.prototype.hasOwnProperty.call(upgradeLevels,rep)?Number(upgradeLevels[rep]||0):0;
+  return Math.max(0,Math.min(5,Math.max(stored,repLevel)));
+}
+function setFusionProgress(pair,value){
+  pair=sortedPair(...String(pair||"").split("+"));
+  const rep=getFusionRepresentativeKey(pair);
+  const lvl=Math.max(0,Math.min(5,Math.floor(Number(value)||0)));
+  fusionProgressLevels[pair]=lvl;
+  if(Object.prototype.hasOwnProperty.call(upgradeLevels,rep)){
+    upgradeLevels[rep]=lvl;
+    upgradeMaxLevels[rep]=5;
+  }
+  const parts=pair.split("+");
+  parts.forEach(k=>{
+    if(k!==rep&&Object.prototype.hasOwnProperty.call(upgradeLevels,k)){
+      upgradeLevels[k]=0;
+      upgradeMaxLevels[k]=5;
+    }
+  });
+  return lvl;
+}
+function addFusionProgress(pair,amount=1){
+  return setFusionProgress(pair,getFusionProgress(pair)+amount);
+}
 function isHiddenFusedComponent(key){
   const pair=getFusedPairForKey(key);
   if(!pair)return false;
   return key!==getFusionRepresentativeKey(pair);
 }
 function getFusionVisualNextLevel(pair){
-  const rep=getFusionRepresentativeKey(pair);
-  return Math.min(5,(upgradeLevels[rep]||0)+1);
+  return Math.min(5,getFusionProgress(pair)+1);
 }
 function getFusionVisualCurrentLevel(pair){
-  const rep=getFusionRepresentativeKey(pair);
-  return Math.min(5,Math.max(1,upgradeLevels[rep]||0));
+  return Math.min(5,Math.max(1,getFusionProgress(pair)));
 }
 function getFusionIconFromPair(pair){
   const [a,b]=pair.split("+");
@@ -1270,10 +1299,10 @@ if(pair){
     special:true,
     fusion:true,
     apply:()=>{
-      if(upgradeLevels[rep]>=upgradeMaxLevels[rep])return;
-      upgradeLevels[rep]++;
+      if(getFusionProgress(pair)>=5)return;
+      const newLevel=addFusionProgress(pair,1);
       applyUpgradeStatsFromLevels();
-      if(rep==="maxLife")life=Math.min(upgrades.maxLife,life+25+(upgradeLevels[rep]>=5?45:0));
+      if(rep==="maxLife")life=Math.min(upgrades.maxLife,life+25+(newLevel>=5?45:0));
     }
   }
 }
@@ -1473,7 +1502,12 @@ return getRandomUpgradeChoices(3).filter(u=>!u.fusion);
 }
 
 function allDirectUpgradesMaxed(){
-const allScalable=Object.keys(upgradeLevels).every(k=>upgradeLevels[k]>=upgradeMaxLevels[k]||isUpgradeFinal(k));
+const allScalable=Object.keys(upgradeLevels).every(k=>{
+  if(isHiddenFusedComponent(k))return true;
+  const pair=getFusedPairForKey(k);
+  if(pair)return getFusionProgress(pair)>=5;
+  return upgradeLevels[k]>=upgradeMaxLevels[k]||isUpgradeFinal(k);
+});
 const allUnique=uniqueFusionKeys.every(k=>hasUniqueUpgrade(k));
 return allScalable&&allUnique;
 }
@@ -1496,10 +1530,9 @@ if(pendingUpgradeQueue.length)processPendingUpgradeQueue();
 return
 }
 showCards(reason==="wave"?"🌊 ¡Ronda superada!":"⭐ ¡Subiste de nivel!",darkWave?"🖤 La Voluntad Oscura elige por ti":lovePhrases[Math.floor(Math.random()*lovePhrases.length)],darkWave?"Solo aparecen mejoras escalables para que el +2 no se desperdicie":"Elige una mejora gatuna",choices,upgrade=>{
-if(upgrade.fusion){upgrade.apply();return}
 upgrade.apply();
 if(darkWave){const bonusCoins=1+Math.floor(Math.random()*5);coins+=bonusCoins;floatingTexts.push({x:player.x,y:player.y-105,text:`🖤 +${bonusCoins} monedas`,life:1.3,maxLife:1.3,big:false})}
-if(darkWave&&upgrade.key&&!isUpgradeFinal(upgrade.key)&&upgradeLevels[upgrade.key]<upgradeMaxLevels[upgrade.key]){
+if(darkWave&&upgrade.key&&!upgrade.fusion&&!isUpgradeFinal(upgrade.key)&&upgradeLevels[upgrade.key]<upgradeMaxLevels[upgrade.key]){
 upgrade.apply();
 floatingTexts.push({x:player.x,y:player.y-85,text:"🖤 +2 niveles",life:1.4,maxLife:1.4,big:false})
 }
@@ -1513,9 +1546,10 @@ if(pendingUpgradeQueue.length)processPendingUpgradeQueue();else maybeOpenShopOrF
 
 function getShopUpgradeChoices(amount=3){
 const keys=Object.keys(upgradeLevels).filter(k=>{
-if(isUpgradeFinal(k))return false;
+if(isHiddenFusedComponent(k))return false;
 const pair=getFusedPairForKey(k);
-if(pair){const rep=getFusionRepresentativeKey(pair);if(isMax(rep)||isUpgradeFinal(rep))return false;}
+if(pair){if(getFusionProgress(pair)>=5)return false;return true;}
+if(isUpgradeFinal(k))return false;
 return upgradeLevels[k]<upgradeMaxLevels[k];
 });
 if(keys.length===0)return[];
@@ -2294,6 +2328,8 @@ if(pair==="critChance+zoomies"||pair==="autoFire+critChance"){upgrades.zoomiesCr
     upgradeMaxLevels[k]=5;
   }
 });
+fusionProgressLevels[pair]=0;
+setFusionProgress(pair,0);
 applyFusionBonus(pair,first.key,second.key);
 applyUpgradeStatsFromLevels();
 playFusionCompleteSound();
@@ -2346,7 +2382,6 @@ updateHud();checkGameCompletion();
 return;
 }
 showCards("🌈 ¡Gatito arcoíris!","Elige una mejora de las más bajas 💖","Cuenta también las no desbloqueadas como nivel 0",choices,upgrade=>{
-if(upgrade.fusion){upgrade.apply();return}
 upgrade.apply();
 choosingUpgrade=false;
 levelUpPanel.style.display="none";
@@ -3176,8 +3211,7 @@ const icon=pairKey==="darkPact+moralSupport"&&upgrades.boyfriendDogReturned?"�
 let level=1,max=1;
 
 if(aIsScalable||bIsScalable){
-const rep=getFusionRepresentativeKey(pairKey);
-level=Math.min(5,Math.max(1,upgradeLevels[rep]||0));
+level=getFusionVisualCurrentLevel(pairKey);
 max=5;
 }else if(aIsUnique&&bIsUnique){
 level=1;
@@ -4506,6 +4540,7 @@ function adminShuffleArray(arr){
 function adminClearFusionState(){
   doneFusionPairs={};
   fusedUpgradeNames={};
+  fusionProgressLevels={};
   Object.keys(fusedBaseLevels).forEach(k=>delete fusedBaseLevels[k]);
   upgrades.fusionBonusPower=0;
 }
@@ -4518,6 +4553,8 @@ function adminApplyRandomFusionPair(a,b){
   const name=getFusionNameFromPair(a,b);
   fusedUpgradeNames[a]=name;
   fusedUpgradeNames[b]=name;
+  fusionProgressLevels[pair]=0;
+  setFusionProgress(pair,0);
   applyFusionBonus(pair,a,b);
   return true;
 }
