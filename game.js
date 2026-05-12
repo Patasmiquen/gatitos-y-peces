@@ -69,7 +69,7 @@ if(startWaveInput){
 }
 
 /* === Ranking online con Firebase === */
-const GAME_VERSION="v20-fish-size-fusion-boost";
+const GAME_VERSION="v24-rare-giant-fish-limit";
 const PLAYER_NAME_KEY="gatitos_player_name";
 const firebaseConfig={
   apiKey:"AIzaSyD2DJyvaXseXX2ZNZrUCmjXqa1fYytanRA",
@@ -238,6 +238,7 @@ let perfFps=60,lowPerfMode=false,lowPerfTimer=0,perfNoticeTimer=0;
 let pendingUpgradeQueue=[];
 let runStats;
 let defeatedBossTypes=new Set();
+let giantFishEasterEggsUsed=0;
 let mouseIsDown=false;
 let selectedTarget=null;
 let screenShake=0,screenShakeX=0,screenShakeY=0,lastStarTrail=0;
@@ -561,7 +562,7 @@ const initialWave=Math.max(1,Math.floor(startAtWave||1));
 runStartWave=initialWave;
 rankingEligibleThisRun=initialWave===1;
 rankingDisabledReason=rankingEligibleThisRun?"":`Ranking desactivado: la partida empezó en ronda ${initialWave}.`;
-score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=0;lastAutoShot=0;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=initialWave;spawnCooldown=0;life=upgrades.maxLife;level=initialWave;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();bossVictoryAlreadyShown=false;bossVictoryScoreSaved=false;dogRelaxTime=0;enemyIntroSeen={};finalChoiceLocked=false;demonSpawnPressure=0;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
+score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=0;lastAutoShot=0;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=initialWave;spawnCooldown=0;life=upgrades.maxLife;level=initialWave;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();giantFishEasterEggsUsed=0;bossVictoryAlreadyShown=false;bossVictoryScoreSaved=false;dogRelaxTime=0;enemyIntroSeen={};finalChoiceLocked=false;demonSpawnPressure=0;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
 demonOrbs.length=0;yarnBalls.length=0;powerStars.length=0;shockwaves.length=0;sparkles.length=0;tunaDrops.length=0;
 player.x=canvas.width/2;player.y=canvas.height/2;player.angle=0;player.shootAnim=0;player.hurtAnim=0;dogCompanion.x=player.x-50;dogCompanion.y=player.y+45;dogCompanion.shootCooldown=0;
 fishes.length=0;cats.length=0;hearts.length=0;smokes.length=0;floatingTexts.length=0;pawPrints.length=0;quacks.length=0;coinsDrops.length=0;dogBones.length=0;demonOrbs.length=0;yarnBalls.length=0;shockwaves.length=0;sparkles.length=0;
@@ -1947,7 +1948,7 @@ const fusionShortDescMap={
 "healOnWave+lifeSteal":"Te curas entre rondas y peleando.",
 "healOnWave+maxLife":"Build tanque: más vida y descanso.",
 "catSlow+shield":"Zona segura alrededor de ti.",
-"fishSize+shield":"Escudo con peces más grandes. Cada nivel de fusión hace que el tamaño se note más.",
+"fishSize+shield":"Escudo con peces grandes.",
 "damage+shield":"El escudo también pega más.",
 "coinMagnet+xpBoost":"Recoges y progresas más rápido.",
 "healOnWave+xpBoost":"Subes mejor y te recuperas al pasar ronda.",
@@ -1966,7 +1967,7 @@ const fusionShortDescMap={
 "fishSpeed+yarnBounce":"Rebotes más rápidos.",
 "doubleFish+yarnBounce":"Más peces significa más rebotes.",
 "bigFish+yarnBounce":"Peces grandes que encadenan mejor.",
-"fishSize+yarnBounce":"Peces enormes con rebote. Al subir la fusión, el tamaño crece de forma visible.",
+"fishSize+yarnBounce":"Peces grandes con rebote.",
 "omniBurst+yarnBounce":"La ráfaga puede encadenar rebotes.",
 "damage+yarnBounce":"Los rebotes también duelen.",
 "aimAssist+catInstinct":"Cuando estás en peligro, respondes mejor.",
@@ -2006,16 +2007,16 @@ const fusionShortDescMap={
 "boomerang+zoomies":"Boomerangs más locos y rápidos.",
 "bigFish+doubleFish":"Dos peces gigantes salen a la vez. El doble de tamaño, el doble de destrucción.",
 "bigFish+fireRate":"Los peces grandes llueven sin parar. Una avalancha de escamas y daño.",
-"bigFish+fishSize":"Un pez descomunal que aumenta mucho el tamaño de tus peces. Al subir esta fusión, los peces se hacen visiblemente más grandes.",
+"bigFish+fishSize":"Peces mucho más grandes.",
 "bigFish+pierce":"Un pez enorme que atraviesa a todos los enemigos en línea recta.",
 "catInstinct+shield":"El instinto felino activa un escudo defensivo justo antes del impacto.",
 "catSlow+coinMagnet":"Los enemigos ralentizados sueltan más monedas y el imán las recoge al instante.",
-"catSlow+fishSize":"Un pez gigante y helado que congela y aplasta a la vez. La fusión aumenta el tamaño de forma notable.",
+"catSlow+fishSize":"Pez gigante y helado.",
 "catSlow+maxLife":"El frío protege el cuerpo. Ralentizas a los enemigos y ganas más vida máxima.",
 "catSlow+moveSpeed":"Te deslizas velozmente mientras los enemigos se arrastran en el hielo.",
 "coinMagnet+healOnWave":"Cada moneda recogida restaura vida. Recolectar es curar.",
 "doubleFish+omniBurst":"Dos peces por ola y ráfagas en todas direcciones. El caos es total.",
-"fishSize+pierce":"Los peces aumentan mucho de tamaño y además perforan enemigos. Cada nivel de la fusión hace más visible el tamaño.",
+"fishSize+pierce":"Peces grandes que perforan.",
 "fishSpeed+omniBurst":"Peces ultrarrápidos que explotan en todas direcciones al impactar.",
 "lifeSteal+shield":"El escudo absorbe el daño y lo convierte en vida para ti.",
 "maxLife+moralSupport":"El apoyo de tu novio te da fuerzas para aguantar mucho más.",
@@ -2083,8 +2084,8 @@ function getFusionExtraBonusDesc(pair){
   if(has("fishSpeed"))return "Bonus de fusión: peces más rápidos.";
   if(has("pierce"))return "Bonus de fusión: más perforación.";
   if(has("damage"))return "Bonus de fusión: más daño.";
-  if(has("bigFish")&&has("fishSize"))return "Bonus de fusión: Leviatán hace los peces mucho más grandes.";
-  if(has("fishSize"))return "Bonus de fusión: el tamaño de los peces escala más.";
+  if(has("bigFish")&&has("fishSize"))return "Bonus de fusión: tamaño extra.";
+  if(has("fishSize"))return "Bonus de fusión: tamaño extra.";
   if(has("bigFish"))return "Bonus de fusión: peces más grandes.";
   if(has("maxLife"))return "Bonus de fusión: más aguante.";
   if(has("healOnWave"))return "Bonus de fusión: más curación.";
@@ -2422,8 +2423,8 @@ if(!upgrades.aimAssist)pool.push({key:"aimAssist",level:0,upgrade:{icon:"🎯",t
 if(!upgrades.bigCursor)pool.push({key:"bigCursor",level:0,upgrade:{icon:"🌈",title:"Mirilla brillante",levelTag:"1/1",desc:"La mirilla se ve mucho mejor.",apply:()=>{upgrades.bigCursor=true}}});
 if(!upgrades.moralSupport)pool.push({key:"moralSupport",level:0,upgrade:{icon:"💛",title:"Apoyo Moral",levelTag:"1/1",desc:"Tu novio te anima durante la partida.",special:true,apply:()=>{upgrades.moralSupport=true}}});
 if(!upgrades.darkPact)pool.push({key:"darkPact",level:0,upgrade:{icon:"🖤",title:"Voluntad Oscura",levelTag:"1/1",desc:"Menos opciones, pero más poder.",dark:true,apply:()=>{upgrades.darkPact=true}}});
-if(!upgrades.catInstinct)pool.push({key:"catInstinct",level:0,upgrade:{icon:"🐱‍👤",title:"Instinto gatuno",levelTag:"1/1",desc:"Te ayuda cuando estás en peligro.",special:true,apply:()=>{upgrades.catInstinct=true}}});
-if(!upgrades.zoomies)pool.push({key:"zoomies",level:0,upgrade:{icon:"🐱💨",title:"Zoomies",levelTag:"1/1",desc:"A veces vas rapidísima.",special:true,apply:()=>{upgrades.zoomies=true}}});
+if(!upgrades.catInstinct)pool.push({key:"catInstinct",level:0,upgrade:{icon:"🥷",title:"Instinto gatuno",levelTag:"1/1",desc:"Te ayuda cuando estás en peligro.",special:true,apply:()=>{upgrades.catInstinct=true}}});
+if(!upgrades.zoomies)pool.push({key:"zoomies",level:0,upgrade:{icon:"💨",title:"Zoomies",levelTag:"1/1",desc:"A veces vas rapidísima.",special:true,apply:()=>{upgrades.zoomies=true}}});
 
 if(pool.length===0)return [];
 
@@ -2625,16 +2626,22 @@ let delay=210/(upgrades.fireRate*getZoomiesFireMultiplier());
 if(fromHold&&upgrades.holdShoot)delay/=getHoldShootMultiplier();
 if(now-lastShot<delay)return;
 lastShot=now;shots++;if(runStats)runStats.shotsFired++;player.shootAnim=.12;
-const angle=Math.atan2(mouse.y-player.y,mouse.x-player.x),isBigFish=Math.random()<upgrades.bigFishChance,fishScale=upgrades.fishSize*(isBigFish?1.65:1),lowLifeBonus=(life<upgrades.maxLife*.35?(upgrades.braveHeart?0.35:0)+(upgrades.cursedInstinct?0.45:0):0),fishDamage=upgrades.damage*(1+lowLifeBonus)*(isBigFish?2.1:1),canPierce=Math.random()<upgrades.pierceChance,boomerang=Math.random()<upgrades.boomerangChance;
+const angle=Math.atan2(mouse.y-player.y,mouse.x-player.x),giantFishEasterEgg=giantFishEasterEggsUsed<1&&Math.random()<0.0002,isBigFish=giantFishEasterEgg||Math.random()<upgrades.bigFishChance,fishScale=upgrades.fishSize*(giantFishEasterEgg?7.5:(isBigFish?1.65:1)),lowLifeBonus=(life<upgrades.maxLife*.35?(upgrades.braveHeart?0.35:0)+(upgrades.cursedInstinct?0.45:0):0),fishDamage=upgrades.damage*(1+lowLifeBonus)*(giantFishEasterEgg?35:(isBigFish?2.1:1)),canPierce=giantFishEasterEgg||Math.random()<upgrades.pierceChance,boomerang=!giantFishEasterEgg&&Math.random()<upgrades.boomerangChance;
 function addFish(offsetAngle=0){
 const finalAngle=angle+offsetAngle;
 const boomerangLvl=effectLevel("boomerang");
 const boomerangRangeBonus=boomerang?1+boomerangLvl*.08:1;
 const critRoll=Math.random()<getCurrentCritChance();
-fishes.push({x:player.x+Math.cos(finalAngle)*62,y:player.y+Math.sin(finalAngle)*62,vx:Math.cos(finalAngle)*610*upgrades.fishSpeed*boomerangRangeBonus,vy:Math.sin(finalAngle)*610*upgrades.fishSpeed*boomerangRangeBonus,angle:finalAngle,damage:fishDamage*(critRoll?((upgrades.autoFire&&upgrades.aimAssist)?1.75:2):1),life:boomerang?3.35+boomerangLvl*.18:1.45,scale:fishScale,pierce:canPierce,boomerang,crit:critRoll&&!boomerang,returning:false,age:0,turnTime:boomerang?0.95+boomerangLvl*.06:0,hitIds:new Set()})
+fishes.push({x:player.x+Math.cos(finalAngle)*62,y:player.y+Math.sin(finalAngle)*62,vx:Math.cos(finalAngle)*610*upgrades.fishSpeed*boomerangRangeBonus,vy:Math.sin(finalAngle)*610*upgrades.fishSpeed*boomerangRangeBonus,angle:finalAngle,damage:fishDamage*(critRoll?((upgrades.autoFire&&upgrades.aimAssist)?1.75:2):1),life:giantFishEasterEgg?2.2:(boomerang?3.35+boomerangLvl*.18:1.45),scale:fishScale,pierce:canPierce,boomerang,crit:critRoll&&!boomerang,giantEaster:giantFishEasterEgg,returning:false,age:0,turnTime:boomerang?0.95+boomerangLvl*.06:0,hitIds:new Set()})
 }
 addFish();
-if(Math.random()<upgrades.doubleFishChance){addFish(.14);addFish(-.14)}
+if(giantFishEasterEgg){
+  giantFishEasterEggsUsed++;
+  floatingTexts.push({x:player.x,y:player.y-92,text:"🐟 PEZ GIGANTE",life:1.8,maxLife:1.8,big:true});
+  shockwaves.push({x:player.x,y:player.y,r:10,maxR:180,life:.65,maxLife:.65,color:"#4cc9f0",line:7});
+  addScreenShake(10);
+}
+if(!giantFishEasterEgg&&Math.random()<upgrades.doubleFishChance){addFish(.14);addFish(-.14)}
 if(!lowPerfMode||Math.random()<.35)pawPrints.push({x:player.x+Math.cos(angle)*38,y:player.y+Math.sin(angle)*38,angle,life:.22,maxLife:.22});
 if(Math.random()<(lowPerfMode?.08:.18)){const phrases=["glugluglu","fiuuu","ñomñom","pez vaaa","blu blu","mimitos!"],phrase=phrases[Math.floor(Math.random()*phrases.length)];playFishSound(phrase.includes("fiu")?"fiu":"bloop");floatingTexts.push({x:player.x+Math.cos(angle)*58,y:player.y+Math.sin(angle)*58-14,text:phrase,life:.85,maxLife:.85,big:false})}
 if(upgrades.moralSupport&&Math.random()<.16)floatingTexts.push({x:player.x+Math.cos(angle)*75,y:player.y+Math.sin(angle)*75-38,text:lovePhrases[Math.floor(Math.random()*lovePhrases.length)],life:1.45,maxLife:1.45,big:false})
@@ -3963,9 +3970,9 @@ ctx.fillStyle="#111";ctx.beginPath();ctx.arc(7,-2,2,0,Math.PI*2);ctx.fill();ctx.
 function drawFish(f){
 drawEntityShadow(f.x,f.y,18*(f.scale||1),5*(f.scale||1),.10);
 ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.angle);ctx.scale(f.scale||1,f.scale||1);
-ctx.shadowColor=f.boomerang?"#80ed99":f.crit?"#ff6b6b":f.shieldShot?"#ffd166":"#4cc9f0";ctx.shadowBlur=f.crit?14:8;
-ctx.fillStyle=f.boomerang?"#80ed99":f.crit?"#ff6b6b":f.shieldShot?"#ffd166":"#4cc9f0";ctx.beginPath();ctx.ellipse(0,0,16,8,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle="rgba(255,255,255,.72)";ctx.lineWidth=1.6;ctx.stroke();
-ctx.fillStyle=f.boomerang?"#57cc99":f.crit?"#e03131":f.shieldShot?"#ffb703":"#4895ef";ctx.beginPath();ctx.moveTo(-15,0);ctx.lineTo(-27,-9);ctx.lineTo(-27,9);ctx.closePath();ctx.fill();
+ctx.shadowColor=f.giantEaster?"#ffd166":f.boomerang?"#80ed99":f.crit?"#ff6b6b":f.shieldShot?"#ffd166":"#4cc9f0";ctx.shadowBlur=f.giantEaster?28:(f.crit?14:8);
+ctx.fillStyle=f.giantEaster?"#ffd166":f.boomerang?"#80ed99":f.crit?"#ff6b6b":f.shieldShot?"#ffd166":"#4cc9f0";ctx.beginPath();ctx.ellipse(0,0,16,8,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle="rgba(255,255,255,.72)";ctx.lineWidth=1.6;ctx.stroke();
+ctx.fillStyle=f.giantEaster?"#fb8500":f.boomerang?"#57cc99":f.crit?"#e03131":f.shieldShot?"#ffb703":"#4895ef";ctx.beginPath();ctx.moveTo(-15,0);ctx.lineTo(-27,-9);ctx.lineTo(-27,9);ctx.closePath();ctx.fill();
 ctx.fillStyle="#111111";ctx.beginPath();ctx.arc(8,-2,2,0,Math.PI*2);ctx.fill();ctx.restore()
 }
 
