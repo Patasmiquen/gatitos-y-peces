@@ -47,7 +47,7 @@ if(startWaveInput){
 }
 
 /* === Ranking online con Firebase === */
-const GAME_VERSION="v17-no-double-demon";
+const GAME_VERSION="v18-low-mode-projectiles-fix";
 const PLAYER_NAME_KEY="gatitos_player_name";
 const firebaseConfig={
   apiKey:"AIzaSyD2DJyvaXseXX2ZNZrUCmjXqa1fYytanRA",
@@ -3688,7 +3688,25 @@ for(let i=pawPrints.length-1;i>=0;i--)if(pawPrints[i].life<=0)pawPrints.splice(i
 for(let i=shockwaves.length-1;i>=0;i--)if(shockwaves[i].life<=0)shockwaves.splice(i,1);
 for(let i=sparkles.length-1;i>=0;i--)if(sparkles[i].life<=0)sparkles.splice(i,1);
 
-limitArray(hearts,getEntityLimit(120,70,42));limitArray(smokes,getEntityLimit(160,90,52));limitArray(shockwaves,getEntityLimit(20,14,8));limitArray(sparkles,getEntityLimit(180,95,50));limitArray(floatingTexts,getEntityLimit(42,26,16));limitArray(pawPrints,getEntityLimit(28,18,8));limitArray(fishes,getEntityLimit(110,92,72));limitArray(cats,avalancheActive?getEntityLimit(130,105,82):getEntityLimit(86,72,58));limitArray(quacks,getEntityLimit(34,26,18));limitArray(coinsDrops,getEntityLimit(60,46,35));limitArray(dogBones,getEntityLimit(48,36,26));limitArray(demonOrbs,getEntityLimit(64,48,34));limitArray(yarnBalls,getEntityLimit(54,40,28));limitArray(powerStars,2);
+// El modo ligero solo debe recortar elementos visuales, no elementos de gameplay.
+limitArray(hearts,getEntityLimit(120,70,42));
+limitArray(smokes,getEntityLimit(160,90,52));
+limitArray(shockwaves,getEntityLimit(20,14,8));
+limitArray(sparkles,getEntityLimit(180,95,50));
+limitArray(floatingTexts,getEntityLimit(42,26,16));
+limitArray(pawPrints,getEntityLimit(28,18,8));
+
+// Proyectiles, enemigos y objetos jugables mantienen límites seguros incluso en modo ligero.
+// Si se recortan demasiado, desaparecen balas de gatos/demonio y cambia la partida.
+limitArray(fishes,140);
+limitArray(cats,avalancheActive?150:105);
+limitArray(quacks,70);
+limitArray(coinsDrops,90);
+limitArray(dogBones,80);
+limitArray(demonOrbs,110);
+limitArray(yarnBalls,110);
+limitArray(tunaDrops,70);
+limitArray(powerStars,2);
 updateHud()
 }
 
