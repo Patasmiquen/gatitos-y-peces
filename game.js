@@ -69,7 +69,7 @@ if(startWaveInput){
 }
 
 /* === Ranking online con Firebase === */
-const GAME_VERSION="v19-ranking-scroll-zoom-guard";
+const GAME_VERSION="v20-fish-size-fusion-boost";
 const PLAYER_NAME_KEY="gatitos_player_name";
 const firebaseConfig={
   apiKey:"AIzaSyD2DJyvaXseXX2ZNZrUCmjXqa1fYytanRA",
@@ -1135,6 +1135,29 @@ boss={type,x:canvas.width/2,y:canvas.height*.35,r:55+Math.min(22,wave*.85),hp,ma
 }
 
 function effectLevel(key){return (upgradeLevels[key]||0)+(fusedBaseLevels[key]||0)}
+function getFusionComponentProgressBonus(key){
+let bonus=0;
+Object.keys(doneFusionPairs).forEach(pair=>{
+  if(!pair.split("+").includes(key))return;
+  const rep=getFusionRepresentativeKey(pair);
+  if(rep===key)return;
+  bonus+=getFusionProgress(pair);
+});
+return bonus;
+}
+function hasDoneFusionPair(pair){return !!doneFusionPairs[sortedPair(...String(pair||"").split("+"))]}
+function getFishSizeFusionBonus(){
+let bonus=0;
+Object.keys(doneFusionPairs).forEach(pair=>{
+  const parts=pair.split("+");
+  if(!parts.includes("fishSize"))return;
+  const rep=getFusionRepresentativeKey(pair);
+  if(rep!=="fishSize")bonus+=getFusionProgress(pair);
+  bonus+=1;
+});
+if(hasDoneFusionPair("bigFish+fishSize"))bonus+=2;
+return bonus;
+}
 function nextLevel(key){return upgradeLevels[key]+1}
 function isMax(key){return upgradeLevels[key]>=upgradeMaxLevels[key]}
 function getUpgradeVisualLevel(key){const l=upgradeLevels[key]||0;if(isUpgradeFinal(key))return"upgradeTierMax";if(isUniqueKey(key)&&hasUniqueUpgrade(key))return"upgradeTierMax";if((upgradeMaxLevels[key]||5)<=1&&l>0)return"upgradeTierMax";if(l>=5)return"upgradeTierMax";if(l>=3)return"upgradeTierBoost";return"upgradeTierBase"}
@@ -1242,10 +1265,13 @@ upgrades.moveSpeed=1+s("moveSpeed");
 upgrades.fireRate=1+s("fireRate");
 upgrades.fishSpeed=1+s("fishSpeed");
 upgrades.damage=1+s("damage");
-upgrades.fishSize=1+s("fishSize");
+const fishSizeFusionLevel=effectLevel("fishSize")+getFishSizeFusionBonus();
+upgrades.fishSize=1+Math.min(1.45,fishSizeFusionLevel*.12);
+if(hasDoneFusionPair("bigFish+fishSize"))upgrades.fishSize*=1.18;
 upgrades.xpBoost=1+Math.min(1,s("xpBoost"));
 // Probabilidades (topes duros: 95% o 85%)
-upgrades.bigFishChance=Math.min(.95,s("bigFish"));
+const bigFishFusionLevel=effectLevel("bigFish")+getFusionComponentProgressBonus("bigFish");
+upgrades.bigFishChance=Math.min(.95,bigFishFusionLevel*.13);
 upgrades.doubleFishChance=Math.min(.95,s("doubleFish"));
 upgrades.pierceChance=Math.min((upgrades.autoFire&&upgrades.aimAssist)?0.78:0.95,s("pierce"));
 upgrades.catSlow=Math.min(.85,s("catSlow"));
@@ -1921,7 +1947,7 @@ const fusionShortDescMap={
 "healOnWave+lifeSteal":"Te curas entre rondas y peleando.",
 "healOnWave+maxLife":"Build tanque: más vida y descanso.",
 "catSlow+shield":"Zona segura alrededor de ti.",
-"fishSize+shield":"Escudo con peces más grandes.",
+"fishSize+shield":"Escudo con peces más grandes. Cada nivel de fusión hace que el tamaño se note más.",
 "damage+shield":"El escudo también pega más.",
 "coinMagnet+xpBoost":"Recoges y progresas más rápido.",
 "healOnWave+xpBoost":"Subes mejor y te recuperas al pasar ronda.",
@@ -1940,7 +1966,7 @@ const fusionShortDescMap={
 "fishSpeed+yarnBounce":"Rebotes más rápidos.",
 "doubleFish+yarnBounce":"Más peces significa más rebotes.",
 "bigFish+yarnBounce":"Peces grandes que encadenan mejor.",
-"fishSize+yarnBounce":"Peces enormes con rebote.",
+"fishSize+yarnBounce":"Peces enormes con rebote. Al subir la fusión, el tamaño crece de forma visible.",
 "omniBurst+yarnBounce":"La ráfaga puede encadenar rebotes.",
 "damage+yarnBounce":"Los rebotes también duelen.",
 "aimAssist+catInstinct":"Cuando estás en peligro, respondes mejor.",
@@ -1980,16 +2006,16 @@ const fusionShortDescMap={
 "boomerang+zoomies":"Boomerangs más locos y rápidos.",
 "bigFish+doubleFish":"Dos peces gigantes salen a la vez. El doble de tamaño, el doble de destrucción.",
 "bigFish+fireRate":"Los peces grandes llueven sin parar. Una avalancha de escamas y daño.",
-"bigFish+fishSize":"Un pez descomunal que aplasta todo a su paso. El leviatán del lago.",
+"bigFish+fishSize":"Un pez descomunal que aumenta mucho el tamaño de tus peces. Al subir esta fusión, los peces se hacen visiblemente más grandes.",
 "bigFish+pierce":"Un pez enorme que atraviesa a todos los enemigos en línea recta.",
 "catInstinct+shield":"El instinto felino activa un escudo defensivo justo antes del impacto.",
 "catSlow+coinMagnet":"Los enemigos ralentizados sueltan más monedas y el imán las recoge al instante.",
-"catSlow+fishSize":"Un pez gigante y helado que congela y aplasta a la vez.",
+"catSlow+fishSize":"Un pez gigante y helado que congela y aplasta a la vez. La fusión aumenta el tamaño de forma notable.",
 "catSlow+maxLife":"El frío protege el cuerpo. Ralentizas a los enemigos y ganas más vida máxima.",
 "catSlow+moveSpeed":"Te deslizas velozmente mientras los enemigos se arrastran en el hielo.",
 "coinMagnet+healOnWave":"Cada moneda recogida restaura vida. Recolectar es curar.",
 "doubleFish+omniBurst":"Dos peces por ola y ráfagas en todas direcciones. El caos es total.",
-"fishSize+pierce":"Un pez enorme que perfora a todos los enemigos que se crucen en su camino.",
+"fishSize+pierce":"Los peces aumentan mucho de tamaño y además perforan enemigos. Cada nivel de la fusión hace más visible el tamaño.",
 "fishSpeed+omniBurst":"Peces ultrarrápidos que explotan en todas direcciones al impactar.",
 "lifeSteal+shield":"El escudo absorbe el daño y lo convierte en vida para ti.",
 "maxLife+moralSupport":"El apoyo de tu novio te da fuerzas para aguantar mucho más.",
@@ -2057,7 +2083,9 @@ function getFusionExtraBonusDesc(pair){
   if(has("fishSpeed"))return "Bonus de fusión: peces más rápidos.";
   if(has("pierce"))return "Bonus de fusión: más perforación.";
   if(has("damage"))return "Bonus de fusión: más daño.";
-  if(has("bigFish")||has("fishSize"))return "Bonus de fusión: peces más grandes.";
+  if(has("bigFish")&&has("fishSize"))return "Bonus de fusión: Leviatán hace los peces mucho más grandes.";
+  if(has("fishSize"))return "Bonus de fusión: el tamaño de los peces escala más.";
+  if(has("bigFish"))return "Bonus de fusión: peces más grandes.";
   if(has("maxLife"))return "Bonus de fusión: más aguante.";
   if(has("healOnWave"))return "Bonus de fusión: más curación.";
   if(has("moveSpeed")||has("zoomies"))return "Bonus de fusión: más velocidad.";
