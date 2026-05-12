@@ -47,7 +47,7 @@ if(startWaveInput){
 }
 
 /* === Ranking online con Firebase === */
-const GAME_VERSION="v16-boss-victory-ranking";
+const GAME_VERSION="v17-no-double-demon";
 const PLAYER_NAME_KEY="gatitos_player_name";
 const firebaseConfig={
   apiKey:"AIzaSyD2DJyvaXseXX2ZNZrUCmjXqa1fYytanRA",
@@ -945,7 +945,12 @@ function weightedRandomBoss(weightedList){
   return valid[valid.length-1].type;
 }
 function chooseNextBossType(types){
-  const valid=types.filter(t=>isBossTypeAllowedNow(t));
+  let valid=types.filter(t=>isBossTypeAllowedNow(t));
+
+  if(lastBossType==="demon"){
+    const withoutDemon=valid.filter(t=>t!=="demon");
+    if(withoutDemon.length)valid=withoutDemon;
+  }
 
   if(!valid.length)return types.find(t=>t!=="demon")||"giantCat";
 
