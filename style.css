@@ -1,6 +1,6 @@
 *{box-sizing:border-box;margin:0;padding:0;user-select:none}
 html,body{width:100%;height:100%;overflow:hidden;background:#1f1b2e;font-family:Arial,sans-serif}
-canvas{display:block;width:100vw;height:100vh;background:#1f1b2e;cursor:crosshair}
+canvas{display:block;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#1f1b2e;cursor:crosshair;box-shadow:0 0 0 9999px #1f1b2e}
 #hud{position:fixed;top:15px;left:15px;color:#ffd6e7;background:rgba(20,15,20,.84);padding:12px 16px;border-radius:16px;font-weight:bold;box-shadow:0 6px 18px rgba(100,40,70,.25);min-width:270px;line-height:1.35;z-index:5}
 .barBox{width:205px;height:10px;background:rgba(255,255,255,.25);border-radius:999px;overflow:hidden;margin:4px 0 7px}
 .barFill{height:100%;width:100%;background:#ff7aa8;border-radius:999px}
@@ -523,6 +523,17 @@ body.panel-theme-dark .shopCoinBadge{box-shadow:0 12px 28px rgba(255,159,28,.28)
 .onlineRankMeta{font-size:11px;color:#d9c9d8;opacity:.82;grid-column:2/4;margin-top:-3px}
 .onlineRankStatus{font-size:12px;color:#ffd6e7;opacity:.9;text-align:center;padding:5px}
 .onlineSubmitStatus{margin:10px auto 2px;max-width:520px;border-radius:14px;padding:8px 12px;font-size:13px;font-weight:900;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#ffd6e7}
+.onlineRankList{max-height:min(260px,32vh);overflow-y:auto;overscroll-behavior:contain;padding-right:4px;scrollbar-width:thin;scrollbar-color:#ff7aa8 rgba(255,255,255,.08)}
+#startRankingList{max-height:min(220px,28vh)}
+#victoryRankingList,#gameOverRankingList{max-height:min(190px,22vh)}
+.onlineRankList::-webkit-scrollbar{width:10px}
+.onlineRankList::-webkit-scrollbar-track{background:rgba(255,255,255,.08);border-radius:999px}
+.onlineRankList::-webkit-scrollbar-thumb{background:linear-gradient(#ff7aa8,#ffd166);border-radius:999px;border:2px solid rgba(20,15,20,.25)}
+#startBox,#victoryBox,#gameOverBox{max-height:92vh;overflow:auto;scrollbar-width:thin;scrollbar-color:#ff7aa8 rgba(255,255,255,.08)}
+#startBox::-webkit-scrollbar,#victoryBox::-webkit-scrollbar,#gameOverBox::-webkit-scrollbar{width:12px}
+#startBox::-webkit-scrollbar-track,#victoryBox::-webkit-scrollbar-track,#gameOverBox::-webkit-scrollbar-track{background:rgba(255,255,255,.08);border-radius:999px}
+#startBox::-webkit-scrollbar-thumb,#victoryBox::-webkit-scrollbar-thumb,#gameOverBox::-webkit-scrollbar-thumb{background:linear-gradient(#ff7aa8,#ffd166);border-radius:999px;border:2px solid rgba(20,15,20,.25)}
+
 body.panel-theme-dark .onlineRankBox{background:rgba(255,255,255,.06);border-color:rgba(255,194,209,.16)}
 #startBox.nameError #playerNameInput{border-color:#ff6b6b;animation:nameShake .25s ease}
 @keyframes nameShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}

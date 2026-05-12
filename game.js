@@ -8,7 +8,29 @@ const pausePanel=document.getElementById("pausePanel"),pauseStats=document.getEl
 const adminToggle=document.getElementById("adminToggle"),adminPanel=document.getElementById("adminPanel"),adminUpgradeSelect=document.getElementById("adminUpgradeSelect"),adminUniqueSelect=document.getElementById("adminUniqueSelect"),adminLog=document.getElementById("adminLog"),adminLock=document.getElementById("adminLock"),adminTools=document.getElementById("adminTools"),adminStateTag=document.getElementById("adminStateTag"),adminPassword=document.getElementById("adminPassword"),adminUnlockBtn=document.getElementById("adminUnlockBtn"),adminUpgradeAmount=document.getElementById("adminUpgradeAmount"),adminCoinAmount=document.getElementById("adminCoinAmount"),adminLevelAmount=document.getElementById("adminLevelAmount"),adminWaveValue=document.getElementById("adminWaveValue");
 const playerNameInput=document.getElementById("playerNameInput"),nameWarning=document.getElementById("nameWarning"),refreshRankingBtn=document.getElementById("refreshRankingBtn"),startRankingList=document.getElementById("startRankingList"),victoryRankingList=document.getElementById("victoryRankingList"),gameOverRankingList=document.getElementById("gameOverRankingList"),victoryOnlineStatus=document.getElementById("victoryOnlineStatus"),gameOverOnlineStatus=document.getElementById("gameOverOnlineStatus");
 
-function resize(){canvas.width=window.innerWidth;canvas.height=window.innerHeight}
+function getGameViewportSize(){
+  const screenW=Number(window.screen?.availWidth)||window.innerWidth;
+  const screenH=Number(window.screen?.availHeight)||window.innerHeight;
+  const w=Math.max(320,Math.min(window.innerWidth,screenW));
+  const h=Math.max(320,Math.min(window.innerHeight,screenH));
+  return{w:Math.floor(w),h:Math.floor(h)};
+}
+function resize(){
+  const size=getGameViewportSize();
+  canvas.width=size.w;
+  canvas.height=size.h;
+  canvas.style.width=size.w+"px";
+  canvas.style.height=size.h+"px";
+}
+function pointerToGame(e){
+  const rect=canvas.getBoundingClientRect();
+  const sx=canvas.width/(rect.width||canvas.width||1);
+  const sy=canvas.height/(rect.height||canvas.height||1);
+  return{
+    x:(e.clientX-rect.left)*sx,
+    y:(e.clientY-rect.top)*sy
+  };
+}
 resize();window.addEventListener("resize",resize);
 let panelTheme=localStorage.getItem("gatitosPanelTheme")||"light";
 function applyPanelTheme(theme){
@@ -47,7 +69,7 @@ if(startWaveInput){
 }
 
 /* === Ranking online con Firebase === */
-const GAME_VERSION="v18-low-mode-projectiles-fix";
+const GAME_VERSION="v19-ranking-scroll-zoom-guard";
 const PLAYER_NAME_KEY="gatitos_player_name";
 const firebaseConfig={
   apiKey:"AIzaSyD2DJyvaXseXX2ZNZrUCmjXqa1fYytanRA",
@@ -447,13 +469,14 @@ if(k===" "||k==="spacebar"){e.preventDefault();if(gameStarted&&!gameOver&&!choos
 if(k==="r"&&gameStarted&&gameOver&&startPanel.style.display==="none"){restart()}
 });
 window.addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
-canvas.addEventListener("mousemove",e=>{mouse.x=e.clientX;mouse.y=e.clientY});
+canvas.addEventListener("mousemove",e=>{const p=pointerToGame(e);mouse.x=p.x;mouse.y=p.y});
 canvas.addEventListener("mousedown",e=>{
 mouseIsDown=true;
 if(e.button===0&&!gameOver&&gameStarted&&!paused&&!choosingUpgrade)shootFish();
 if(e.button===2&&!gameOver&&gameStarted&&!paused&&!choosingUpgrade){
   e.preventDefault();
-  selectTargetAt(e.clientX,e.clientY);
+  const p=pointerToGame(e);
+  selectTargetAt(p.x,p.y);
 }
 });
 window.addEventListener("mouseup",()=>{mouseIsDown=false});
