@@ -47,7 +47,7 @@ if(startWaveInput){
 }
 
 /* === Ranking online con Firebase === */
-const GAME_VERSION="v15-fusion-progress-fix";
+const GAME_VERSION="v16-boss-victory-ranking";
 const PLAYER_NAME_KEY="gatitos_player_name";
 const firebaseConfig={
   apiKey:"AIzaSyD2DJyvaXseXX2ZNZrUCmjXqa1fYytanRA",
@@ -162,6 +162,7 @@ async function submitOnlineScore(finalScore, statusEl, rankingEl){
     level:Math.max(1,Math.floor(Number(level)||1)),
     bosses:Math.max(0,Math.min(4,Math.floor(defeatedBossTypes?.size||0))),
     impacts:Math.max(0,Math.floor(Number(finalScore.impactCount)||0)),
+    result:defeatedBossTypes?.size>=4?"boss_victory":"game_over",
     version:GAME_VERSION,
     createdAt:firebase.firestore.FieldValue.serverTimestamp()
   };
@@ -230,6 +231,7 @@ let fusedUpgradeNames={};
 let doneFusionPairs={};
 let fusionProgressLevels={};
 let bossVictoryAlreadyShown=false;
+let bossVictoryScoreSaved=false;
 let dogRelaxTime=0;
 let enemyIntroSeen={};
 let finalChoiceLocked=false;
@@ -536,7 +538,7 @@ const initialWave=Math.max(1,Math.floor(startAtWave||1));
 runStartWave=initialWave;
 rankingEligibleThisRun=initialWave===1;
 rankingDisabledReason=rankingEligibleThisRun?"":`Ranking desactivado: la partida empezó en ronda ${initialWave}.`;
-score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=0;lastAutoShot=0;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=initialWave;spawnCooldown=0;life=upgrades.maxLife;level=initialWave;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();bossVictoryAlreadyShown=false;dogRelaxTime=0;enemyIntroSeen={};finalChoiceLocked=false;demonSpawnPressure=0;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
+score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=0;lastAutoShot=0;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=initialWave;spawnCooldown=0;life=upgrades.maxLife;level=initialWave;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();bossVictoryAlreadyShown=false;bossVictoryScoreSaved=false;dogRelaxTime=0;enemyIntroSeen={};finalChoiceLocked=false;demonSpawnPressure=0;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
 demonOrbs.length=0;yarnBalls.length=0;powerStars.length=0;shockwaves.length=0;sparkles.length=0;tunaDrops.length=0;
 player.x=canvas.width/2;player.y=canvas.height/2;player.angle=0;player.shootAnim=0;player.hurtAnim=0;dogCompanion.x=player.x-50;dogCompanion.y=player.y+45;dogCompanion.shootCooldown=0;
 fishes.length=0;cats.length=0;hearts.length=0;smokes.length=0;floatingTexts.length=0;pawPrints.length=0;quacks.length=0;coinsDrops.length=0;dogBones.length=0;demonOrbs.length=0;yarnBalls.length=0;shockwaves.length=0;sparkles.length=0;
@@ -2226,7 +2228,14 @@ ${r.efficiencyBonus>0?`<div class="sRow"><span>⚡ Eficiencia (ronda ${wave})</s
 <div class="sRow"><span>🎯 Impactos</span><span>${r.impactCount||0} impactos: +${r.fishBonus.toLocaleString()}</span></div>
 <div class="sRow"><span>TOTAL</span><span>${r.total.toLocaleString()}</span></div>
 </div>`;
+if(!bossVictoryScoreSaved){
+bossVictoryScoreSaved=true;
+setOnlineStatus(victoryOnlineStatus,"Guardando victoria en el ranking online...","info");
 submitOnlineScore(r,victoryOnlineStatus,victoryRankingList);
+}else{
+setOnlineStatus(victoryOnlineStatus,"Victoria ya enviada al ranking.","ok");
+loadOnlineRanking([startRankingList,victoryRankingList].filter(Boolean));
+}
 }
 /* ─────────────────────────────────────────────────────────── */
 function isGameCompleted(){
