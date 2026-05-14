@@ -587,3 +587,14 @@ body.panel-theme-dark .onlineRankBox{background:rgba(255,255,255,.06);border-col
 @media (max-width:720px){
   .compactControls{grid-template-columns:1fr;}
 }
+
+.dedicationText{
+  margin:10px auto 14px;
+  max-width:620px;
+  color:#ff7aa8;
+  font-weight:800;
+  line-height:1.35;
+}
+.panel-theme-dark .dedicationText{
+  color:#ffd6e7;
+}
