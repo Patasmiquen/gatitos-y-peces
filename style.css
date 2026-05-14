@@ -798,3 +798,20 @@ body.panel-theme-dark .onlineRankBox{background:rgba(255,255,255,.06);border-col
     min-width:34px !important;
   }
 }
+
+/* === v50 dedication single line === */
+#startBox .dedicationText{
+  max-width:none !important;
+  width:100% !important;
+  padding:0 12px !important;
+  white-space:nowrap !important;
+  text-align:center !important;
+  font-size:16px !important;
+  line-height:1.3 !important;
+}
+@media (max-width:760px){
+  #startBox .dedicationText{
+    white-space:normal !important;
+    font-size:15px !important;
+  }
+}
