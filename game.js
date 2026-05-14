@@ -71,7 +71,7 @@ if(startWaveInput){
 }
 
 /* === Ranking online con Firebase === */
-const GAME_VERSION="v38-clean-start-text";
+const GAME_VERSION="v41-special-cat-scaling";
 const PLAYER_NAME_KEY="gatitos_player_name";
 const firebaseConfig={
   apiKey:"AIzaSyD2DJyvaXseXX2ZNZrUCmjXqa1fYytanRA",
@@ -561,7 +561,7 @@ return need;
 
 function restart(startAtWave=1){
 stopPowerStarLoop();
-autoRunChoices=[];autoRunStartTime=performance.now();
+autoRunChoices=[];autoRunStartTime=performance.now();autoLastPlayerX=player.x;autoLastPlayerY=player.y;autoStuckTimer=0;autoEmergencyEscapeUntil=0;
 resetUpgrades();
 const initialWave=Math.max(1,Math.floor(startAtWave||1));
 runStartWave=initialWave;
@@ -1056,21 +1056,10 @@ function updateObjectivePanel(){
   objectiveFusionEl.textContent=hints.length?`🔮 Fusiones próximas: ${hints.join(" / ")}`:"🔮 Fusiones próximas: sube mejoras compatibles";
 }
 function showEnemyIntro(type){
-  if(!type||type==="normal"||enemyIntroSeen[type])return;
+  // Sin pop-ups explicativos para gatos especiales.
+  // Se dejan solo sus señales visuales y comportamiento propio durante la partida.
+  if(!type||type==="normal")return;
   enemyIntroSeen[type]=true;
-  const info={
-    thief:"😾 Gato ladrón: roba monedas y huye.",
-    yarn:"🧶 Gato lanero: dispara ovillos. Priorízalo.",
-    sleepy:"😴 Gato dormilón: se enfada si lo despiertas.",
-    mini:"🐾 Mini gatos: aparecen en grupo y son rápidos.",
-    glutton:"🍽️ Gato glotón: mucha vida y mucho daño.",
-    musician:"🎵 Gato músico: acelera el caos cerca de otros gatos.",
-    student:"📚 Gato estudiante: se vuelve fuerte si lo dejas estudiar."
-  }[type];
-  if(info){
-  floatingTexts.push({x:canvas.width/2,y:125,text:info,life:3.2,maxLife:3.2,big:true});
-  shockwaves.push({x:canvas.width/2,y:150,r:8,maxR:180,life:.75,maxLife:.75,color:"#ffd166",line:5});
-}
 }
 function activateDogRescueRelax(){
   dogRelaxTime=3.2;
@@ -2580,13 +2569,15 @@ if(catType==="sleepy"){color="#c8b6e2";r=28;hp+=3;speed*=.34;}
 if(catType==="mini"){color="#ffb347";r=12;hp=1;speed*=1.65;}
 if(catType==="glutton"){color="#e8956d";r=34;hp+=6;speed*=.38;}
 if(catType==="musician"){color="#d084c8";r=26;hp+=2;speed*=.78;}
-if(catType==="student"){color="#74b9ff";r=24;hp+=2;speed*=.54;}
-cats.push({x,y,r,speed,hp,maxHp:hp,damageCooldown:0,hitAnim:0,wobble:Math.random()*Math.PI*2,color,rainbow,small,type:catType,yarnCooldown:1.2+Math.random()*1.1,stealCooldown:0,fleeTimer:0,spawnAnim:.32,maxSpawnAnim:.32,sleepState:catType==="sleepy"?"sleeping":null,wakeTimer:0,rushTimer:0,zigzagPhase:Math.random()*Math.PI*2,studyTimer:0,studyLevel:0,freezeTimer:0})
+if(catType==="student"){color="#74b9ff";r=24;const startStudy=Math.min(4,Math.max(0,Math.floor((wave-12)/8)));hp+=2+startStudy*2;speed*=Math.max(.38,.54-startStudy*.025);}
+const initialStudyLevel=catType==="student"?Math.min(4,Math.max(0,Math.floor((wave-12)/8))):0;
+const musicianImmune=catType==="musician"?1:0;
+cats.push({x,y,r,speed,hp,maxHp:hp,damageCooldown:0,hitAnim:0,wobble:Math.random()*Math.PI*2,color,rainbow,small,type:catType,yarnCooldown:1.2+Math.random()*1.1,stealCooldown:0,fleeTimer:0,spawnAnim:.32,maxSpawnAnim:.32,sleepState:catType==="sleepy"?"sleeping":null,wakeTimer:0,rushTimer:0,sleepAwakeDuration:0,baseSpeed:speed,zigzagPhase:Math.random()*Math.PI*2,studyTimer:0,studyLevel:initialStudyLevel,musicImmuneTimer:musicianImmune,freezeTimer:0})
 showEnemyIntro(catType);
 if(catType==="mini"){
   for(let pk=0;pk<3;pk++){
     const px=x+Math.cos(Math.random()*Math.PI*2)*65;const py=y+Math.sin(Math.random()*Math.PI*2)*65;
-    cats.push({x:px,y:py,r:12,speed,hp:1,maxHp:1,damageCooldown:0,hitAnim:0,wobble:Math.random()*Math.PI*2,color:"#ffb347",rainbow:false,small:false,type:"mini",yarnCooldown:999,stealCooldown:0,fleeTimer:0,spawnAnim:.32,maxSpawnAnim:.32,sleepState:null,wakeTimer:0,rushTimer:0,zigzagPhase:Math.random()*Math.PI*2,studyTimer:0,studyLevel:0});
+    cats.push({x:px,y:py,r:12,speed,hp:1,maxHp:1,damageCooldown:0,hitAnim:0,wobble:Math.random()*Math.PI*2,color:"#ffb347",rainbow:false,small:false,type:"mini",yarnCooldown:999,stealCooldown:0,fleeTimer:0,spawnAnim:.32,maxSpawnAnim:.32,sleepState:null,wakeTimer:0,rushTimer:0,sleepAwakeDuration:0,baseSpeed:speed,zigzagPhase:Math.random()*Math.PI*2,studyTimer:0,studyLevel:0,musicImmuneTimer:0,freezeTimer:0});
     makeSpawnPuff(px,py,"#ffb347");
   }
 }
@@ -3686,7 +3677,7 @@ cats.forEach(cat=>{
 if(!isFinitePos(cat))return;
 if(cat.spawnAnim>0)cat.spawnAnim=Math.max(0,cat.spawnAnim-dt);
 let dx=player.x-cat.x,dy=player.y-cat.y,dist=Math.hypot(dx,dy)||1;
-cat.wobble+=dt*7;cat.damageCooldown=Math.max(0,cat.damageCooldown-dt);cat.hitAnim=Math.max(0,cat.hitAnim-dt);cat.stealCooldown=Math.max(0,(cat.stealCooldown||0)-dt);cat.fleeTimer=Math.max(0,(cat.fleeTimer||0)-dt);cat.freezeTimer=Math.max(0,(cat.freezeTimer||0)-dt);
+cat.wobble+=dt*7;cat.damageCooldown=Math.max(0,cat.damageCooldown-dt);cat.hitAnim=Math.max(0,cat.hitAnim-dt);cat.stealCooldown=Math.max(0,(cat.stealCooldown||0)-dt);cat.fleeTimer=Math.max(0,(cat.fleeTimer||0)-dt);cat.freezeTimer=Math.max(0,(cat.freezeTimer||0)-dt);cat.musicImmuneTimer=Math.max(0,(cat.musicImmuneTimer||0)-dt);
 if(cat.freezeTimer>0){cat.hitAnim=Math.max(cat.hitAnim,.12);return;}
 if(isPowerStarActive()&&dist<player.r+cat.r+10){killCat(cats.indexOf(cat),cat);return;}
 if(cat.type==="yarn"){
@@ -3716,8 +3707,12 @@ if(cat.type==="yarn"){
 }else if(cat.type==="sleepy"){
   cat.wakeTimer=Math.max(0,(cat.wakeTimer||0)-dt);cat.rushTimer=Math.max(0,(cat.rushTimer||0)-dt);
   if(cat.sleepState==="sleeping"||!cat.sleepState){cat.x+=(dx/dist)*cat.speed*.46*dt+Math.cos(cat.wobble)*4*dt;cat.y+=(dy/dist)*cat.speed*.46*dt+Math.sin(cat.wobble)*4*dt;}
-  else if(cat.sleepState==="waking"){if(cat.wakeTimer<=0){cat.sleepState="awake";cat.rushTimer=2.4;}}
-  else if(cat.sleepState==="awake"){cat.x+=(dx/dist)*cat.speed*4.2*dt;cat.y+=(dy/dist)*cat.speed*4.2*dt;if(cat.rushTimer<=0){cat.sleepState="sleeping";floatingTexts.push({x:cat.x,y:cat.y-38,text:"💤 vuelve a dormir",life:.7,maxLife:.7,big:false});}}
+  else if(cat.sleepState==="waking"){if(cat.wakeTimer<=0){cat.sleepState="awake";cat.rushTimer=cat.sleepAwakeDuration||Math.min(7.2,3.0+wave*.12);}}
+  else if(cat.sleepState==="awake"){
+  const awakeSpeed=4.2+Math.min(2.4,wave*.045);
+  cat.x+=(dx/dist)*cat.speed*awakeSpeed*dt;cat.y+=(dy/dist)*cat.speed*awakeSpeed*dt;
+  if(cat.rushTimer<=0){cat.sleepState="sleeping";floatingTexts.push({x:cat.x,y:cat.y-38,text:"💤 vuelve a dormir",life:.7,maxLife:.7,big:false});}
+  }
 }else if(cat.type==="mini"){
   const perp=-Math.atan2(dx,dy);const zz=Math.sin((cat.zigzagPhase||0)+performance.now()*.005)*34;
   cat.x+=(dx/dist)*cat.speed*dt+Math.cos(perp)*zz*dt;cat.y+=(dy/dist)*cat.speed*dt+Math.sin(perp)*zz*dt;
@@ -3772,9 +3767,18 @@ if(fish.hitIds.has(hitTargetId))continue;
 fish.hitIds.add(hitTargetId);
 const hitX=cat.x, hitY=cat.y;
 const dealt=Number.isFinite(fish.damage)?fish.damage:1;
+if(cat.type==="musician"&&(cat.musicImmuneTimer||0)>0){
+  if(runStats)runStats.fishHits++;
+  cat.hitAnim=.12;
+  makeImpact(hitX,hitY,"#d084c8",.45);
+  floatingTexts.push({x:hitX,y:hitY-32,text:"♪ protegido",life:.45,maxLife:.45,big:false});
+  if(!fish.pierce)fishes.splice(j,1);else fish.damage*=.72;
+  continue;
+}
 cat.hp-=dealt;
 if(runStats)runStats.fishHits++;
 cat.hitAnim=.15;
+if(cat.type==="musician"&&cat.hp>0)cat.musicImmuneTimer=1;
 
 // Primero aplicamos daño y quitamos el pez. Los efectos van protegidos para que
 // nunca bloqueen el daño si algún efecto visual/sonoro falla.
@@ -3789,10 +3793,11 @@ try{playCuteMeowThrottled()}catch(e){}
 if(cat.type==="thief"&&cat.hp>0)teleportThiefCat(cat);
 if(cat.type==="sleepy"&&cat.hp>0&&(cat.sleepState==="sleeping"||!cat.sleepState)){
 cat.sleepState="waking";
-cat.wakeTimer=.32;
-cat.rushTimer=3.2;
-cat.speed*=1.18;
-shockwaves.push({x:cat.x,y:cat.y,r:6,maxR:85,life:.42,maxLife:.42,color:"#ff8fab",line:4});
+cat.wakeTimer=.30;
+cat.sleepAwakeDuration=Math.min(7.2,3.0+wave*.12);
+cat.rushTimer=cat.sleepAwakeDuration;
+cat.baseSpeed=cat.baseSpeed||cat.speed;
+shockwaves.push({x:cat.x,y:cat.y,r:6,maxR:85+Math.min(70,wave*2.2),life:.42,maxLife:.42,color:"#ff8fab",line:4});
 floatingTexts.push({x:cat.x,y:cat.y-48,text:"😤 ¡DESPERTÓ!",life:1.15,maxLife:1.15,big:false});
 }
 if(upgrades.lifeSteal>0)life=Math.min(upgrades.maxLife,life+dealt*upgrades.lifeSteal);
@@ -4107,7 +4112,7 @@ if(cat.type==="sleepy"){
   ctx.fillStyle="rgba(255,255,255,0.35)";ctx.beginPath();ctx.ellipse(0,6,10,8,0,0,Math.PI*2);ctx.fill();
   ctx.font="bold 15px Arial";ctx.textAlign="center";ctx.fillText("🍽️",0,-36);
 }else if(cat.type==="musician"){
-  ctx.save();ctx.globalAlpha=.22+.08*Math.sin(performance.now()/180);ctx.strokeStyle="#f06595";ctx.lineWidth=4;ctx.beginPath();ctx.arc(0,0,cat.r+18,0,Math.PI*2);ctx.stroke();ctx.restore();
+  ctx.save();ctx.globalAlpha=.22+.08*Math.sin(performance.now()/180);ctx.strokeStyle=(cat.musicImmuneTimer||0)>0?"#ffd166":"#f06595";ctx.lineWidth=(cat.musicImmuneTimer||0)>0?6:4;ctx.beginPath();ctx.arc(0,0,cat.r+18+((cat.musicImmuneTimer||0)>0?5:0),0,Math.PI*2);ctx.stroke();ctx.restore();
   ctx.strokeStyle="#9b4fba";ctx.lineWidth=3.5;ctx.beginPath();ctx.arc(0,-4,15,.75*Math.PI,.25*Math.PI,true);ctx.stroke();
   ctx.fillStyle="#9b4fba";ctx.beginPath();ctx.ellipse(-15,1,5,7,-.2,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(15,1,5,7,.2,0,Math.PI*2);ctx.fill();
   const tNote=performance.now()/1000;const na=tNote*2.6;
@@ -4630,6 +4635,11 @@ let autoChoiceTimer=null;
 let autoRunChoices=[];
 let autoRunStartTime=0;
 let autoModeUsedThisRun=false;
+let autoLastPlayerX=0;
+let autoLastPlayerY=0;
+let autoStuckTimer=0;
+let autoEmergencyEscapeUntil=0;
+let autoEmergencyEscapeAngle=0;
 const AUTO_MEMORY_KEY="gatitos_auto_ai_memory_v2";
 
 function autoLoadMemory(){
@@ -4803,8 +4813,8 @@ function autoFindBestTarget(){
     if(c.type==="yarn")s+=230;
     if(c.type==="thief")s+=190;
     if(c.type==="musician")s+=260;
-    if(c.type==="student")s+=220+(c.studyLevel||0)*95;
-    if(c.type==="sleepy"&&c.sleepState==="awake")s+=260;
+    if(c.type==="student")s+=240+(c.studyLevel||0)*125;
+    if(c.type==="sleepy"&&c.sleepState==="awake")s+=320+Math.min(180,wave*6);
     if(c.type==="glutton")s+=125;
     if(d<260)s+=170;
     if(s>bestScore){best=c;bestScore=s;}
@@ -4828,6 +4838,59 @@ function autoUpdateAimAndShoot(target){
   }
   if(target&&!choosingUpgrade&&!paused&&!gameOver)shootFish(true);
 }
+
+function autoDistanceToWall(){
+  return Math.min(player.x,player.y,canvas.width-player.x,canvas.height-player.y);
+}
+function autoIsInCorner(){
+  const m=150;
+  const nearX=player.x<m||player.x>canvas.width-m;
+  const nearY=player.y<m||player.y>canvas.height-m;
+  return nearX&&nearY;
+}
+function autoForceCenterEscape(v,weight=1){
+  const cx=canvas.width/2,cy=canvas.height/2;
+  const dx=cx-player.x,dy=cy-player.y,d=Math.hypot(dx,dy)||1;
+  autoSafeAdd(v,dx/d,dy/d,weight);
+}
+function autoForceAwayFromBoss(v,weight=1){
+  if(!boss||!isFinitePos(boss))return;
+  const dx=player.x-boss.x,dy=player.y-boss.y,d=Math.hypot(dx,dy)||1;
+  autoSafeAdd(v,dx/d,dy/d,weight);
+}
+function autoUpdateStuckState(dt,danger){
+  const moved=Math.hypot(player.x-autoLastPlayerX,player.y-autoLastPlayerY);
+  autoLastPlayerX=player.x;
+  autoLastPlayerY=player.y;
+  const wall=autoDistanceToWall();
+  const demonNear=boss&&boss.type==="demon"&&Math.hypot(player.x-boss.x,player.y-boss.y)<520;
+  if(gameStarted&&!gameOver&&autoMode&&(moved<18*dt)&&(danger>.8||demonNear||wall<95))autoStuckTimer+=dt;
+  else autoStuckTimer=Math.max(0,autoStuckTimer-dt*1.8);
+  if(autoStuckTimer>.65||((autoIsInCorner()||wall<70)&&(danger>1.05||demonNear))){
+    autoEmergencyEscapeUntil=performance.now()+1300;
+    autoEmergencyEscapeAngle=Math.atan2(canvas.height/2-player.y,canvas.width/2-player.x)+(Math.random()*.55-.275);
+    autoStuckTimer=0;
+    floatingTexts.push({x:player.x,y:player.y-82,text:"🤖 escape de emergencia",life:.85,maxLife:.85,big:false});
+  }
+}
+function autoApplyEmergencyEscape(v,danger){
+  const now=performance.now();
+  const wall=autoDistanceToWall();
+  const demonNear=boss&&boss.type==="demon"&&Math.hypot(player.x-boss.x,player.y-boss.y)<620;
+  if(now<autoEmergencyEscapeUntil){
+    autoSafeAdd(v,Math.cos(autoEmergencyEscapeAngle),Math.sin(autoEmergencyEscapeAngle),7.5);
+    autoForceCenterEscape(v,4.8);
+    if(demonNear)autoForceAwayFromBoss(v,4.5);
+    return true;
+  }
+  if((autoIsInCorner()||wall<85)&&(danger>.75||demonNear)){
+    autoForceCenterEscape(v,demonNear?8.5:6.2);
+    if(demonNear)autoForceAwayFromBoss(v,5.4);
+    return true;
+  }
+  return false;
+}
+
 function updateAutoPlayer(dt){
   if(gameStarted&&!gameOver)markRankingInvalidByAI();
   refreshAutoModeUI();
@@ -4861,15 +4924,18 @@ function updateAutoPlayer(dt){
     if(t>0){const dx=player.x-o.x,dy=player.y-o.y,d=Math.hypot(dx,dy)||1;autoSafeAdd(v,dx/d,dy/d,t);danger+=t;}
   });
 
-  const margin=115;
-  if(player.x<margin)v.x+=(margin-player.x)/margin*3.7;
-  if(player.x>canvas.width-margin)v.x-=(player.x-(canvas.width-margin))/margin*3.7;
-  if(player.y<margin)v.y+=(margin-player.y)/margin*3.7;
-  if(player.y>canvas.height-margin)v.y-=(player.y-(canvas.height-margin))/margin*3.7;
+  autoUpdateStuckState(dt,danger);
+  const emergencyEscaping=autoApplyEmergencyEscape(v,danger);
+
+  const margin=boss&&boss.type==="demon"?180:125;
+  if(player.x<margin)v.x+=(margin-player.x)/margin*(boss&&boss.type==="demon"?6.6:4.4);
+  if(player.x>canvas.width-margin)v.x-=(player.x-(canvas.width-margin))/margin*(boss&&boss.type==="demon"?6.6:4.4);
+  if(player.y<margin)v.y+=(margin-player.y)/margin*(boss&&boss.type==="demon"?6.6:4.4);
+  if(player.y>canvas.height-margin)v.y-=(player.y-(canvas.height-margin))/margin*(boss&&boss.type==="demon"?6.6:4.4);
 
   const hpRatio=life/Math.max(1,upgrades.maxLife||100);
-  const safeToLoot=danger<.72&&hpRatio>.58;
-  const verySafeToLoot=danger<.42&&hpRatio>.72;
+  const safeToLoot=!emergencyEscaping&&danger<.72&&hpRatio>.58;
+  const verySafeToLoot=!emergencyEscaping&&danger<.42&&hpRatio>.72;
 
   // Estrella: prioridad de recogida muy alta, salvo peligro extremo.
   let nearestStar=null,nearestStarD=Infinity;
@@ -4894,15 +4960,15 @@ function updateAutoPlayer(dt){
 
   if(target&&isFinitePos(target)){
     const dx=target.x-player.x,dy=target.y-player.y,d=Math.hypot(dx,dy)||1;
-    let desired=boss?430:335;
+    let desired=boss?(boss.type==="demon"?560:430):335;
     if(target.rainbow)desired=260;
-    if(target.rainbow&&danger<1.05){
+    if(!emergencyEscaping&&target.rainbow&&danger<1.05){
       // Arcoíris: acercarse más para matarlo rápido y asegurar la recompensa.
       if(d>desired)autoSafeAdd(v,dx/d,dy/d,1.65);
       else autoSafeAdd(v,-dx/d,-dy/d,.35);
     }else{
-      if(d<desired)autoSafeAdd(v,-dx/d,-dy/d,(desired-d)/desired*2.9);
-      else if(d>desired+250&&danger<.7)autoSafeAdd(v,dx/d,dy/d,.8);
+      if(d<desired)autoSafeAdd(v,-dx/d,-dy/d,(desired-d)/desired*(boss&&boss.type==="demon"?4.1:2.9));
+      else if(!emergencyEscaping&&d>desired+250&&danger<.7)autoSafeAdd(v,dx/d,dy/d,.8);
     }
     const strafeStrength=target.rainbow?.25:(.6+(boss&&boss.type==="demon"?.55:0));
     const strafe=(Math.sin(performance.now()/520)>0?1:-1)*strafeStrength;
@@ -4913,7 +4979,7 @@ function updateAutoPlayer(dt){
 
   if(autoMode&&performance.now()-autoLastDebugText>9000&&gameStarted&&!choosingUpgrade&&!paused&&!gameOver){
     autoLastDebugText=performance.now();
-    const msg=powerStars.length?"🤖 buscando estrella":(target&&target.rainbow?"🤖 cazando arcoíris":(danger>1.2?"🤖 esquivando":(target?"🤖 atacando":"🤖 buscando recursos")));
+    const msg=emergencyEscaping?"🤖 saliendo de peligro":(powerStars.length?"🤖 buscando estrella":(target&&target.rainbow?"🤖 cazando arcoíris":(danger>1.2?"🤖 esquivando":(target?"🤖 atacando":"🤖 buscando recursos"))));
     floatingTexts.push({x:player.x,y:player.y-72,text:msg,life:.75,maxLife:.75,big:false});
   }
 }
