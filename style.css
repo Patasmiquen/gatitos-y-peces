@@ -576,40 +576,57 @@ body.panel-theme-dark .onlineRankBox{background:rgba(255,255,255,.06);border-col
 
 
 
-.dedicationText{
-  display:block;
-  width:min(680px,92%);
-  margin:10px auto 16px;
-  color:#ff7aa8;
-  font-weight:900;
-  line-height:1.38;
-  text-align:center;
+
+
+.panel-theme-dark 
+
+
+@media (max-width:720px){
+  
 }
-.shortIntro{
-  width:min(620px,92%);
-  margin:0 auto 18px;
-  font-weight:800;
-  line-height:1.35;
-  text-align:center;
+
+#startBox .dedicationText{
+  display:block !important;
+  width:100% !important;
+  max-width:680px !important;
+  margin:10px auto 16px !important;
+  padding:0 18px !important;
+  color:#ff7aa8 !important;
+  font-weight:900 !important;
+  line-height:1.38 !important;
+  text-align:center !important;
+  box-sizing:border-box !important;
 }
-.panel-theme-dark .dedicationText{
-  color:#ffd6e7;
+#startBox .shortIntro{
+  display:block !important;
+  width:100% !important;
+  max-width:620px !important;
+  margin:0 auto 18px !important;
+  padding:0 18px !important;
+  font-weight:800 !important;
+  line-height:1.35 !important;
+  text-align:center !important;
+  box-sizing:border-box !important;
 }
-.compactControls{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:10px 12px;
-  text-align:left;
+.panel-theme-dark #startBox .dedicationText{
+  color:#ffd6e7 !important;
 }
-.compactControls div{
-  min-height:58px;
-  display:flex;
-  align-items:center;
-  background:rgba(255,255,255,.045);
-  border:1px solid rgba(255,255,255,.06);
-  border-radius:12px;
-  padding:10px 12px;
+#startBox .compactControls{
+  display:grid !important;
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:10px 12px !important;
+  text-align:left !important;
+}
+#startBox .compactControls div{
+  min-height:58px !important;
+  display:flex !important;
+  align-items:center !important;
+  background:rgba(255,255,255,.045) !important;
+  border:1px solid rgba(255,255,255,.06) !important;
+  border-radius:12px !important;
+  padding:10px 12px !important;
+  box-sizing:border-box !important;
 }
 @media (max-width:720px){
-  .compactControls{grid-template-columns:1fr;}
+  #startBox .compactControls{grid-template-columns:1fr !important;}
 }
