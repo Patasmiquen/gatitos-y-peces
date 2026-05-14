@@ -572,29 +572,44 @@ body.panel-theme-dark .onlineRankBox{background:rgba(255,255,255,.06);border-col
   color:#123;
 }
 
-.compactControls{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:8px 14px;
-  text-align:left;
-}
-.compactControls div{
-  background:rgba(255,255,255,.045);
-  border:1px solid rgba(255,255,255,.06);
-  border-radius:12px;
-  padding:8px 10px;
-}
-@media (max-width:720px){
-  .compactControls{grid-template-columns:1fr;}
-}
+
+
+
 
 .dedicationText{
-  margin:10px auto 14px;
-  max-width:620px;
+  display:block;
+  width:min(680px,92%);
+  margin:10px auto 16px;
   color:#ff7aa8;
+  font-weight:900;
+  line-height:1.38;
+  text-align:center;
+}
+.shortIntro{
+  width:min(620px,92%);
+  margin:0 auto 18px;
   font-weight:800;
   line-height:1.35;
+  text-align:center;
 }
 .panel-theme-dark .dedicationText{
   color:#ffd6e7;
+}
+.compactControls{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px 12px;
+  text-align:left;
+}
+.compactControls div{
+  min-height:58px;
+  display:flex;
+  align-items:center;
+  background:rgba(255,255,255,.045);
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:12px;
+  padding:10px 12px;
+}
+@media (max-width:720px){
+  .compactControls{grid-template-columns:1fr;}
 }
