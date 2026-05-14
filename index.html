@@ -24,20 +24,19 @@
 </div>
 <button id="startButton">Empezar 💖</button>
 <div id="startOptions"><label for="startWaveInput">Empezar en ronda:</label><input id="startWaveInput" max="50" min="1" type="number" value="1"/></div>
-<div id="themeOptions" class="themeOptions" aria-label="Tema visual de menús">
-  <span>Interfaz:</span>
-  <button type="button" class="themeChoice active" data-theme="light">Claro</button>
-  <button type="button" class="themeChoice" data-theme="dark">Oscuro</button>
+<div id="themeOptions" class="themeOptions iconThemeOptions" aria-label="Tema visual de menús">
+  <button type="button" class="themeChoice active" data-theme="light" aria-label="Tema claro">☀️</button>
+  <button type="button" class="themeChoice" data-theme="dark" aria-label="Tema oscuro">🌙</button>
 </div>
 <details id="howToPlay">
 <summary>📖 Cómo jugar</summary>
-<div class="controls compactControls">
-<div><span class="controlKey">🎮 WASD</span><span class="controlText">Moverse</span></div>
-<div><span class="controlKey">🐟 Click izquierdo</span><span class="controlText">Lanzar peces</span></div>
-<div><span class="controlKey">🎯 Click derecho</span><span class="controlText">Fijar objetivo</span></div>
-<div><span class="controlKey">⏸️ Espacio</span><span class="controlText">Pausar</span></div>
-<div><span class="controlKey">⭐ Mejoras</span><span class="controlText">Elegir habilidad</span></div>
-<div><span class="controlKey">🔮 Fusiones</span><span class="controlText">Unir mejoras al máximo</span></div>
+<div class="controls compactControls cleanControls">
+<div><span class="controlIcon">🎮</span><span><b>WASD</b> para moverte</span></div>
+<div><span class="controlIcon">🐟</span><span><b>Click izquierdo</b> para lanzar peces</span></div>
+<div><span class="controlIcon">🎯</span><span><b>Click derecho</b> para fijar objetivo</span></div>
+<div><span class="controlIcon">⏸️</span><span><b>Espacio</b> para pausar</span></div>
+<div><span class="controlIcon">⭐</span><span>Elige <b>mejoras</b> al subir nivel</span></div>
+<div><span class="controlIcon">🔮</span><span>Combina <b>fusiones</b> al máximo</span></div>
 </div>
 </details>
 <div class="onlineRankBox" id="startRankingBox">

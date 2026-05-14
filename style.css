@@ -717,3 +717,84 @@ body.panel-theme-dark .onlineRankBox{background:rgba(255,255,255,.06);border-col
     grid-template-columns:1fr !important;
   }
 }
+
+/* === v49 clean start UI === */
+#startBox{
+  position:relative !important;
+}
+#startBox .iconThemeOptions{
+  position:absolute !important;
+  top:18px !important;
+  right:18px !important;
+  margin:0 !important;
+  display:flex !important;
+  gap:6px !important;
+  align-items:center !important;
+  justify-content:center !important;
+  z-index:2 !important;
+}
+#startBox .iconThemeOptions .themeChoice{
+  width:38px !important;
+  height:38px !important;
+  min-width:38px !important;
+  padding:0 !important;
+  border-radius:999px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  font-size:17px !important;
+  line-height:1 !important;
+}
+#startBox .iconThemeOptions .themeChoice:not(.active){
+  opacity:.52 !important;
+  transform:scale(.92) !important;
+}
+#startBox .cleanControls{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:8px !important;
+  max-width:520px !important;
+  padding:14px !important;
+  margin:14px auto 6px !important;
+}
+#startBox .cleanControls div{
+  min-height:auto !important;
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  gap:10px !important;
+  padding:10px 14px !important;
+  text-align:left !important;
+  line-height:1.2 !important;
+}
+#startBox .cleanControls .controlIcon{
+  width:28px !important;
+  min-width:28px !important;
+  text-align:center !important;
+  font-size:18px !important;
+}
+#startBox .cleanControls b{
+  font-weight:900 !important;
+}
+#startBox .controlKey,
+#startBox .controlText{
+  display:unset !important;
+}
+#startOptions{
+  margin-top:12px !important;
+}
+#startRankingBox{
+  margin-top:12px !important;
+}
+@media (max-width:720px){
+  #startBox .iconThemeOptions{
+    top:12px !important;
+    right:12px !important;
+  }
+  #startBox .iconThemeOptions .themeChoice{
+    width:34px !important;
+    height:34px !important;
+    min-width:34px !important;
+  }
+}
