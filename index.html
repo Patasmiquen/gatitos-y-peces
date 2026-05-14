@@ -15,31 +15,31 @@
 <div id="startPanel">
 <div id="startBox">
 <h1>🐾 Gatitos &amp; Peces 🐟</h1>
-<p class="dedicationText">He hecho este juego especialmente para mi novia,<br/>con mucho amor y pensando en sus gustos. 💖</p>
+<p class="dedicationText">He hecho este juego especialmente para mi novia, con mucho amor y pensando en ella. 💖</p>
 <p class="shortIntro">Tírales peces a los gatitos, aliméntalos y sobrevive todo lo que puedas.</p>
-<details id="howToPlay">
-<summary>📖 Cómo jugar</summary>
-<div class="controls compactControls">
-<div>🎮 <b>WASD</b>: moverse</div>
-<div>🐟 <b>Click izquierdo</b>: lanzar peces</div>
-<div>🎯 <b>Click derecho</b>: fijar objetivo</div>
-<div>⏸️ <b>Espacio</b>: pausar</div>
-<div>⭐ <b>Mejoras</b>: elige habilidades</div>
-<div>🔮 <b>Fusiones</b>: combina mejoras al máximo</div>
-</div>
-</details>
 <div id="playerSetup">
 <label for="playerNameInput">Tu nombre para el ranking:</label>
 <input id="playerNameInput" maxlength="16" type="text" placeholder="Escribe tu nombre" autocomplete="nickname"/>
 <div id="nameWarning"></div>
 </div>
+<button id="startButton">Empezar 💖</button>
 <div id="startOptions"><label for="startWaveInput">Empezar en ronda:</label><input id="startWaveInput" max="50" min="1" type="number" value="1"/></div>
 <div id="themeOptions" class="themeOptions" aria-label="Tema visual de menús">
   <span>Interfaz:</span>
   <button type="button" class="themeChoice active" data-theme="light">Claro</button>
   <button type="button" class="themeChoice" data-theme="dark">Oscuro</button>
 </div>
-<button id="startButton">Empezar 💖</button>
+<details id="howToPlay">
+<summary>📖 Cómo jugar</summary>
+<div class="controls compactControls">
+<div><span class="controlKey">🎮 WASD</span><span class="controlText">Moverse</span></div>
+<div><span class="controlKey">🐟 Click izquierdo</span><span class="controlText">Lanzar peces</span></div>
+<div><span class="controlKey">🎯 Click derecho</span><span class="controlText">Fijar objetivo</span></div>
+<div><span class="controlKey">⏸️ Espacio</span><span class="controlText">Pausar</span></div>
+<div><span class="controlKey">⭐ Mejoras</span><span class="controlText">Elegir habilidad</span></div>
+<div><span class="controlKey">🔮 Fusiones</span><span class="controlText">Unir mejoras al máximo</span></div>
+</div>
+</details>
 <div class="onlineRankBox" id="startRankingBox">
   <div class="onlineRankTitle"><span>🏆 Ranking online</span><button class="onlineRankRefresh" id="refreshRankingBtn" type="button">Actualizar</button></div>
   <div class="onlineRankList" id="startRankingList"><div class="onlineRankStatus">Cargando ranking...</div></div>

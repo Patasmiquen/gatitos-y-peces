@@ -632,9 +632,88 @@ body.panel-theme-dark .onlineRankBox{background:rgba(255,255,255,.06);border-col
 }
 
 
-/* v47 start-screen polish */
-#startBox .dedicationText{max-width:640px !important;margin:10px auto 14px !important;padding:0 8px !important;text-wrap:balance;line-height:1.42 !important;}
-#startBox .shortIntro{max-width:650px !important;margin:0 auto 16px !important;padding:0 8px !important;text-wrap:balance;line-height:1.32 !important;}
-#startButton{display:block;margin:16px auto 14px !important;}
-#startRankingBox{margin-top:10px !important;}
-@media (max-width:720px){#startButton{margin:14px auto 12px !important;}}
+/* === v48 start screen cleanup === */
+#startBox{
+  max-height:92vh;
+  overflow:auto;
+}
+#startBox h1{
+  margin-bottom:14px;
+}
+#startBox .dedicationText,
+#startBox .shortIntro{
+  width:100%;
+  max-width:640px;
+  margin-left:auto !important;
+  margin-right:auto !important;
+  text-align:center !important;
+}
+#startBox .dedicationText{
+  font-weight:800 !important;
+  color:#ff86b0 !important;
+  line-height:1.4 !important;
+}
+#startBox .shortIntro{
+  font-weight:800;
+  margin-top:10px !important;
+  margin-bottom:16px !important;
+}
+#playerSetup{
+  margin-top:8px;
+}
+#startButton{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin:12px auto 6px;
+}
+#startOptions{
+  margin-top:14px;
+}
+#themeOptions{
+  margin-top:12px;
+}
+#howToPlay{
+  margin:16px auto 12px;
+  max-width:660px;
+}
+#startBox .compactControls{
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:12px !important;
+  max-width:660px;
+  padding:14px !important;
+}
+#startBox .compactControls div{
+  min-height:72px !important;
+  display:flex !important;
+  flex-direction:column !important;
+  justify-content:center !important;
+  align-items:flex-start !important;
+  gap:6px !important;
+  padding:12px 14px !important;
+}
+#startBox .compactControls .controlKey{
+  display:block;
+  font-weight:900;
+  font-size:16px;
+  color:#ffe6f0;
+  line-height:1.15;
+}
+#startBox .compactControls .controlText{
+  display:block;
+  font-size:15px;
+  color:#ffd6e7;
+  opacity:.95;
+  line-height:1.2;
+}
+#startRankingBox{
+  margin-top:14px;
+}
+@media (max-width:720px){
+  #startBox{
+    padding:26px 20px;
+  }
+  #startBox .compactControls{
+    grid-template-columns:1fr !important;
+  }
+}
