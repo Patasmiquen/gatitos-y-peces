@@ -630,3 +630,11 @@ body.panel-theme-dark .onlineRankBox{background:rgba(255,255,255,.06);border-col
 @media (max-width:720px){
   #startBox .compactControls{grid-template-columns:1fr !important;}
 }
+
+
+/* v47 start-screen polish */
+#startBox .dedicationText{max-width:640px !important;margin:10px auto 14px !important;padding:0 8px !important;text-wrap:balance;line-height:1.42 !important;}
+#startBox .shortIntro{max-width:650px !important;margin:0 auto 16px !important;padding:0 8px !important;text-wrap:balance;line-height:1.32 !important;}
+#startButton{display:block;margin:16px auto 14px !important;}
+#startRankingBox{margin-top:10px !important;}
+@media (max-width:720px){#startButton{margin:14px auto 12px !important;}}
