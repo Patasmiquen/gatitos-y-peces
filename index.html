@@ -15,19 +15,18 @@
 <div id="startPanel">
 <div id="startBox">
 <h1>🐾 Gatitos &amp; Peces 🐟</h1>
-<p>Los gatitos vienen corriendo a por ti porque quieren mimos intensos. Tu misión es lanzarles pececitos mágicos para calmarlos y ganar experiencia.</p>
-<p>Sobrevive a rondas, derrota jefes, esquiva avalanchas de gatitos y protege a tu perro del demonio oscuro.</p>
+<p>Sobrevive a oleadas de gatitos, lánzales pececitos mágicos y mejora tu partida con nuevas habilidades.</p>
+<p>Derrota jefes, consigue fusiones y protege a tu perro del demonio oscuro.</p>
 <details id="howToPlay">
 <summary>📖 Cómo jugar</summary>
-<div class="controls">
+<div class="controls compactControls">
 <div>🎮 <b>WASD</b>: moverse</div>
 <div>🐟 <b>Click izquierdo</b>: lanzar peces</div>
-<div>⭐ <b>Subir nivel / terminar ronda</b>: elige una mejora</div>
-<div>🪙 <b>Cada jefe</b>: se abre la tienda para gastar monedas</div>
-<div>🔮 <b>5 monedas + 2 mejoras compatibles</b>: fusionar mejoras compatibles</div>
-<div>👑 <b>Cada 5 rondas</b>: jefe aleatorio</div>
-<div>⏸️ <b>Espacio</b>: pausa y menú de mejoras</div>
-<div>⭐ <b>Estrella rara</b>: invulnerabilidad y velocidad durante 10s</div>
+<div>🎯 <b>Click derecho</b>: fijar o quitar objetivo</div>
+<div>⏸️ <b>Espacio</b>: pausar y ver mejoras</div>
+<div>⭐ <b>Mejoras</b>: elige una al subir nivel o pasar ronda</div>
+<div>🪙 <b>Tienda</b>: compra mejoras y fusiones tras los jefes</div>
+<div>🔮 <b>Fusiones</b>: combina 2 mejoras compatibles al máximo</div>
 </div>
 </details>
 <div id="playerSetup">
@@ -84,6 +83,7 @@
       <div class="adminRow"><label>Nivel:</label><input id="adminLevelAmount" min="1" max="50" type="number" value="1"/><button class="adminButton secondary" id="adminLevel">Subir</button></div>
       <div class="adminRow"><label>Ronda:</label><input id="adminWaveValue" min="1" max="999" type="number" value="1"/><button class="adminButton dark" id="adminSetWave">Poner ronda</button></div>
       <div class="adminRow"><button class="adminButton" id="adminHeal">Curar vida</button><button class="adminButton danger" id="adminHurt">Quitar 25 vida</button></div>
+      <div class="adminRow"><button class="adminButton gold" id="autoModeButton" type="button">🤖 Modo automático: OFF</button></div>
     </div>
     <div class="adminBox">
       <div class="adminBoxTitle">Eventos y enemigos</div>
@@ -152,9 +152,9 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
 <script>
-  const gameScript = document.createElement("script");
-  gameScript.src = "game.js?v=" + Date.now();
-  document.body.appendChild(gameScript);
+const gameScript = document.createElement("script");
+gameScript.src = "game.js?v=" + Date.now();
+document.body.appendChild(gameScript);
 </script>
 </body>
 </html>
