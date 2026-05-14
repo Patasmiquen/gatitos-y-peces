@@ -71,7 +71,7 @@ if(startWaveInput){
 }
 
 /* === Ranking online con Firebase === */
-const GAME_VERSION="v41-special-cat-scaling";
+const GAME_VERSION="v42-single-musician";
 const PLAYER_NAME_KEY="gatitos_player_name";
 const firebaseConfig={
   apiKey:"AIzaSyD2DJyvaXseXX2ZNZrUCmjXqa1fYytanRA",
@@ -2522,6 +2522,15 @@ while(xp>=xpNeed){xp-=xpNeed;level++;xpNeed=Math.ceil(xpNeed*1.35+2);gainedLevel
 if(gainedLevels>0)queueUpgradeMenus("level",gainedLevels);
 }
 
+
+function hasActiveMusicianCat(){
+return cats.some(c=>c&&c.type==="musician"&&!c.dead&&isFinitePos(c));
+}
+function normalizeSpecialCatSpawnType(catType){
+if(catType==="musician"&&hasActiveMusicianCat())return "normal";
+return catType;
+}
+
 function spawnCat(x=null,y=null,small=false){
 if(x===null){
 const side=Math.floor(Math.random()*4);
@@ -2548,6 +2557,7 @@ if(!small&&!rainbow){
   else if(roll<(acc+=studChance))catType="student";
   else if(roll<(acc+=miniChance))catType="mini";
 }
+catType=normalizeSpecialCatSpawnType(catType);
 let color=rainbow?"rainbow":small?"#ffd6a5":["#f7b7c9","#f4c28b","#d7c1ff","#bde0fe","#caffbf"][Math.floor(Math.random()*5)];
 let r=rainbow?28:(small?17:24);
 let speed=(rainbow?70:(small?85:48+wave*7+Math.random()*18))*Math.max(.45,1-upgrades.catSlow);
