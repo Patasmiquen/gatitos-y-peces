@@ -71,7 +71,7 @@ if(startWaveInput){
 }
 
 /* === Ranking online con Firebase === */
-const GAME_VERSION="v43-dedication-start";
+const GAME_VERSION="v44-thief-balance";
 const PLAYER_NAME_KEY="gatitos_player_name";
 const firebaseConfig={
   apiKey:"AIzaSyD2DJyvaXseXX2ZNZrUCmjXqa1fYytanRA",
@@ -263,6 +263,7 @@ let dogRelaxTime=0;
 let enemyIntroSeen={};
 let finalChoiceLocked=false;
 let demonSpawnPressure=0;
+let thiefCoinsStolenThisWave=0;
 perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
 
 const upgrades={fireRate:1,fishSpeed:1,damage:1,moveSpeed:1,maxLife:100,bigFishChance:0,doubleFishChance:0,pierceChance:0,fishSize:1,catSlow:0,healOnWave:8,lifeSteal:0,xpBoost:1,boomerangChance:0,shield:false,shieldLevel:0,autoFire:false,autoFireLevel:0,critChance:0,zoomies:false,zoomiesHyper:false,zoomiesCannon:false,zoomiesCrit:false,aimAssist:false,moralSupport:false,darkPact:false,catInstinct:false,boyfriendDog:false,boyfriendDogSpirit:false,boyfriendDogReturned:false,bigCursor:false,coinMagnetRange:0,combatAI:false,assistedShot:false,perfectAim:false,moraleFire:false,braveHeart:false,reflexBurst:false,valorCasa:false,cursedInstinct:false,fusionBonusPower:0,sevenLives:false,holdShoot:false};
@@ -568,7 +569,7 @@ runStartWave=initialWave;
 autoModeUsedThisRun=!!autoMode;
 rankingEligibleThisRun=initialWave===1&&!autoModeUsedThisRun;
 rankingDisabledReason=rankingEligibleThisRun?"":(autoModeUsedThisRun?"Ranking desactivado: la partida empezó con IA activada.":`Ranking desactivado: la partida empezó en ronda ${initialWave}.`);
-score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=0;lastAutoShot=0;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=initialWave;spawnCooldown=0;life=upgrades.maxLife;level=initialWave;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();giantFishEasterEggsUsed=0;bossVictoryAlreadyShown=false;bossVictoryScoreSaved=false;dogRelaxTime=0;fusionMoveXpTimer=0;lastFusionShieldGuard=0;enemyIntroSeen={};finalChoiceLocked=false;demonSpawnPressure=0;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
+score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=0;lastAutoShot=0;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=initialWave;thiefCoinsStolenThisWave=0;spawnCooldown=0;life=upgrades.maxLife;level=initialWave;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();giantFishEasterEggsUsed=0;bossVictoryAlreadyShown=false;bossVictoryScoreSaved=false;dogRelaxTime=0;fusionMoveXpTimer=0;lastFusionShieldGuard=0;enemyIntroSeen={};finalChoiceLocked=false;demonSpawnPressure=0;thiefCoinsStolenThisWave=0;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
 demonOrbs.length=0;yarnBalls.length=0;powerStars.length=0;shockwaves.length=0;sparkles.length=0;tunaDrops.length=0;
 player.x=canvas.width/2;player.y=canvas.height/2;player.angle=0;player.shootAnim=0;player.hurtAnim=0;dogCompanion.x=player.x-50;dogCompanion.y=player.y+45;dogCompanion.shootCooldown=0;
 fishes.length=0;cats.length=0;hearts.length=0;smokes.length=0;floatingTexts.length=0;pawPrints.length=0;quacks.length=0;coinsDrops.length=0;dogBones.length=0;demonOrbs.length=0;yarnBalls.length=0;shockwaves.length=0;sparkles.length=0;
@@ -1605,7 +1606,8 @@ function openUpgradeMenu(reason="level",opts={}){
 const darkWave=reason==="wave"&&upgrades.darkPact;
 const choices=darkWave?getRandomScalableUpgradeChoices(1):getRandomUpgradeChoices(3);
 if(choices.length===0||allDirectUpgradesMaxed()){
-if(reason==="wave"&&waveUpgradePending){waveUpgradePending=false;wave++;life=Math.min(upgrades.maxLife,life+upgrades.healOnWave);startWave()}
+if(reason==="wave"&&waveUpgradePending){waveUpgradePending=false;wave++;
+thiefCoinsStolenThisWave=0;life=Math.min(upgrades.maxLife,life+upgrades.healOnWave);startWave()}
 giveLevelCoins("por tener mejoras al máximo");
 if(pendingUpgradeQueue.length)processPendingUpgradeQueue();
 return
@@ -2523,6 +2525,35 @@ if(gainedLevels>0)queueUpgradeMenus("level",gainedLevels);
 }
 
 
+
+function getThiefStealTier(){
+  return Math.max(1,Math.min(5,Math.ceil(Math.max(1,wave)/10)));
+}
+function getThiefStealPerTouch(){
+  return getThiefStealTier();
+}
+function getThiefWaveStealLimit(){
+  return getThiefStealTier()*5;
+}
+function getThiefRemainingWaveSteal(){
+  return Math.max(0,getThiefWaveStealLimit()-thiefCoinsStolenThisWave);
+}
+function dropRecoveredStolenCoins(cat){
+  const stolen=Math.max(0,Math.floor(Number(cat?.stolenCoins)||0));
+  if(!stolen)return;
+  const roll=Math.random();
+  let recovered=0;
+  if(roll<.10)recovered=stolen;
+  else if(roll<.30)recovered=Math.max(1,Math.floor(stolen/2));
+  if(recovered>0){
+    for(let i=0;i<recovered;i++){
+      const a=Math.random()*Math.PI*2;
+      coinsDrops.push({x:cat.x+Math.cos(a)*(12+Math.random()*18),y:cat.y+Math.sin(a)*(12+Math.random()*18),r:10,amount:1,life:18});
+    }
+    floatingTexts.push({x:cat.x,y:cat.y-44,text:`+${recovered} recuperadas 🪙`,life:1.0,maxLife:1.0,big:false});
+  }
+}
+
 function hasActiveMusicianCat(){
 return cats.some(c=>c&&c.type==="musician"&&!c.dead&&isFinitePos(c));
 }
@@ -2582,12 +2613,12 @@ if(catType==="musician"){color="#d084c8";r=26;hp+=2;speed*=.78;}
 if(catType==="student"){color="#74b9ff";r=24;const startStudy=Math.min(4,Math.max(0,Math.floor((wave-12)/8)));hp+=2+startStudy*2;speed*=Math.max(.38,.54-startStudy*.025);}
 const initialStudyLevel=catType==="student"?Math.min(4,Math.max(0,Math.floor((wave-12)/8))):0;
 const musicianImmune=catType==="musician"?1:0;
-cats.push({x,y,r,speed,hp,maxHp:hp,damageCooldown:0,hitAnim:0,wobble:Math.random()*Math.PI*2,color,rainbow,small,type:catType,yarnCooldown:1.2+Math.random()*1.1,stealCooldown:0,fleeTimer:0,spawnAnim:.32,maxSpawnAnim:.32,sleepState:catType==="sleepy"?"sleeping":null,wakeTimer:0,rushTimer:0,sleepAwakeDuration:0,baseSpeed:speed,zigzagPhase:Math.random()*Math.PI*2,studyTimer:0,studyLevel:initialStudyLevel,musicImmuneTimer:musicianImmune,freezeTimer:0})
+cats.push({x,y,r,speed,hp,maxHp:hp,damageCooldown:0,hitAnim:0,wobble:Math.random()*Math.PI*2,color,rainbow,small,type:catType,yarnCooldown:1.2+Math.random()*1.1,stealCooldown:0,fleeTimer:0,spawnAnim:.32,maxSpawnAnim:.32,sleepState:catType==="sleepy"?"sleeping":null,wakeTimer:0,rushTimer:0,sleepAwakeDuration:0,baseSpeed:speed,zigzagPhase:Math.random()*Math.PI*2,studyTimer:0,studyLevel:initialStudyLevel,musicImmuneTimer:musicianImmune,stolenCoins:0,freezeTimer:0})
 showEnemyIntro(catType);
 if(catType==="mini"){
   for(let pk=0;pk<3;pk++){
     const px=x+Math.cos(Math.random()*Math.PI*2)*65;const py=y+Math.sin(Math.random()*Math.PI*2)*65;
-    cats.push({x:px,y:py,r:12,speed,hp:1,maxHp:1,damageCooldown:0,hitAnim:0,wobble:Math.random()*Math.PI*2,color:"#ffb347",rainbow:false,small:false,type:"mini",yarnCooldown:999,stealCooldown:0,fleeTimer:0,spawnAnim:.32,maxSpawnAnim:.32,sleepState:null,wakeTimer:0,rushTimer:0,sleepAwakeDuration:0,baseSpeed:speed,zigzagPhase:Math.random()*Math.PI*2,studyTimer:0,studyLevel:0,musicImmuneTimer:0,freezeTimer:0});
+    cats.push({x:px,y:py,r:12,speed,hp:1,maxHp:1,damageCooldown:0,hitAnim:0,wobble:Math.random()*Math.PI*2,color:"#ffb347",rainbow:false,small:false,type:"mini",yarnCooldown:999,stealCooldown:0,fleeTimer:0,spawnAnim:.32,maxSpawnAnim:.32,sleepState:null,wakeTimer:0,rushTimer:0,sleepAwakeDuration:0,baseSpeed:speed,zigzagPhase:Math.random()*Math.PI*2,studyTimer:0,studyLevel:0,musicImmuneTimer:0,stolenCoins:0,freezeTimer:0});
     makeSpawnPuff(px,py,"#ffb347");
   }
 }
@@ -2992,6 +3023,7 @@ const realIndex=cats.indexOf(cat);
 if(realIndex!==-1)index=realIndex;
 if(index<0||index>=cats.length||cats[index]!==cat)return;
 cat.dead=true;
+dropRecoveredStolenCoins(cat);
 if(cat.type==="yarn")explodeYarnCat(cat);
 if(cat.type==="glutton"){const tunaCount=2+Math.floor(Math.random()*2);for(let t=0;t<tunaCount;t++){tunaDrops.push({x:cat.x+(Math.random()*44-22),y:cat.y+(Math.random()*44-22),r:16,life:16,wobble:0});floatingTexts.push({x:cat.x,y:cat.y-38-t*18,text:"🐟 ¡Lata!",life:1.0,maxLife:1.0,big:false});}}
 if(cat.type==="mini")gainXP(2+Math.floor(wave/3));
@@ -3711,8 +3743,21 @@ if(cat.type==="yarn"){
   cat.x+=(dx/dist)*cat.speed*dir*thiefBoost*dt+Math.cos(cat.wobble)*16*dt;
   cat.y+=(dy/dist)*cat.speed*dir*thiefBoost*dt+Math.sin(cat.wobble)*16*dt;
   if(dist<player.r+cat.r+8&&cat.stealCooldown<=0&&coins>0&&isCatOnScreen(cat)){
-    const stolen=Math.max(1,Math.ceil(coins/4));coins=Math.max(0,coins-stolen);cat.stealCooldown=1.8;cat.fleeTimer=2.8;player.hurtAnim=.12;
-    floatingTexts.push({x:player.x,y:player.y-45,text:`-${stolen} moneda${stolen>1?"s":""} 😾`,life:1,maxLife:1,big:false});updateHud();
+    const remaining=getThiefRemainingWaveSteal();
+    const stolen=Math.min(coins,getThiefStealPerTouch(),remaining);
+    if(stolen>0){
+      coins=Math.max(0,coins-stolen);
+      thiefCoinsStolenThisWave+=stolen;
+      cat.stolenCoins=(cat.stolenCoins||0)+stolen;
+      cat.stealCooldown=1.8;
+      cat.fleeTimer=2.8;
+      player.hurtAnim=.12;
+      floatingTexts.push({x:player.x,y:player.y-45,text:`-${stolen} moneda${stolen>1?"s":""} 😾`,life:1,maxLife:1,big:false});
+      updateHud();
+    }else{
+      cat.stealCooldown=1.1;
+      cat.fleeTimer=1.4;
+    }
   }
 }else if(cat.type==="sleepy"){
   cat.wakeTimer=Math.max(0,(cat.wakeTimer||0)-dt);cat.rushTimer=Math.max(0,(cat.rushTimer||0)-dt);
