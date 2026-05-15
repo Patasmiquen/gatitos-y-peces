@@ -5193,6 +5193,86 @@ function autoFusionFutureValue(key){
   });
   return Math.max(0,best);
 }
+function autoStepsToFusionReadyAfterTaking(key){
+  if(!key)return 99;
+  if(isUniqueKey(key))return 0;
+  if(Object.prototype.hasOwnProperty.call(upgradeLevels,key)){
+    const current=upgradeLevels[key]||0;
+    const max=upgradeMaxLevels[key]||5;
+    return Math.max(0,max-(current+1));
+  }
+  return autoStepsToFusionReady(key);
+}
+function autoFusionRouteValue(key){
+  if(!key||fusedUpgradeNames[key])return 0;
+  const possible=new Set();
+  (fusionPairs[key]||[]).forEach(k=>possible.add(k));
+  Object.keys(fusionPairs).forEach(k=>{if((fusionPairs[k]||[]).includes(key))possible.add(k)});
+  let best=0,total=0,count=0;
+  possible.forEach(other=>{
+    if(other===key||hasFusionBeenDone(key,other)||fusedUpgradeNames[other])return;
+    const pair=sortedPair(key,other);
+    const raw=autoPairValue(pair);
+    if(raw<=0)return;
+    const selfSteps=autoStepsToFusionReadyAfterTaking(key);
+    const otherSteps=autoStepsToFusionReady(other);
+    const readiness=1/(1+selfSteps*.52+otherSteps*.62);
+    const ownedBonus=autoKeyOwned(other)?170:0;
+    const readyBonus=autoKeyMaxed(other)?420:0;
+    const closeBonus=(selfSteps<=1?190:0)+(otherSteps<=1?170:0);
+    const value=Math.max(0,raw*readiness+ownedBonus+readyBonus+closeBonus-selfSteps*24-otherSteps*32);
+    best=Math.max(best,value);
+    total+=value;count++;
+  });
+  return Math.max(0,best+Math.min(260,total*.18));
+}
+function autoStrategicKeyScore(key){
+  if(!key)return 0;
+  let score=autoDirectNeedScore(key);
+  score+=autoFusionFutureValue(key);
+  score+=autoFusionRouteValue(key);
+  const pair=getFusedPairForKey(key);
+  if(pair){
+    const progress=getFusionProgress(pair);
+    score+=760+autoPairValue(pair)*.45+(5-progress)*45;
+  }else if(Object.prototype.hasOwnProperty.call(upgradeLevels,key)){
+    const lvl=upgradeLevels[key]||0;
+    const max=upgradeMaxLevels[key]||5;
+    if(max-lvl<=1&&autoFusionFutureValue(key)>0)score+=240;
+    if(lvl===0)score+=70;
+  }
+  return score;
+}
+function autoRandomShopUpgradeScore(choice,context){
+  const hidden=choice&&choice.hiddenUpgrade;
+  const key=hidden&&hidden.key;
+  let score=520;
+  if(key){
+    score=autoStrategicKeyScore(key);
+    const current=getShopCurrentLevelForKey(key);
+    const minLevel=Math.min(...getShopEligibleUpgradeKeys().map(k=>getShopCurrentLevelForKey(k)));
+    if(Number.isFinite(minLevel)&&current<=minLevel)score+=130;
+    if(autoFusionRouteValue(key)>420)score+=210;
+  }
+  // Es más barata que una mejora normal, así que se premia la eficiencia,
+  // pero no por encima de una fusión claramente buena.
+  score+=260;
+  const tag=String(choice.levelTag||"");
+  const price=parseInt(tag,10);
+  if(Number.isFinite(price))score-=price*12;
+  return score+autoLearningBonus(choice,context)+Math.random()*10;
+}
+function autoBestAvailableFusionPairScore(){
+  const ready=getMaxedFusionKeys();
+  let best=0;
+  ready.forEach((a,i)=>ready.slice(i+1).forEach(b=>{
+    if(areFusionCompatible(a,b)&&!hasFusionBeenDone(a,b)){
+      const pair=sortedPair(a,b);
+      best=Math.max(best,autoPairValue(pair));
+    }
+  }));
+  return best;
+}
 function autoChoiceSignature(choice,context){
   if(!choice)return "none";
   if(choice.first&&choice.key)return "fusion:"+sortedPair(choice.first,choice.key);
@@ -5253,18 +5333,19 @@ function autoDirectNeedScore(key){
 }
 function autoChoiceScore(choice,context){
   if(!choice||choice.locked)return -999999;
-  if(choice.recommended)return 20000;
   if(choice.skipShop)return context==="shop"?-120:-999;
-  let score=0;
+  const recommendedBonus=choice.recommended?520+Math.max(0,(choice.recommendScore||0)*900):0;
+  let score=recommendedBonus;
+
+  if(choice.randomShopUpgrade){
+    return autoRandomShopUpgradeScore(choice,context)+recommendedBonus;
+  }
 
   if(choice.openFusionShop){
     if(!canFuse(getShopFusionPrice()))return -9999;
-    const ready=getMaxedFusionKeys();
-    let bestPair=0;
-    ready.forEach((a,i)=>ready.slice(i+1).forEach(b=>{
-      if(areFusionCompatible(a,b)&&!hasFusionBeenDone(a,b))bestPair=Math.max(bestPair,autoPairValue(sortedPair(a,b)));
-    }));
-    return 400+bestPair*.82+autoLearningBonus(choice,context);
+    const bestPair=autoBestAvailableFusionPairScore();
+    const noAffordableUpgrade=context==="shop"&&coins<getShopUpgradePrice()&&coins>=getShopFusionPrice();
+    return 520+bestPair*.9+(noAffordableUpgrade?360:0)+recommendedBonus+autoLearningBonus(choice,context);
   }
 
   const key=choice.key||"";
@@ -5281,8 +5362,7 @@ function autoChoiceScore(choice,context){
     else score+=260;
   }
 
-  score+=autoDirectNeedScore(key);
-  score+=autoFusionFutureValue(key);
+  score+=autoStrategicKeyScore(key);
   if(runStats){
     const hpRatioNow=life/Math.max(1,upgrades.maxLife||100);
     const pressureNow=(cats.length+(boss?8:0)+quacks.length+yarnBalls.length+demonOrbs.length);
@@ -5321,7 +5401,11 @@ function autoPickChoice(choices,context){
     const fusionScore=fusion?autoChoiceScore(fusion,context):-9999;
     const upgradeScore=bestUpgrade?autoChoiceScore(bestUpgrade,context):-9999;
 
-    if(fusion&&fusionScore>upgradeScore+80&&coins>=getShopFusionPrice())return fusion;
+    if(fusion&&coins>=getShopFusionPrice()){
+      const anyAffordableBuy=nonExit.some(c=>!c.openFusionShop&&!c.locked);
+      if(!anyAffordableBuy)return fusion;
+      if(fusionScore>upgradeScore+60)return fusion;
+    }
     return bestUpgrade||fusion||usable.find(c=>c.skipShop)||usable[0];
   }
 
