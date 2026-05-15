@@ -401,12 +401,24 @@ function applyRecommendationsToChoices(choices,context="generic"){
   // Las recomendaciones se desbloquean desde la primera tienda incluida.
   // Antes de ese momento todavía no hay suficiente partida para que tengan sentido.
   if(!firstShopReached)return choices;
+  const recommendRandomFallback=()=>{
+    if(context!=="shop")return false;
+    const random=list.find(c=>c&&c.randomShopUpgrade&&!c.locked&&!c.skipShop);
+    if(!random)return false;
+    random.recommended=true;
+    random.recommendScore=.11;
+    random.recommendReason="No hay una mejora óptima clara; la aleatoria puede avanzar una mejora atrasada por menos monedas.";
+    if(!String(random.desc||"").includes("Recomendado si no hay una mejora óptima clara")){
+      random.desc=`${random.desc}<br><span class="shopHint">Recomendado si no hay una mejora óptima clara.</span>`;
+    }
+    return true;
+  };
   const valid=list.filter(c=>!c.locked&&!c.skipShop&&!(context==="admin")&&(c.key||c.fusion||!c.special));
-  if(valid.length<2)return choices;
+  if(valid.length<2){recommendRandomFallback();return choices;}
   const needs=getRecommendationNeeds();
   let best=null,bestScore=-999;
   valid.forEach(c=>{const sc=scoreRecommendationChoice(c,needs);if(sc>bestScore){bestScore=sc;best=c;}});
-  if(!best||bestScore<.12)return choices;
+  if(!best||bestScore<.12){recommendRandomFallback();return choices;}
   best.recommended=true;
   best.recommendScore=bestScore;
   return choices;
@@ -1630,14 +1642,36 @@ if(pendingUpgradeQueue.length)processPendingUpgradeQueue();else maybeOpenShopOrF
 })
 }
 
-function getShopUpgradeChoices(amount=3){
-const keys=Object.keys(upgradeLevels).filter(k=>{
+function getShopEligibleUpgradeKeys(){
+return Object.keys(upgradeLevels).filter(k=>{
 if(isHiddenFusedComponent(k))return false;
 const pair=getFusedPairForKey(k);
 if(pair){if(getFusionProgress(pair)>=5)return false;return true;}
 if(isUpgradeFinal(k))return false;
 return upgradeLevels[k]<upgradeMaxLevels[k];
 });
+}
+function getShopChoiceGroupKey(key){
+  const fusionName=fusedUpgradeNames[key];
+  return fusionName?`fusion:${fusionName}`:`single:${key}`;
+}
+function getShopCurrentLevelForKey(key){
+  const pair=getFusedPairForKey(key);
+  if(pair)return getFusionProgress(pair);
+  return upgradeLevels[key]||0;
+}
+function getRandomShopUpgradeChoice(currentChoices=[]){
+  const blockedGroups=new Set((currentChoices||[]).map(u=>u&&u.key?getShopChoiceGroupKey(u.key):u?.title).filter(Boolean));
+  const keys=getShopEligibleUpgradeKeys().filter(k=>!blockedGroups.has(getShopChoiceGroupKey(k)));
+  if(keys.length===0)return null;
+  const minLevel=Math.min(...keys.map(k=>getShopCurrentLevelForKey(k)));
+  const lowest=keys.filter(k=>getShopCurrentLevelForKey(k)===minLevel);
+  const key=lowest[Math.floor(Math.random()*lowest.length)];
+  return makeLevelUpgrade(key,true);
+}
+
+function getShopUpgradeChoices(amount=3){
+const keys=getShopEligibleUpgradeKeys();
 if(keys.length===0)return[];
 
 const currentFusionKeys=getMaxedFusionKeys();
@@ -1744,11 +1778,36 @@ levelTag:u.levelTag||"",
  desc:u.desc
 }));
 const fusionChoice={icon:"🔮",title:"Fusión de mejoras",levelTag:"",desc:canFuse(fusionPrice)?`Disponible: fusiona 2 mejoras compatibles.`:getFusionLockReason(fusionPrice),special:true,fusion:true,openFusionShop:true,locked:!canFuse(fusionPrice)};
+const randomUpgrade=getRandomShopUpgradeChoice(upgradeChoices);
+const randomPrice=Math.max(1,Math.ceil(upgradePrice/2));
+const randomChoice=randomUpgrade?{
+  icon:"🎲",
+  title:"Mejora aleatoria",
+  levelTag:`${randomPrice}🪙`,
+  desc:"Compra una mejora sorpresa que no está entre las opciones actuales. No puede tocar una mejora única ni una mejora al máximo.",
+  special:true,
+  randomShopUpgrade:true,
+  hiddenUpgrade:randomUpgrade,
+  locked:coins<randomPrice
+}:null;
 const choices=canFuse(fusionPrice)?[fusionChoice,...upgradeChoices]:[...upgradeChoices,fusionChoice];
+if(randomChoice)choices.push(randomChoice);
 choices.push({icon:"🚪",title:"Salir de la tienda",levelTag:"",desc:"Cierra la tienda y conserva las monedas que te queden.",special:true,skipShop:true});
-showCards("🪙 Tienda de gatitos","Compra todo lo que quieras hasta que decidas salir 💖",`Mejora: ${upgradePrice}🪙 (+1 por compra) · Fusión: ${fusionPrice}🪙 (+3 por fusión)`,choices,upgrade=>{
+showCards("🪙 Tienda de gatitos","Compra todo lo que quieras hasta que decidas salir 💖",`Mejora: ${upgradePrice}🪙 (+1 por compra) · Aleatoria: ${randomPrice}🪙 · Fusión: ${fusionPrice}🪙 (+3 por fusión)`,choices,upgrade=>{
 if(upgrade.skipShop){closeShopSession();return}
 if(upgrade.openFusionShop){openFusionChoice(fusionPrice);return}
+if(upgrade.randomShopUpgrade){
+  if(coins<randomPrice){openCoinShop();return}
+  const hidden=upgrade.hiddenUpgrade;
+  if(!hidden||typeof hidden.apply!=="function"){openCoinShop();return}
+  coins-=randomPrice;shopUpgradePurchases++;
+  hidden.apply();playShopBuySound();
+  floatingTexts.push({x:player.x,y:player.y-65,text:`🎲 Aleatoria por ${randomPrice}🪙: ${hidden.title}`,life:1.3,maxLife:1.3,big:false});
+  updateHud();checkGameCompletion();
+  if(isGameCompleted())return;
+  openCoinShop();
+  return;
+}
 if(coins<upgradePrice){openCoinShop();return}
 coins-=upgradePrice;shopUpgradePurchases++;
 upgrade.apply();playShopBuySound();
@@ -2515,8 +2574,10 @@ openRainbowLowestMenu()
 
 
 function grantFullLevel(){
-xp=xpNeed;
-gainXP(0);
+level++;
+xpNeed=Math.ceil(xpNeed*1.35+2);
+queueUpgradeMenus("level",1);
+updateHud();
 }
 
 function gainXP(amount){
