@@ -815,3 +815,12 @@ body.panel-theme-dark .onlineRankBox{background:rgba(255,255,255,.06);border-col
     font-size:15px !important;
   }
 }
+
+
+/* === v59: sin selector de tema === */
+#themeOptions,
+.themeOptions,
+#themeToggleButton,
+.themeToggleButton{
+  display:none !important;
+}
