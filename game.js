@@ -1,3 +1,5 @@
+const themeToggleButton=document.getElementById("themeToggleButton");
+
 
 const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
 const scoreEl=document.getElementById("score"),shotsEl=document.getElementById("shots"),lifeEl=document.getElementById("life"),levelEl=document.getElementById("level"),xpEl=document.getElementById("xp"),xpNeedEl=document.getElementById("xpNeed"),waveEl=document.getElementById("wave"),timeLeftEl=document.getElementById("timeLeft"),lifeBar=document.getElementById("lifeBar"),xpBar=document.getElementById("xpBar"),timeBar=document.getElementById("timeBar"),messageEl=document.getElementById("message"),startPanel=document.getElementById("startPanel"),startButton=document.getElementById("startButton"),levelUpPhrase=document.getElementById("levelUpPhrase"),levelUpPanel=document.getElementById("levelUpPanel"),levelUpBox=document.getElementById("levelUpBox"),upgradeCards=document.getElementById("upgradeCards"),upgradeTitle=document.getElementById("upgradeTitle"),upgradeSubtitle=document.getElementById("upgradeSubtitle"),coinsEl=document.getElementById("coins");
@@ -36,29 +38,30 @@ function pointerToGame(e){
 resize();window.addEventListener("resize",resize);
 let panelTheme=localStorage.getItem("gatitosPanelTheme")||"light";
 
-function refreshThemeToggleButton(){
+
+
+
+
+function updateThemeToggleIcon(){
   if(!themeToggleButton)return;
-  const current=document.body.classList.contains("panel-theme-dark")?"dark":"light";
-  themeToggleButton.textContent=current==="dark"?"☀️":"🌙";
-  themeToggleButton.title=current==="dark"?"Cambiar a tema claro":"Cambiar a tema oscuro";
+  const isDark=document.body.classList.contains("panel-theme-dark");
+  themeToggleButton.textContent=isDark?"☀️":"🌙";
+  themeToggleButton.title=isDark?"Cambiar a tema claro":"Cambiar a tema oscuro";
 }
-function toggleStartTheme(){
-  const current=document.body.classList.contains("panel-theme-dark")?"dark":"light";
-  const next=current==="dark"?"light":"dark";
-  document.querySelectorAll(".themeChoice").forEach(btn=>{
-    btn.classList.toggle("active",btn.dataset.theme===next);
-  });
-  applyPanelTheme(next);
-  refreshThemeToggleButton();
+function setPanelThemeSafely(theme){
+  const next=theme==="dark"?"dark":"light";
+  document.body.classList.toggle("panel-theme-dark",next==="dark");
+  document.body.classList.toggle("panel-theme-light",next==="light");
+  try{localStorage.setItem("gatitos_panel_theme",next)}catch(e){}
+  updateThemeToggleIcon();
+}
+function togglePanelThemeSafely(){
+  const isDark=document.body.classList.contains("panel-theme-dark");
+  setPanelThemeSafely(isDark?"light":"dark");
 }
 
 function applyPanelTheme(theme){
-  panelTheme=theme==="dark"?"dark":"light";
-  document.body.classList.toggle("panel-theme-dark",panelTheme==="dark");
-  themeButtons.forEach(btn=>btn.classList.toggle("active",btn.dataset.theme===panelTheme));
-  try{localStorage.setItem("gatitosPanelTheme",panelTheme)}catch(e){}
-
-  refreshThemeToggleButton();
+  setPanelThemeSafely(theme);
 }
 themeButtons.forEach(btn=>btn.addEventListener("click",()=>applyPanelTheme(btn.dataset.theme)));
 
@@ -101,7 +104,7 @@ if(startWaveInput){
 }
 
 /* === Ranking online con Firebase === */
-const GAME_VERSION="v55-no-start-ranking-notice";
+const GAME_VERSION="v57-start-fix";
 const PLAYER_NAME_KEY="gatitos_player_name";
 const firebaseConfig={
   apiKey:"AIzaSyD2DJyvaXseXX2ZNZrUCmjXqa1fYytanRA",
@@ -5624,5 +5627,31 @@ function buyRandomShopUpgrade(){
 
 
 
-if(themeToggleButton)themeToggleButton.addEventListener("click",toggleStartTheme);
-refreshThemeToggleButton();
+
+
+if(themeToggleButton&&!themeToggleButton.dataset.bound){
+  themeToggleButton.dataset.bound="1";
+  themeToggleButton.addEventListener("click",togglePanelThemeSafely);
+}
+try{
+  const savedTheme=localStorage.getItem("gatitos_panel_theme")||"light";
+  setPanelThemeSafely(savedTheme);
+}catch(e){
+  updateThemeToggleIcon();
+}
+
+function forceStartIfStuckAfterMenu(){
+  setTimeout(()=>{
+    if(startPanel&&startPanel.style.display==="none"&&(!gameStarted||gameOver)){
+      try{
+        gameStarted=true;
+        gameOver=false;
+        if(typeof restart==="function")restart();
+      }catch(e){console.warn("force start fallback",e);}
+    }
+  },80);
+}
+if(startButton&&!startButton.dataset.forceStartBound){
+  startButton.dataset.forceStartBound="1";
+  startButton.addEventListener("click",forceStartIfStuckAfterMenu);
+}

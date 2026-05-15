@@ -14,6 +14,7 @@
 <canvas id="game"></canvas>
 <div id="startPanel">
 <div id="startBox">
+<button id="themeToggleButton" class="themeToggleButton" type="button" aria-label="Cambiar tema" title="Cambiar tema">🌙</button>
 <h1>🐾 Gatitos &amp; Peces 🐟</h1>
 <p class="dedicationText">Juego hecho especialmente para mi novia, con mucho amor y pensando en ella 💖.</p>
 <p class="shortIntro">Tírales peces a los gatitos, aliméntalos y sobrevive todo lo que puedas.</p>
@@ -34,11 +35,6 @@
 <div id="nameWarning"></div>
 </div>
 <div id="startOptions"><label for="startWaveInput">Empezar en ronda:</label><input id="startWaveInput" max="50" min="1" type="number" value="1"/></div>
-<button id="themeToggleButton" class="themeToggleButton" type="button" aria-label="Cambiar tema" title="Cambiar tema">🌙</button>
-<div id="themeOptions" class="themeOptions hiddenThemeOptions" aria-hidden="true">
-  <button type="button" class="themeChoice active" data-theme="light">Claro</button>
-  <button type="button" class="themeChoice" data-theme="dark">Oscuro</button>
-</div>
 <div class="onlineRankBox" id="startRankingBox">
   <div class="onlineRankTitle"><span>🏆 Ranking online</span><button class="onlineRankRefresh" id="refreshRankingBtn" type="button">Actualizar</button></div>
   <div class="onlineRankList" id="startRankingList"><div class="onlineRankStatus">Cargando ranking...</div></div>
