@@ -631,175 +631,49 @@ body.panel-theme-dark .onlineRankBox{background:rgba(255,255,255,.06);border-col
   #startBox .compactControls{grid-template-columns:1fr !important;}
 }
 
-
-/* === v48 start screen cleanup === */
-#startBox{
-  max-height:92vh;
-  overflow:auto;
+/* === v51 gameplay polish UI === */
+.rankingEligibilityNotice{
+  width:min(520px,92%);
+  margin:8px auto 0;
+  padding:8px 12px;
+  border-radius:999px;
+  font-size:13px;
+  font-weight:900;
+  text-align:center;
 }
-#startBox h1{
-  margin-bottom:14px;
+.rankingEligibilityNotice.rankingOk{
+  color:#123;
+  background:linear-gradient(90deg,#80ed99,#4cc9f0);
 }
-#startBox .dedicationText,
-#startBox .shortIntro{
-  width:100%;
-  max-width:640px;
-  margin-left:auto !important;
-  margin-right:auto !important;
-  text-align:center !important;
+.rankingEligibilityNotice.rankingOff{
+  color:#fff;
+  background:linear-gradient(90deg,#ff7aa8,#c92a2a);
 }
-#startBox .dedicationText{
-  font-weight:800 !important;
-  color:#ff86b0 !important;
-  line-height:1.4 !important;
-}
-#startBox .shortIntro{
-  font-weight:800;
-  margin-top:10px !important;
-  margin-bottom:16px !important;
-}
-#playerSetup{
-  margin-top:8px;
-}
-#startButton{
-  display:inline-flex;
+.randomShopUpgradeBtn{
   align-items:center;
   justify-content:center;
-  margin:12px auto 6px;
-}
-#startOptions{
-  margin-top:14px;
-}
-#themeOptions{
-  margin-top:12px;
-}
-#howToPlay{
-  margin:16px auto 12px;
-  max-width:660px;
-}
-#startBox .compactControls{
-  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
-  gap:12px !important;
-  max-width:660px;
-  padding:14px !important;
-}
-#startBox .compactControls div{
-  min-height:72px !important;
-  display:flex !important;
-  flex-direction:column !important;
-  justify-content:center !important;
-  align-items:flex-start !important;
-  gap:6px !important;
-  padding:12px 14px !important;
-}
-#startBox .compactControls .controlKey{
-  display:block;
+  margin:16px auto 0;
+  border:none;
+  border-radius:999px;
+  padding:12px 22px;
+  background:linear-gradient(135deg,#ffd166,#ff7aa8);
+  color:#4b2636;
   font-weight:900;
   font-size:16px;
-  color:#ffe6f0;
-  line-height:1.15;
+  cursor:pointer;
+  box-shadow:0 10px 24px rgba(255,122,168,.25);
 }
-#startBox .compactControls .controlText{
-  display:block;
-  font-size:15px;
-  color:#ffd6e7;
-  opacity:.95;
-  line-height:1.2;
+.randomShopUpgradeBtn:hover{
+  transform:translateY(-2px) scale(1.03);
+  filter:brightness(1.06);
 }
-#startRankingBox{
-  margin-top:14px;
-}
-@media (max-width:720px){
-  #startBox{
-    padding:26px 20px;
-  }
-  #startBox .compactControls{
-    grid-template-columns:1fr !important;
-  }
+.randomShopUpgradeBtn:disabled{
+  opacity:.48;
+  filter:grayscale(.4);
+  cursor:not-allowed;
 }
 
-/* === v49 clean start UI === */
-#startBox{
-  position:relative !important;
-}
-#startBox .iconThemeOptions{
-  position:absolute !important;
-  top:18px !important;
-  right:18px !important;
-  margin:0 !important;
-  display:flex !important;
-  gap:6px !important;
-  align-items:center !important;
-  justify-content:center !important;
-  z-index:2 !important;
-}
-#startBox .iconThemeOptions .themeChoice{
-  width:38px !important;
-  height:38px !important;
-  min-width:38px !important;
-  padding:0 !important;
-  border-radius:999px !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  font-size:17px !important;
-  line-height:1 !important;
-}
-#startBox .iconThemeOptions .themeChoice:not(.active){
-  opacity:.52 !important;
-  transform:scale(.92) !important;
-}
-#startBox .cleanControls{
-  display:flex !important;
-  flex-direction:column !important;
-  gap:8px !important;
-  max-width:520px !important;
-  padding:14px !important;
-  margin:14px auto 6px !important;
-}
-#startBox .cleanControls div{
-  min-height:auto !important;
-  display:flex !important;
-  flex-direction:row !important;
-  align-items:center !important;
-  justify-content:flex-start !important;
-  gap:10px !important;
-  padding:10px 14px !important;
-  text-align:left !important;
-  line-height:1.2 !important;
-}
-#startBox .cleanControls .controlIcon{
-  width:28px !important;
-  min-width:28px !important;
-  text-align:center !important;
-  font-size:18px !important;
-}
-#startBox .cleanControls b{
-  font-weight:900 !important;
-}
-#startBox .controlKey,
-#startBox .controlText{
-  display:unset !important;
-}
-#startOptions{
-  margin-top:12px !important;
-}
-#startRankingBox{
-  margin-top:12px !important;
-}
-@media (max-width:720px){
-  #startBox .iconThemeOptions{
-    top:12px !important;
-    right:12px !important;
-  }
-  #startBox .iconThemeOptions .themeChoice{
-    width:34px !important;
-    height:34px !important;
-    min-width:34px !important;
-  }
-}
-
-/* === v50 dedication single line === */
+/* === v53 final consistency fix === */
 #startBox .dedicationText{
   max-width:none !important;
   width:100% !important;
