@@ -34,9 +34,8 @@
 <div id="nameWarning"></div>
 </div>
 <div id="startOptions"><label for="startWaveInput">Empezar en ronda:</label><input id="startWaveInput" max="50" min="1" type="number" value="1"/></div>
-<div id="rankingEligibilityNotice" class="rankingEligibilityNotice rankingOk">🏆 Ranking activado</div>
-<div id="themeOptions" class="themeOptions" aria-label="Tema visual de menús">
-  <span>Interfaz:</span>
+<button id="themeToggleButton" class="themeToggleButton" type="button" aria-label="Cambiar tema" title="Cambiar tema">🌙</button>
+<div id="themeOptions" class="themeOptions hiddenThemeOptions" aria-hidden="true">
   <button type="button" class="themeChoice active" data-theme="light">Claro</button>
   <button type="button" class="themeChoice" data-theme="dark">Oscuro</button>
 </div>

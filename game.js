@@ -35,11 +35,30 @@ function pointerToGame(e){
 }
 resize();window.addEventListener("resize",resize);
 let panelTheme=localStorage.getItem("gatitosPanelTheme")||"light";
+
+function refreshThemeToggleButton(){
+  if(!themeToggleButton)return;
+  const current=document.body.classList.contains("panel-theme-dark")?"dark":"light";
+  themeToggleButton.textContent=current==="dark"?"☀️":"🌙";
+  themeToggleButton.title=current==="dark"?"Cambiar a tema claro":"Cambiar a tema oscuro";
+}
+function toggleStartTheme(){
+  const current=document.body.classList.contains("panel-theme-dark")?"dark":"light";
+  const next=current==="dark"?"light":"dark";
+  document.querySelectorAll(".themeChoice").forEach(btn=>{
+    btn.classList.toggle("active",btn.dataset.theme===next);
+  });
+  applyPanelTheme(next);
+  refreshThemeToggleButton();
+}
+
 function applyPanelTheme(theme){
   panelTheme=theme==="dark"?"dark":"light";
   document.body.classList.toggle("panel-theme-dark",panelTheme==="dark");
   themeButtons.forEach(btn=>btn.classList.toggle("active",btn.dataset.theme===panelTheme));
   try{localStorage.setItem("gatitosPanelTheme",panelTheme)}catch(e){}
+
+  refreshThemeToggleButton();
 }
 themeButtons.forEach(btn=>btn.addEventListener("click",()=>applyPanelTheme(btn.dataset.theme)));
 
@@ -82,7 +101,7 @@ if(startWaveInput){
 }
 
 /* === Ranking online con Firebase === */
-const GAME_VERSION="v53-final-consistency-fix";
+const GAME_VERSION="v55-no-start-ranking-notice";
 const PLAYER_NAME_KEY="gatitos_player_name";
 const firebaseConfig={
   apiKey:"AIzaSyD2DJyvaXseXX2ZNZrUCmjXqa1fYytanRA",
@@ -5604,3 +5623,6 @@ function buyRandomShopUpgrade(){
 }
 
 
+
+if(themeToggleButton)themeToggleButton.addEventListener("click",toggleStartTheme);
+refreshThemeToggleButton();

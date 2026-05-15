@@ -632,23 +632,9 @@ body.panel-theme-dark .onlineRankBox{background:rgba(255,255,255,.06);border-col
 }
 
 /* === v51 gameplay polish UI === */
-.rankingEligibilityNotice{
-  width:min(520px,92%);
-  margin:8px auto 0;
-  padding:8px 12px;
-  border-radius:999px;
-  font-size:13px;
-  font-weight:900;
-  text-align:center;
-}
-.rankingEligibilityNotice.rankingOk{
-  color:#123;
-  background:linear-gradient(90deg,#80ed99,#4cc9f0);
-}
-.rankingEligibilityNotice.rankingOff{
-  color:#fff;
-  background:linear-gradient(90deg,#ff7aa8,#c92a2a);
-}
+
+
+
 .randomShopUpgradeBtn{
   align-items:center;
   justify-content:center;
@@ -687,5 +673,45 @@ body.panel-theme-dark .onlineRankBox{background:rgba(255,255,255,.06);border-col
   #startBox .dedicationText{
     white-space:normal !important;
     font-size:15px !important;
+  }
+}
+
+/* === v54 corner theme toggle === */
+#startBox{
+  position:relative !important;
+}
+#startBox .hiddenThemeOptions{
+  display:none !important;
+}
+#startBox .themeToggleButton{
+  position:absolute !important;
+  top:18px !important;
+  right:18px !important;
+  width:42px !important;
+  height:42px !important;
+  border:none !important;
+  border-radius:999px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  font-size:20px !important;
+  cursor:pointer !important;
+  background:linear-gradient(135deg,rgba(255,122,168,.96),rgba(155,93,229,.92)) !important;
+  color:#fff !important;
+  box-shadow:0 10px 24px rgba(255,122,168,.28), inset 0 1px 0 rgba(255,255,255,.28) !important;
+  z-index:4 !important;
+  transition:transform .15s ease, filter .15s ease;
+}
+#startBox .themeToggleButton:hover{
+  transform:translateY(-2px) scale(1.06);
+  filter:brightness(1.08);
+}
+@media (max-width:720px){
+  #startBox .themeToggleButton{
+    top:12px !important;
+    right:12px !important;
+    width:36px !important;
+    height:36px !important;
+    font-size:18px !important;
   }
 }
