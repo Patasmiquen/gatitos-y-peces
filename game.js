@@ -407,9 +407,9 @@ function applyRecommendationsToChoices(choices,context="generic"){
     if(!random)return false;
     random.recommended=true;
     random.recommendScore=.11;
-    random.recommendReason="No hay una mejora óptima clara; la aleatoria puede avanzar una mejora atrasada por menos monedas.";
-    if(!String(random.desc||"").includes("Recomendado si no hay una mejora óptima clara")){
-      random.desc=`${random.desc}<br><span class="shopHint">Recomendado si no hay una mejora óptima clara.</span>`;
+    random.recommendReason="Mejora sorpresa.";
+    if(!String(random.desc||"").includes("Mejora sorpresa")){
+      random.desc=`Mejora sorpresa.`;
     }
     return true;
   };
@@ -1802,7 +1802,7 @@ if(upgrade.randomShopUpgrade){
   if(!hidden||typeof hidden.apply!=="function"){openCoinShop();return}
   coins-=randomPrice;shopUpgradePurchases++;
   hidden.apply();playShopBuySound();
-  floatingTexts.push({x:player.x,y:player.y-65,text:`🎲 Aleatoria por ${randomPrice}🪙: ${hidden.title}`,life:1.3,maxLife:1.3,big:false});
+  floatingTexts.push({x:player.x,y:player.y-65,text:`🎲 Sorpresa: ${hidden.title}`,life:1.3,maxLife:1.3,big:false});
   updateHud();checkGameCompletion();
   if(isGameCompleted())return;
   openCoinShop();
