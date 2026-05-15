@@ -1,5 +1,3 @@
-const themeToggleButton=document.getElementById("themeToggleButton");
-
 
 const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
 const scoreEl=document.getElementById("score"),shotsEl=document.getElementById("shots"),lifeEl=document.getElementById("life"),levelEl=document.getElementById("level"),xpEl=document.getElementById("xp"),xpNeedEl=document.getElementById("xpNeed"),waveEl=document.getElementById("wave"),timeLeftEl=document.getElementById("timeLeft"),lifeBar=document.getElementById("lifeBar"),xpBar=document.getElementById("xpBar"),timeBar=document.getElementById("timeBar"),messageEl=document.getElementById("message"),startPanel=document.getElementById("startPanel"),startButton=document.getElementById("startButton"),levelUpPhrase=document.getElementById("levelUpPhrase"),levelUpPanel=document.getElementById("levelUpPanel"),levelUpBox=document.getElementById("levelUpBox"),upgradeCards=document.getElementById("upgradeCards"),upgradeTitle=document.getElementById("upgradeTitle"),upgradeSubtitle=document.getElementById("upgradeSubtitle"),coinsEl=document.getElementById("coins");
@@ -37,46 +35,15 @@ function pointerToGame(e){
 }
 resize();window.addEventListener("resize",resize);
 let panelTheme=localStorage.getItem("gatitosPanelTheme")||"light";
-
-
-
-
-
-function updateThemeToggleIcon(){
-  if(!themeToggleButton)return;
-  const isDark=document.body.classList.contains("panel-theme-dark");
-  themeToggleButton.textContent=isDark?"☀️":"🌙";
-  themeToggleButton.title=isDark?"Cambiar a tema claro":"Cambiar a tema oscuro";
-}
-function setPanelThemeSafely(theme){
-  const next=theme==="dark"?"dark":"light";
-  document.body.classList.toggle("panel-theme-dark",next==="dark");
-  document.body.classList.toggle("panel-theme-light",next==="light");
-  try{localStorage.setItem("gatitos_panel_theme",next)}catch(e){}
-  updateThemeToggleIcon();
-}
-function togglePanelThemeSafely(){
-  const isDark=document.body.classList.contains("panel-theme-dark");
-  setPanelThemeSafely(isDark?"light":"dark");
-}
-
 function applyPanelTheme(theme){
-  setPanelThemeSafely(theme);
+  panelTheme=theme==="dark"?"dark":"light";
+  document.body.classList.toggle("panel-theme-dark",panelTheme==="dark");
+  themeButtons.forEach(btn=>btn.classList.toggle("active",btn.dataset.theme===panelTheme));
+  try{localStorage.setItem("gatitosPanelTheme",panelTheme)}catch(e){}
 }
 themeButtons.forEach(btn=>btn.addEventListener("click",()=>applyPanelTheme(btn.dataset.theme)));
 
 applyPanelTheme(panelTheme);
-
-
-function refreshStartRankingEligibilityNotice(){
-  if(!rankingEligibilityNotice)return;
-  const sw=Math.max(1,Math.min(50,parseInt(startWaveInput?.value||"1")||1));
-  const aiOn=!!autoMode;
-  const ok=sw===1&&!aiOn;
-  rankingEligibilityNotice.classList.toggle("rankingOk",ok);
-  rankingEligibilityNotice.classList.toggle("rankingOff",!ok);
-  rankingEligibilityNotice.textContent=ok?"🏆 Ranking activado":(aiOn?"⚠️ Ranking desactivado: modo IA activo":`⚠️ Ranking desactivado: empiezas en ronda ${sw}`);
-}
 
 function clampStartWaveInput(){
   if(!startWaveInput)return 1;
@@ -104,7 +71,7 @@ if(startWaveInput){
 }
 
 /* === Ranking online con Firebase === */
-const GAME_VERSION="v57-start-fix";
+const GAME_VERSION="v50-dedication-single-line";
 const PLAYER_NAME_KEY="gatitos_player_name";
 const firebaseConfig={
   apiKey:"AIzaSyD2DJyvaXseXX2ZNZrUCmjXqa1fYytanRA",
@@ -296,7 +263,6 @@ let dogRelaxTime=0;
 let enemyIntroSeen={};
 let finalChoiceLocked=false;
 let demonSpawnPressure=0;
-let currentUpgradeContext="generic";
 let thiefCoinsStolenThisWave=0;
 perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
 
@@ -1546,10 +1512,8 @@ const iconHTML=isComboIcon?iconParts.slice(0,2).map(i=>`<span class="miniIcon">$
 return `${upgrade.recommended?`<div class="recommendedTag">✨ RECOMENDADO</div>`:""}<div class="upgradeCardTop"><div class="upgradeIconBubble${isComboIcon?" comboIconBubble":""}">${iconHTML}</div><div class="upgradeBadges">${upgrade.levelTag?`<span class="upgradeLevelTag">${upgrade.levelTag}</span>`:""}</div></div><div class="upgradeTitle">${escapeHtml(upgrade.title)}</div><div class="upgradeDesc"><span class="upgradeDescMain">${formatCardText(desc)}</span>${bonus?`<span class="upgradeFusionBonus">${formatCardText(bonus)}</span>`:""}${upgrade.lockReason?`<span class="upgradeLockedReason">🔒 ${formatCardText(upgrade.lockReason)}</span>`:""}</div>`;
 }
 function showCards(title,phrase,subtitle,choices,onPick,onBack,context="generic"){
-currentUpgradeContext=context;
 choices=applyRecommendationsToChoices(choices,context);
-choosingUpgrade=true;levelUpPanel.style.display="flex";
-setTimeout(refreshRandomShopButton,0);upgradeCards.innerHTML="";
+choosingUpgrade=true;levelUpPanel.style.display="flex";upgradeCards.innerHTML="";
 const oldCoinBadge=levelUpBox.querySelector(".shopCoinBadge");
 if(oldCoinBadge)oldCoinBadge.remove();
 levelUpBox.classList.toggle("shopMode",context==="shop");
@@ -1581,7 +1545,6 @@ function renderCardList(){
     const _uniqueClassMap={aimAssist:" aimAssistUpgrade",bigCursor:" bigCursorUpgrade",catInstinct:" catInstinctUpgrade",zoomies:" zoomiesUpgrade",moralSupport:" apoyoMoralUpgrade",darkPact:" voluntadOscuraUpgrade"};
     const _uniqueClass=upgrade.key&&!upgrade.fusion?(_uniqueClassMap[upgrade.key]||""):"";
     card.className="upgradeCard "+visualClass+(upgrade.fusion?" fusionCard":"")+(_uniqueClass||((upgrade.special&&!upgrade.fusion?" specialUpgrade":"")+(upgrade.dark?" darkUpgrade":"")))+(upgrade.easter?" easterUpgrade":"")+(upgrade.locked?" locked":"")+(upgrade.recommended?" recommended":"");
-    if(upgrade.key)card.dataset.key=upgrade.key;
     card.innerHTML=buildUpgradeCardHTML(upgrade);
     if(upgrade.locked)card.disabled=true;
     else card.addEventListener("click",()=>{
@@ -1611,7 +1574,6 @@ function renderCardList(){
   }
 }
 renderCardList();
-refreshRandomShopButton();
 autoRegisterChoiceMenu(choices,onPick,context);
 }
 
@@ -1637,7 +1599,6 @@ const amount=2+Math.floor(Math.random()*3);
 coins+=amount;
 floatingTexts.push({x:player.x,y:player.y-70,text:`+${amount} monedas ${reason}`,life:1.4,maxLife:1.4,big:false});
 updateHud();
-if(typeof refreshRandomShopButton==="function")refreshRandomShopButton();
 maybeOpenShopOrFusion();
 }
 
@@ -1739,7 +1700,7 @@ if(shopBossPending&&!shopAvailable){shopBossPending=false;startShopSession()}
 function getShopUpgradePrice(){return 1+shopUpgradePurchases}
 function getShopFusionPrice(){return 5+shopFusionPurchases*3}
 function startShopSession(){shopAvailable=true;openCoinShop()}
-function closeShopSession(){shopAvailable=false;currentUpgradeContext="generic";choosingUpgrade=false;levelUpPanel.style.display="none";floatingTexts.push({x:player.x,y:player.y-65,text:"Tienda cerrada 💰",life:1.2,maxLife:1.2,big:false});updateHud()}
+function closeShopSession(){shopAvailable=false;choosingUpgrade=false;levelUpPanel.style.display="none";floatingTexts.push({x:player.x,y:player.y-65,text:"Tienda cerrada 💰",life:1.2,maxLife:1.2,big:false});updateHud()}
 
 function getFusionLockReason(cost=getShopFusionPrice()){
 const keys=getMaxedFusionKeys();
@@ -2551,11 +2512,8 @@ openRainbowLowestMenu()
 
 
 function grantFullLevel(){
-const savedXp=xp;
-level++;
-xpNeed=Math.ceil(xpNeed*1.35+2);
-xp=Math.min(savedXp,xpNeed-1);
-queueUpgradeMenus("level",1);
+xp=xpNeed;
+gainXP(0);
 }
 
 function gainXP(amount){
@@ -2674,12 +2632,6 @@ if(Math.random()>chance)return;
 const amount=1;
 if(runStats)runStats.coinsGenerated+=amount;
 coinsDrops.push({x,y,r:10,amount,life:18})
-}
-
-
-function grantBossLevelUpReward(){
-  const needed=Math.max(0,xpNeed-xp);
-  gainXP(needed);
 }
 
 function damageBoss(amount){
@@ -3247,20 +3199,6 @@ const d=Math.hypot(boss.x-x,boss.y-y);
 if(d<bestD){best=boss;bestD=d}
 }
 return best
-}
-
-
-function dogPersonalityTick(dt){
-  if(!upgrades.boyfriendDog||dogKidnapped)return;
-  if(!dogPersonalityTick.t)dogPersonalityTick.t=0;
-  dogPersonalityTick.t+=dt;
-  if(dogPersonalityTick.t<3.8)return;
-  dogPersonalityTick.t=0;
-  if(boss&&boss.type==="demon"){
-    floatingTexts.push({x:player.x+46,y:player.y-70,text:"🐶💦",life:.9,maxLife:.9,big:false});
-  }else if(cats.length<4&&Math.random()<.45){
-    floatingTexts.push({x:player.x+42,y:player.y-62,text:"🐶💖",life:.9,maxLife:.9,big:false});
-  }
 }
 
 function updateDog(dt){
@@ -4249,29 +4187,6 @@ if(cat.maxHp>1){ctx.fillStyle="rgba(255,255,255,0.85)";ctx.fillRect(-18,-48,36,5
 ctx.restore()
 }
 
-
-function drawLockedTargetMarker(){
-  if(!selectedTarget||!isFinitePos(selectedTarget)||selectedTarget.dead)return;
-  const now=performance.now()/1000;
-  const r=(selectedTarget.r||34)+16+Math.sin(now*6)*3;
-  ctx.save();
-  ctx.translate(selectedTarget.x,selectedTarget.y);
-  ctx.strokeStyle="#ffd166";
-  ctx.lineWidth=4;
-  ctx.shadowColor="#ff7aa8";
-  ctx.shadowBlur=18;
-  ctx.setLineDash([10,7]);
-  ctx.beginPath();
-  ctx.arc(0,0,r,0,Math.PI*2);
-  ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.font="bold 24px Arial";
-  ctx.textAlign="center";
-  ctx.fillStyle="#ffd166";
-  ctx.fillText("🎯",0,-r-12);
-  ctx.restore();
-}
-
 function drawBoss(){
 if(!boss||!isFinitePos(boss))return;
 const now=performance.now()/1000;
@@ -4726,7 +4641,6 @@ coinsDrops.forEach(c=>{if(isFinitePos(c))drawCoin(c)});tunaDrops.forEach(t=>{if(
 powerStars.forEach(s=>{if(isFinitePos(s))drawPowerStar(s)});
 cats.forEach(cat=>{if(isFinitePos(cat))drawCat(cat)});
 drawBoss();
-drawLockedTargetMarker();
 drawTargetMarker(selectedTarget);
 quacks.forEach(q=>{if(isFinitePos(q))drawQuack(q)});
 demonOrbs.forEach(o=>{if(isFinitePos(o))drawDemonOrb(o)});
@@ -4808,7 +4722,6 @@ function initAutoMode(){
 
   try{autoMode=localStorage.getItem("gatitos_auto_mode")==="1"&&isAdminUnlocked()}catch(e){autoMode=false}
   refreshAutoModeUI();
-  refreshStartRankingEligibilityNotice();
 
   if(autoModeButton){
     autoModeButton.addEventListener("click",()=>{
@@ -4848,7 +4761,6 @@ function setAutoMode(value){
   }
   refreshAutoModeUI();
   if(typeof refreshAdminLockUI==="function")refreshAdminLockUI();
-  if(typeof refreshStartRankingEligibilityNotice==="function")refreshStartRankingEligibilityNotice();
 }
 function refreshAutoModeUI(){
   const adminUnlocked=typeof isAdminUnlocked==="function"&&isAdminUnlocked();
@@ -5570,88 +5482,8 @@ function adminSpawnBoss(forceDemon=false){
   waveTime=0;
   adminMessage(forceDemon?"demonio invocado":"jefe invocado");
 }
-if(startWaveInput){startWaveInput.addEventListener("input",refreshStartRankingEligibilityNotice);startWaveInput.addEventListener("change",refreshStartRankingEligibilityNotice);}
 initAutoMode();
 initAdminPanel();
 
 restart();gameStarted=false;startPanel.style.display="flex";requestAnimationFrame(loop);
 
-function getVisibleShopUpgradeKeys(){
-  return Array.from(document.querySelectorAll("#upgradeCards .upgradeCard")).map(card=>card.dataset?.key).filter(Boolean);
-}
-function getRandomShopUpgradeCost(){
-  return Math.max(1,Math.floor(getShopUpgradePrice()/2));
-}
-function getRandomShopEligibleUpgrades(){
-  const visible=new Set(getVisibleShopUpgradeKeys());
-  return getLevelUpgradeKeys().filter(key=>!visible.has(key));
-}
-function getWeightedRandomShopUpgrade(){
-  const eligible=getRandomShopEligibleUpgrades();
-  if(!eligible.length)return null;
-  const weighted=[];
-  eligible.forEach(key=>{
-    const pair=getFusedPairForKey(key);
-    const lvl=pair?getFusionProgress(pair):(upgradeLevels[key]||0);
-    const weight=Math.max(1,7-lvl);
-    for(let i=0;i<weight;i++)weighted.push(key);
-  });
-  return weighted[Math.floor(Math.random()*weighted.length)]||eligible[0];
-}
-function refreshRandomShopButton(){
-  if(!randomShopUpgradeBtn)return;
-  const inShop=currentUpgradeContext==="shop"&&shopAvailable&&choosingUpgrade;
-  if(!inShop){randomShopUpgradeBtn.style.display="none";return;}
-  const cost=getRandomShopUpgradeCost();
-  const eligible=getRandomShopEligibleUpgrades();
-  randomShopUpgradeBtn.style.display="inline-flex";
-  randomShopUpgradeBtn.disabled=coins<cost||!eligible.length;
-  randomShopUpgradeBtn.textContent=eligible.length?`🎲 Mejora aleatoria (${cost}🪙)`:"🎲 Sin mejoras aleatorias";
-}
-function buyRandomShopUpgrade(){
-  if(currentUpgradeContext!=="shop"||!shopAvailable)return;
-  const cost=getRandomShopUpgradeCost();
-  const key=getWeightedRandomShopUpgrade();
-  if(!key||coins<cost)return;
-  const choice=makeLevelUpgrade(key);
-  coins-=cost;
-  shopUpgradePurchases++;
-  choice.apply();
-  playShopBuySound();
-  floatingTexts.push({x:player.x,y:player.y-82,text:`🎲 ${choice.title}`,life:1.35,maxLife:1.35,big:false});
-  updateHud();
-  checkGameCompletion();
-  if(isGameCompleted())return;
-  openCoinShop();
-}
-
-
-
-
-
-if(themeToggleButton&&!themeToggleButton.dataset.bound){
-  themeToggleButton.dataset.bound="1";
-  themeToggleButton.addEventListener("click",togglePanelThemeSafely);
-}
-try{
-  const savedTheme=localStorage.getItem("gatitos_panel_theme")||"light";
-  setPanelThemeSafely(savedTheme);
-}catch(e){
-  updateThemeToggleIcon();
-}
-
-function forceStartIfStuckAfterMenu(){
-  setTimeout(()=>{
-    if(startPanel&&startPanel.style.display==="none"&&(!gameStarted||gameOver)){
-      try{
-        gameStarted=true;
-        gameOver=false;
-        if(typeof restart==="function")restart();
-      }catch(e){console.warn("force start fallback",e);}
-    }
-  },80);
-}
-if(startButton&&!startButton.dataset.forceStartBound){
-  startButton.dataset.forceStartBound="1";
-  startButton.addEventListener("click",forceStartIfStuckAfterMenu);
-}

@@ -631,35 +631,175 @@ body.panel-theme-dark .onlineRankBox{background:rgba(255,255,255,.06);border-col
   #startBox .compactControls{grid-template-columns:1fr !important;}
 }
 
-/* === v51 gameplay polish UI === */
 
-
-
-.randomShopUpgradeBtn{
+/* === v48 start screen cleanup === */
+#startBox{
+  max-height:92vh;
+  overflow:auto;
+}
+#startBox h1{
+  margin-bottom:14px;
+}
+#startBox .dedicationText,
+#startBox .shortIntro{
+  width:100%;
+  max-width:640px;
+  margin-left:auto !important;
+  margin-right:auto !important;
+  text-align:center !important;
+}
+#startBox .dedicationText{
+  font-weight:800 !important;
+  color:#ff86b0 !important;
+  line-height:1.4 !important;
+}
+#startBox .shortIntro{
+  font-weight:800;
+  margin-top:10px !important;
+  margin-bottom:16px !important;
+}
+#playerSetup{
+  margin-top:8px;
+}
+#startButton{
+  display:inline-flex;
   align-items:center;
   justify-content:center;
-  margin:16px auto 0;
-  border:none;
-  border-radius:999px;
-  padding:12px 22px;
-  background:linear-gradient(135deg,#ffd166,#ff7aa8);
-  color:#4b2636;
+  margin:12px auto 6px;
+}
+#startOptions{
+  margin-top:14px;
+}
+#themeOptions{
+  margin-top:12px;
+}
+#howToPlay{
+  margin:16px auto 12px;
+  max-width:660px;
+}
+#startBox .compactControls{
+  grid-template-columns:repeat(2,minmax(0,1fr)) !important;
+  gap:12px !important;
+  max-width:660px;
+  padding:14px !important;
+}
+#startBox .compactControls div{
+  min-height:72px !important;
+  display:flex !important;
+  flex-direction:column !important;
+  justify-content:center !important;
+  align-items:flex-start !important;
+  gap:6px !important;
+  padding:12px 14px !important;
+}
+#startBox .compactControls .controlKey{
+  display:block;
   font-weight:900;
   font-size:16px;
-  cursor:pointer;
-  box-shadow:0 10px 24px rgba(255,122,168,.25);
+  color:#ffe6f0;
+  line-height:1.15;
 }
-.randomShopUpgradeBtn:hover{
-  transform:translateY(-2px) scale(1.03);
-  filter:brightness(1.06);
+#startBox .compactControls .controlText{
+  display:block;
+  font-size:15px;
+  color:#ffd6e7;
+  opacity:.95;
+  line-height:1.2;
 }
-.randomShopUpgradeBtn:disabled{
-  opacity:.48;
-  filter:grayscale(.4);
-  cursor:not-allowed;
+#startRankingBox{
+  margin-top:14px;
+}
+@media (max-width:720px){
+  #startBox{
+    padding:26px 20px;
+  }
+  #startBox .compactControls{
+    grid-template-columns:1fr !important;
+  }
 }
 
-/* === v53 final consistency fix === */
+/* === v49 clean start UI === */
+#startBox{
+  position:relative !important;
+}
+#startBox .iconThemeOptions{
+  position:absolute !important;
+  top:18px !important;
+  right:18px !important;
+  margin:0 !important;
+  display:flex !important;
+  gap:6px !important;
+  align-items:center !important;
+  justify-content:center !important;
+  z-index:2 !important;
+}
+#startBox .iconThemeOptions .themeChoice{
+  width:38px !important;
+  height:38px !important;
+  min-width:38px !important;
+  padding:0 !important;
+  border-radius:999px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  font-size:17px !important;
+  line-height:1 !important;
+}
+#startBox .iconThemeOptions .themeChoice:not(.active){
+  opacity:.52 !important;
+  transform:scale(.92) !important;
+}
+#startBox .cleanControls{
+  display:flex !important;
+  flex-direction:column !important;
+  gap:8px !important;
+  max-width:520px !important;
+  padding:14px !important;
+  margin:14px auto 6px !important;
+}
+#startBox .cleanControls div{
+  min-height:auto !important;
+  display:flex !important;
+  flex-direction:row !important;
+  align-items:center !important;
+  justify-content:flex-start !important;
+  gap:10px !important;
+  padding:10px 14px !important;
+  text-align:left !important;
+  line-height:1.2 !important;
+}
+#startBox .cleanControls .controlIcon{
+  width:28px !important;
+  min-width:28px !important;
+  text-align:center !important;
+  font-size:18px !important;
+}
+#startBox .cleanControls b{
+  font-weight:900 !important;
+}
+#startBox .controlKey,
+#startBox .controlText{
+  display:unset !important;
+}
+#startOptions{
+  margin-top:12px !important;
+}
+#startRankingBox{
+  margin-top:12px !important;
+}
+@media (max-width:720px){
+  #startBox .iconThemeOptions{
+    top:12px !important;
+    right:12px !important;
+  }
+  #startBox .iconThemeOptions .themeChoice{
+    width:34px !important;
+    height:34px !important;
+    min-width:34px !important;
+  }
+}
+
+/* === v50 dedication single line === */
 #startBox .dedicationText{
   max-width:none !important;
   width:100% !important;
@@ -674,130 +814,4 @@ body.panel-theme-dark .onlineRankBox{background:rgba(255,255,255,.06);border-col
     white-space:normal !important;
     font-size:15px !important;
   }
-}
-
-/* === v54 corner theme toggle === */
-#startBox{
-  position:relative !important;
-}
-#startBox .hiddenThemeOptions{
-  display:none !important;
-}
-#startBox .themeToggleButton{
-  position:absolute !important;
-  top:18px !important;
-  right:18px !important;
-  width:42px !important;
-  height:42px !important;
-  border:none !important;
-  border-radius:999px !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  font-size:20px !important;
-  cursor:pointer !important;
-  background:linear-gradient(135deg,rgba(255,122,168,.96),rgba(155,93,229,.92)) !important;
-  color:#fff !important;
-  box-shadow:0 10px 24px rgba(255,122,168,.28), inset 0 1px 0 rgba(255,255,255,.28) !important;
-  z-index:4 !important;
-  transition:transform .15s ease, filter .15s ease;
-}
-#startBox .themeToggleButton:hover{
-  transform:translateY(-2px) scale(1.06);
-  filter:brightness(1.08);
-}
-@media (max-width:720px){
-  #startBox .themeToggleButton{
-    top:12px !important;
-    right:12px !important;
-    width:36px !important;
-    height:36px !important;
-    font-size:18px !important;
-  }
-}
-
-/* === v56: tema con un único botón en esquina === */
-#themeOptions,
-.themeOptions,
-.hiddenThemeOptions{
-  display:none !important;
-  visibility:hidden !important;
-  pointer-events:none !important;
-  width:0 !important;
-  height:0 !important;
-  overflow:hidden !important;
-  margin:0 !important;
-  padding:0 !important;
-}
-#startBox{
-  position:relative !important;
-}
-#startBox #themeToggleButton.themeToggleButton{
-  position:absolute !important;
-  top:18px !important;
-  right:18px !important;
-  width:44px !important;
-  height:44px !important;
-  min-width:44px !important;
-  min-height:44px !important;
-  margin:0 !important;
-  padding:0 !important;
-  border:none !important;
-  border-radius:999px !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  font-size:20px !important;
-  line-height:1 !important;
-  cursor:pointer !important;
-  color:#fff !important;
-  background:linear-gradient(135deg,#ff7aa8,#9b5de5) !important;
-  box-shadow:0 10px 24px rgba(255,122,168,.32), inset 0 1px 0 rgba(255,255,255,.28) !important;
-  z-index:100 !important;
-}
-#startBox #themeToggleButton.themeToggleButton:hover{
-  transform:translateY(-2px) scale(1.06) !important;
-  filter:brightness(1.08) !important;
-}
-@media (max-width:720px){
-  #startBox #themeToggleButton.themeToggleButton{
-    top:12px !important;
-    right:12px !important;
-    width:38px !important;
-    height:38px !important;
-    min-width:38px !important;
-    min-height:38px !important;
-    font-size:18px !important;
-  }
-}
-
-/* === v57 final safe theme/start fix === */
-#themeOptions,.themeOptions,.hiddenThemeOptions{
-  display:none !important;
-}
-#startBox{
-  position:relative !important;
-}
-#startBox #themeToggleButton.themeToggleButton{
-  position:absolute !important;
-  top:18px !important;
-  right:18px !important;
-  width:44px !important;
-  height:44px !important;
-  min-width:44px !important;
-  min-height:44px !important;
-  margin:0 !important;
-  padding:0 !important;
-  border:none !important;
-  border-radius:999px !important;
-  display:flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-  font-size:20px !important;
-  line-height:1 !important;
-  cursor:pointer !important;
-  color:#fff !important;
-  background:linear-gradient(135deg,#ff7aa8,#9b5de5) !important;
-  box-shadow:0 10px 24px rgba(255,122,168,.32), inset 0 1px 0 rgba(255,255,255,.28) !important;
-  z-index:100 !important;
 }
