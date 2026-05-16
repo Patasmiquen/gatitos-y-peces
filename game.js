@@ -345,6 +345,12 @@ const FUSION_RECOMMENDATION_PROFILE={
   "fireRate+autoFire":{automation:.9,damage:.6,consistency:.55},
   "fishSize+bigFish":{area:.85,damage:.75,control:.35}
 };
+Object.keys(FUSION_RECOMMENDATION_PROFILE).forEach(pair=>{
+  const parts=pair.split("+");
+  if(parts.length!==2)return;
+  const normalized=parts.sort().join("+");
+  if(!FUSION_RECOMMENDATION_PROFILE[normalized])FUSION_RECOMMENDATION_PROFILE[normalized]=FUSION_RECOMMENDATION_PROFILE[pair];
+});
 function freshRunStats(){return{damageTaken:0,damageEvents:0,lowHpTime:0,enemiesNearTime:0,kills:0,shotsFired:0,fishHits:0,fishMisses:0,bossDamage:0,coinsGenerated:0,coinsCollected:0,coinsMissed:0,elapsed:0,lastShopAt:0};}
 function clamp01(v){return Math.max(0,Math.min(1,Number.isFinite(v)?v:0))}
 function emptyProfile(){return Object.fromEntries(RECOMMEND_DIMENSIONS.map(k=>[k,0]))}
@@ -2894,7 +2900,7 @@ mouse.x=oldMouseX;mouse.y=oldMouseY
 }
 
 function shieldAttack(){
-if(upgradeLevels.shield<5)return;
+if(effectLevel("shield")<5)return;
 if(Math.random()>.012)return;
 let target=null,dist=Infinity;
 cats.forEach(cat=>{if(!isFinitePos(cat))return;const d=Math.hypot(cat.x-player.x,cat.y-player.y);if(d<dist){dist=d;target=cat}});
