@@ -243,6 +243,7 @@ let perfFps=60,lowPerfMode=false,lowPerfTimer=0,perfNoticeTimer=0;
 let pendingUpgradeQueue=[];
 let runStats;
 let defeatedBossTypes=new Set();
+let bossEncounterCounts={giantCat:0,duck:0,seal:0,demon:0};
 let giantFishEasterEggsUsed=0;
 let mouseIsDown=false;
 let selectedTarget=null;
@@ -262,6 +263,7 @@ let doneFusionPairs={};
 let fusionProgressLevels={};
 let bossVictoryAlreadyShown=false;
 let bossVictoryScoreSaved=false;
+let bossVictoryPending=false;
 let dogRelaxTime=0;
 let enemyIntroSeen={};
 let finalChoiceLocked=false;
@@ -584,7 +586,7 @@ runStartWave=initialWave;
 autoModeUsedThisRun=!!autoMode;
 rankingEligibleThisRun=initialWave===1&&!autoModeUsedThisRun;
 rankingDisabledReason=rankingEligibleThisRun?"":(autoModeUsedThisRun?"Ranking desactivado: la partida empezó con IA activada.":`Ranking desactivado: la partida empezó en ronda ${initialWave}.`);
-score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=0;lastAutoShot=0;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=initialWave;thiefCoinsStolenThisWave=0;spawnCooldown=0;life=upgrades.maxLife;level=initialWave;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();giantFishEasterEggsUsed=0;bossVictoryAlreadyShown=false;bossVictoryScoreSaved=false;dogRelaxTime=0;fusionMoveXpTimer=0;lastFusionShieldGuard=0;enemyIntroSeen={};finalChoiceLocked=false;demonSpawnPressure=0;thiefCoinsStolenThisWave=0;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
+score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=0;lastAutoShot=0;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=initialWave;thiefCoinsStolenThisWave=0;spawnCooldown=0;life=upgrades.maxLife;level=initialWave;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();bossEncounterCounts={giantCat:0,duck:0,seal:0,demon:0};giantFishEasterEggsUsed=0;bossVictoryAlreadyShown=false;bossVictoryScoreSaved=false;bossVictoryPending=false;dogRelaxTime=0;fusionMoveXpTimer=0;lastFusionShieldGuard=0;enemyIntroSeen={};finalChoiceLocked=false;demonSpawnPressure=0;thiefCoinsStolenThisWave=0;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
 demonOrbs.length=0;yarnBalls.length=0;powerStars.length=0;shockwaves.length=0;sparkles.length=0;tunaDrops.length=0;
 player.x=canvas.width/2;player.y=canvas.height/2;player.angle=0;player.shootAnim=0;player.hurtAnim=0;dogCompanion.x=player.x-50;dogCompanion.y=player.y+45;dogCompanion.shootCooldown=0;
 fishes.length=0;cats.length=0;hearts.length=0;smokes.length=0;floatingTexts.length=0;pawPrints.length=0;quacks.length=0;coinsDrops.length=0;dogBones.length=0;demonOrbs.length=0;yarnBalls.length=0;shockwaves.length=0;sparkles.length=0;
@@ -729,6 +731,41 @@ function cleanupRoundScreen(opts={}){
   starActive=false;
   starTime=0;
   starWarningPlayed=false;
+}
+
+function collectAllMapLootAfterBoss(){
+  let collectedCoins=0;
+  for(let i=0;i<coinsDrops.length;i++){
+    const coin=coinsDrops[i];
+    const amount=Math.max(0,Math.floor(Number(coin?.amount)||0));
+    if(amount<=0)continue;
+    coins+=amount;
+    collectedCoins+=amount;
+    if(runStats)runStats.coinsCollected+=amount;
+    if(hasDoneFusionPair("coinMagnet+healOnWave")){
+      life=Math.min(upgrades.maxLife,life+Math.max(1,Math.round(upgrades.healOnWave*.10))*amount);
+    }
+  }
+
+  let collectedTuna=0;
+  let healed=0;
+  for(let i=0;i<tunaDrops.length;i++){
+    const heal=Math.round(15+Math.random()*10);
+    healed+=heal;
+    collectedTuna++;
+  }
+  if(healed>0)life=Math.min(upgrades.maxLife,life+healed);
+
+  coinsDrops.length=0;
+  tunaDrops.length=0;
+
+  if(collectedCoins>0||collectedTuna>0){
+    const parts=[];
+    if(collectedCoins>0)parts.push(`+${collectedCoins} 🪙`);
+    if(collectedTuna>0)parts.push(`+${collectedTuna} 🐟`);
+    floatingTexts.push({x:canvas.width/2,y:150,text:`Recogido: ${parts.join(" · ")}`,life:1.7,maxLife:1.7,big:true});
+  }
+  updateHud();
 }
 
 function startWave(){
@@ -965,6 +1002,23 @@ return true;
 }
 
 const BOSS_DISPLAY_NAMES={giantCat:"Gato gigante",duck:"Pato",seal:"Foca",demon:"Demonio"};
+function getBossRepeatLevel(type){
+  return Math.max(0,(bossEncounterCounts&&bossEncounterCounts[type]?bossEncounterCounts[type]:0)-1);
+}
+
+function showBossVictoryPanel(){
+  if(!victoryPanel||gameOver||bossVictoryAlreadyShown)return;
+  bossVictoryPending=false;
+  stopPowerStarLoop();
+  gameOver=true;
+  levelUpPanel.style.display="none";
+  document.querySelector("#victoryBox h1").textContent="🏆 ¡Lo has hecho genial!";
+  document.querySelector("#victoryBox .victoryMsg").innerHTML=`<span class="vLine vMain">Lo has hecho muy bien, mi amor 💖. ¡Has derrotado a todos los jefes!</span><span class="vLine vSub">Puedes seguir jugando para conseguirlo todo ✨</span>`;
+  injectVictoryScore();
+  victoryPanel.style.display="flex";
+  playVictoryJingle();
+}
+
 function getPendingBossTypes(){
   return ["giantCat","duck","seal","demon"].filter(t=>!defeatedBossTypes.has(t));
 }
@@ -1115,6 +1169,12 @@ if(type==="demon"){
 }
 
 lastBossType=type;
+const previousBossEncounters=bossEncounterCounts[type]||0;
+bossEncounterCounts[type]=previousBossEncounters+1;
+const bossRepeatLevel=previousBossEncounters;
+if(bossRepeatLevel>0){
+  floatingTexts.push({x:canvas.width/2,y:205,text:"👑 Jefe reforzado",life:1.6,maxLife:1.6,big:false});
+}
 const hpScale=wave<=5?1.05:1+wave*.10;
 
 if(type==="demon"){
@@ -1132,12 +1192,13 @@ maxHp:hp,
 speed:95+wave*2.2,
 shoot:.9,
 baseShoot:Math.max(.42,1.15-wave*.025),
-circleCount:10+Math.min(10,Math.floor(wave/5)),
+circleCount:10+Math.min(10,Math.floor(wave/5))+Math.min(8,bossRepeatLevel*2),
 orbSpeed:165+wave*5,
 hitAnim:0,
 wobble:0,
 contactDamage:20+wave*.45
 };
+boss.repeatLevel=bossRepeatLevel;
 const demonMsg=hasDog?"😈 El demonio ha robado a tu perro":"😈 ¡El demonio ha llegado!";
 floatingTexts.push({x:canvas.width/2,y:170,text:demonMsg,life:2.6,maxLife:2.6,big:true});
 return;
@@ -1145,15 +1206,16 @@ return;
 
 if(type==="giantCat"){
 const hp=Math.round((80+wave*16)*hpScale);
-boss={type,x:canvas.width/2,y:-90,r:62+Math.min(28,wave*1.2),hp,maxHp:hp,speed:42+wave*3.4,summon:Math.max(.55,2.15-wave*.07),baseSummon:Math.max(.55,2.15-wave*.07),summonCount:Math.min(5,2+Math.floor(wave/10)),hitAnim:0,wobble:0,contactDamage:16+wave*.7}
+boss={type,x:canvas.width/2,y:-90,r:62+Math.min(28,wave*1.2),hp,maxHp:hp,speed:42+wave*3.4,summon:Math.max(.42,2.15-wave*.07-bossRepeatLevel*.12),baseSummon:Math.max(.42,2.15-wave*.07-bossRepeatLevel*.12),summonCount:Math.min(8,2+Math.floor(wave/10)+Math.floor((bossRepeatLevel+1)/2)),hitAnim:0,wobble:0,contactDamage:16+wave*.7}
 }else if(type==="duck"){
 const hp=Math.round((90+wave*18)*hpScale);
-boss={type,x:canvas.width/2,y:canvas.height*.25,r:58+Math.min(20,wave*.9),hp,maxHp:hp,shoot:Math.max(.42,1.25-wave*.045),baseShoot:Math.max(.42,1.25-wave*.045),burst:Math.min(4,1+Math.floor(wave/15)),quackSpeed:190+wave*12,hitAnim:0,wobble:0}
+boss={type,x:canvas.width/2,y:canvas.height*.25,r:58+Math.min(20,wave*.9),hp,maxHp:hp,shoot:Math.max(.30,1.25-wave*.045-bossRepeatLevel*.10),baseShoot:Math.max(.30,1.25-wave*.045-bossRepeatLevel*.10),burst:Math.min(4,1+Math.floor(wave/15)),quackSpeed:190+wave*12,hitAnim:0,wobble:0}
 }else{
 const tx=Math.random()*(canvas.width-180)+90,ty=Math.random()*(canvas.height-180)+90;
 const hp=Math.round((95+wave*19)*hpScale);
-boss={type,x:canvas.width/2,y:canvas.height*.35,r:55+Math.min(22,wave*.85),hp,maxHp:hp,hitAnim:0,wobble:0,state:"jumping",baseJumpDuration:Math.max(.52,1.12-wave*.025),jumpTimer:Math.max(.52,1.12-wave*.025),jumpDuration:Math.max(.52,1.12-wave*.025),startX:canvas.width/2,startY:canvas.height*.35,targetX:tx,targetY:ty,shadowX:tx,shadowY:ty,jumps:0,jumpsBeforeRest:Math.max(2,5-Math.floor(wave/15)),stunTimer:0,stunDuration:Math.max(1.1,2.5-wave*.035),slamDamage:13+wave*.65}
+boss={type,x:canvas.width/2,y:canvas.height*.35,r:55+Math.min(22,wave*.85),hp,maxHp:hp,hitAnim:0,wobble:0,state:"jumping",baseJumpDuration:Math.max(.52,1.12-wave*.025),jumpTimer:Math.max(.52,1.12-wave*.025),jumpDuration:Math.max(.52,1.12-wave*.025),startX:canvas.width/2,startY:canvas.height*.35,targetX:tx,targetY:ty,shadowX:tx,shadowY:ty,jumps:0,jumpsBeforeRest:Math.max(2,5-Math.floor(wave/15)+bossRepeatLevel),stunTimer:0,stunDuration:Math.max(.85,2.5-wave*.035-bossRepeatLevel*.16),slamDamage:13+wave*.65}
 }
+if(boss)boss.repeatLevel=bossRepeatLevel;
 }
 
 function fusionPostLevel(key){
@@ -1782,9 +1844,9 @@ const randomUpgrade=getRandomShopUpgradeChoice(upgradeChoices);
 const randomPrice=Math.max(1,Math.ceil(upgradePrice/2));
 const randomChoice=randomUpgrade?{
   icon:"🎲",
-  title:"Mejora aleatoria",
+  title:"Mejora sorpresa",
   levelTag:`${randomPrice}🪙`,
-  desc:"Compra una mejora sorpresa que no está entre las opciones actuales. No puede tocar una mejora única ni una mejora al máximo.",
+  desc:"Mejora sorpresa.",
   special:true,
   randomShopUpgrade:true,
   hiddenUpgrade:randomUpgrade,
@@ -1793,7 +1855,7 @@ const randomChoice=randomUpgrade?{
 const choices=canFuse(fusionPrice)?[fusionChoice,...upgradeChoices]:[...upgradeChoices,fusionChoice];
 if(randomChoice)choices.push(randomChoice);
 choices.push({icon:"🚪",title:"Salir de la tienda",levelTag:"",desc:"Cierra la tienda y conserva las monedas que te queden.",special:true,skipShop:true});
-showCards("🪙 Tienda de gatitos","Compra todo lo que quieras hasta que decidas salir 💖",`Mejora: ${upgradePrice}🪙 (+1 por compra) · Aleatoria: ${randomPrice}🪙 · Fusión: ${fusionPrice}🪙 (+3 por fusión)`,choices,upgrade=>{
+showCards("🪙 Tienda de gatitos","Compra todo lo que quieras hasta que decidas salir 💖",`Mejora: ${upgradePrice}🪙 (+1 por compra) · Sorpresa: ${randomPrice}🪙 · Fusión: ${fusionPrice}🪙 (+3 por fusión)`,choices,upgrade=>{
 if(upgrade.skipShop){closeShopSession();return}
 if(upgrade.openFusionShop){openFusionChoice(fusionPrice);return}
 if(upgrade.randomShopUpgrade){
@@ -2735,18 +2797,15 @@ grantFullLevel();
 shopBossPending=true;
 defeatedBossTypes.add(defeatedType);
 boss=null;
+collectAllMapLootAfterBoss();
 cleanupRoundScreen({keepFloating:true,keepSoftEffects:true});
-maybeOpenShopOrFusion();
 const allBossTypes=["giantCat","duck","seal","demon"];
 if(allBossTypes.every(t=>defeatedBossTypes.has(t))&&victoryPanel&&!gameOver&&!bossVictoryAlreadyShown){
-stopPowerStarLoop();
-gameOver=true;
-levelUpPanel.style.display="none";
-document.querySelector("#victoryBox h1").textContent="🏆 ¡Lo has hecho genial!";
-document.querySelector("#victoryBox .victoryMsg").innerHTML=`<span class="vLine vMain">Lo has hecho muy bien, mi amor 💖. ¡Has derrotado a todos los jefes!</span><span class="vLine vSub">Puedes seguir jugando para conseguirlo todo ✨</span>`;
-injectVictoryScore();
-victoryPanel.style.display="flex";
-playVictoryJingle();
+  shopBossPending=false;
+  shopAvailable=true;
+  showBossVictoryPanel();
+}else{
+  maybeOpenShopOrFusion();
 }
 }
 }
@@ -2949,7 +3008,7 @@ boss.x=boss.targetX;boss.y=boss.targetY;makeSmoke(boss.x,boss.y);
 if(Math.hypot(player.x-boss.x,player.y-boss.y)<boss.r+player.r+38){takePlayerDamage((boss.slamDamage||18),"La foca ha caído encima de ti 🦭",.2)}
 boss.jumps++;
 if(boss.jumps>=boss.jumpsBeforeRest){
-boss.state="stunned";boss.stunTimer=boss.stunDuration||2.4;boss.jumps=0;boss.jumpsBeforeRest=Math.max(2,5-Math.floor(wave/15));boss.hp-=Math.max(4,boss.maxHp*.055);floatingTexts.push({x:boss.x,y:boss.y-boss.r-25,text:"La foca se ha mareado",life:1.4,maxLife:1.4,big:false})
+boss.state="stunned";boss.stunTimer=boss.stunDuration||2.4;boss.jumps=0;boss.jumpsBeforeRest=Math.max(2,5-Math.floor(wave/15)+(boss.repeatLevel||0));boss.hp-=Math.max(4,boss.maxHp*.055);floatingTexts.push({x:boss.x,y:boss.y-boss.r-25,text:"La foca se ha mareado",life:1.4,maxLife:1.4,big:false})
 }else startSealJump()
 }
 }else{
@@ -3669,7 +3728,13 @@ if(isPowerStarActive()&&performance.now()-lastStarTrail>45){
   for(let i=0;i<5;i++){const a=Math.random()*Math.PI*2; sparkles.push({x:player.x-Math.cos(player.angle)*18+Math.cos(a)*18,y:player.y-Math.sin(player.angle)*18+Math.sin(a)*18,vx:Math.cos(a)*(25+Math.random()*65),vy:Math.sin(a)*(25+Math.random()*65),size:3+Math.random()*4,life:.45,maxLife:.45,color:`hsl(${(performance.now()/5+i*45)%360},100%,70%)`});}
 }
 waveTime-=dt;
-if(waveTime<=0&&!boss){waveTime=0;if(!waveUpgradePending){waveUpgradePending=true;cleanupRoundScreen();openUpgradeMenu("wave");}return}
+if(waveTime<=0&&!boss){
+  waveTime=0;
+  if(bossVictoryPending){cleanupRoundScreen({keepFloating:true,keepSoftEffects:true});showBossVictoryPanel();return}
+  if(shopBossPending){cleanupRoundScreen({keepFloating:true,keepSoftEffects:true});maybeOpenShopOrFusion();return}
+  if(!waveUpgradePending){waveUpgradePending=true;cleanupRoundScreen();openUpgradeMenu("wave");}
+  return
+}
 if(waveTime<=0&&boss)waveTime=0;
 
 spawnCooldown-=dt;
