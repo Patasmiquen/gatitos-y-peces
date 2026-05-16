@@ -339,6 +339,10 @@ const FUSION_RECOMMENDATION_PROFILE={
   "zoomies+catInstinct":{defense:.65,mobility:.9,consistency:.55},
   "coinMagnet+xpBoost":{economy:1,scaling:.9,consistency:.45},
   "catInstinct+coinMagnet":{economy:.9,defense:.8,healing:.45,consistency:.7,scaling:.35},
+  "bigCursor+boomerang":{consistency:.95,control:.75,automation:.35},
+  "boomerang+catInstinct":{control:.9,defense:.65,consistency:.65},
+  "catInstinct+omniBurst":{area:1,defense:.65,damage:.45},
+  "coinMagnet+darkPact":{economy:1,scaling:.8,consistency:.45},
   "shield+lifeSteal":{defense:.9,healing:.9,control:.25},
   "damage+critChance":{damage:1,scaling:.55},
   "pierce+yarnBounce":{area:.95,control:.9,consistency:.45},
@@ -1782,7 +1786,7 @@ return
 }
 showCards(reason==="wave"?"🌊 ¡Ronda superada!":"⭐ ¡Subiste de nivel!",darkWave?"🖤 La Voluntad Oscura elige por ti":lovePhrases[Math.floor(Math.random()*lovePhrases.length)],darkWave?"Solo aparecen mejoras escalables para que el +2 no se desperdicie":"Elige una mejora gatuna",choices,upgrade=>{
 upgrade.apply();
-if(darkWave){const bonusCoins=1+Math.floor(Math.random()*5);coins+=bonusCoins;floatingTexts.push({x:player.x,y:player.y-105,text:`🖤 +${bonusCoins} monedas`,life:1.3,maxLife:1.3,big:false})}
+if(darkWave){let bonusCoins=1+Math.floor(Math.random()*5);if(hasDoneFusionPair("coinMagnet+darkPact")){const fp=getFusionProgress("coinMagnet+darkPact");bonusCoins+=2+Math.floor(Math.random()*(3+fp));}coins+=bonusCoins;floatingTexts.push({x:player.x,y:player.y-105,text:`🖤 +${bonusCoins} monedas`,life:1.3,maxLife:1.3,big:false})}
 if(darkWave&&upgrade.key){
   let doubled=false;
   if(upgrade.fusion){
@@ -2016,15 +2020,15 @@ zoomies:{icon:"💨",name:"Zoomies",desc:"A veces vas rapidísima."}
 const fusionPairs={
 aimAssist:["autoFire", "bigCursor", "catInstinct", "damage", "pierce", "fishSpeed", "boomerang", "critChance"],
 autoFire:["aimAssist", "bigCursor", "moralSupport"],
-bigCursor:["aimAssist", "autoFire", "moralSupport", "damage", "pierce", "critChance", "fishSize"],
+bigCursor:["aimAssist", "autoFire", "moralSupport", "damage", "pierce", "critChance", "fishSize", "boomerang"],
 bigFish:["damage", "doubleFish", "fireRate", "fishSize", "pierce", "yarnBounce"],
-boomerang:["doubleFish", "fireRate", "fishSpeed", "omniBurst", "pierce", "yarnBounce"],
-catInstinct:["aimAssist", "darkPact", "moralSupport", "shield", "maxLife", "catSlow", "moveSpeed", "healOnWave", "coinMagnet"],
+boomerang:["doubleFish", "fireRate", "fishSpeed", "omniBurst", "pierce", "yarnBounce", "bigCursor", "catInstinct"],
+catInstinct:["aimAssist", "darkPact", "moralSupport", "shield", "maxLife", "catSlow", "moveSpeed", "healOnWave", "coinMagnet", "boomerang", "omniBurst"],
 catSlow:["coinMagnet", "fishSize", "maxLife", "moveSpeed", "shield"],
-coinMagnet:["catSlow", "healOnWave", "moveSpeed", "xpBoost", "catInstinct"],
+coinMagnet:["catSlow", "healOnWave", "moveSpeed", "xpBoost", "catInstinct", "darkPact"],
 critChance:["damage", "doubleFish", "autoFire", "zoomies"],
 damage:["bigFish", "doubleFish", "lifeSteal", "omniBurst", "pierce", "shield", "yarnBounce", "critChance"],
-darkPact:["catInstinct", "moralSupport", "damage", "critChance", "lifeSteal", "xpBoost", "omniBurst"],
+darkPact:["catInstinct", "moralSupport", "damage", "critChance", "lifeSteal", "xpBoost", "omniBurst", "coinMagnet"],
 doubleFish:["bigFish", "boomerang", "damage", "fireRate", "omniBurst", "yarnBounce", "critChance"],
 fireRate:["bigFish", "boomerang", "doubleFish", "fishSpeed", "omniBurst", "zoomies"],
 fishSize:["bigFish", "catSlow", "pierce", "shield", "yarnBounce"],
@@ -2034,7 +2038,7 @@ lifeSteal:["damage", "healOnWave", "maxLife", "shield"],
 maxLife:["catSlow", "healOnWave", "lifeSteal", "shield"],
 moralSupport:["autoFire", "bigCursor", "catInstinct", "darkPact", "maxLife", "healOnWave", "xpBoost", "moveSpeed"],
 moveSpeed:["catSlow", "coinMagnet", "xpBoost", "zoomies"],
-omniBurst:["boomerang", "damage", "doubleFish", "fireRate", "fishSpeed", "xpBoost", "yarnBounce"],
+omniBurst:["boomerang", "damage", "doubleFish", "fireRate", "fishSpeed", "xpBoost", "yarnBounce", "catInstinct"],
 pierce:["bigFish", "boomerang", "damage", "fishSize", "fishSpeed", "yarnBounce"],
 shield:["catInstinct", "catSlow", "damage", "fishSize", "lifeSteal", "maxLife"],
 xpBoost:["coinMagnet", "healOnWave", "moveSpeed", "omniBurst"],
@@ -2062,6 +2066,10 @@ const fusionNameMap={
 "damage+shield":"Escudo ofensivo",
 "coinMagnet+xpBoost":"Progreso acelerado",
 "catInstinct+coinMagnet":"Instinto recolector",
+"bigCursor+boomerang":"Retorno marcado",
+"boomerang+catInstinct":"Reflejo circular",
+"catInstinct+omniBurst":"Ráfaga felina",
+"coinMagnet+darkPact":"Codicia oscura",
 "healOnWave+xpBoost":"Crecimiento estable",
 "coinMagnet+moveSpeed":"Recolector ágil",
 "fireRate+omniBurst":"Caos continuo",
@@ -2159,6 +2167,10 @@ const fusionEffectDescMap={
 "damage+shield":"El escudo deja de ser solo defensa: sus peces hacen más daño al contacto.",
 "coinMagnet+xpBoost":"Recoges recursos y subes de nivel más rápido, acelerando muchísimo la progresión.",
 "catInstinct+coinMagnet":"Cuando se activa el instinto gatuno, atrae monedas y latas cercanas hacia ti. Al subir esta fusión, aumenta el rango de atracción.",
+"bigCursor+boomerang":"Los boomerangs quedan marcados por la mirilla y, al volver, buscan enemigos cercanos antes de regresar. Al subir esta fusión, corrigen mejor su trayectoria.",
+"boomerang+catInstinct":"Cuando se activa Instinto gatuno, los boomerangs que haya en pantalla se reorientan hacia enemigos cercanos y duran un poco más.",
+"catInstinct+omniBurst":"Cuando se activa Instinto gatuno, dispara una ráfaga circular defensiva. Al subir esta fusión, salen más peces.",
+"coinMagnet+darkPact":"Voluntad Oscura se vuelve codiciosa: al elegir por ti al final de ronda, gana monedas extra. Al subir esta fusión, aumenta la recompensa.",
 "healOnWave+xpBoost":"Subes de nivel con más estabilidad porque ganas experiencia y recuperas vida entre rondas.",
 "coinMagnet+moveSpeed":"Te mueves rápido y recoges monedas desde más lejos, ideal para jugar agresivo sin perder recursos.",
 "fireRate+omniBurst":"La ráfaga circular se activa con mejor ritmo y combina muy bien con una cadencia alta.",
@@ -2223,6 +2235,10 @@ const fusionShortDescMap={
 "damage+shield":"El escudo también pega más.",
 "coinMagnet+xpBoost":"Recoges y progresas más rápido.",
 "catInstinct+coinMagnet":"Tu instinto atrae monedas y latas.",
+"bigCursor+boomerang":"Boomerangs que vuelven marcando objetivos.",
+"boomerang+catInstinct":"Tu instinto redirige los boomerangs.",
+"catInstinct+omniBurst":"Tu instinto dispara una ráfaga defensiva.",
+"coinMagnet+darkPact":"Voluntad Oscura da más monedas.",
 "healOnWave+xpBoost":"Subes mejor y te recuperas al pasar ronda.",
 "coinMagnet+moveSpeed":"Corres y recoges monedas más fácil.",
 "fireRate+omniBurst":"Más disparo y más ráfagas.",
@@ -2350,6 +2366,10 @@ function getFusionExtraBonusDesc(pair){
   if(pair==="darkPact+moralSupport")return "Bonus de fusión: invoca al perrito protector.";
   if(pair==="catInstinct+maxLife")return "Bonus de fusión: protección de emergencia.";
   if(pair==="catInstinct+coinMagnet")return "Bonus de fusión: el instinto atrae recursos.";
+  if(pair==="bigCursor+boomerang")return "Bonus de fusión: boomerangs con retorno marcado.";
+  if(pair==="boomerang+catInstinct")return "Bonus de fusión: el instinto redirige boomerangs.";
+  if(pair==="catInstinct+omniBurst")return "Bonus de fusión: ráfaga defensiva al activar instinto.";
+  if(pair==="coinMagnet+darkPact")return "Bonus de fusión: Voluntad Oscura da más monedas.";
   if(has("lifeSteal")&&has("shield"))return "Bonus de fusión: el escudo roba vida.";
   if(has("lifeSteal"))return "Bonus de fusión: más robo de vida.";
   if(has("shield")&&has("damage"))return "Bonus de fusión: el escudo pega más.";
@@ -2672,6 +2692,10 @@ if(pair==="catInstinct+moralSupport"){upgrades.valorCasa=true;floatingTexts.push
 if(pair==="catInstinct+darkPact"){upgrades.cursedInstinct=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🖤 Instinto maldito",life:1.8,maxLife:1.8,big:false})}
 if(pair==="catInstinct+maxLife"){upgrades.sevenLives=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🐱 Siete vidas de gato",life:2,maxLife:2,big:false})}
 if(pair==="catInstinct+coinMagnet"){floatingTexts.push({x:player.x,y:player.y-95,text:"🧲 Instinto recolector",life:1.8,maxLife:1.8,big:false})}
+if(pair==="bigCursor+boomerang"){floatingTexts.push({x:player.x,y:player.y-95,text:"🪃 Retorno marcado",life:1.8,maxLife:1.8,big:false})}
+if(pair==="boomerang+catInstinct"){floatingTexts.push({x:player.x,y:player.y-95,text:"🥷 Reflejo circular",life:1.8,maxLife:1.8,big:false})}
+if(pair==="catInstinct+omniBurst"){floatingTexts.push({x:player.x,y:player.y-95,text:"💥 Ráfaga felina",life:1.8,maxLife:1.8,big:false})}
+if(pair==="coinMagnet+darkPact"){floatingTexts.push({x:player.x,y:player.y-95,text:"🖤 Codicia oscura",life:1.8,maxLife:1.8,big:false})}
 if(pair==="darkPact+moralSupport"){upgrades.boyfriendDog=true;upgrades.boyfriendDogSpirit=false;dogSacrificeUsed=false;forceDemonNextBoss=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🐶 Tu novio ha hecho este juego",life:2.3,maxLife:2.3,big:false});floatingTexts.push({x:player.x,y:player.y-125,text:"😈 El demonio te está buscando...",life:2,maxLife:2,big:false})}
 if(pair==="moveSpeed+zoomies"){upgrades.zoomiesHyper=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🐱💨 Hiperactividad",life:1.8,maxLife:1.8,big:false})}
 if(pair==="fireRate+zoomies"||pair==="autoFire+zoomies"){upgrades.zoomiesCannon=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🐱💨 Modo cañón",life:1.8,maxLife:1.8,big:false})}
@@ -3578,6 +3602,46 @@ function pullResourcesWithCatInstinct(){
   }
 }
 
+function getNearestCombatTargetFrom(x,y,maxDist=900){
+  let target=null,best=maxDist;
+  cats.forEach(cat=>{if(!isFinitePos(cat)||cat.dead)return;const d=Math.hypot(cat.x-x,cat.y-y);if(d<best){best=d;target=cat;}});
+  if(boss&&isFinitePos(boss)&&boss.hp>0){const d=Math.hypot(boss.x-x,boss.y-y);if(d<best){best=d;target=boss;}}
+  return target;
+}
+function redirectBoomerangsWithCatInstinct(){
+  const pair="boomerang+catInstinct";
+  if(!hasDoneFusionPair(pair))return;
+  const lvl=getFusionProgress(pair);
+  let count=0;
+  fishes.forEach(fish=>{
+    if(!fish||!fish.boomerang||!isFinitePos(fish))return;
+    const target=getNearestCombatTargetFrom(fish.x,fish.y,680+lvl*90);
+    if(!target)return;
+    const a=Math.atan2(target.y-fish.y,target.x-fish.x);
+    const speed=Math.max(560,Math.hypot(fish.vx,fish.vy))*(1+.03*lvl);
+    fish.vx=Math.cos(a)*speed;
+    fish.vy=Math.sin(a)*speed;
+    fish.angle=a;
+    fish.returning=false;
+    fish.life=Math.max(fish.life,1.0+lvl*.22);
+    fish.pierce=true;
+    count++;
+  });
+  if(count>0)floatingTexts.push({x:player.x,y:player.y-140,text:"🪃 Reflejo circular",life:1.05,maxLife:1.05,big:false});
+}
+function shootCatInstinctBurst(){
+  const pair="catInstinct+omniBurst";
+  if(!hasDoneFusionPair(pair))return;
+  const lvl=getFusionProgress(pair);
+  const count=8+lvl*3;
+  const speed=500*upgrades.fishSpeed*(1+lvl*.035);
+  for(let i=0;i<count;i++){
+    const a=(Math.PI*2/count)*i+Math.random()*.05;
+    fishes.push({x:player.x+Math.cos(a)*50,y:player.y+Math.sin(a)*50,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,angle:a,damage:Math.max(.75,upgrades.damage*(.62+lvl*.06)),life:1.05+lvl*.05,scale:Math.max(.72,upgrades.fishSize*.75),pierce:Math.random()<Math.min(.65,upgrades.pierceChance*.35+lvl*.04),boomerang:false,returning:false,age:0,hitIds:new Set(),shieldShot:true});
+  }
+  floatingTexts.push({x:player.x,y:player.y-154,text:"💥 Ráfaga felina",life:1.15,maxLife:1.15,big:false});
+}
+
 function triggerCatInstinct(){
 if(!upgrades.catInstinct||life>upgrades.maxLife*.3)return;
 const maxUses=upgrades.valorCasa?2:1;
@@ -3608,6 +3672,8 @@ if(upgrades.cursedInstinct){
 }
 floatingTexts.push({x:player.x,y:player.y-82,text:upgrades.valorCasa?"🏠 ¡Valor de casa!":"🥷 ¡Instinto gatuno!",life:1.35,maxLife:1.35,big:false});
 pullResourcesWithCatInstinct();
+redirectBoomerangsWithCatInstinct();
+shootCatInstinctBurst();
 
 cats.forEach(cat=>{
   if(!isFinitePos(cat))return;
@@ -3931,9 +3997,17 @@ fishes.forEach(fish=>{
 fish.age+=dt;
 if(fish.boomerang&&!fish.returning&&fish.age>(fish.turnTime||.95)){fish.returning=true;fish.pierce=true}
 if(fish.returning){
-const a=Math.atan2(player.y-fish.y,player.x-fish.x),speed=690*upgrades.fishSpeed*(1+effectLevel("boomerang")*.05);
+let returnTarget={x:player.x,y:player.y};
+let expireAtPlayer=true;
+if(hasDoneFusionPair("bigCursor+boomerang")){
+  const lvl=getFusionProgress("bigCursor+boomerang");
+  const marked=getSelectedTarget();
+  const nearby=marked&&isFinitePos(marked)?marked:getNearestCombatTargetFrom(fish.x,fish.y,520+lvl*95);
+  if(nearby){returnTarget=nearby;expireAtPlayer=false;fish.pierce=true;}
+}
+const a=Math.atan2(returnTarget.y-fish.y,returnTarget.x-fish.x),speed=690*upgrades.fishSpeed*(1+effectLevel("boomerang")*.05+(hasDoneFusionPair("bigCursor+boomerang")?getFusionProgress("bigCursor+boomerang")*.025:0));
 fish.vx=Math.cos(a)*speed;fish.vy=Math.sin(a)*speed;fish.angle=a;
-if(Math.hypot(player.x-fish.x,player.y-fish.y)<player.r+10)fish.life=0
+if(expireAtPlayer&&Math.hypot(player.x-fish.x,player.y-fish.y)<player.r+10)fish.life=0
 }else applyAimAssist(fish);
 fish.x+=fish.vx*dt;fish.y+=fish.vy*dt;fish.life-=dt
 });
@@ -5479,6 +5553,10 @@ function autoPairValue(pair){
     "aimAssist+bigCursor":840,
     "coinMagnet+xpBoost":820,
     "catInstinct+coinMagnet":835,
+    "bigCursor+boomerang":855,
+    "boomerang+catInstinct":845,
+    "catInstinct+omniBurst":875,
+    "coinMagnet+darkPact":830,
     "catInstinct+moralSupport":810,
     "catInstinct+darkPact":800,
     "shield+maxLife":780,
@@ -5509,6 +5587,10 @@ function autoPairValue(pair){
   if(parts.includes("maxLife")&&life<upgrades.maxLife*.65)v+=180;
   if(parts.includes("coinMagnet")&&coins<7)v+=120;
   if(parts.includes("catInstinct")&&parts.includes("coinMagnet"))v+=140;
+  if(parts.includes("boomerang")&&parts.includes("bigCursor"))v+=150;
+  if(parts.includes("boomerang")&&parts.includes("catInstinct"))v+=145;
+  if(parts.includes("omniBurst")&&parts.includes("catInstinct"))v+=160;
+  if(parts.includes("coinMagnet")&&parts.includes("darkPact"))v+=150;
   if(parts.includes("xpBoost")&&wave<16)v+=130;
 
   return v;
@@ -5982,7 +6064,7 @@ function adminCompleteAllFusions(){
   adminMaxAllUpgrades();
   adminClearFusionState();
 
-  const pairs=adminBuildRandomFusionSet(["catInstinct+coinMagnet"]);
+  const pairs=adminBuildRandomFusionSet(["catInstinct+coinMagnet","bigCursor+boomerang","boomerang+catInstinct","catInstinct+omniBurst","coinMagnet+darkPact"]);
   let applied=0;
   pairs.forEach(([a,b])=>{if(adminApplyRandomFusionPair(a,b))applied++;});
 
