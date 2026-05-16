@@ -240,6 +240,7 @@ const lovePhrases=["Muy bien miamor, lo estás haciendo muy bien 💖","Lo has h
 
 let score,shots,lastShot,lastAutoShot,lastFrame,gameOver,wave,spawnCooldown,life,level,xp,xpNeed,choosingUpgrade,gameStarted=false,paused=false,waveTime,waveDuration,waveUpgradePending=false,boss=null,shieldAngle=0,lastShieldHit=0,lastOmniBurst=0,rainbowChanceLevel=1,rainbowSelectedThisWave=false,rainbowSpawnedThisWave=false,rainbowPendingUntilKilled=false,coins=0,shopAvailable=false,firstShopReached=false,shopBossPending=false,fusionAvailable=false,lastBossType="",shopUpgradePurchases=0,shopFusionPurchases=0,dogKidnapped=false,avalancheActive=false,avalancheTime=0,avalancheDelay=999,avalancheThisWave=false,avalancheSpawnTimer=0,starChanceLevel=1,starActive=false,starTime=0,starWarningPlayed=false,forceDemonNextBoss=false,sevenLivesTime=0,sevenLivesCooldown=0,sevenLivesUsedThisWave=false,musicianNoteTimer=0,musicianMelodyIdx=0;
 let perfFps=60,lowPerfMode=false,lowPerfTimer=0,perfNoticeTimer=0;
+let backgroundFishSeed=Math.floor(Math.random()*1000000);
 let pendingUpgradeQueue=[];
 let runStats;
 let defeatedBossTypes=new Set();
@@ -667,6 +668,7 @@ return need;
 
 function restart(startAtWave=1){
 stopPowerStarLoop();
+backgroundFishSeed=Math.floor(Math.random()*1000000);
 autoRunChoices=[];autoRunStartTime=performance.now();autoLastPlayerX=player.x;autoLastPlayerY=player.y;autoStuckTimer=0;autoEmergencyEscapeUntil=0;
 resetUpgrades();
 const initialWave=Math.max(1,Math.floor(startAtWave||1));
@@ -4169,47 +4171,59 @@ ctx.fill();
 ctx.restore();
 }
 
-function drawAmbientBackgroundFish(now){
-const count=lowPerfMode?5:10;
-const specialPalette=["rgba(120,205,255,1)","rgba(255,174,204,1)","rgba(205,190,255,1)","rgba(255,209,102,1)","rgba(128,237,153,1)"];
-for(let i=0;i<count;i++){
-  const dir=i%2===0?1:-1;
-  const speed=(lowPerfMode?11:17)+(i%4)*4;
-  const lane=(i+1)/(count+1);
-  const bandY=canvas.height*(.12+lane*.72);
-  const y=bandY+Math.sin(now*.00022*(1+i*.08)+i*1.7)*(10+i*2.5);
-  const travel=(now*.001*speed + i*canvas.width*.19)%(canvas.width+260);
-  const x=dir>0?travel-130:canvas.width-travel+130;
-  const isLarge=i===3 || i===8;
-  const scale=(lowPerfMode?.42:.48)+(i%3)*.12+(isLarge?.18:0);
-  const alpha=(lowPerfMode?.055:.07)+(i%4)*.014;
-  const tint=specialPalette[i%specialPalette.length];
-  drawOneAmbientFish(x,y,dir,scale,alpha,tint,now*.0005+i*.3,false);
+function ambientFishRand(i,offset=0){
+const x=Math.sin((backgroundFishSeed+1)*12.9898+(i+1)*78.233+offset*37.719)*43758.5453;
+return x-Math.floor(x);
 }
 
-// Peces grandes raros: aparecen muy de vez en cuando, enormes pero muy transparentes.
+function drawAmbientBackgroundFish(now){
+const count=lowPerfMode?5:10;
+const specialPalette=["rgba(120,205,255,1)","rgba(255,174,204,1)","rgba(205,190,255,1)","rgba(255,209,102,1)","rgba(128,237,153,1)","rgba(179,255,236,1)","rgba(255,156,192,1)"];
+for(let i=0;i<count;i++){
+  const dir=ambientFishRand(i,1)<.5?1:-1;
+  const speed=(lowPerfMode?10:15)+ambientFishRand(i,2)*24;
+  const lane=(i+ambientFishRand(i,3))/(count+1);
+  const bandY=canvas.height*(.10+lane*.76);
+  const bob=8+ambientFishRand(i,4)*22;
+  const y=bandY+Math.sin(now*(.00016+ambientFishRand(i,5)*.00018)+ambientFishRand(i,6)*Math.PI*2)*bob;
+  const phaseOffset=ambientFishRand(i,7)*(canvas.width+300);
+  const travel=(now*.001*speed + phaseOffset)%(canvas.width+300);
+  const x=dir>0?travel-150:canvas.width-travel+150;
+  const isLarge=ambientFishRand(i,8)>.72;
+  const scale=(lowPerfMode?.38:.43)+ambientFishRand(i,9)*.34+(isLarge?.20:0);
+  const alpha=(lowPerfMode?.048:.06)+ambientFishRand(i,10)*.055;
+  const tint=specialPalette[Math.floor(ambientFishRand(i,11)*specialPalette.length)%specialPalette.length];
+  drawOneAmbientFish(x,y,dir,scale,alpha,tint,now*(.00032+ambientFishRand(i,12)*.00035)+ambientFishRand(i,13)*6,false);
+}
+
+// Pez enorme muy raro. Su momento, altura, color y dirección cambian en cada partida.
 if(!lowPerfMode){
-  const rareCycle=52000;
-  const phase=(now%rareCycle)/rareCycle;
-  if(phase>.72&&phase<.92){
-    const t=(phase-.72)/.20;
-    const alpha=Math.sin(t*Math.PI)*.055;
-    const dir=Math.floor(now/rareCycle)%2===0?1:-1;
-    const x=dir>0?canvas.width*(t*1.25-.15):canvas.width*(1.15-t*1.25);
-    const y=canvas.height*(.22+.52*((Math.floor(now/rareCycle)%3)/2)) + Math.sin(now*.00018)*18;
-    drawOneAmbientFish(x,y,dir,1.65,alpha,"rgba(255,209,235,1)",now*.00028,true);
+  const rareCycle=48000+ambientFishRand(90,1)*26000;
+  const shiftedNow=now+ambientFishRand(90,2)*rareCycle;
+  const phase=(shiftedNow%rareCycle)/rareCycle;
+  const windowStart=.66+ambientFishRand(90,3)*.14;
+  const windowSize=.13+ambientFishRand(90,4)*.08;
+  if(phase>windowStart&&phase<windowStart+windowSize){
+    const t=(phase-windowStart)/windowSize;
+    const alpha=Math.sin(t*Math.PI)*(.035+ambientFishRand(90,5)*.03);
+    const dir=ambientFishRand(90,6)<.5?1:-1;
+    const x=dir>0?canvas.width*(t*1.28-.16):canvas.width*(1.16-t*1.28);
+    const y=canvas.height*(.18+ambientFishRand(90,7)*.58) + Math.sin(now*(.00012+ambientFishRand(90,8)*.00012))*24;
+    const hugePalette=["rgba(255,209,235,1)","rgba(160,225,255,1)","rgba(255,226,140,1)","rgba(205,190,255,1)"];
+    const tint=hugePalette[Math.floor(ambientFishRand(90,9)*hugePalette.length)%hugePalette.length];
+    drawOneAmbientFish(x,y,dir,1.35+ambientFishRand(90,10)*.75,alpha,tint,now*.00024+ambientFishRand(90,11)*6,true);
   }
 }
 
-// Corazones de fondo, suaves y lentos.
+// Corazones de fondo, suaves y lentos, también con posición distinta por partida.
 const heartCount=lowPerfMode?1:3;
 for(let h=0;h<heartCount;h++){
-  const cycle=26000+h*7000;
-  const phase=((now+h*9200)%cycle)/cycle;
-  const x=canvas.width*(phase*1.2-.1);
-  const y=canvas.height*(.22+.24*h)+Math.sin(now*.00035+h)*16;
-  const alpha=.035+Math.sin(phase*Math.PI)*.045;
-  drawAmbientBackgroundHeart(x,y,.34+h*.09,alpha,Math.sin(now*.00025+h)*.18,h%2?"rgba(255,174,204,1)":"rgba(255,122,168,1)");
+  const cycle=23000+ambientFishRand(120+h,1)*16000;
+  const phase=((now+ambientFishRand(120+h,2)*cycle)%cycle)/cycle;
+  const x=canvas.width*(phase*1.22-.11);
+  const y=canvas.height*(.16+ambientFishRand(120+h,3)*.62)+Math.sin(now*(.00022+ambientFishRand(120+h,4)*.00022)+h)*18;
+  const alpha=.025+Math.sin(phase*Math.PI)*(.035+ambientFishRand(120+h,5)*.035);
+  drawAmbientBackgroundHeart(x,y,.28+ambientFishRand(120+h,6)*.22,alpha,Math.sin(now*.00025+h)*.18,ambientFishRand(120+h,7)<.5?"rgba(255,174,204,1)":"rgba(255,122,168,1)");
 }
 }
 
