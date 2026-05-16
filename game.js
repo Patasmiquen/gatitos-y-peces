@@ -2702,10 +2702,10 @@ if(!gameOver&&wasShopOpen)openCoinShop();else maybeOpenShopOrFusion()
 function getRainbowLowestChoices(amount=3){
 const pool=[];
 
-Object.keys(upgradeLevels).forEach(key=>{
-if(upgradeLevels[key]<upgradeMaxLevels[key]&&!isUpgradeFinal(key)){
-pool.push({key,level:upgradeLevels[key],upgrade:makeLevelUpgrade(key)});
-}
+getLevelUpgradeKeys().forEach(key=>{
+const pair=getFusedPairForKey(key);
+const level=pair?getFusionProgress(pair):(upgradeLevels[key]||0);
+pool.push({key,level,upgrade:makeLevelUpgrade(key)});
 });
 
 if(!upgrades.aimAssist)pool.push({key:"aimAssist",level:0,upgrade:{icon:"🎯",title:"Peces listillos",levelTag:"1/1",desc:"Los peces giran hacia enemigos cercanos.",apply:()=>{upgrades.aimAssist=true}}});
@@ -2718,7 +2718,7 @@ if(!upgrades.zoomies)pool.push({key:"zoomies",level:0,upgrade:{icon:"💨",title
 if(pool.length===0)return [];
 
 const minLevel=Math.min(...pool.map(p=>p.level));
-const lowest=pool.filter(p=>p.level===minLevel).map(p=>p.upgrade);
+const lowest=pool.filter(p=>p.level===minLevel).map(p=>p.upgrade).filter(Boolean);
 const choices=[];
 
 while(choices.length<amount&&lowest.length>0){
@@ -2729,11 +2729,23 @@ choices.push(lowest.splice(index,1)[0]);
 return choices;
 }
 
+function giveRainbowMaxedReward(){
+const amount=12+Math.floor(Math.random()*9);
+coins+=amount;
+floatingTexts.push({x:player.x,y:player.y-82,text:`🌈 +${amount} monedas`,life:1.8,maxLife:1.8,big:true});
+floatingTexts.push({x:player.x,y:player.y-48,text:"Todo está al máximo",life:1.4,maxLife:1.4,big:false});
+choosingUpgrade=false;
+levelUpPanel.style.display="none";
+canvas.style.cursor=upgrades.bigCursor?"none":"crosshair";
+updateHud();
+refreshAdminPanelUI();
+checkGameCompletion();
+}
+
 function openRainbowLowestMenu(){
 const choices=getRainbowLowestChoices(3);
 if(choices.length===0){
-floatingTexts.push({x:player.x,y:player.y-75,text:"🌈 Todo está al máximo",life:1.5,maxLife:1.5,big:false});
-updateHud();checkGameCompletion();
+giveRainbowMaxedReward();
 return;
 }
 showCards("🌈 ¡Gatito arcoíris!","Elige una mejora de las más bajas 💖","Cuenta también las no desbloqueadas como nivel 0",choices,upgrade=>{
@@ -2742,7 +2754,7 @@ choosingUpgrade=false;
 levelUpPanel.style.display="none";
 canvas.style.cursor=upgrades.bigCursor?"none":"crosshair";
 floatingTexts.push({x:player.x,y:player.y-65,text:"🌈 "+upgrade.title,life:1.3,maxLife:1.3,big:false});
-updateHud();checkGameCompletion();
+updateHud();refreshAdminPanelUI();checkGameCompletion();
 });
 }
 
