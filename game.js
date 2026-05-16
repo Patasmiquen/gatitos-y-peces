@@ -238,7 +238,7 @@ const player={x:canvas.width/2,y:canvas.height/2,r:24,speed:270,angle:0,shootAni
 const dogCompanion={x:canvas.width/2-50,y:canvas.height/2+45,r:15,shootCooldown:0,wag:0};
 const lovePhrases=["Muy bien miamor, lo estás haciendo muy bien 💖","Lo has hecho muy bien pequeña 🌸","Mi niña es muy valiente 🐾","Eres la mejor gorda 💕","Estoy muy orgulloso de ti miamor ✨","Sigue así, preciosa 💗"];
 
-let score,shots,lastShot,lastAutoShot,lastFrame,gameOver,wave,spawnCooldown,life,level,xp,xpNeed,choosingUpgrade,gameStarted=false,paused=false,waveTime,waveDuration,waveUpgradePending=false,boss=null,shieldAngle=0,lastShieldHit=0,lastOmniBurst=0,rainbowChanceLevel=1,rainbowSelectedThisWave=false,rainbowSpawnedThisWave=false,rainbowPendingUntilKilled=false,coins=0,shopAvailable=false,firstShopReached=false,shopBossPending=false,fusionAvailable=false,lastBossType="",shopUpgradePurchases=0,shopFusionPurchases=0,dogKidnapped=false,avalancheActive=false,avalancheTime=0,avalancheDelay=999,avalancheThisWave=false,avalancheSpawnTimer=0,starChanceLevel=1,starActive=false,starTime=0,starWarningPlayed=false,forceDemonNextBoss=false,sevenLivesTime=0,sevenLivesCooldown=0,sevenLivesUsedThisWave=false,musicianNoteTimer=0,musicianMelodyIdx=0;
+let score,shots,lastShot,lastAutoShot,lastFrame,gameOver,wave,spawnCooldown,life,level,xp,xpNeed,choosingUpgrade,gameStarted=false,paused=false,waveTime,waveDuration,waveUpgradePending=false,boss=null,shieldAngle=0,lastShieldHit=0,lastOmniBurst=0,rainbowChanceLevel=1,rainbowSelectedThisWave=false,rainbowSpawnedThisWave=false,rainbowPendingUntilKilled=false,coins=0,shopAvailable=false,firstShopReached=false,shopBossPending=false,fusionAvailable=false,lastBossType="",shopUpgradePurchases=0,shopFusionPurchases=0,dogKidnapped=false,avalancheActive=false,avalancheTime=0,avalancheDelay=999,avalancheThisWave=false,avalancheSpawnTimer=0,starChanceLevel=1,starActive=false,starTime=0,starWarningPlayed=false,forceDemonNextBoss=false,sevenLivesTime=0,sevenLivesCooldown=0,sevenLivesUsedThisWave=false,musicianSpawnedThisWave=false,musicianNoteTimer=0,musicianMelodyIdx=0;
 let perfFps=60,lowPerfMode=false,lowPerfTimer=0,perfNoticeTimer=0;
 let backgroundFishSeed=Math.floor(Math.random()*1000000);
 let pendingUpgradeQueue=[];
@@ -338,6 +338,7 @@ const FUSION_RECOMMENDATION_PROFILE={
   "zoomies+autoFire":{automation:.85,damage:.45,mobility:.65,consistency:.45},
   "zoomies+catInstinct":{defense:.65,mobility:.9,consistency:.55},
   "coinMagnet+xpBoost":{economy:1,scaling:.9,consistency:.45},
+  "catInstinct+coinMagnet":{economy:.9,defense:.8,healing:.45,consistency:.7,scaling:.35},
   "shield+lifeSteal":{defense:.9,healing:.9,control:.25},
   "damage+critChance":{damage:1,scaling:.55},
   "pierce+yarnBounce":{area:.95,control:.9,consistency:.45},
@@ -676,7 +677,7 @@ runStartWave=initialWave;
 autoModeUsedThisRun=!!autoMode;
 rankingEligibleThisRun=initialWave===1&&!autoModeUsedThisRun;
 rankingDisabledReason=rankingEligibleThisRun?"":(autoModeUsedThisRun?"Ranking desactivado: la partida empezó con IA activada.":`Ranking desactivado: la partida empezó en ronda ${initialWave}.`);
-score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=0;lastAutoShot=0;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=initialWave;thiefCoinsStolenThisWave=0;spawnCooldown=0;life=upgrades.maxLife;level=initialWave;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();bossEncounterCounts={giantCat:0,duck:0,seal:0,demon:0};giantFishEasterEggsUsed=0;bossVictoryAlreadyShown=false;bossVictoryScoreSaved=false;bossVictoryPending=false;dogRelaxTime=0;fusionMoveXpTimer=0;lastFusionShieldGuard=0;enemyIntroSeen={};finalChoiceLocked=false;demonSpawnPressure=0;thiefCoinsStolenThisWave=0;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
+score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=0;lastAutoShot=0;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=initialWave;thiefCoinsStolenThisWave=0;spawnCooldown=0;life=upgrades.maxLife;level=initialWave;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;musicianSpawnedThisWave=false;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();bossEncounterCounts={giantCat:0,duck:0,seal:0,demon:0};giantFishEasterEggsUsed=0;bossVictoryAlreadyShown=false;bossVictoryScoreSaved=false;bossVictoryPending=false;dogRelaxTime=0;fusionMoveXpTimer=0;lastFusionShieldGuard=0;enemyIntroSeen={};finalChoiceLocked=false;demonSpawnPressure=0;thiefCoinsStolenThisWave=0;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
 demonOrbs.length=0;yarnBalls.length=0;powerStars.length=0;shockwaves.length=0;sparkles.length=0;tunaDrops.length=0;
 player.x=canvas.width/2;player.y=canvas.height/2;player.angle=0;player.shootAnim=0;player.hurtAnim=0;dogCompanion.x=player.x-50;dogCompanion.y=player.y+45;dogCompanion.shootCooldown=0;
 fishes.length=0;cats.length=0;hearts.length=0;smokes.length=0;floatingTexts.length=0;pawPrints.length=0;quacks.length=0;coinsDrops.length=0;dogBones.length=0;demonOrbs.length=0;yarnBalls.length=0;shockwaves.length=0;sparkles.length=0;
@@ -864,7 +865,7 @@ waveTime=waveDuration;
 spawnCooldown=.25;
 cleanupRoundScreen({keepFloating:true,keepSoftEffects:false});boss=null;
 rainbowSpawnedThisWave=false;
-catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;sevenLivesUsedThisWave=false;
+catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;sevenLivesUsedThisWave=false;musicianSpawnedThisWave=false;
 if(rainbowPendingUntilKilled)rainbowSelectedThisWave=true;
 else{
 const rainbowChance=Math.min(.78,rainbowChanceLevel*.013);
@@ -1990,9 +1991,9 @@ autoFire:["aimAssist", "bigCursor", "moralSupport"],
 bigCursor:["aimAssist", "autoFire", "moralSupport", "damage", "pierce", "critChance", "fishSize"],
 bigFish:["damage", "doubleFish", "fireRate", "fishSize", "pierce", "yarnBounce"],
 boomerang:["doubleFish", "fireRate", "fishSpeed", "omniBurst", "pierce", "yarnBounce"],
-catInstinct:["aimAssist", "darkPact", "moralSupport", "shield", "maxLife", "catSlow", "moveSpeed", "healOnWave"],
+catInstinct:["aimAssist", "darkPact", "moralSupport", "shield", "maxLife", "catSlow", "moveSpeed", "healOnWave", "coinMagnet"],
 catSlow:["coinMagnet", "fishSize", "maxLife", "moveSpeed", "shield"],
-coinMagnet:["catSlow", "healOnWave", "moveSpeed", "xpBoost"],
+coinMagnet:["catSlow", "healOnWave", "moveSpeed", "xpBoost", "catInstinct"],
 critChance:["damage", "doubleFish", "autoFire", "zoomies"],
 damage:["bigFish", "doubleFish", "lifeSteal", "omniBurst", "pierce", "shield", "yarnBounce", "critChance"],
 darkPact:["catInstinct", "moralSupport", "damage", "critChance", "lifeSteal", "xpBoost", "omniBurst"],
@@ -2032,6 +2033,7 @@ const fusionNameMap={
 "fishSize+shield":"Escudo gigante",
 "damage+shield":"Escudo ofensivo",
 "coinMagnet+xpBoost":"Progreso acelerado",
+"catInstinct+coinMagnet":"Instinto recolector",
 "healOnWave+xpBoost":"Crecimiento estable",
 "coinMagnet+moveSpeed":"Recolector ágil",
 "fireRate+omniBurst":"Caos continuo",
@@ -2128,6 +2130,7 @@ const fusionEffectDescMap={
 "fishSize+shield":"Los peces del escudo crecen y golpean con más presencia, sin tapar al personaje.",
 "damage+shield":"El escudo deja de ser solo defensa: sus peces hacen más daño al contacto.",
 "coinMagnet+xpBoost":"Recoges recursos y subes de nivel más rápido, acelerando muchísimo la progresión.",
+"catInstinct+coinMagnet":"Cuando se activa el instinto gatuno, atrae monedas y latas cercanas hacia ti. Al subir esta fusión, aumenta el rango de atracción.",
 "healOnWave+xpBoost":"Subes de nivel con más estabilidad porque ganas experiencia y recuperas vida entre rondas.",
 "coinMagnet+moveSpeed":"Te mueves rápido y recoges monedas desde más lejos, ideal para jugar agresivo sin perder recursos.",
 "fireRate+omniBurst":"La ráfaga circular se activa con mejor ritmo y combina muy bien con una cadencia alta.",
@@ -2191,6 +2194,7 @@ const fusionShortDescMap={
 "fishSize+shield":"Escudo con peces grandes.",
 "damage+shield":"El escudo también pega más.",
 "coinMagnet+xpBoost":"Recoges y progresas más rápido.",
+"catInstinct+coinMagnet":"Tu instinto atrae monedas y latas.",
 "healOnWave+xpBoost":"Subes mejor y te recuperas al pasar ronda.",
 "coinMagnet+moveSpeed":"Corres y recoges monedas más fácil.",
 "fireRate+omniBurst":"Más disparo y más ráfagas.",
@@ -2317,6 +2321,7 @@ function getFusionExtraBonusDesc(pair){
 
   if(pair==="darkPact+moralSupport")return "Bonus de fusión: invoca al perrito protector.";
   if(pair==="catInstinct+maxLife")return "Bonus de fusión: protección de emergencia.";
+  if(pair==="catInstinct+coinMagnet")return "Bonus de fusión: el instinto atrae recursos.";
   if(has("lifeSteal")&&has("shield"))return "Bonus de fusión: el escudo roba vida.";
   if(has("lifeSteal"))return "Bonus de fusión: más robo de vida.";
   if(has("shield")&&has("damage"))return "Bonus de fusión: el escudo pega más.";
@@ -2638,6 +2643,7 @@ if(pair==="aimAssist+catInstinct"){upgrades.reflexBurst=true;floatingTexts.push(
 if(pair==="catInstinct+moralSupport"){upgrades.valorCasa=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🏠 Valor de casa",life:1.8,maxLife:1.8,big:false})}
 if(pair==="catInstinct+darkPact"){upgrades.cursedInstinct=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🖤 Instinto maldito",life:1.8,maxLife:1.8,big:false})}
 if(pair==="catInstinct+maxLife"){upgrades.sevenLives=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🐱 Siete vidas de gato",life:2,maxLife:2,big:false})}
+if(pair==="catInstinct+coinMagnet"){floatingTexts.push({x:player.x,y:player.y-95,text:"🧲 Instinto recolector",life:1.8,maxLife:1.8,big:false})}
 if(pair==="darkPact+moralSupport"){upgrades.boyfriendDog=true;upgrades.boyfriendDogSpirit=false;dogSacrificeUsed=false;forceDemonNextBoss=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🐶 Tu novio ha hecho este juego",life:2.3,maxLife:2.3,big:false});floatingTexts.push({x:player.x,y:player.y-125,text:"😈 El demonio te está buscando...",life:2,maxLife:2,big:false})}
 if(pair==="moveSpeed+zoomies"){upgrades.zoomiesHyper=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🐱💨 Hiperactividad",life:1.8,maxLife:1.8,big:false})}
 if(pair==="fireRate+zoomies"||pair==="autoFire+zoomies"){upgrades.zoomiesCannon=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🐱💨 Modo cañón",life:1.8,maxLife:1.8,big:false})}
@@ -2774,7 +2780,7 @@ function hasActiveMusicianCat(){
 return cats.some(c=>c&&c.type==="musician"&&!c.dead&&isFinitePos(c));
 }
 function normalizeSpecialCatSpawnType(catType){
-if(catType==="musician"&&hasActiveMusicianCat())return "normal";
+if(catType==="musician"&&(hasActiveMusicianCat()||musicianSpawnedThisWave))return "normal";
 return catType;
 }
 
@@ -2830,6 +2836,7 @@ if(catType==="student"){color="#74b9ff";r=24;const startStudy=Math.min(4,Math.ma
 const initialStudyLevel=catType==="student"?Math.min(4,Math.max(0,Math.floor((wave-12)/8))):0;
 const musicianImmune=catType==="musician"?1:0;
 cats.push({x,y,r,speed,hp,maxHp:hp,damageCooldown:0,hitAnim:0,wobble:Math.random()*Math.PI*2,color,rainbow,small,type:catType,yarnCooldown:1.2+Math.random()*1.1,stealCooldown:0,fleeTimer:0,spawnAnim:.32,maxSpawnAnim:.32,sleepState:catType==="sleepy"?"sleeping":null,wakeTimer:0,rushTimer:0,sleepAwakeDuration:0,baseSpeed:speed,zigzagPhase:Math.random()*Math.PI*2,studyTimer:0,studyLevel:initialStudyLevel,musicImmuneTimer:musicianImmune,stolenCoins:0,freezeTimer:0})
+if(catType==="musician")musicianSpawnedThisWave=true;
 showEnemyIntro(catType);
 if(catType==="mini"){
   for(let pk=0;pk<3;pk++){
@@ -3502,6 +3509,35 @@ ctx.restore()
 }
 
 
+function getCatInstinctMagnetRange(){
+  const pair="catInstinct+coinMagnet";
+  if(!hasDoneFusionPair(pair))return 0;
+  const fusionLvl=getFusionProgress(pair);
+  const magnetLvl=effectLevel("coinMagnet");
+  return 260+fusionLvl*120+Math.min(220,magnetLvl*24);
+}
+function pullResourcesWithCatInstinct(){
+  const range=getCatInstinctMagnetRange();
+  if(range<=0)return;
+  const fusionLvl=getFusionProgress("catInstinct+coinMagnet");
+  const items=[...coinsDrops,...tunaDrops];
+  let pulled=0;
+  items.forEach(item=>{
+    if(!item||!isFinitePos(item))return;
+    const dx=player.x-item.x,dy=player.y-item.y,d=Math.hypot(dx,dy)||1;
+    if(d>range)return;
+    const closeness=1-Math.min(1,d/range);
+    const pull=Math.min(.9,.38+fusionLvl*.08+closeness*.25);
+    item.x+=dx*pull;
+    item.y+=dy*pull;
+    pulled++;
+  });
+  if(pulled>0){
+    floatingTexts.push({x:player.x,y:player.y-126,text:`🧲 Instinto recolector`,life:1.15,maxLife:1.15,big:false});
+    shockwaves.push({x:player.x,y:player.y,r:6,maxR:Math.min(range*.55,420),life:.65,maxLife:.65,color:"#4cc9f0",line:3});
+  }
+}
+
 function triggerCatInstinct(){
 if(!upgrades.catInstinct||life>upgrades.maxLife*.3)return;
 const maxUses=upgrades.valorCasa?2:1;
@@ -3531,6 +3567,7 @@ if(upgrades.cursedInstinct){
   floatingTexts.push({x:player.x,y:player.y-108,text:"🖤 Modo instinto maldito",life:1.4,maxLife:1.4,big:false});
 }
 floatingTexts.push({x:player.x,y:player.y-82,text:upgrades.valorCasa?"🏠 ¡Valor de casa!":"🥷 ¡Instinto gatuno!",life:1.35,maxLife:1.35,big:false});
+pullResourcesWithCatInstinct();
 
 cats.forEach(cat=>{
   if(!isFinitePos(cat))return;
@@ -5401,6 +5438,7 @@ function autoPairValue(pair){
     "autoFire+bigCursor":860,
     "aimAssist+bigCursor":840,
     "coinMagnet+xpBoost":820,
+    "catInstinct+coinMagnet":835,
     "catInstinct+moralSupport":810,
     "catInstinct+darkPact":800,
     "shield+maxLife":780,
@@ -5430,6 +5468,7 @@ function autoPairValue(pair){
   if(parts.includes("aimAssist"))v+=150;
   if(parts.includes("maxLife")&&life<upgrades.maxLife*.65)v+=180;
   if(parts.includes("coinMagnet")&&coins<7)v+=120;
+  if(parts.includes("catInstinct")&&parts.includes("coinMagnet"))v+=140;
   if(parts.includes("xpBoost")&&wave<16)v+=130;
 
   return v;
