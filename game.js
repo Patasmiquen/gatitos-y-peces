@@ -3753,14 +3753,9 @@ function updatePerformanceMode(rawDt){
   const shouldUseLow=lowPerfMode?lowPerfTimer>.28:lowPerfTimer>1.05;
   if(shouldUseLow!==lowPerfMode){
     lowPerfMode=shouldUseLow;
-    perfNoticeTimer=lowPerfMode?2.4:1.2;
-    if(!lowPerfMode&&perfNotice)perfNotice.textContent="Visual normal restaurado";
-    if(lowPerfMode&&perfNotice)perfNotice.textContent="Modo ligero activo";
+    perfNoticeTimer=0;
   }
-  if(perfNotice){
-    perfNoticeTimer=Math.max(0,perfNoticeTimer-rawDt);
-    perfNotice.classList.toggle("visible",perfNoticeTimer>0&&gameStarted&&!paused&&!choosingUpgrade&&!gameOver);
-  }
+  if(perfNotice)perfNotice.classList.remove("visible");
 }
 function getEffectQuality(){
   return lowPerfMode?.34:1;
