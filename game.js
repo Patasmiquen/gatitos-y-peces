@@ -4152,6 +4152,64 @@ lifeBar.style.width=`${Math.max(0,(life/upgrades.maxLife)*100)}%`;xpBar.style.wi
 if(helpEl)helpEl.classList.toggle("hiddenAfterIntro",gameStarted&&wave>=3);
 }
 
+function drawAmbientBackgroundFish(now){
+const count=lowPerfMode?4:8;
+for(let i=0;i<count;i++){
+  const dir=i%2===0?1:-1;
+  const speed=(lowPerfMode?12:18)+(i%4)*4;
+  const lane=(i+1)/(count+1);
+  const bandY=canvas.height*(.14+lane*.68);
+  const y=bandY+Math.sin(now*.00022*(1+i*.08)+i*1.7)*(10+i*2.5);
+  const travel=(now*.001*speed + i*canvas.width*.19)%(canvas.width+220);
+  const x=dir>0?travel-110:canvas.width-travel+110;
+  const scale=(lowPerfMode?.42:.48)+(i%3)*.12;
+  const alpha=(lowPerfMode?.06:.075)+(i%4)*.015;
+  const tint=i%3===0?"rgba(120,205,255,1)":(i%3===1?"rgba(255,174,204,1)":"rgba(205,190,255,1)");
+
+  ctx.save();
+  ctx.translate(x,y);
+  if(dir<0)ctx.scale(-1,1);
+  ctx.scale(scale,scale);
+  ctx.globalAlpha=alpha;
+  ctx.fillStyle=tint;
+  ctx.shadowBlur=lowPerfMode?0:10;
+  ctx.shadowColor=tint.replace(',1)',`,${Math.min(.18,alpha+.05)})`);
+
+  ctx.beginPath();
+  ctx.ellipse(0,0,24,12,0,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(-24,0);
+  ctx.lineTo(-41,-11);
+  ctx.lineTo(-38,0);
+  ctx.lineTo(-41,11);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(2,-4);
+  ctx.quadraticCurveTo(-2,-16,-11,-18);
+  ctx.quadraticCurveTo(-3,-10,4,-8);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(4,4);
+  ctx.quadraticCurveTo(-3,14,-14,16);
+  ctx.quadraticCurveTo(-5,8,3,7);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.globalAlpha*=.42;
+  ctx.fillStyle="#f7fbff";
+  ctx.beginPath();
+  ctx.ellipse(8,-3,6,2.5,-.25,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+}
+
 function drawBackground(){
 ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.shadowBlur=0;ctx.globalCompositeOperation="source-over";
 const now=performance.now();
@@ -4167,6 +4225,9 @@ const glow2=ctx.createRadialGradient(canvas.width*.82,canvas.height*.82,0,canvas
 glow2.addColorStop(0,"rgba(76,201,240,.16)");glow2.addColorStop(.5,"rgba(76,201,240,.05)");glow2.addColorStop(1,"rgba(76,201,240,0)");
 ctx.fillStyle=glow2;ctx.fillRect(0,0,canvas.width,canvas.height);
 
+// Peces decorativos muy suaves por el fondo, para dar más vida sin molestar.
+drawAmbientBackgroundFish(now);
+
 // Patrón muy sutil de puntitos/estrellas en movimiento.
 if(!lowPerfMode){
 for(let i=0;i<58;i++){
@@ -4180,18 +4241,6 @@ for(let i=0;i<58;i++){
 ctx.globalAlpha=1;
 }
 
-// Rejilla decorativa inferior, da sensación de suelo sin molestar al gameplay.
-if(!lowPerfMode){
-ctx.save();
-ctx.globalAlpha=.075;
-ctx.strokeStyle="#ffe6f0";
-ctx.lineWidth=1;
-const step=54;
-const offset=(now*.018)%step;
-for(let x=-step+offset;x<canvas.width+step;x+=step){ctx.beginPath();ctx.moveTo(x,canvas.height*.58);ctx.lineTo(x+canvas.width*.18,canvas.height);ctx.stroke();}
-for(let y=canvas.height*.62;y<canvas.height+step;y+=step){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y+18);ctx.stroke();}
-ctx.restore();
-}
 
 // Viñeta suave para centrar la mirada.
 const vignette=ctx.createRadialGradient(canvas.width/2,canvas.height/2,Math.min(canvas.width,canvas.height)*.18,canvas.width/2,canvas.height/2,Math.max(canvas.width,canvas.height)*.72);
