@@ -438,9 +438,9 @@ function scoreRecommendationChoice(choice,needs,context="generic"){
   if(!choice||choice.locked||choice.skipShop)return -999;
 
   if(choice.openFusionShop){
-    if(!canFuse(getShopFusionPrice()))return -999;
+    if(!canFuse(getEffectiveShopFusionPrice()))return -999;
     const bestPair=autoBestAvailableFusionPairScore();
-    const noAffordableUpgrade=context==="shop"&&coins<getShopUpgradePrice()&&coins>=getShopFusionPrice();
+    const noAffordableUpgrade=context==="shop"&&coins<getShopUpgradePrice()&&coins>=getEffectiveShopFusionPrice();
     return clamp01(bestPair/1650*.72+(noAffordableUpgrade ? .22 : 0)+.08);
   }
 
@@ -1783,9 +1783,21 @@ return
 showCards(reason==="wave"?"🌊 ¡Ronda superada!":"⭐ ¡Subiste de nivel!",darkWave?"🖤 La Voluntad Oscura elige por ti":lovePhrases[Math.floor(Math.random()*lovePhrases.length)],darkWave?"Solo aparecen mejoras escalables para que el +2 no se desperdicie":"Elige una mejora gatuna",choices,upgrade=>{
 upgrade.apply();
 if(darkWave){const bonusCoins=1+Math.floor(Math.random()*5);coins+=bonusCoins;floatingTexts.push({x:player.x,y:player.y-105,text:`🖤 +${bonusCoins} monedas`,life:1.3,maxLife:1.3,big:false})}
-if(darkWave&&upgrade.key&&!upgrade.fusion&&!isUpgradeFinal(upgrade.key)&&upgradeLevels[upgrade.key]<upgradeMaxLevels[upgrade.key]){
-upgrade.apply();
-floatingTexts.push({x:player.x,y:player.y-85,text:"🖤 +2 niveles",life:1.4,maxLife:1.4,big:false})
+if(darkWave&&upgrade.key){
+  let doubled=false;
+  if(upgrade.fusion){
+    const pair=getFusedPairForKey(upgrade.key);
+    const before=pair?getFusionProgress(pair):0;
+    if(pair&&before<5){
+      upgrade.apply();
+      doubled=getFusionProgress(pair)>before;
+    }
+  }else if(!isUpgradeFinal(upgrade.key)&&upgradeLevels[upgrade.key]<upgradeMaxLevels[upgrade.key]){
+    const before=upgradeLevels[upgrade.key]||0;
+    upgrade.apply();
+    doubled=(upgradeLevels[upgrade.key]||0)>before;
+  }
+  if(doubled)floatingTexts.push({x:player.x,y:player.y-85,text:upgrade.fusion?"🖤 +2 niveles de fusión":"🖤 +2 niveles",life:1.4,maxLife:1.4,big:false})
 }
 choosingUpgrade=false;levelUpPanel.style.display="none";canvas.style.cursor=upgrades.bigCursor?"none":"crosshair";
 floatingTexts.push({x:player.x,y:player.y-55,text:upgrade.title,life:1.5,maxLife:1.5,big:false});
@@ -1890,10 +1902,21 @@ if(shopBossPending&&!shopAvailable){shopBossPending=false;startShopSession()}
 
 function getShopUpgradePrice(){return 1+shopUpgradePurchases}
 function getShopFusionPrice(){return 5+shopFusionPurchases*3}
+function hasPendingShopFusionPair(){
+  const keys=getMaxedFusionKeys();
+  return keys.some((a,i)=>keys.slice(i+1).some(b=>areFusionCompatible(a,b)&&!hasFusionBeenDone(a,b)));
+}
+function isFusionOnlyShopDiscountActive(){
+  return getShopEligibleUpgradeKeys().length===0&&hasPendingShopFusionPair();
+}
+function getEffectiveShopFusionPrice(){
+  const normal=getShopFusionPrice();
+  return isFusionOnlyShopDiscountActive()?Math.max(1,Math.ceil(normal/2)):normal;
+}
 function startShopSession(){shopAvailable=true;openCoinShop()}
 function closeShopSession(){shopAvailable=false;choosingUpgrade=false;levelUpPanel.style.display="none";floatingTexts.push({x:player.x,y:player.y-65,text:"Tienda cerrada 💰",life:1.2,maxLife:1.2,big:false});updateHud()}
 
-function getFusionLockReason(cost=getShopFusionPrice()){
+function getFusionLockReason(cost=getEffectiveShopFusionPrice()){
 const keys=getMaxedFusionKeys();
 const hasPair=keys.some((a,i)=>keys.slice(i+1).some(b=>areFusionCompatible(a,b)&&!hasFusionBeenDone(a,b)));
 if(coins<cost&&!hasPair)return `Bloqueado: necesitas ${cost} monedas y 2 mejoras compatibles listas para fusionar.`;
@@ -1916,7 +1939,9 @@ function openCoinShop(){
 shopAvailable=true;
 firstShopReached=true;
 const upgradePrice=getShopUpgradePrice();
-const fusionPrice=getShopFusionPrice();
+const normalFusionPrice=getShopFusionPrice();
+const fusionPrice=getEffectiveShopFusionPrice();
+const fusionDiscountActive=fusionPrice<normalFusionPrice;
 const seenShopGroups=new Set();
 const upgradeChoices=getShopUpgradeChoices(6).filter(u=>{
   const g=u.key?(fusedUpgradeNames[u.key]?`fusion:${fusedUpgradeNames[u.key]}`:`single:${u.key}`):u.title;
@@ -1947,7 +1972,9 @@ const randomChoice=randomUpgrade?{
 const choices=canFuse(fusionPrice)?[fusionChoice,...upgradeChoices]:[...upgradeChoices,fusionChoice];
 if(randomChoice)choices.push(randomChoice);
 choices.push({icon:"🚪",title:"Salir de la tienda",levelTag:"",desc:"Cierra la tienda y conserva las monedas que te queden.",special:true,skipShop:true});
-showCards("🪙 Tienda de gatitos","Compra todo lo que quieras hasta que decidas salir 💖",`Mejora: ${upgradePrice}🪙 (+1 por compra) · Aleatoria: ${randomPrice}🪙 · Fusión: ${fusionPrice}🪙 (+3 por fusión)`,choices,upgrade=>{
+const randomLabel=randomChoice?`${randomPrice}🪙`:"—";
+const fusionLabel=fusionDiscountActive?`${fusionPrice}🪙 <span class="shopHint">(rebajada)</span>`:`${fusionPrice}🪙`;
+showCards("🪙 Tienda de gatitos","Compra todo lo que quieras hasta que decidas salir 💖",`Mejora: ${upgradePrice}🪙 (+1 por compra) · Aleatoria: ${randomLabel} · Fusión: ${fusionLabel} (+3 por fusión)`,choices,upgrade=>{
 if(upgrade.skipShop){closeShopSession();return}
 if(upgrade.openFusionShop){openFusionChoice(fusionPrice);return}
 if(upgrade.randomShopUpgrade){
@@ -5642,9 +5669,9 @@ function autoChoiceScore(choice,context){
   }
 
   if(choice.openFusionShop){
-    if(!canFuse(getShopFusionPrice()))return -9999;
+    if(!canFuse(getEffectiveShopFusionPrice()))return -9999;
     const bestPair=autoBestAvailableFusionPairScore();
-    const noAffordableUpgrade=context==="shop"&&coins<getShopUpgradePrice()&&coins>=getShopFusionPrice();
+    const noAffordableUpgrade=context==="shop"&&coins<getShopUpgradePrice()&&coins>=getEffectiveShopFusionPrice();
     return 520+bestPair*.9+(noAffordableUpgrade?360:0)+recommendedBonus+autoLearningBonus(choice,context);
   }
 
@@ -5701,7 +5728,7 @@ function autoPickChoice(choices,context){
     const fusionScore=fusion?autoChoiceScore(fusion,context):-9999;
     const upgradeScore=bestUpgrade?autoChoiceScore(bestUpgrade,context):-9999;
 
-    if(fusion&&coins>=getShopFusionPrice()){
+    if(fusion&&coins>=getEffectiveShopFusionPrice()){
       const anyAffordableBuy=nonExit.some(c=>!c.openFusionShop&&!c.locked);
       if(!anyAffordableBuy)return fusion;
       if(fusionScore>upgradeScore+60)return fusion;
