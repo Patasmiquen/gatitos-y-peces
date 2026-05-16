@@ -4152,63 +4152,112 @@ lifeBar.style.width=`${Math.max(0,(life/upgrades.maxLife)*100)}%`;xpBar.style.wi
 if(helpEl)helpEl.classList.toggle("hiddenAfterIntro",gameStarted&&wave>=3);
 }
 
+function drawAmbientBackgroundHeart(x,y,scale,alpha,angle,color){
+ctx.save();
+ctx.translate(x,y);
+ctx.rotate(angle||0);
+ctx.scale(scale,scale);
+ctx.globalAlpha=alpha;
+ctx.fillStyle=color||"rgba(255,122,168,1)";
+ctx.shadowBlur=lowPerfMode?0:10;
+ctx.shadowColor="rgba(255,122,168,.14)";
+ctx.beginPath();
+ctx.moveTo(0,8);
+ctx.bezierCurveTo(-22,-8,-12,-26,0,-13);
+ctx.bezierCurveTo(12,-26,22,-8,0,8);
+ctx.fill();
+ctx.restore();
+}
+
 function drawAmbientBackgroundFish(now){
-const count=lowPerfMode?4:8;
+const count=lowPerfMode?5:10;
+const specialPalette=["rgba(120,205,255,1)","rgba(255,174,204,1)","rgba(205,190,255,1)","rgba(255,209,102,1)","rgba(128,237,153,1)"];
 for(let i=0;i<count;i++){
   const dir=i%2===0?1:-1;
-  const speed=(lowPerfMode?12:18)+(i%4)*4;
+  const speed=(lowPerfMode?11:17)+(i%4)*4;
   const lane=(i+1)/(count+1);
-  const bandY=canvas.height*(.14+lane*.68);
+  const bandY=canvas.height*(.12+lane*.72);
   const y=bandY+Math.sin(now*.00022*(1+i*.08)+i*1.7)*(10+i*2.5);
-  const travel=(now*.001*speed + i*canvas.width*.19)%(canvas.width+220);
-  const x=dir>0?travel-110:canvas.width-travel+110;
-  const scale=(lowPerfMode?.42:.48)+(i%3)*.12;
-  const alpha=(lowPerfMode?.06:.075)+(i%4)*.015;
-  const tint=i%3===0?"rgba(120,205,255,1)":(i%3===1?"rgba(255,174,204,1)":"rgba(205,190,255,1)");
+  const travel=(now*.001*speed + i*canvas.width*.19)%(canvas.width+260);
+  const x=dir>0?travel-130:canvas.width-travel+130;
+  const isLarge=i===3 || i===8;
+  const scale=(lowPerfMode?.42:.48)+(i%3)*.12+(isLarge?.18:0);
+  const alpha=(lowPerfMode?.055:.07)+(i%4)*.014;
+  const tint=specialPalette[i%specialPalette.length];
+  drawOneAmbientFish(x,y,dir,scale,alpha,tint,now*.0005+i*.3,false);
+}
 
-  ctx.save();
-  ctx.translate(x,y);
-  if(dir<0)ctx.scale(-1,1);
-  ctx.scale(scale,scale);
-  ctx.globalAlpha=alpha;
-  ctx.fillStyle=tint;
-  ctx.shadowBlur=lowPerfMode?0:10;
-  ctx.shadowColor=tint.replace(',1)',`,${Math.min(.18,alpha+.05)})`);
+// Peces grandes raros: aparecen muy de vez en cuando, enormes pero muy transparentes.
+if(!lowPerfMode){
+  const rareCycle=52000;
+  const phase=(now%rareCycle)/rareCycle;
+  if(phase>.72&&phase<.92){
+    const t=(phase-.72)/.20;
+    const alpha=Math.sin(t*Math.PI)*.055;
+    const dir=Math.floor(now/rareCycle)%2===0?1:-1;
+    const x=dir>0?canvas.width*(t*1.25-.15):canvas.width*(1.15-t*1.25);
+    const y=canvas.height*(.22+.52*((Math.floor(now/rareCycle)%3)/2)) + Math.sin(now*.00018)*18;
+    drawOneAmbientFish(x,y,dir,1.65,alpha,"rgba(255,209,235,1)",now*.00028,true);
+  }
+}
 
-  ctx.beginPath();
-  ctx.ellipse(0,0,24,12,0,0,Math.PI*2);
-  ctx.fill();
-
-  ctx.beginPath();
-  ctx.moveTo(-24,0);
-  ctx.lineTo(-41,-11);
-  ctx.lineTo(-38,0);
-  ctx.lineTo(-41,11);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.beginPath();
-  ctx.moveTo(2,-4);
-  ctx.quadraticCurveTo(-2,-16,-11,-18);
-  ctx.quadraticCurveTo(-3,-10,4,-8);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.beginPath();
-  ctx.moveTo(4,4);
-  ctx.quadraticCurveTo(-3,14,-14,16);
-  ctx.quadraticCurveTo(-5,8,3,7);
-  ctx.closePath();
-  ctx.fill();
-
-  ctx.globalAlpha*=.42;
-  ctx.fillStyle="#f7fbff";
-  ctx.beginPath();
-  ctx.ellipse(8,-3,6,2.5,-.25,0,Math.PI*2);
-  ctx.fill();
-  ctx.restore();
+// Corazones de fondo, suaves y lentos.
+const heartCount=lowPerfMode?1:3;
+for(let h=0;h<heartCount;h++){
+  const cycle=26000+h*7000;
+  const phase=((now+h*9200)%cycle)/cycle;
+  const x=canvas.width*(phase*1.2-.1);
+  const y=canvas.height*(.22+.24*h)+Math.sin(now*.00035+h)*16;
+  const alpha=.035+Math.sin(phase*Math.PI)*.045;
+  drawAmbientBackgroundHeart(x,y,.34+h*.09,alpha,Math.sin(now*.00025+h)*.18,h%2?"rgba(255,174,204,1)":"rgba(255,122,168,1)");
 }
 }
+
+function drawOneAmbientFish(x,y,dir,scale,alpha,tint,wave,giant){
+ctx.save();
+ctx.translate(x,y);
+if(dir<0)ctx.scale(-1,1);
+ctx.rotate(Math.sin(wave||0)*(giant?.035:.055));
+ctx.scale(scale,scale);
+ctx.globalAlpha=alpha;
+ctx.fillStyle=tint;
+ctx.shadowBlur=lowPerfMode?0:(giant?18:10);
+ctx.shadowColor=tint.replace(',1)',`,${giant?.16:.13})`);
+
+ctx.beginPath();
+ctx.ellipse(0,0,24,12,0,0,Math.PI*2);
+ctx.fill();
+
+ctx.beginPath();
+ctx.moveTo(-24,0);
+ctx.lineTo(-42,-12);
+ctx.lineTo(-37,0);
+ctx.lineTo(-42,12);
+ctx.closePath();
+ctx.fill();
+
+ctx.beginPath();
+ctx.moveTo(2,-4);
+ctx.quadraticCurveTo(-2,-16,-11,-18);
+ctx.quadraticCurveTo(-3,-10,4,-8);
+ctx.closePath();
+ctx.fill();
+
+ctx.beginPath();
+ctx.moveTo(4,4);
+ctx.quadraticCurveTo(-3,14,-14,16);
+ctx.quadraticCurveTo(-5,8,3,7);
+ctx.closePath();
+ctx.fill();
+
+ctx.globalAlpha*=.45;
+ctx.fillStyle="#f7fbff";
+ctx.beginPath();
+ctx.ellipse(8,-3,6,2.5,-.25,0,Math.PI*2);
+ctx.fill();
+ctx.restore();
+}
+
 
 function drawBackground(){
 ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.shadowBlur=0;ctx.globalCompositeOperation="source-over";
