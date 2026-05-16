@@ -381,6 +381,7 @@ function getRecommendationNeeds(){
 function profileForKey(key){return UPGRADE_RECOMMENDATION_PROFILE[key]||emptyProfile()}
 function profileForChoice(choice){
   if(!choice)return emptyProfile();
+  if(choice.randomShopUpgrade&&choice.hiddenUpgrade)return profileForChoice(choice.hiddenUpgrade);
   if(choice.first&&choice.key){const pair=sortedPair(choice.first,choice.key);return FUSION_RECOMMENDATION_PROFILE[pair]||mergeProfiles(profileForKey(choice.first),profileForKey(choice.key),.55,.55)}
   const pair=choice.key?getFusedPairForKey(choice.key):null;
   if(pair){return FUSION_RECOMMENDATION_PROFILE[pair]||mergeProfiles(...pair.split("+").map(profileForKey),.55,.55)}
@@ -388,14 +389,88 @@ function profileForChoice(choice){
   if(choice.title&&String(choice.title).includes("Fusión"))return {scaling:.45,consistency:.25,damage:.15,defense:.15};
   return emptyProfile();
 }
-function scoreRecommendationChoice(choice,needs){
-  const prof=profileForChoice(choice);let score=0;
-  RECOMMEND_DIMENSIONS.forEach(k=>score+=(needs[k]||0)*(prof[k]||0));
-  if(choice.fusion)score+=.08;
-  if(choice.key&&upgradeLevels[choice.key]===0)score+=.04;
-  if(choice.key&&isUpgradeFinal(choice.key))score-=10;
-  if(choice.locked||choice.skipShop)score=-999;
-  return score;
+function recommendationKeyForChoice(choice){
+  if(!choice)return "";
+  if(choice.randomShopUpgrade&&choice.hiddenUpgrade)return choice.hiddenUpgrade.key||"";
+  if(choice.key)return choice.key;
+  return "";
+}
+function recommendationFusionPairForChoice(choice){
+  if(!choice)return "";
+  if(choice.first&&choice.key)return sortedPair(choice.first,choice.key);
+  if(choice.key)return getFusedPairForKey(choice.key)||"";
+  return "";
+}
+function recommendationProfileFit(prof,needs){
+  let weighted=0,totalProfile=0,peak=0;
+  RECOMMEND_DIMENSIONS.forEach(k=>{
+    const p=prof?.[k]||0;
+    const n=needs?.[k]||0;
+    weighted+=p*n;
+    totalProfile+=p;
+    peak=Math.max(peak,p*n);
+  });
+  if(totalProfile<=0)return 0;
+  return clamp01((weighted/Math.max(.01,totalProfile))*.82+peak*.32);
+}
+function recommendationStrategicFitForKey(key){
+  if(!key)return 0;
+  const strategic=Math.max(0,autoStrategicKeyScore(key)||0);
+  const route=Math.max(0,autoFusionRouteValue(key)||0);
+  const future=Math.max(0,autoFusionFutureValue(key)||0);
+  return clamp01(strategic/1850+route/2600+future/3200);
+}
+function recommendationContextFit(key,context,needs){
+  if(!key)return 0;
+  let bonus=0;
+  const hpRatio=life/Math.max(1,upgrades.maxLife||100);
+  const pressure=cats.length+(boss?8:0)+quacks.length+yarnBalls.length+demonOrbs.length;
+  if(hpRatio<.5&&["maxLife","healOnWave","lifeSteal","shield","catSlow","moveSpeed","catInstinct"].includes(key))bonus+=.14;
+  if(pressure>15&&["pierce","yarnBounce","omniBurst","doubleFish","catSlow","shield","damage","fireRate"].includes(key))bonus+=.12;
+  if(boss&&["damage","fireRate","critChance","lifeSteal","shield","autoFire"].includes(key))bonus+=.10;
+  if(context==="shop"&&["coinMagnet","xpBoost"].includes(key)&&wave<14)bonus+=.06;
+  if((needs?.consistency||0)>.55&&["aimAssist","fishSpeed","fishSize","autoFire","bigCursor"].includes(key))bonus+=.08;
+  return clamp01(bonus);
+}
+function scoreRecommendationChoice(choice,needs,context="generic"){
+  if(!choice||choice.locked||choice.skipShop)return -999;
+
+  if(choice.openFusionShop){
+    if(!canFuse(getShopFusionPrice()))return -999;
+    const bestPair=autoBestAvailableFusionPairScore();
+    const noAffordableUpgrade=context==="shop"&&coins<getShopUpgradePrice()&&coins>=getShopFusionPrice();
+    return clamp01(bestPair/1650*.72+(noAffordableUpgrade ? .22 : 0)+.08);
+  }
+
+  const key=recommendationKeyForChoice(choice);
+  const prof=profileForChoice(choice);
+  const profileFit=recommendationProfileFit(prof,needs);
+  const strategicFit=recommendationStrategicFitForKey(key);
+  const oldRec=key?clamp01((scoreUpgradeRecommendation(key)?.score||0)/100):0;
+  const contextFit=recommendationContextFit(key,context,needs);
+  const pair=recommendationFusionPairForChoice(choice);
+  const fusionFit=pair?clamp01(autoPairValue(pair)/1650):0;
+
+  let score=profileFit*.42+strategicFit*.30+oldRec*.15+contextFit*.13;
+  if(pair)score=Math.max(score,profileFit*.30+fusionFit*.46+oldRec*.16+contextFit*.08);
+  if(choice.first&&choice.key)score+=.08;
+  if(choice.fusion)score+=.04;
+
+  if(choice.randomShopUpgrade){
+    return -999;
+  }
+
+  if(key&&Object.prototype.hasOwnProperty.call(upgradeLevels,key)){
+    const lv=upgradeLevels[key]||0;
+    const max=upgradeMaxLevels[key]||5;
+    if(max-lv<=1&&autoFusionFutureValue(key)>350)score+=.07;
+    if(lv===0&&strategicFit<.34)score-=.04;
+  }
+
+  if(["bigCursor","moralSupport","darkPact"].includes(key)&&autoFusionFutureValue(key)<420&&autoFusionRouteValue(key)<420)score-=.16;
+  if(key&&isUpgradeFinal(key))score-=10;
+
+  return clamp01(score);
 }
 function recommendationReasonForProfile(prof,needs){
   const labels={damage:"Tu limpieza de enemigos va algo lenta.",defense:"Te vendrá bien aguantar más presión.",healing:"Necesitas recuperar vida con más seguridad.",mobility:"Te ayudará a reposicionarte mejor.",economy:"Te ayudará a aprovechar mejor las monedas.",control:"Tienes demasiada presión cerca.",consistency:"Hará tus ataques más constantes.",automation:"Te dará más comodidad al atacar.",area:"Te ayudará contra grupos grandes.",scaling:"Escala bien para rondas largas."};
@@ -406,29 +481,36 @@ function recommendationReasonForProfile(prof,needs){
 function applyRecommendationsToChoices(choices,context="generic"){
   const list=choices||[];
   list.forEach(c=>{if(c){delete c.recommended;delete c.recommendReason;delete c.recommendScore;}});
-  // Las recomendaciones se desbloquean desde la primera tienda incluida.
-  // Antes de ese momento todavía no hay suficiente partida para que tengan sentido.
-  if(!firstShopReached)return choices;
-  const recommendRandomFallback=()=>{
-    if(context!=="shop")return false;
-    const random=list.find(c=>c&&c.randomShopUpgrade&&!c.locked&&!c.skipShop);
-    if(!random)return false;
-    random.recommended=true;
-    random.recommendScore=.11;
-    random.recommendReason="Mejora sorpresa.";
-    if(!String(random.desc||"").includes("Mejora sorpresa")){
-      random.desc=`Mejora sorpresa.`;
-    }
-    return true;
-  };
-  const valid=list.filter(c=>!c.locked&&!c.skipShop&&!(context==="admin")&&(c.key||c.fusion||!c.special));
-  if(valid.length<2){recommendRandomFallback();return choices;}
+
+  // Recomendaciones no forzadas: solo aparece etiqueta si una opción encaja claramente.
+  // Se aplica a tienda, subida de nivel, rondas, fusiones y gato arcoíris.
+  if(!firstShopReached||context==="admin")return choices;
+
   const needs=getRecommendationNeeds();
-  let best=null,bestScore=-999;
-  valid.forEach(c=>{const sc=scoreRecommendationChoice(c,needs);if(sc>bestScore){bestScore=sc;best=c;}});
-  if(!best||bestScore<.12){recommendRandomFallback();return choices;}
-  best.recommended=true;
-  best.recommendScore=bestScore;
+  const valid=list
+    .filter(c=>!c.locked&&!c.skipShop&&!c.randomShopUpgrade&&(c.key||c.fusion||!c.special))
+    .map(c=>({choice:c,score:scoreRecommendationChoice(c,needs,context)}))
+    .filter(entry=>entry.score>-100);
+
+  if(valid.length===0)return choices;
+
+  valid.sort((a,b)=>b.score-a.score);
+  const best=valid[0];
+  const secondScore=valid[1]?.score??0;
+  const thirdScore=valid[2]?.score??0;
+  const minScore=(context==="fusionFirst"||context==="fusionPartner")?.58:(context==="shop"?.54:.50);
+  const lead=best.score-secondScore;
+  const clusterLead=best.score-Math.max(secondScore,thirdScore);
+
+  // Evita recomendaciones forzadas: si la mejor opción no destaca claramente,
+  // no se marca nada aunque haya una pequeña ventaja matemática.
+  if(best.score<minScore)return choices;
+  if(best.score<.68&&lead<.085)return choices;
+  if(best.score<.58&&clusterLead<.12)return choices;
+  if(valid.length>=3&&best.score<.64&&clusterLead<.075)return choices;
+
+  best.choice.recommended=true;
+  best.choice.recommendScore=best.score;
   return choices;
 }
 
@@ -1850,9 +1932,9 @@ const randomUpgrade=getRandomShopUpgradeChoice(upgradeChoices);
 const randomPrice=Math.max(1,Math.ceil(upgradePrice/2));
 const randomChoice=randomUpgrade?{
   icon:"🎲",
-  title:"Mejora sorpresa",
+  title:"Mejora aleatoria",
   levelTag:`${randomPrice}🪙`,
-  desc:"Mejora sorpresa.",
+  desc:"Sorpresa",
   special:true,
   randomShopUpgrade:true,
   hiddenUpgrade:randomUpgrade,
@@ -1861,7 +1943,7 @@ const randomChoice=randomUpgrade?{
 const choices=canFuse(fusionPrice)?[fusionChoice,...upgradeChoices]:[...upgradeChoices,fusionChoice];
 if(randomChoice)choices.push(randomChoice);
 choices.push({icon:"🚪",title:"Salir de la tienda",levelTag:"",desc:"Cierra la tienda y conserva las monedas que te queden.",special:true,skipShop:true});
-showCards("🪙 Tienda de gatitos","Compra todo lo que quieras hasta que decidas salir 💖",`Mejora: ${upgradePrice}🪙 (+1 por compra) · Sorpresa: ${randomPrice}🪙 · Fusión: ${fusionPrice}🪙 (+3 por fusión)`,choices,upgrade=>{
+showCards("🪙 Tienda de gatitos","Compra todo lo que quieras hasta que decidas salir 💖",`Mejora: ${upgradePrice}🪙 (+1 por compra) · Aleatoria: ${randomPrice}🪙 · Fusión: ${fusionPrice}🪙 (+3 por fusión)`,choices,upgrade=>{
 if(upgrade.skipShop){closeShopSession();return}
 if(upgrade.openFusionShop){openFusionChoice(fusionPrice);return}
 if(upgrade.randomShopUpgrade){
