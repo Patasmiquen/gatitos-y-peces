@@ -1789,6 +1789,7 @@ floatingTexts.push({x:player.x,y:player.y-85,text:"🖤 +2 niveles",life:1.4,max
 }
 choosingUpgrade=false;levelUpPanel.style.display="none";canvas.style.cursor=upgrades.bigCursor?"none":"crosshair";
 floatingTexts.push({x:player.x,y:player.y-55,text:upgrade.title,life:1.5,maxLife:1.5,big:false});
+refreshAdminPanelUI();
 if(waveUpgradePending){waveUpgradePending=false;wave++;life=Math.min(upgrades.maxLife,life+upgrades.healOnWave);startWave()}
 updateHud();
 if(pendingUpgradeQueue.length)processPendingUpgradeQueue();else maybeOpenShopOrFusion()
@@ -1956,7 +1957,7 @@ if(upgrade.randomShopUpgrade){
   coins-=randomPrice;shopUpgradePurchases++;
   hidden.apply();playShopBuySound();
   floatingTexts.push({x:player.x,y:player.y-65,text:`🎲 Sorpresa: ${hidden.title}`,life:1.3,maxLife:1.3,big:false});
-  updateHud();checkGameCompletion();
+  updateHud();refreshAdminPanelUI();checkGameCompletion();
   if(isGameCompleted())return;
   openCoinShop();
   return;
@@ -1965,7 +1966,7 @@ if(coins<upgradePrice){openCoinShop();return}
 coins-=upgradePrice;shopUpgradePurchases++;
 upgrade.apply();playShopBuySound();
 floatingTexts.push({x:player.x,y:player.y-65,text:`Comprado por ${upgradePrice}🪙: ${upgrade.title}`,life:1.3,maxLife:1.3,big:false});
-updateHud();checkGameCompletion();
+updateHud();refreshAdminPanelUI();checkGameCompletion();
 if(isGameCompleted())return;
 openCoinShop();
 },null,"shop")
@@ -2664,7 +2665,7 @@ fusedUpgradeNames[first.key]=fusionName;
 fusedUpgradeNames[second.key]=fusionName;
 fusionAvailable=false;shopAvailable=false;choosingUpgrade=false;levelUpPanel.style.display="none";
 floatingTexts.push({x:player.x,y:player.y-75,text:`🔮 ${fusionName}`,life:1.8,maxLife:1.8,big:false});
-updateHud();checkGameCompletion();
+updateHud();refreshAdminPanelUI();checkGameCompletion();
 if(!gameOver&&wasShopOpen)openCoinShop();else maybeOpenShopOrFusion()
 },()=>{fusionBackBtn.style.display="none";openFusionChoice(cost)},"fusionPartner")
 },backToShop,"fusionFirst")
@@ -5751,34 +5752,55 @@ function adminNumber(el,def=1,min=0,max=9999){
   if(!Number.isFinite(v))return def;
   return Math.max(min,Math.min(max,v));
 }
-function adminMessage(text){if(adminLog)adminLog.textContent=text;if(typeof floatingTexts!=="undefined")floatingTexts.push({x:canvas.width/2,y:95,text:"🛠️ "+text,life:1.4,maxLife:1.4,big:false});}
-function initAdminPanel(){
-  if(!adminToggle||!adminPanel)return;
+function adminMessage(text){refreshAdminPanelUI();if(adminLog)adminLog.textContent=`${text} · ${adminFusionStatsText()}`;if(typeof floatingTexts!=="undefined")floatingTexts.push({x:canvas.width/2,y:95,text:"🛠️ "+text,life:1.4,maxLife:1.4,big:false});}
+function adminFusionStatsText(){
+  const total=typeof getAllOfficialFusionPairs==="function"?getAllOfficialFusionPairs().length:Object.keys(fusionNameMap||{}).length;
+  const done=Object.keys(doneFusionPairs||{}).length;
+  const hasCollector=!!(doneFusionPairs&&doneFusionPairs[sortedPair("catInstinct","coinMagnet")]);
+  return `${done}/${total} fusiones activas${hasCollector?" · Instinto recolector activo":""}`;
+}
+function refreshAdminSelectLabels(){
   const scalable=Object.keys(upgradeLevels);
   const unique=uniqueFusionKeys;
-  if(adminUpgradeSelect&&!adminUpgradeSelect.options.length){
-    adminUpgradeSelect.innerHTML=scalable.map(k=>`<option value="${k}">${getAnyIcon(k)} ${getOriginalUpgradeName(k)} · ${upgradeLevels[k]}/${upgradeMaxLevels[k]}</option>`).join("");
+  if(adminUpgradeSelect){
+    const selected=adminUpgradeSelect.value;
+    adminUpgradeSelect.innerHTML=scalable.map(k=>{
+      const pair=getFusedPairForKey(k);
+      const fused=pair?` · ${getFusionNameFromPair(...pair.split("+"))} ${getFusionProgress(pair)}/5`:"";
+      const final=isUpgradeFinal(k)?" · DEF":"";
+      return `<option value="${k}">${getAnyIcon(k)} ${getOriginalUpgradeName(k)} · ${upgradeLevels[k]}/${upgradeMaxLevels[k]}${final}${fused}</option>`;
+    }).join("");
+    if(selected&&scalable.includes(selected))adminUpgradeSelect.value=selected;
   }
-  if(adminUniqueSelect&&!adminUniqueSelect.options.length){
-    adminUniqueSelect.innerHTML=unique.map(k=>`<option value="${k}">${getAnyIcon(k)} ${getOriginalUpgradeName(k)}</option>`).join("");
+  if(adminUniqueSelect){
+    const selected=adminUniqueSelect.value;
+    adminUniqueSelect.innerHTML=unique.map(k=>{
+      const pair=getFusedPairForKey(k);
+      const owned=hasUniqueUpgrade(k)?"1/1":"0/1";
+      const fused=pair?` · ${getFusionNameFromPair(...pair.split("+"))}`:"";
+      return `<option value="${k}">${getAnyIcon(k)} ${getOriginalUpgradeName(k)} · ${owned}${fused}</option>`;
+    }).join("");
+    if(selected&&unique.includes(selected))adminUniqueSelect.value=selected;
   }
-  function refreshSelectLabels(){
-    if(adminUpgradeSelect){
-      const selected=adminUpgradeSelect.value;
-      adminUpgradeSelect.innerHTML=scalable.map(k=>`<option value="${k}">${getAnyIcon(k)} ${getOriginalUpgradeName(k)} · ${upgradeLevels[k]}/${upgradeMaxLevels[k]}</option>`).join("");
-      if(selected)adminUpgradeSelect.value=selected;
-    }
-  }
-  window.adminRefreshSelectLabels=refreshSelectLabels;
-  adminToggle.addEventListener("click",()=>{adminPanel.style.display=adminPanel.style.display==="block"?"none":"block";refreshAdminLockUI();refreshSelectLabels();});
+}
+function refreshAdminPanelUI(){
+  refreshAdminSelectLabels();
+  if(typeof refreshAutoModeUI==="function")refreshAutoModeUI();
+}
+function initAdminPanel(){
+  if(!adminToggle||!adminPanel)return;
+  refreshAdminSelectLabels();
+  window.adminRefreshSelectLabels=refreshAdminSelectLabels;
+  window.adminRefreshPanelUI=refreshAdminPanelUI;
+  adminToggle.addEventListener("click",()=>{adminPanel.style.display=adminPanel.style.display==="block"?"none":"block";refreshAdminLockUI();refreshAdminPanelUI();});
   adminUnlockBtn?.addEventListener("click",()=>{
     const pass=(adminPassword?.value||"").trim();
     if(pass===ADMIN_PASSWORD){unlockAdmin("contraseña correcta");if(adminPassword)adminPassword.value="";}
     else{if(adminLog)adminLog.textContent="Contraseña incorrecta.";if(adminPassword)adminPassword.select();}
   });
   adminPassword?.addEventListener("keydown",e=>{if(e.key==="Enter")adminUnlockBtn?.click();});
-  document.getElementById("adminGiveUpgrade")?.addEventListener("click",()=>{if(!requireAdmin())return;adminAddUpgrade(adminUpgradeSelect.value,adminNumber(adminUpgradeAmount,1,1,99));refreshSelectLabels();});
-  document.getElementById("adminMaxUpgrade")?.addEventListener("click",()=>{if(!requireAdmin())return;adminAddUpgrade(adminUpgradeSelect.value,999);refreshSelectLabels();});
+  document.getElementById("adminGiveUpgrade")?.addEventListener("click",()=>{if(!requireAdmin())return;adminAddUpgrade(adminUpgradeSelect.value,adminNumber(adminUpgradeAmount,1,1,99));refreshAdminPanelUI();});
+  document.getElementById("adminMaxUpgrade")?.addEventListener("click",()=>{if(!requireAdmin())return;adminAddUpgrade(adminUpgradeSelect.value,999);refreshAdminPanelUI();});
   document.getElementById("adminGiveUnique")?.addEventListener("click",()=>{if(!requireAdmin())return;adminGiveUnique(adminUniqueSelect.value)});
   document.getElementById("adminGiveDog")?.addEventListener("click",()=>{if(!requireAdmin())return;adminGiveDog()});
   document.getElementById("adminCoins")?.addEventListener("click",()=>{if(!requireAdmin())return;const n=adminNumber(adminCoinAmount,25,1,9999);coins+=n;updateHud();adminMessage(`+${n} monedas`)});
@@ -5792,8 +5814,8 @@ function initAdminPanel(){
   document.getElementById("adminAvalanche")?.addEventListener("click",()=>{if(!requireAdmin())return;avalancheThisWave=true;avalancheActive=true;avalancheTime=getAvalancheConfig().duration;avalancheSpawnTimer=0;adminMessage("avalancha forzada")});
   document.getElementById("adminStar")?.addEventListener("click",()=>{if(!requireAdmin())return;activatePowerStar();adminMessage("estrella activada")});
   document.getElementById("adminClearEnemies")?.addEventListener("click",()=>{if(!requireAdmin())return;cats.length=0;fishes.length=0;quacks.length=0;yarnBalls.length=0;demonOrbs.length=0;boss=null;adminMessage("enemigos limpiados")});
-  document.getElementById("adminMaxAll")?.addEventListener("click",()=>{if(!requireAdmin())return;adminMaxAllUpgrades();refreshSelectLabels();});
-  document.getElementById("adminCompleteAll")?.addEventListener("click",()=>{if(!requireAdmin())return;adminCompleteAllFusions();refreshSelectLabels();});
+  document.getElementById("adminMaxAll")?.addEventListener("click",()=>{if(!requireAdmin())return;adminMaxAllUpgrades();refreshAdminPanelUI();});
+  document.getElementById("adminCompleteAll")?.addEventListener("click",()=>{if(!requireAdmin())return;adminCompleteAllFusions();refreshAdminPanelUI();});
   refreshAdminLockUI();
 }
 function adminAddUpgrade(key,amount=1){
@@ -5870,9 +5892,10 @@ function adminOpenShop(){
 function isOfficialFusionPairKey(pair){
   return !!(FUSION_BY_PAIR[pair]||fusionNameMap[pair]||fusionShortDescMap[pair]||fusionEffectDescMap[pair]);
 }
-function adminBuildRandomFusionSet(){
+function adminBuildRandomFusionSet(preferredPairs=[]){
   // El admin aleatoriza un conjunto de fusiones oficiales sin repetir ninguna mejora base.
-  // Así no puede pasar que, por ejemplo, Robo de vida aparezca en dos fusiones distintas.
+  // Las parejas preferidas se intentan incluir primero para probar fusiones nuevas.
+  rebuildFusionDataCatalogue();
   const officialPairs=adminShuffleArray(FUSION_DATA.map(f=>f.pair))
     .map(pair=>sortedPair(...pair.split("+")))
     .filter((pair,idx,arr)=>arr.indexOf(pair)===idx)
@@ -5882,12 +5905,23 @@ function adminBuildRandomFusionSet(){
     });
 
   const allKeys=[...new Set([...Object.keys(upgradeLevels),...uniqueFusionKeys])];
+  const preferred=preferredPairs
+    .map(pair=>sortedPair(...String(pair).split("+")))
+    .filter(pair=>officialPairs.includes(pair));
   let bestSelected=[];
   let bestUsedCount=0;
 
   for(let attempt=0;attempt<300;attempt++){
     const used=new Set();
     const selected=[];
+    preferred.forEach(pair=>{
+      const [a,b]=pair.split("+");
+      if(!allKeys.includes(a)||!allKeys.includes(b))return;
+      if(used.has(a)||used.has(b))return;
+      selected.push([a,b]);
+      used.add(a);
+      used.add(b);
+    });
     adminShuffleArray(officialPairs).forEach(pair=>{
       const [a,b]=pair.split("+");
       if(!allKeys.includes(a)||!allKeys.includes(b))return;
@@ -5909,7 +5943,7 @@ function adminCompleteAllFusions(){
   adminMaxAllUpgrades();
   adminClearFusionState();
 
-  const pairs=adminBuildRandomFusionSet();
+  const pairs=adminBuildRandomFusionSet(["catInstinct+coinMagnet"]);
   let applied=0;
   pairs.forEach(([a,b])=>{if(adminApplyRandomFusionPair(a,b))applied++;});
 
