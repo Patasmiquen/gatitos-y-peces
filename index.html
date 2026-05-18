@@ -40,7 +40,8 @@
 </div>
 </details>
 <div class="onlineRankBox" id="startRankingBox">
-  <div class="onlineRankTitle"><span>🏆 Ranking online</span><button class="onlineRankRefresh" id="refreshRankingBtn" type="button">Actualizar</button></div>
+  <div class="onlineRankTitle"><span>🏆 Ranking online</span><div class="onlineRankActions"><button class="onlineRankRefresh" id="refreshRankingBtn" type="button">Actualizar</button><button class="onlineRankRefresh" id="startRankingToggleAll" type="button">Ver todos</button></div></div>
+  <label class="onlineRankDuplicateToggle"><input id="startRankingShowDuplicates" type="checkbox"/> Mostrar duplicados</label>
   <div class="onlineRankList" id="startRankingList"><div class="onlineRankStatus">Cargando ranking...</div></div>
 </div>
 </div>
@@ -125,7 +126,7 @@
 <div class="victoryMsg"><span class="vLine vMain">Lo has hecho muy bien, mi amor 💖</span><span class="vLine vSub">¡Eres la mejor! ✨</span></div>
 <div id="victoryScoreArea"></div>
 <div id="victoryOnlineStatus" class="onlineSubmitStatus">Ranking online pendiente...</div>
-<div class="onlineRankBox"><div class="onlineRankTitle"><span>🏆 Top online</span></div><div class="onlineRankList" id="victoryRankingList"><div class="onlineRankStatus">Cargando ranking...</div></div></div>
+<div class="onlineRankBox"><div class="onlineRankTitle"><span>🏆 Top online</span><div class="onlineRankActions"><button class="onlineRankRefresh" id="victoryRankingToggleAll" type="button">Ver todos</button></div></div><label class="onlineRankDuplicateToggle"><input id="victoryRankingShowDuplicates" type="checkbox"/> Mostrar duplicados</label><div class="onlineRankList" id="victoryRankingList"><div class="onlineRankStatus">Cargando ranking...</div></div></div>
 <div class="victoryButtons">
 <button class="victoryBtn finish" id="victoryFinish">Terminar aquí 🌸</button>
 <button class="victoryBtn continue" id="victoryContinue">Seguir jugando 🐾</button>
@@ -141,7 +142,7 @@
 <div style="font-size:13px;color:#ffb3c1;margin-bottom:4px">puntos finales</div>
 <div class="scoreBreakdown" id="gameOverBreakdown"></div>
 <div id="gameOverOnlineStatus" class="onlineSubmitStatus">Ranking online pendiente...</div>
-<div class="onlineRankBox"><div class="onlineRankTitle"><span>🏆 Top online</span></div><div class="onlineRankList" id="gameOverRankingList"><div class="onlineRankStatus">Cargando ranking...</div></div></div>
+<div class="onlineRankBox"><div class="onlineRankTitle"><span>🏆 Top online</span><div class="onlineRankActions"><button class="onlineRankRefresh" id="gameOverRankingToggleAll" type="button">Ver todos</button></div></div><label class="onlineRankDuplicateToggle"><input id="gameOverRankingShowDuplicates" type="checkbox"/> Mostrar duplicados</label><div class="onlineRankList" id="gameOverRankingList"><div class="onlineRankStatus">Cargando ranking...</div></div></div>
 <button class="victoryBtn finish" id="gameOverRestart" style="margin-top:12px;background:#c92a2a;color:#fff">Jugar otra vez 🐱</button>
 <button class="victoryBtn continue" id="gameOverMenu" style="margin-top:12px;background:#4cc9f0;color:#fff">Volver al menú 🏠</button>
 </div>
