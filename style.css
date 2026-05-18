@@ -99,11 +99,8 @@ canvas{display:block;position:fixed;left:50%;top:50%;transform:translate(-50%,-5
 #pauseBox::-webkit-scrollbar-thumb,#adminPanel::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#ffd166,#ff7aa8,#9b5de5);border-radius:999px;border:3px solid rgba(20,15,20,.95);box-shadow:0 0 12px rgba(255,122,168,.35)}
 #pauseBox::-webkit-scrollbar-thumb:hover,#adminPanel::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,#ffe29a,#ff8fb7,#b983ff)}
 #pauseBox p{font-weight:bold;margin-bottom:16px;color:#ffd6e7}
-#pauseButtons{display:flex;flex-direction:column;align-items:flex-start;gap:22px;margin-top:22px}
-.pauseMainActions,.pauseDangerActions{display:flex;gap:10px;flex-wrap:wrap}
-.pauseDangerActions{padding-top:18px;border-top:1px solid rgba(255,255,255,.16);width:100%;opacity:.92}
+#pauseButtons{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}
 .pauseButton{border:none;background:#ff7aa8;color:white;padding:12px 22px;border-radius:999px;font-size:16px;font-weight:900;cursor:pointer;box-shadow:0 8px 20px rgba(255,122,168,.28)}
-#resumeButton{font-size:18px;padding:14px 32px}
 .pauseButton.secondary{background:#4cc9f0}
 .pauseButton.menuButton{background:linear-gradient(135deg,#9b5de5,#6d23b6)}
 #pauseUpgradesList{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
@@ -516,14 +513,6 @@ body.panel-theme-dark .shopCoinBadge{box-shadow:0 12px 28px rgba(255,159,28,.28)
 .onlineRankBox{margin:16px auto 4px;max-width:560px;background:rgba(20,15,20,.35);border:1px solid rgba(255,194,209,.22);border-radius:20px;padding:14px 16px;text-align:left;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)}
 .onlineRankTitle{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;color:#ffd166;font-weight:1000;letter-spacing:.2px}
 .onlineRankRefresh{border:none;border-radius:999px;background:rgba(255,255,255,.12);color:#ffe6f0;font-weight:900;padding:5px 9px;cursor:pointer}
-.onlineRankActions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:flex-end}
-.onlineRankDuplicateToggle{display:none;align-items:center;gap:6px;margin:-2px 0 8px;color:#ffd6e7;font-size:12px;font-weight:900;opacity:.9;cursor:pointer;user-select:none}
-.onlineRankDuplicateToggle.visible{display:flex}
-.onlineRankDuplicateToggle input{accent-color:#ff7aa8}
-.onlineRankRow{cursor:pointer}
-.onlineRankRow:hover{filter:brightness(1.08)}
-.onlineRankDetails{grid-column:1/4;background:rgba(0,0,0,.18);border:1px solid rgba(255,255,255,.10);border-radius:10px;padding:7px 9px;margin-top:4px;color:#ffe6f0;font-size:12px;line-height:1.35}
-.onlineRankDetails b{color:#ffd166}
 .onlineRankRefresh:hover{filter:brightness(1.12)}
 .onlineRankList{display:grid;gap:6px;font-size:13px;color:#ffe6f0}
 .onlineRankRow{display:grid;grid-template-columns:34px 1fr auto;gap:8px;align-items:center;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:7px 9px}
