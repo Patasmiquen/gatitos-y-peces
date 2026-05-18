@@ -6,7 +6,7 @@ const victoryPanel=document.getElementById("victoryPanel"),victoryFinishBtn=docu
 const gameOverPanel=document.getElementById("gameOverPanel"),gameOverRestartBtn=document.getElementById("gameOverRestart"),gameOverMenuBtn=document.getElementById("gameOverMenu"),gameOverTotalEl=document.getElementById("gameOverTotal"),gameOverBreakdownEl=document.getElementById("gameOverBreakdown"),gameOverRankEmojiEl=document.getElementById("gameOverRankEmoji"),gameOverRankLabelEl=document.getElementById("gameOverRankLabel"),victoryScoreAreaEl=document.getElementById("victoryScoreArea");
 const fusionBackBtn=document.getElementById("fusionBackBtn");
 const objectiveMainEl=document.getElementById("objectiveMain"),objectiveFusionEl=document.getElementById("objectiveFusion"),helpEl=document.getElementById("help");
-const pausePanel=document.getElementById("pausePanel"),pauseStats=document.getElementById("pauseStats"),pauseRecordBadge=document.getElementById("pauseRecordBadge"),pauseUpgradesList=document.getElementById("pauseUpgradesList"),resumeButton=document.getElementById("resumeButton"),restartButton=document.getElementById("restartButton"),menuButton=document.getElementById("menuButton"),startWaveInput=document.getElementById("startWaveInput"),perfNotice=document.getElementById("perfNotice"),themeButtons=[...document.querySelectorAll(".themeChoice")];
+const pausePanel=document.getElementById("pausePanel"),pauseStats=document.getElementById("pauseStats"),pauseRecordBadge=document.getElementById("pauseRecordBadge"),pauseUpgradesList=document.getElementById("pauseUpgradesList"),resumeButton=document.getElementById("resumeButton"),restartButton=document.getElementById("restartButton"),menuButton=document.getElementById("menuButton"),perfNotice=document.getElementById("perfNotice"),themeButtons=[...document.querySelectorAll(".themeChoice")];
 const adminToggle=document.getElementById("adminToggle"),adminPanel=document.getElementById("adminPanel"),adminUpgradeSelect=document.getElementById("adminUpgradeSelect"),adminUniqueSelect=document.getElementById("adminUniqueSelect"),adminLog=document.getElementById("adminLog"),adminLock=document.getElementById("adminLock"),adminTools=document.getElementById("adminTools"),adminStateTag=document.getElementById("adminStateTag"),adminPassword=document.getElementById("adminPassword"),adminUnlockBtn=document.getElementById("adminUnlockBtn"),adminUpgradeAmount=document.getElementById("adminUpgradeAmount"),adminCoinAmount=document.getElementById("adminCoinAmount"),adminLevelAmount=document.getElementById("adminLevelAmount"),adminWaveValue=document.getElementById("adminWaveValue");
 const playerNameInput=document.getElementById("playerNameInput"),nameWarning=document.getElementById("nameWarning"),refreshRankingBtn=document.getElementById("refreshRankingBtn"),startRankingList=document.getElementById("startRankingList"),victoryRankingList=document.getElementById("victoryRankingList"),gameOverRankingList=document.getElementById("gameOverRankingList"),victoryOnlineStatus=document.getElementById("victoryOnlineStatus"),gameOverOnlineStatus=document.getElementById("gameOverOnlineStatus");
 const autoModeButton=document.getElementById("autoModeButton");
@@ -47,31 +47,6 @@ function applyPanelTheme(theme){
 themeButtons.forEach(btn=>btn.addEventListener("click",()=>applyPanelTheme(btn.dataset.theme)));
 
 applyPanelTheme(panelTheme);
-
-function clampStartWaveInput(){
-  if(!startWaveInput)return 1;
-
-  const value=parseInt(startWaveInput.value||"1",10);
-
-  if(!Number.isFinite(value)){
-    startWaveInput.value="1";
-    return 1;
-  }
-
-  const clamped=Math.max(1,Math.min(50,value));
-  startWaveInput.value=String(clamped);
-  return clamped;
-}
-
-if(startWaveInput){
-  startWaveInput.addEventListener("change",clampStartWaveInput);
-  startWaveInput.addEventListener("blur",clampStartWaveInput);
-  startWaveInput.addEventListener("input",()=>{
-    const value=parseInt(startWaveInput.value,10);
-    if(Number.isFinite(value)&&value>50)startWaveInput.value="50";
-    if(Number.isFinite(value)&&value<1)startWaveInput.value="1";
-  });
-}
 
 /* === Ranking online con Firebase === */
 const GAME_VERSION="v59-no-theme-switch";
@@ -245,10 +220,8 @@ async function submitOnlineScore(finalScore, statusEl, rankingEl){
   initRanking();
 
   const playedFromWave=Math.max(1,Math.floor(Number(runStartWave)||1));
-  const inputWave=Math.max(1,Math.floor(Number(startWaveInput?.value)||1));
-
   if(autoModeUsedThisRun||autoMode||playedFromWave!==1||!rankingEligibleThisRun){
-    const disabledMsg=rankingDisabledReason||`Ranking desactivado: la partida empezó en ronda ${playedFromWave!==1?playedFromWave:inputWave}.`;
+    const disabledMsg=rankingDisabledReason||`Ranking desactivado: la partida empezó en ronda ${playedFromWave}.`;
     setOnlineStatus(statusEl,disabledMsg,"error");
     await loadOnlineRanking([startRankingList,rankingEl].filter(Boolean));
     return;
@@ -642,10 +615,9 @@ function getAudioCtx(){if(!audioCtx)audioCtx=new(window.AudioContext||window.web
 function playCuteMeow(){const ac=getAudioCtx(),g=ac.createGain();g.gain.setValueAtTime(.045,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.34);g.connect(ac.destination);const o1=ac.createOscillator();o1.type="sine";o1.frequency.setValueAtTime(760+Math.random()*60,ac.currentTime);o1.frequency.exponentialRampToValueAtTime(520+Math.random()*40,ac.currentTime+.14);o1.connect(g);o1.start();o1.stop(ac.currentTime+.16);const o2=ac.createOscillator();o2.type="triangle";o2.frequency.setValueAtTime(470+Math.random()*40,ac.currentTime+.13);o2.frequency.exponentialRampToValueAtTime(330+Math.random()*30,ac.currentTime+.34);o2.connect(g);o2.start(ac.currentTime+.12);o2.stop(ac.currentTime+.36)}
 function playFishSound(type="bloop"){const ac=getAudioCtx(),o=ac.createOscillator(),g=ac.createGain();if(type==="fiu"){o.type="sine";o.frequency.setValueAtTime(900,ac.currentTime);o.frequency.exponentialRampToValueAtTime(360,ac.currentTime+.18);g.gain.setValueAtTime(.023,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.2)}else{o.type="sine";o.frequency.setValueAtTime(260+Math.random()*80,ac.currentTime);o.frequency.exponentialRampToValueAtTime(190+Math.random()*60,ac.currentTime+.11);g.gain.setValueAtTime(.021,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.13)}o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+.22)}
 function startGame(){
-  const chosenWave=clampStartWaveInput();
   gameStarted=true;
   startPanel.style.display="none";
-  restart(chosenWave);
+  restart();
   requestGamePointerLock();
 }
 
@@ -779,7 +751,6 @@ function returnToMainMenu(){
   paused=false;
   choosingUpgrade=false;
   startPanel.style.display="flex";
-  if(startWaveInput)startWaveInput.value="1";
   loadOnlineRanking([startRankingList]);
 }
 menuButton.addEventListener("click",returnToMainMenu);
@@ -797,35 +768,22 @@ for(let i=1;i<lvl;i++)need=Math.ceil(need*1.35+2);
 return need;
 }
 
-function restart(startAtWave=1){
+function restart(){
 stopPowerStarLoop();
 backgroundFishSeed=Math.floor(Math.random()*1000000);
 autoRunChoices=[];autoRunStartTime=performance.now();autoLastPlayerX=player.x;autoLastPlayerY=player.y;autoStuckTimer=0;autoEmergencyEscapeUntil=0;
 resetUpgrades();
-const initialWave=Math.max(1,Math.floor(startAtWave||1));
-runStartWave=initialWave;
+runStartWave=1;
 autoModeUsedThisRun=!!autoMode;
-rankingEligibleThisRun=initialWave===1&&!autoModeUsedThisRun;
-rankingDisabledReason=rankingEligibleThisRun?"":(autoModeUsedThisRun?"Ranking desactivado: la partida empezó con IA activada.":`Ranking desactivado: la partida empezó en ronda ${initialWave}.`);
-score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=0;lastAutoShot=0;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=initialWave;thiefCoinsStolenThisWave=0;spawnCooldown=0;life=upgrades.maxLife;level=initialWave;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;musicianSpawnedThisWave=false;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();bossEncounterCounts={giantCat:0,duck:0,seal:0,demon:0};giantFishEasterEggsUsed=0;bossVictoryAlreadyShown=false;bossVictoryScoreSaved=false;bossVictoryPending=false;dogRelaxTime=0;fusionMoveXpTimer=0;lastFusionShieldGuard=0;enemyIntroSeen={};finalChoiceLocked=false;demonSpawnPressure=0;thiefCoinsStolenThisWave=0;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
+rankingEligibleThisRun=!autoModeUsedThisRun;
+rankingDisabledReason=rankingEligibleThisRun?"":"Ranking desactivado: la partida empezó con IA activada.";
+score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=0;lastAutoShot=0;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=1;thiefCoinsStolenThisWave=0;spawnCooldown=0;life=upgrades.maxLife;level=1;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;musicianSpawnedThisWave=false;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();bossEncounterCounts={giantCat:0,duck:0,seal:0,demon:0};giantFishEasterEggsUsed=0;bossVictoryAlreadyShown=false;bossVictoryScoreSaved=false;bossVictoryPending=false;dogRelaxTime=0;fusionMoveXpTimer=0;lastFusionShieldGuard=0;enemyIntroSeen={};finalChoiceLocked=false;demonSpawnPressure=0;thiefCoinsStolenThisWave=0;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
 demonOrbs.length=0;yarnBalls.length=0;powerStars.length=0;shockwaves.length=0;sparkles.length=0;tunaDrops.length=0;
 player.x=canvas.width/2;player.y=canvas.height/2;player.angle=0;player.shootAnim=0;player.hurtAnim=0;dogCompanion.x=player.x-50;dogCompanion.y=player.y+45;dogCompanion.shootCooldown=0;
 fishes.length=0;cats.length=0;hearts.length=0;smokes.length=0;floatingTexts.length=0;pawPrints.length=0;quacks.length=0;coinsDrops.length=0;dogBones.length=0;demonOrbs.length=0;yarnBalls.length=0;shockwaves.length=0;sparkles.length=0;
 canvas.style.cursor="crosshair";
-messageEl.classList.remove("dogSave");messageEl.style.display="none";levelUpPanel.style.display="none";gameOverPanel.style.display="none";victoryPanel.style.display="none";grantStartingProgressionForWave(wave);life=upgrades.maxLife;startWave();updateHud()
+messageEl.classList.remove("dogSave");messageEl.style.display="none";levelUpPanel.style.display="none";gameOverPanel.style.display="none";victoryPanel.style.display="none";life=upgrades.maxLife;startWave();updateHud()
 }
-
-function grantStartingRandomUpgrades(count){
-for(let i=0;i<count;i++){
-const pool=getUpgradePool().filter(u=>!u.fusion&&!u.locked);
-if(pool.length===0)break;
-const upgrade=pool[Math.floor(Math.random()*pool.length)];
-upgrade.apply();
-}
-applyUpgradeStatsFromLevels();
-if(count>0)floatingTexts.push({x:canvas.width/2,y:150,text:`🎁 ${count} mejoras iniciales aleatorias`,life:2.2,maxLife:2.2,big:true});
-}
-
 
 function queueUpgradeMenus(reason,count){
   count=Math.max(0,Math.floor(count||0));
@@ -838,93 +796,6 @@ function processPendingUpgradeQueue(){
   const next=pendingUpgradeQueue.shift();
   openUpgradeMenu(next,{fromQueue:true});
 }
-function applyFusionPairSilently(a,b){
-  if(!a||!b||a===b||!areFusionCompatible(a,b))return false;
-  const pair=sortedPair(a,b);
-  if(!isOfficialFusionPairKey(pair))return false;
-  if(doneFusionPairs[pair]||fusedUpgradeNames[a]||fusedUpgradeNames[b])return false;
-  doneFusionPairs[pair]=true;
-  const fusionName=getFusionNameFromPair(a,b);
-  if(pair.includes("autoFire"))upgrades.holdShoot=true;
-  if(pair==="aimAssist+autoFire")upgrades.combatAI=true;
-  if(pair==="autoFire+bigCursor")upgrades.assistedShot=true;
-  if(pair==="aimAssist+bigCursor")upgrades.perfectAim=true;
-  if(pair==="autoFire+moralSupport")upgrades.moraleFire=true;
-  if(pair==="bigCursor+moralSupport")upgrades.braveHeart=true;
-  if(pair==="aimAssist+catInstinct")upgrades.reflexBurst=true;
-  if(pair==="catInstinct+moralSupport")upgrades.valorCasa=true;
-  if(pair==="catInstinct+darkPact")upgrades.cursedInstinct=true;
-  if(pair==="catInstinct+maxLife")upgrades.sevenLives=true;
-  if(pair==="darkPact+moralSupport"){upgrades.boyfriendDog=true;upgrades.boyfriendDogSpirit=false;dogSacrificeUsed=false;forceDemonNextBoss=true;}
-  if(pair==="moveSpeed+zoomies")upgrades.zoomiesHyper=true;
-  if(pair==="fireRate+zoomies"||pair==="autoFire+zoomies")upgrades.zoomiesCannon=true;
-  if(pair==="critChance+zoomies"||pair==="autoFire+critChance")upgrades.zoomiesCrit=true;
-  [a,b].forEach(k=>{
-    if(Object.prototype.hasOwnProperty.call(upgradeLevels,k)){
-      fusedBaseLevels[k]=(fusedBaseLevels[k]||0)+(upgradeLevels[k]||0);
-      upgradeLevels[k]=0;
-      upgradeMaxLevels[k]=5;
-    }
-  });
-  fusionProgressLevels[pair]=0;
-  setFusionProgress(pair,0);
-  applyFusionBonus(pair,a,b);
-  fusedUpgradeNames[a]=fusionName;
-  fusedUpgradeNames[b]=fusionName;
-  applyUpgradeStatsFromLevels();
-  return true;
-}
-function getAvailableAutoFusionPairs(){
-  const keys=getMaxedFusionKeys();
-  const pairs=[];
-  keys.forEach((a,i)=>keys.slice(i+1).forEach(b=>{
-    const pair=sortedPair(a,b);
-    if(areFusionCompatible(a,b)&&isOfficialFusionPairKey(pair)&&!hasFusionBeenDone(a,b)&&!fusedUpgradeNames[a]&&!fusedUpgradeNames[b])pairs.push([a,b]);
-  }));
-  return pairs;
-}
-function tryApplyStartingAutoFusion(){
-  const pairs=getAvailableAutoFusionPairs();
-  if(!pairs.length)return false;
-  const [a,b]=pairs[Math.floor(Math.random()*pairs.length)];
-  return applyFusionPairSilently(a,b);
-}
-function grantStartingProgressionForWave(startWave){
-  const waveNum=Math.max(1,Math.floor(startWave||1));
-  if(waveNum<=1)return;
-  // Compensación inicial: cuanto más avanzada es la ronda, más mejoras previas se simulan.
-  // En rondas muy altas se permite fusionar automáticamente y subir las fusiones.
-  const simulatedChoices=Math.max(0,Math.floor((waveNum-1)*2.2)+(waveNum>=35?Math.floor((waveNum-34)*1.6):0));
-  let applied=0, fused=0;
-  for(let i=0;i<simulatedChoices;i++){
-    const shouldTryFuse=waveNum>=12&&(allDirectUpgradesMaxed()||Math.random()<Math.min(.48,.08+waveNum*.009));
-    if(shouldTryFuse&&tryApplyStartingAutoFusion()){fused++;continue;}
-    const pool=getUpgradePool().filter(u=>!u.locked&&!u.skipShop&&u.apply);
-    if(!pool.length){
-      if(tryApplyStartingAutoFusion()){fused++;continue;}
-      break;
-    }
-    const choice=pool[Math.floor(Math.random()*pool.length)];
-    choice.apply();applied++;
-    if(waveNum>=18&&tryApplyStartingAutoFusion())fused++;
-  }
-  // Si la ronda es muy alta y quedan parejas listas, termina de fusionar hasta que no haya combinaciones disponibles.
-  if(waveNum>=40){
-    let guard=0;
-    while(guard++<40&&tryApplyStartingAutoFusion())fused++;
-  }
-  // Después de fusionar en rondas muy altas, sube también algunas fusiones para que no empiecen vacías.
-  const postFusionBoost=waveNum>=30?Math.floor((waveNum-29)*1.15):0;
-  for(let j=0;j<postFusionBoost;j++){
-    const pool=getUpgradePool().filter(u=>!u.locked&&!u.skipShop&&u.apply);
-    if(!pool.length)break;
-    const choice=pool[Math.floor(Math.random()*pool.length)];
-    choice.apply();applied++;
-  }
-  applyUpgradeStatsFromLevels();
-  if(applied>0||fused>0)floatingTexts.push({x:canvas.width/2,y:150,text:`🎁 Ronda ${waveNum}: ${applied} mejoras y ${fused} fusiones iniciales`,life:2.4,maxLife:2.4,big:true});
-}
-
 function cleanupRoundScreen(opts={}){
   const keepFloating=!!opts.keepFloating;
   const keepSoftEffects=!!opts.keepSoftEffects;
@@ -6162,7 +6033,7 @@ function adminOpenShop(){
   if(!gameStarted){
     gameStarted=true;
     startPanel.style.display="none";
-    restart(Math.max(1,parseInt(startWaveInput?.value||"1",10)||1));
+    restart(1);
   }
   paused=false;
   if(pausePanel)pausePanel.style.display="none";
@@ -6238,7 +6109,7 @@ function adminCompleteAllFusions(){
   checkGameCompletion();
 }
 function adminSpawnBoss(forceDemon=false){
-  if(!gameStarted){gameStarted=true;startPanel.style.display="none";restart(Math.max(1,parseInt(startWaveInput?.value||"1",10)||1));}
+  if(!gameStarted){gameStarted=true;startPanel.style.display="none";restart(1);}
   cats.length=0;fishes.length=0;quacks.length=0;yarnBalls.length=0;demonOrbs.length=0;boss=null;
   if(forceDemon){upgrades.boyfriendDog=true;dogKidnapped=false;forceDemonNextBoss=true;wave=Math.max(15,wave);}
   spawnBoss();
