@@ -304,7 +304,8 @@ function isPanelActuallyVisible(el){
 }
 function isAdminInterfaceOpen(){return !!adminPanel&&isPanelActuallyVisible(adminPanel)}
 function shouldLockGamePointer(){
-  return !!(gameStarted&&!gameOver&&!choosingUpgrade&&!paused&&!isAdminInterfaceOpen()&&startPanel?.style.display==="none");
+  // Desactivado: el bloqueo real del cursor rompía el click derecho para fijar enemigos.
+  return false;
 }
 function releaseGamePointer(){
   if(document.pointerLockElement===canvas)document.exitPointerLock?.();
@@ -312,19 +313,16 @@ function releaseGamePointer(){
   document.body.style.cursor="auto";
 }
 function requestGamePointerLock(){
-  if(!shouldLockGamePointer())return;
-  if(document.pointerLockElement!==canvas){
-    try{canvas.requestPointerLock?.();}catch(e){}
-  }
+  // No usamos Pointer Lock para mantener el click derecho y el cursor normal del navegador.
+  releaseGamePointer();
 }
 function syncGamePointerLock(){
-  if(shouldLockGamePointer())requestGamePointerLock();
-  else releaseGamePointer();
+  releaseGamePointer();
 }
 document.addEventListener("pointerlockchange",()=>{
-  const locked=document.pointerLockElement===canvas;
-  canvas.style.cursor=locked?"none":"crosshair";
-  document.body.style.cursor=locked?"none":"auto";
+  if(document.pointerLockElement===canvas)document.exitPointerLock?.();
+  canvas.style.cursor="crosshair";
+  document.body.style.cursor="auto";
 });
 
 let score,shots,lastShot,lastAutoShot,lastFrame,gameOver,wave,spawnCooldown,life,level,xp,xpNeed,choosingUpgrade,gameStarted=false,paused=false,waveTime,waveDuration,waveUpgradePending=false,boss=null,shieldAngle=0,lastShieldHit=0,lastOmniBurst=0,rainbowChanceLevel=1,rainbowSelectedThisWave=false,rainbowSpawnedThisWave=false,rainbowPendingUntilKilled=false,coins=0,shopAvailable=false,firstShopReached=false,shopBossPending=false,fusionAvailable=false,lastBossType="",shopUpgradePurchases=0,shopFusionPurchases=0,dogKidnapped=false,avalancheActive=false,avalancheTime=0,avalancheDelay=999,avalancheThisWave=false,avalancheSpawnTimer=0,starChanceLevel=1,starActive=false,starTime=0,starWarningPlayed=false,forceDemonNextBoss=false,sevenLivesTime=0,sevenLivesCooldown=0,sevenLivesUsedThisWave=false,musicianSpawnedThisWave=false,musicianNoteTimer=0,musicianMelodyIdx=0;
@@ -685,7 +683,6 @@ canvas.addEventListener("mousemove",e=>{
 });
 canvas.addEventListener("mousedown",e=>{
 mouseIsDown=true;
-requestGamePointerLock();
 if(e.button===0&&!gameOver&&gameStarted&&!paused&&!choosingUpgrade)shootFish();
 if(e.button===2&&!gameOver&&gameStarted&&!paused&&!choosingUpgrade){
   e.preventDefault();
