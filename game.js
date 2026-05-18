@@ -5224,12 +5224,24 @@ function drawFloatingText(t){ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,t.
 function drawPawPrint(p){ctx.save();ctx.globalAlpha=Math.max(0,p.life/p.maxLife)*.65;ctx.translate(p.x,p.y);ctx.rotate(p.angle+Math.PI/2);ctx.fillStyle="#ffafcc";ctx.beginPath();ctx.arc(0,0,8,0,Math.PI*2);ctx.fill();[-8,0,8].forEach((x,index)=>{ctx.beginPath();ctx.arc(x,-10-(index===1?2:0),3.5,0,Math.PI*2);ctx.fill()});ctx.restore()}
 
 function drawReticle(){
-if(!upgrades.bigCursor)return;
+const pointerLocked=document.pointerLockElement===canvas;
+if(!upgrades.bigCursor&&!pointerLocked)return;
 const t=performance.now()/220,x=mouse.x,y=mouse.y;
-ctx.save();ctx.translate(x,y);ctx.strokeStyle=`hsl(${(t*60)%360},100%,75%)`;ctx.lineWidth=3;ctx.shadowColor="#ffd6e7";ctx.shadowBlur=12;
-ctx.beginPath();ctx.arc(0,0,18+Math.sin(t)*2,0,Math.PI*2);ctx.stroke();
-ctx.beginPath();ctx.moveTo(-34,0);ctx.lineTo(-12,0);ctx.moveTo(12,0);ctx.lineTo(34,0);ctx.moveTo(0,-34);ctx.lineTo(0,-12);ctx.moveTo(0,12);ctx.lineTo(0,34);ctx.stroke();
-ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(0,0,3,0,Math.PI*2);ctx.fill();ctx.restore()
+ctx.save();
+ctx.translate(x,y);
+if(upgrades.bigCursor){
+  ctx.strokeStyle=`hsl(${(t*60)%360},100%,75%)`;ctx.lineWidth=3;ctx.shadowColor="#ffd6e7";ctx.shadowBlur=12;
+  ctx.beginPath();ctx.arc(0,0,18+Math.sin(t)*2,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(-34,0);ctx.lineTo(-12,0);ctx.moveTo(12,0);ctx.lineTo(34,0);ctx.moveTo(0,-34);ctx.lineTo(0,-12);ctx.moveTo(0,12);ctx.lineTo(0,34);ctx.stroke();
+  ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(0,0,3,0,Math.PI*2);ctx.fill();
+}else{
+  ctx.globalAlpha=.95;
+  ctx.strokeStyle="#ffd6e7";ctx.lineWidth=2;ctx.shadowColor="#1f1028";ctx.shadowBlur=8;
+  ctx.beginPath();ctx.arc(0,0,7,0,Math.PI*2);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(-15,0);ctx.lineTo(-5,0);ctx.moveTo(5,0);ctx.lineTo(15,0);ctx.moveTo(0,-15);ctx.lineTo(0,-5);ctx.moveTo(0,5);ctx.lineTo(0,15);ctx.stroke();
+  ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(0,0,2.2,0,Math.PI*2);ctx.fill();
+}
+ctx.restore()
 }
 
 function render(){
