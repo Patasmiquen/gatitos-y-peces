@@ -99,10 +99,14 @@ canvas{display:block;position:fixed;left:50%;top:50%;transform:translate(-50%,-5
 #pauseBox::-webkit-scrollbar-thumb,#adminPanel::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#ffd166,#ff7aa8,#9b5de5);border-radius:999px;border:3px solid rgba(20,15,20,.95);box-shadow:0 0 12px rgba(255,122,168,.35)}
 #pauseBox::-webkit-scrollbar-thumb:hover,#adminPanel::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,#ffe29a,#ff8fb7,#b983ff)}
 #pauseBox p{font-weight:bold;margin-bottom:16px;color:#ffd6e7}
-#pauseButtons{display:grid!important;grid-template-columns:1fr!important;align-items:start!important;gap:34px!important;margin-top:28px!important;width:100%!important}
-.pauseMainActions{display:flex!important;width:100%!important;justify-content:flex-start!important}
-.pauseDangerActions{display:flex!important;gap:14px!important;flex-wrap:wrap!important;width:100%!important;justify-content:flex-start!important;padding-top:28px!important;margin-top:2px!important;border-top:2px solid rgba(255,255,255,.18)!important;opacity:.92!important}
-.pauseDangerActions::before{content:"Opciones de salida";display:block;flex-basis:100%;font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,214,231,.65);margin-bottom:2px}
+#pauseButtons{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:28px!important;margin-top:28px!important;width:100%!important}
+.pauseMainActions{display:flex!important;align-items:center!important;justify-content:flex-start!important;flex:0 0 auto!important}
+.pauseDangerActions{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:14px!important;flex-wrap:wrap!important;flex:1 1 auto!important;width:auto!important;padding-top:0!important;margin-top:0!important;border-top:none!important;opacity:.92!important}
+.pauseDangerActions::before{content:none!important;display:none!important}
+@media(max-width:680px){
+  #pauseButtons{align-items:stretch!important;flex-direction:column!important;gap:18px!important}
+  .pauseMainActions,.pauseDangerActions{justify-content:flex-start!important;width:100%!important}
+}
 .pauseButton{border:none;background:#ff7aa8;color:white;padding:12px 22px;border-radius:999px;font-size:16px;font-weight:900;cursor:pointer;box-shadow:0 8px 20px rgba(255,122,168,.28)}
 #resumeButton{font-size:19px;padding:15px 38px;min-width:190px}
 .pauseButton.secondary{background:#4cc9f0}
