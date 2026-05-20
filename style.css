@@ -898,15 +898,14 @@ body.panel-theme-dark .onlineRankBox{background:rgba(255,255,255,.06);border-col
 
 /* === Fila de desplegables del menú inicial === */
 .startDropdownRow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start;margin:14px auto 8px;max-width:980px}
-.startDropdownRow>details{display:contents;margin:0;max-width:none;text-align:center}
-.startDropdownRow>details>summary{grid-row:1;width:100%;min-height:56px;box-sizing:border-box;white-space:nowrap;margin:0;align-self:center;display:flex;align-items:center;justify-content:center}
-.startDropdownRow>details:nth-of-type(1)>summary{grid-column:1}
-.startDropdownRow>details:nth-of-type(2)>summary{grid-column:2}
-.startDropdownRow>details:nth-of-type(3)>summary{grid-column:3}
-.startDropdownRow .achievementsBox,.startDropdownRow .cosmeticsBox,.startDropdownRow #howToPlay .controls{grid-column:1 / -1;grid-row:2;width:100%;max-width:860px;margin:12px auto 0;box-sizing:border-box}
-#howToPlay[open]{max-width:none}
+.startDropdownRow>details{margin:0!important;max-width:none!important;width:100%;text-align:center}
+.startDropdownRow>details>summary{width:100%!important;min-width:0!important;min-height:56px;box-sizing:border-box;white-space:nowrap;margin:0!important;display:flex;align-items:center;justify-content:center}
+.startDropdownContentSlot{width:100%;max-width:860px;margin:12px auto 8px;box-sizing:border-box}
+.startDropdownContentSlot:not(.visible){display:none}
+.startDropdownContentSlot .achievementsBox,.startDropdownContentSlot .cosmeticsBox,.startDropdownContentSlot .controls{margin:0 auto!important;width:100%;box-sizing:border-box}
+.startDropdownContentSlot .controls{display:grid;max-width:600px}
 .goldenPlayerName{color:#ffd166!important;text-shadow:0 0 8px rgba(255,209,102,.45);font-weight:900}
 #playerNameInput.goldenPlayerName{border-color:#ffd166!important;box-shadow:0 0 0 3px rgba(255,209,102,.22),0 0 18px rgba(255,209,102,.20);background:rgba(255,248,220,.98)}
 .onlineRankName.goldenName{color:#ffd166!important;text-shadow:0 0 7px rgba(255,209,102,.45);font-weight:1000}
 .achievementMeta .achievementReward{display:none}
-@media(max-width:760px){.startDropdownRow{grid-template-columns:1fr}.startDropdownRow>details[open]{grid-column:auto}.startDropdownRow>details[open]>summary{width:100%;min-width:0}}
+@media(max-width:760px){.startDropdownRow{grid-template-columns:1fr;gap:10px}.startDropdownRow>details>summary{min-height:52px}.startDropdownContentSlot{max-width:100%}}

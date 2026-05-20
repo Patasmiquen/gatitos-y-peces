@@ -478,11 +478,35 @@ function applyGoldenPlayerNameUI(){
   document.body.classList.toggle("hasGoldenPlayerName",gold);
 }
 function syncStartDropdowns(){
+  const slot=document.getElementById("startDropdownContentSlot");
   const panels=[achievementsPanel,cosmeticPanel,document.getElementById("howToPlay")].filter(Boolean);
+  const items=panels.map(panel=>{
+    const content=panel.id==="achievementsPanel"?panel.querySelector(".achievementsBox"):panel.id==="cosmeticsPanel"?panel.querySelector(".cosmeticsBox"):panel.querySelector(".controls");
+    return{panel,content,parent:content?.parentNode||panel};
+  }).filter(item=>item.content);
+  function restoreClosedContent(openPanel=null){
+    items.forEach(item=>{
+      if(item.panel!==openPanel&&item.content.parentNode!==item.parent)item.parent.appendChild(item.content);
+    });
+  }
+  function syncSlot(){
+    if(!slot)return;
+    const openItem=items.find(item=>item.panel.open);
+    if(!openItem){
+      restoreClosedContent(null);
+      slot.classList.remove("visible");
+      return;
+    }
+    restoreClosedContent(openItem.panel);
+    if(openItem.content.parentNode!==slot)slot.appendChild(openItem.content);
+    slot.classList.add("visible");
+  }
   panels.forEach(panel=>panel.addEventListener("toggle",()=>{
-    if(!panel.open)return;
-    panels.forEach(other=>{if(other!==panel)other.open=false;});
+    if(panel.open)panels.forEach(other=>{if(other!==panel)other.open=false;});
+    requestAnimationFrame(syncSlot);
   }));
+  window.addEventListener("resize",()=>requestAnimationFrame(syncSlot));
+  requestAnimationFrame(syncSlot);
 }
 
 function checkAchievements(){
