@@ -6270,3 +6270,34 @@ if(adminPanel){
     const skinsSection = document.getElementById('adminSkinsSection');
     if(skinsSection) skinsSection.appendChild(unlockAllSkinsBtn);
 }
+
+// Botón funcional admin: desbloquear todas las skins correctamente
+(function(){
+    const skinsSection = document.getElementById('adminSkinsSection');
+    if(!skinsSection) return;
+    const unlockAllSkinsBtn = document.createElement('button');
+    unlockAllSkinsBtn.textContent = 'Desbloquear todas las skins';
+    unlockAllSkinsBtn.className = 'admin-btn';
+    // Estilo coherente con otros botones del panel
+    unlockAllSkinsBtn.style.padding = '8px 16px';
+    unlockAllSkinsBtn.style.borderRadius = '12px';
+    unlockAllSkinsBtn.style.border = 'none';
+    unlockAllSkinsBtn.style.background = 'linear-gradient(90deg, #ff9a00, #ff5a5f)';
+    unlockAllSkinsBtn.style.color = 'white';
+    unlockAllSkinsBtn.style.fontWeight = 'bold';
+    unlockAllSkinsBtn.style.cursor = 'pointer';
+    unlockAllSkinsBtn.addEventListener('mouseenter', ()=>{unlockAllSkinsBtn.style.opacity='0.85';});
+    unlockAllSkinsBtn.addEventListener('mouseleave', ()=>{unlockAllSkinsBtn.style.opacity='1';});
+    // Función de desbloqueo
+    unlockAllSkinsBtn.addEventListener('click', ()=>{
+        if(typeof playerSkins !== 'undefined'){
+            playerSkins.forEach(skin=>{ skin.desbloqueada = true; });
+            if(typeof refreshCosmeticPanel === 'function') refreshCosmeticPanel();
+            if(typeof updateHud === 'function') updateHud();
+            console.log('Todas las skins desbloqueadas');
+        } else {
+            console.warn('playerSkins no definido');
+        }
+    });
+    skinsSection.appendChild(unlockAllSkinsBtn);
+})();
