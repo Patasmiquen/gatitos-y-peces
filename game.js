@@ -1004,10 +1004,32 @@ victoryFinishBtn.addEventListener("click",()=>{
   levelUpPanel.style.display="none";
   messageEl.classList.remove("dogSave");
   const r=computeFinalScore();
-  messageEl.innerHTML=`🌸 ¡Gracias por jugar!<br><small>Lo has hecho genial 💖 · ${r.total.toLocaleString()} puntos</small><br><button class="victoryBtn finish" onclick="returnToMainMenu()" style="margin-top:18px;font-size:16px;padding:10px 22px">Volver al menú 🏠</button>`;
+  messageEl.innerHTML=`🌸 ¡Gracias por jugar!<br><small>Lo has hecho genial 💖 · ${r.total.toLocaleString()} puntos</small><br><button class="victoryBtn finish" onclick="returnToMainMenuWithConfirm()" style="margin-top:18px;font-size:16px;padding:10px 22px">Volver al menú 🏠</button>`;
   messageEl.style.display="block";
 });
-gameOverRestartBtn.addEventListener("click",()=>{gameOverPanel.style.display="none";startGame()});
+function confirmGameRestart(){
+  return window.confirm("¿Seguro que quieres reiniciar la partida? Perderás el progreso de la partida actual.");
+}
+function confirmGoToMenu(){
+  return window.confirm("¿Seguro que quieres volver al menú? Perderás el progreso de la partida actual.");
+}
+function restartFromGameOverWithConfirm(){
+  if(!confirmGameRestart())return;
+  gameOverPanel.style.display="none";
+  startGame();
+}
+function restartCurrentGameWithConfirm(){
+  if(!confirmGameRestart())return;
+  closePause();
+  gameStarted=true;
+  startPanel.style.display="none";
+  restart();
+}
+function returnToMainMenuWithConfirm(){
+  if(!confirmGoToMenu())return;
+  returnToMainMenu();
+}
+gameOverRestartBtn.addEventListener("click",restartFromGameOverWithConfirm);
 victoryContinueBtn.addEventListener("click",()=>{
   victoryPanel.style.display="none";
   gameOver=false;
@@ -1020,7 +1042,7 @@ victoryContinueBtn.addEventListener("click",()=>{
   if(shopAvailable)openCoinShop();
   else maybeOpenShopOrFusion();
 });
-restartButton.addEventListener("click",()=>{closePause();gameStarted=true;startPanel.style.display="none";restart()});
+restartButton.addEventListener("click",restartCurrentGameWithConfirm);
 canvas.addEventListener("contextmenu",e=>e.preventDefault());
 startButton.addEventListener("click",()=>{
   const name=getPlayerName();
@@ -1054,8 +1076,8 @@ function returnToMainMenu(){
   startPanel.style.display="flex";
   loadOnlineRanking([startRankingList]);
 }
-menuButton.addEventListener("click",returnToMainMenu);
-if(gameOverMenuBtn)gameOverMenuBtn.addEventListener("click",returnToMainMenu);
+menuButton.addEventListener("click",returnToMainMenuWithConfirm);
+if(gameOverMenuBtn)gameOverMenuBtn.addEventListener("click",returnToMainMenuWithConfirm);
 
 function resetUpgrades(){
 Object.assign(upgrades,{fireRate:1,fishSpeed:1,damage:1,moveSpeed:1,maxLife:100,bigFishChance:0,doubleFishChance:0,pierceChance:0,fishSize:1,catSlow:0,healOnWave:8,lifeSteal:0,xpBoost:1,boomerangChance:0,shield:false,shieldLevel:0,autoFire:false,autoFireLevel:0,critChance:0,zoomies:false,zoomiesHyper:false,zoomiesCannon:false,zoomiesCrit:false,aimAssist:false,moralSupport:false,darkPact:false,catInstinct:false,boyfriendDog:false,boyfriendDogSpirit:false,boyfriendDogReturned:false,bigCursor:false,coinMagnetRange:0,combatAI:false,assistedShot:false,perfectAim:false,moraleFire:false,braveHeart:false,reflexBurst:false,valorCasa:false,cursedInstinct:false,fusionBonusPower:0,sevenLives:false,holdShoot:false});
