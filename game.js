@@ -221,11 +221,20 @@ async function submitOnlineScore(finalScore, statusEl, rankingEl){
   initRanking();
 
   const playedFromWave=Math.max(1,Math.floor(Number(runStartWave)||1));
-  if(autoModeUsedThisRun||autoMode||playedFromWave!==1||!rankingEligibleThisRun){
+  const aiScoreRun=!!(autoModeUsedThisRun||autoMode);
+  if(playedFromWave!==1||(!aiScoreRun&&!rankingEligibleThisRun)){
     const disabledMsg=rankingDisabledReason||`Ranking desactivado: la partida empezó en ronda ${playedFromWave}.`;
     setOnlineStatus(statusEl,disabledMsg,"error");
     await loadOnlineRanking([startRankingList,rankingEl].filter(Boolean));
     return;
+  }
+  if(aiScoreRun){
+    const saveAI=window.confirm("Esta partida se ha jugado con modo IA. ¿Quieres guardar igualmente esta puntuación en el ranking?");
+    if(!saveAI){
+      setOnlineStatus(statusEl,"Puntuación de IA no guardada por elección del jugador.","info");
+      await loadOnlineRanking([startRankingList,rankingEl].filter(Boolean));
+      return;
+    }
   }
   const name=savePlayerName(getPlayerName()||"Jugador");
   if(!firebaseReady||!rankingDb){setOnlineStatus(statusEl,"Ranking online no disponible en este momento.","error");return;}
