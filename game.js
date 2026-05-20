@@ -659,6 +659,7 @@ let bossVictoryPending=false;
 let dogRelaxTime=0;
 let enemyIntroSeen={};
 let finalChoiceLocked=false;
+let finalCompletionContinue=false;
 let demonSpawnPressure=0;
 let thiefCoinsStolenThisWave=0;
 perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
@@ -1031,10 +1032,19 @@ function returnToMainMenuWithConfirm(){
 }
 gameOverRestartBtn.addEventListener("click",restartFromGameOverWithConfirm);
 victoryContinueBtn.addEventListener("click",()=>{
+  const wasFinalCompletion=isGameCompleted();
   victoryPanel.style.display="none";
   gameOver=false;
   choosingUpgrade=false;
   levelUpPanel.style.display="none";
+  if(wasFinalCompletion){
+    finalCompletionContinue=true;
+    bossVictoryAlreadyShown=true;
+    floatingTexts.push({x:canvas.width/2,y:130,text:"🐾 Modo infinito activado",life:2.5,maxLife:2.5,big:true});
+    startWave();
+    updateHud();
+    return;
+  }
   if(!bossVictoryAlreadyShown){
     bossVictoryAlreadyShown=true;
     floatingTexts.push({x:canvas.width/2,y:130,text:"💪 ¡Sigue mejorando!",life:2.5,maxLife:2.5,big:true});
@@ -1063,6 +1073,7 @@ function returnToMainMenu(){
   choosingUpgrade=false;
   gameOver=false;
   finalChoiceLocked=false;
+  finalCompletionContinue=false;
   pausePanel.style.display="none";
   levelUpPanel.style.display="none";
   victoryPanel.style.display="none";
@@ -1102,7 +1113,7 @@ rankingEligibleThisRun=!autoModeUsedThisRun;
 rankingDisabledReason=rankingEligibleThisRun?"":"Ranking desactivado: la partida empezó con IA activada.";
 cosmeticAwardedThisRun=false;
 currentWaveHadDamage=false;currentNoDamageStreak=0;
-score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=0;lastAutoShot=0;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=1;thiefCoinsStolenThisWave=0;spawnCooldown=0;life=upgrades.maxLife;level=1;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;musicianSpawnedThisWave=false;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();bossEncounterCounts={giantCat:0,duck:0,seal:0,demon:0};giantFishEasterEggsUsed=0;bossVictoryAlreadyShown=false;bossVictoryScoreSaved=false;bossVictoryPending=false;dogRelaxTime=0;fusionMoveXpTimer=0;lastFusionShieldGuard=0;enemyIntroSeen={};finalChoiceLocked=false;demonSpawnPressure=0;thiefCoinsStolenThisWave=0;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
+score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=0;lastAutoShot=0;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=1;thiefCoinsStolenThisWave=0;spawnCooldown=0;life=upgrades.maxLife;level=1;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;musicianSpawnedThisWave=false;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();bossEncounterCounts={giantCat:0,duck:0,seal:0,demon:0};giantFishEasterEggsUsed=0;bossVictoryAlreadyShown=false;bossVictoryScoreSaved=false;bossVictoryPending=false;dogRelaxTime=0;fusionMoveXpTimer=0;lastFusionShieldGuard=0;enemyIntroSeen={};finalChoiceLocked=false;finalCompletionContinue=false;demonSpawnPressure=0;thiefCoinsStolenThisWave=0;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
 demonOrbs.length=0;yarnBalls.length=0;powerStars.length=0;shockwaves.length=0;sparkles.length=0;tunaDrops.length=0;
 player.x=canvas.width/2;player.y=canvas.height/2;player.angle=0;player.shootAnim=0;player.hurtAnim=0;dogCompanion.x=player.x-50;dogCompanion.y=player.y+45;dogCompanion.shootCooldown=0;
 fishes.length=0;cats.length=0;hearts.length=0;smokes.length=0;floatingTexts.length=0;pawPrints.length=0;quacks.length=0;coinsDrops.length=0;dogBones.length=0;demonOrbs.length=0;yarnBalls.length=0;shockwaves.length=0;sparkles.length=0;
@@ -2960,6 +2971,7 @@ releaseGamePointer();
 setAchievementFlag("completeGame",{run:true});
 stopPowerStarLoop();
 gameOver=true;
+bossVictoryAlreadyShown=true;
 injectVictoryScore();
 victoryPanel.style.display="flex";
 playVictoryJingle();
@@ -2967,7 +2979,7 @@ document.querySelector("#victoryBox h1").textContent="🌟 ¡Juego completado!";
 document.querySelector("#victoryBox .victoryMsg").innerHTML=`<span class="vLine vMain">Has maxeado todas las mejoras y agotado todas las fusiones posibles.</span><span class="vLine vSub">Has alcanzado el poder absoluto gatuno. ✨🏆</span>`;
 floatingTexts.push({x:canvas.width/2,y:canvas.height/2-110,text:"¡FINAL COMPLETADO!",life:4,maxLife:4,big:true})
 }
-function checkGameCompletion(){if(!gameOver&&isGameCompleted())finishGame()}
+function checkGameCompletion(){if(!gameOver&&!finalCompletionContinue&&isGameCompleted())finishGame()}
 
 function canFuse(cost=5){
 const maxed=getMaxedFusionKeys();
@@ -3478,7 +3490,8 @@ function playDemonShotSound(){
 }
 
 function makeQuack(){
-if(!boss||boss.type!=="duck")return;
+if(!gameStarted||paused||gameOver||choosingUpgrade||!boss||boss.type!=="duck")return;
+if(quacks.length>=18)return;
 const angle=Math.atan2(player.y-boss.y,player.x-boss.x),speed=boss.quackSpeed||190+wave*8,word=Math.random()<.5?"QUACK!":"QUACK?";
 quacks.push({x:boss.x+Math.cos(angle)*65,y:boss.y+Math.sin(angle)*65,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,r:24,life:4,text:word,hp:2+Math.floor(wave/10)})
 }
@@ -3507,7 +3520,12 @@ if(boss.summon<=0&&isCatOnScreen(boss)){boss.summon=boss.baseSummon||Math.max(.5
 if(dist<player.r+boss.r-8){takePlayerDamage((boss.contactDamage||18)*dt,"El jefe te ha llenado de mimos 🐱",.1)}
 }else if(boss.type==="duck"){
 boss.shoot-=dt;
-if(boss.shoot<=0){boss.shoot=boss.baseShoot||Math.max(.42,1.25-wave*.045);for(let i=0;i<(boss.burst||1);i++)setTimeout(()=>{if(boss&&boss.type==="duck")makeQuack()},i*130);floatingTexts.push({x:boss.x,y:boss.y-70,text:Math.random()<.5?"QUACK!":"QUACK?",life:.7,maxLife:.7,big:false})}
+if(boss.shoot<=0){
+boss.shoot=boss.baseShoot||Math.max(.42,1.25-wave*.045);
+const duckBoss=boss;
+for(let i=0;i<(boss.burst||1);i++)setTimeout(()=>{if(boss===duckBoss&&boss&&boss.type==="duck"&&!gameOver&&!paused&&!choosingUpgrade)makeQuack()},i*130);
+floatingTexts.push({x:boss.x,y:boss.y-70,text:Math.random()<.5?"QUACK!":"QUACK?",life:.7,maxLife:.7,big:false})
+}
 }else if(boss.type==="seal"){
 if(boss.state==="jumping"){
 boss.jumpTimer-=dt;
