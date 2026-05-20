@@ -6186,8 +6186,11 @@ function autoPickChoice(choices,context){
 /* ─────────────────────────────────────────────────────────── */
 
 
-const ADMIN_PASSWORD="Patasmiquen";
-const ADMIN_UNLOCK_KEY="gatitos_peces_admin_unlocked";
+const ADMIN_PASSWORD="Eperiopatataquesopure";
+const ADMIN_UNLOCK_KEY="gatitos_peces_admin_unlocked_v2";
+try{
+  localStorage.removeItem("gatitos_peces_admin_unlocked");
+}catch(e){}
 function isAdminUnlocked(){return localStorage.getItem(ADMIN_UNLOCK_KEY)==="1"}
 function setAdminUnlocked(value=true){if(value)localStorage.setItem(ADMIN_UNLOCK_KEY,"1")}
 function refreshAdminLockUI(){
