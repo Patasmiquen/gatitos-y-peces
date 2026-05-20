@@ -6251,3 +6251,22 @@ if(adminPanel){
     });
     adminPanel.appendChild(unlockAllSkinsBtn);
 }
+
+// Botón admin: desbloquear todas las skins funcional
+if(adminPanel){
+    const unlockAllSkinsBtn = document.createElement('button');
+    unlockAllSkinsBtn.textContent = 'Desbloquear todas las skins';
+    unlockAllSkinsBtn.className = 'admin-btn'; // coincidir estilo con otros botones
+    unlockAllSkinsBtn.addEventListener('click', () => {
+        if(typeof playerSkins !== 'undefined'){
+            playerSkins.forEach(skin => { skin.desbloqueada = true; });
+            if(typeof refreshCosmeticPanel === 'function') refreshCosmeticPanel();
+            if(typeof updateHud === 'function') updateHud();
+            console.log('Todas las skins desbloqueadas');
+        } else {
+            console.warn('playerSkins no definido');
+        }
+    });
+    const skinsSection = document.getElementById('adminSkinsSection');
+    if(skinsSection) skinsSection.appendChild(unlockAllSkinsBtn);
+}
