@@ -146,6 +146,7 @@ function renderRankingList(el,items){
   el.innerHTML=rows.map((s,i)=>{
     const safeName=escapeHtml(cleanPlayerName(s.name)||"Jugador");
     const isMe=me&&safeName.toLowerCase()===escapeHtml(me).toLowerCase();
+    const isGold=!!s.goldenName||(isMe&&hasGoldenPlayerName());
     const total=Number(s.score||0).toLocaleString();
     const meta=`Ronda ${Number(s.wave||0)} · Nivel ${Number(s.level||0)} · Jefes ${Number(s.bosses||0)}/4`;
     const medal=i===0?"🥇":i===1?"🥈":i===2?"🥉":`#${i+1}`;
@@ -154,7 +155,7 @@ function renderRankingList(el,items){
     const dupeHint=duplicateCount>1&&!rankingShowDuplicates?` · ${duplicateCount} partidas`:"";
     const detailsOpen=expandedRankingNameKey&&expandedRankingNameKey===s._nameKey;
     const details=detailsOpen?renderRankingNameDetails(s._nameKey):"";
-    return `<div class="onlineRankRow ${isMe?"me":""}" data-rank-name="${escapeHtml(s._nameKey)}" title="Click para ver sus otras posiciones"><div class="onlineRankPos">${medal}</div><div class="onlineRankName">${safeName}</div><div class="onlineRankScore">${total}</div><div class="onlineRankMeta">${escapeHtml(meta+realRank+dupeHint)}</div>${details}</div>`;
+    return `<div class="onlineRankRow ${isMe?"me":""} ${isGold?"goldenRankRow":""}" data-rank-name="${escapeHtml(s._nameKey)}" title="Click para ver sus otras posiciones"><div class="onlineRankPos">${medal}</div><div class="onlineRankName ${isGold?"goldenName":""}">${safeName}</div><div class="onlineRankScore">${total}</div><div class="onlineRankMeta">${escapeHtml(meta+realRank+dupeHint)}</div>${details}</div>`;
   }).join("");
   el.querySelectorAll(".onlineRankRow").forEach(row=>row.addEventListener("click",()=>{
     const key=row.dataset.rankName||"";
@@ -230,6 +231,7 @@ async function submitOnlineScore(finalScore, statusEl, rankingEl){
   if(!firebaseReady||!rankingDb){setOnlineStatus(statusEl,"Ranking online no disponible en este momento.","error");return;}
   const data={
     name,
+    goldenName:hasGoldenPlayerName(),
     score:Math.max(0,Math.floor(Number(finalScore.total)||0)),
     wave:Math.max(1,Math.floor(Number(wave)||1)),
     level:Math.max(1,Math.floor(Number(level)||1)),
@@ -251,6 +253,7 @@ async function submitOnlineScore(finalScore, statusEl, rankingEl){
     const scoreRef=rankingDb.collection("scores").doc(scoreDocId);
     const existing=await scoreRef.get();
     if(existing.exists){
+      if(data.goldenName)await scoreRef.set({goldenName:true},{merge:true});
       lastScoreUploadKey=uploadKey;
       setOnlineStatus(statusEl,"Puntuación ya enviada al ranking.","ok");
     }else{
@@ -329,7 +332,7 @@ function selectedCosmetic(category){return selectedCosmetics[category]||"default
 function updateScaleBalance(){if(scaleBalanceEl)scaleBalanceEl.textContent=cosmeticScales.toLocaleString()}
 function equipCosmetic(id){const c=getCosmetic(id);if(!c||!isCosmeticOwned(id))return;selectedCosmetics[c.category]=id;saveCosmetics();renderCosmetics()}
 function resetCosmeticSelections(){selectedCosmetics={player:"default",fish:"default",enemy:"default",boss_duck:"default",boss_seal:"default",boss_demon:"default"};saveCosmetics();renderCosmetics()}
-function buyCosmetic(id){const c=getCosmetic(id);if(!c||ownedCosmetics.has(id)||cosmeticScales<c.price)return;cosmeticScales-=c.price;ownedCosmetics.add(id);selectedCosmetics[c.category]=id;saveCosmetics();renderCosmetics()}
+function buyCosmetic(id){const c=getCosmetic(id);if(!c||ownedCosmetics.has(id)||cosmeticScales<c.price)return;cosmeticScales-=c.price;registerScalesSpent(c.price);ownedCosmetics.add(id);selectedCosmetics[c.category]=id;saveCosmetics();renderCosmetics()}
 function getPackInfo(pack){
   const items=pack.items.map(getCosmetic).filter(Boolean);
   const owned=items.filter(i=>ownedCosmetics.has(i.id));
@@ -340,7 +343,7 @@ function getPackInfo(pack){
   const price=Math.ceil(missingValue*(1-pack.discount));
   return{items,owned,missing,ownedValue,missingValue,totalValue,price,complete:missing.length===0};
 }
-function buyPack(id){const pack=COSMETIC_PACKS.find(p=>p.id===id);if(!pack)return;const info=getPackInfo(pack);if(info.complete||cosmeticScales<info.price)return;cosmeticScales-=info.price;info.missing.forEach(i=>ownedCosmetics.add(i.id));saveCosmetics();renderCosmetics()}
+function buyPack(id){const pack=COSMETIC_PACKS.find(p=>p.id===id);if(!pack)return;const info=getPackInfo(pack);if(info.complete||cosmeticScales<info.price)return;cosmeticScales-=info.price;registerScalesSpent(info.price);info.missing.forEach(i=>ownedCosmetics.add(i.id));saveCosmetics();renderCosmetics()}
 function equipPack(id){const pack=COSMETIC_PACKS.find(p=>p.id===id);if(!pack)return;const info=getPackInfo(pack);if(!info.complete)return;info.items.forEach(i=>{selectedCosmetics[i.category]=i.id});saveCosmetics();renderCosmetics()}
 function renderCosmeticCard(c){
   const owned=isCosmeticOwned(c.id),equipped=selectedCosmetic(c.category)===c.id;
@@ -396,6 +399,182 @@ cosmeticsPacksTab?.addEventListener("click",()=>{cosmeticTab="packs";renderCosme
 cosmeticsResetBtn?.addEventListener("click",resetCosmeticSelections);
 cosmeticPanel?.addEventListener("toggle",()=>{if(cosmeticPanel.open)renderCosmetics()});
 renderCosmetics();
+
+/* === Sistema de logros permanentes === */
+const ACHIEVEMENT_KEYS={state:"gatitos_achievements_state_v1"};
+const achievementsPanel=document.getElementById("achievementsPanel"),achievementsContentEl=document.getElementById("achievementsContent"),achievementProgressText=document.getElementById("achievementProgressText"),achievementsRefreshBtn=document.getElementById("achievementsRefreshBtn");
+const ACHIEVEMENTS=[
+  {id:"complete_game",icon:"🌟",name:"Poder absoluto gatuno",stat:"completeGame",desc:"Completa todas las fusiones posibles y maxéalas.",phases:[{target:1,label:"Completa el juego al 100%",reward:0}]},
+  {id:"bosses_run",icon:"👑",name:"Los venciste a todos",stat:"bossesInRun",desc:"Derrota a los 4 jefes diferentes en una misma partida.",phases:[{target:4,label:"4 jefes en una partida",reward:0}]},
+  {id:"shots",icon:"🐟",name:"Lluvia de peces",stat:"shots",desc:"Dispara peces a lo largo de tus partidas.",phases:[{target:500,label:"500 peces",reward:0},{target:2500,label:"2.500 peces",reward:0},{target:10000,label:"10.000 peces",reward:0},{target:50000,label:"50.000 peces",reward:0}]},
+  {id:"cats",icon:"🐱",name:"Mimos gatunos",stat:"cats",desc:"Mima gatitos a lo largo de tus partidas.",phases:[{target:100,label:"100 gatos",reward:0},{target:1000,label:"1.000 gatos",reward:0},{target:5000,label:"5.000 gatos",reward:0},{target:25000,label:"25.000 gatos",reward:0}]},
+  {id:"thieves",icon:"😾",name:"Ladrones desgraciados",stat:"coinsStolen",desc:"Pierde monedas por culpa de los gatos ladrones.",phases:[{target:25,label:"25 monedas robadas",reward:0},{target:100,label:"100 monedas robadas",reward:0},{target:300,label:"300 monedas robadas",reward:0},{target:1000,label:"1.000 monedas robadas",reward:0}]},
+  {id:"no_damage",icon:"🛡️",name:"Ni un rasguño",stat:"noDamageStreak",desc:"Aguanta rondas seguidas sin recibir daño.",phases:[{target:3,label:"3 rondas seguidas",reward:0},{target:5,label:"5 rondas seguidas",reward:0},{target:10,label:"10 rondas seguidas",reward:0}]},
+  {id:"one_hp",icon:"🍀",name:"Suerte pura",stat:"oneHpLuck",desc:"Quédate exactamente a 1 de vida sin activar una mejora de salvación.",phases:[{target:1,label:"Quedarte a 1 de vida",reward:0}]},
+  {id:"scales_spent",icon:"🫧",name:"Caprichos brillantes",stat:"scalesSpent",desc:"Gasta escamas en cosméticos o packs.",phases:[{target:100,label:"100 escamas gastadas",reward:0},{target:500,label:"500 escamas gastadas",reward:0},{target:1500,label:"1.500 escamas gastadas",reward:0},{target:3000,label:"3.000 escamas gastadas",reward:0}]},
+  {id:"score_million",icon:"🏆",name:"Puntuación de leyenda",stat:"maxScore",desc:"Alcanza puntuaciones cada vez más altas.",phases:[{target:50000,label:"50.000 puntos",reward:0},{target:250000,label:"250.000 puntos",reward:0},{target:1000000,label:"1.000.000 de puntos",reward:0}]},
+  {id:"waves",icon:"🌊",name:"Superviviente",stat:"maxWave",desc:"Llega a rondas cada vez más altas.",phases:[{target:10,label:"Ronda 10",reward:0},{target:20,label:"Ronda 20",reward:0},{target:30,label:"Ronda 30",reward:0},{target:50,label:"Ronda 50",reward:0}]},
+  {id:"fusions_created",icon:"🔮",name:"Alquimia gatuna",stat:"fusionsCreated",desc:"Crea fusiones diferentes durante tus partidas.",phases:[{target:1,label:"1 fusión",reward:0},{target:5,label:"5 fusiones",reward:0},{target:15,label:"15 fusiones",reward:0},{target:30,label:"30 fusiones",reward:0}]},
+  {id:"fusions_maxed",icon:"💎",name:"Fusión definitiva",stat:"fusionsMaxed",desc:"Sube fusiones al máximo.",phases:[{target:1,label:"1 fusión máxima",reward:0},{target:5,label:"5 fusiones máximas",reward:0},{target:15,label:"15 fusiones máximas",reward:0}]},
+  {id:"shop_spender",icon:"🪙",name:"Compradora gatuna",stat:"shopCoinsSpent",desc:"Gasta monedas en la tienda de mejoras.",phases:[{target:25,label:"25 monedas gastadas",reward:0},{target:100,label:"100 monedas gastadas",reward:0},{target:250,label:"250 monedas gastadas",reward:0},{target:500,label:"500 monedas gastadas",reward:0}]},
+  {id:"all_achievements",icon:"👑",name:"Lo has conseguido todo",stat:"allAchievements",final:true,desc:"Completa todos los demás logros y vuelve dorado tu nombre.",phases:[{target:1,label:"Todos los logros",reward:0}]}
+];
+let achievementState={stats:{},levels:{},rewarded:{}};
+let achievementRunBlocked=false,currentWaveHadDamage=false,currentNoDamageStreak=0,achievementToastTimer=null;
+function loadAchievements(){
+  const saved=safeJsonParse(localStorage.getItem(ACHIEVEMENT_KEYS.state)||"{}",{});
+  achievementState={stats:Object.assign({},saved.stats||{}),levels:Object.assign({},saved.levels||{}),rewarded:Object.assign({},saved.rewarded||{})};
+}
+function saveAchievements(){try{localStorage.setItem(ACHIEVEMENT_KEYS.state,JSON.stringify(achievementState))}catch(e){}}
+function achievementValue(stat){return Number(achievementState.stats?.[stat]||0)}
+function areRunAchievementsAllowed(){return true}
+function blockAchievementsForRun(reason="admin"){if(gameStarted){achievementRunBlocked=true;renderAchievements();}}
+function setAchievementStatMax(stat,value,opts={}){if(opts.run&& !areRunAchievementsAllowed())return;const v=Math.max(0,Math.floor(Number(value)||0));if(v>achievementValue(stat)){achievementState.stats[stat]=v;checkAchievements();}}
+function addAchievementStat(stat,amount=1,opts={}){if(opts.run&& !areRunAchievementsAllowed())return;const v=Math.max(0,Math.floor(Number(amount)||0));if(v<=0)return;achievementState.stats[stat]=achievementValue(stat)+v;checkAchievements();}
+function setAchievementFlag(stat,opts={}){setAchievementStatMax(stat,1,opts)}
+function getAchievementUnlockedLevel(def){return Math.max(0,Math.floor(Number(achievementState.levels?.[def.id]||0)))}
+function getAchievementTargetLevel(def){
+  if(def.final)return achievementValue(def.stat)>=1?1:0;
+  const value=achievementValue(def.stat);
+  let level=0;
+  def.phases.forEach((p,i)=>{if(value>=p.target)level=i+1});
+  return level;
+}
+function awardAchievementReward(def,phaseIndex){
+  const key=`${def.id}:${phaseIndex}`;
+  if(achievementState.rewarded[key])return;
+  achievementState.rewarded[key]=true;
+}
+function showAchievementToast(def,phaseIndex){
+  const label=def.phases?.[phaseIndex]?.label||"Completado";
+  let toast=document.getElementById("achievementToast");
+  if(!toast){
+    toast=document.createElement("div");
+    toast.id="achievementToast";
+    toast.className="achievementToast";
+    document.body.appendChild(toast);
+  }
+  toast.innerHTML=`🏆 Logro: ${escapeHtml(def.name)} <span style="opacity:.82">· ${escapeHtml(label)}</span>`;
+  toast.classList.add("visible");
+  clearTimeout(achievementToastTimer);
+  achievementToastTimer=setTimeout(()=>toast.classList.remove("visible"),2600);
+}
+function checkAllAchievementsCompletion(){
+  const finalDef=ACHIEVEMENTS.find(a=>a.final);
+  if(!finalDef)return;
+  const others=ACHIEVEMENTS.filter(a=>!a.final);
+  const allDone=others.every(def=>getAchievementUnlockedLevel(def)>=def.phases.length);
+  if(allDone&&achievementValue(finalDef.stat)<1){
+    achievementState.stats[finalDef.stat]=1;
+  }
+}
+function hasGoldenPlayerName(){
+  const finalDef=ACHIEVEMENTS.find(a=>a.final);
+  return !!finalDef&&getAchievementUnlockedLevel(finalDef)>=finalDef.phases.length;
+}
+function applyGoldenPlayerNameUI(){
+  const gold=hasGoldenPlayerName();
+  playerNameInput?.classList.toggle("goldenPlayerName",gold);
+  document.body.classList.toggle("hasGoldenPlayerName",gold);
+}
+function syncStartDropdowns(){
+  const panels=[achievementsPanel,cosmeticPanel,document.getElementById("howToPlay")].filter(Boolean);
+  panels.forEach(panel=>panel.addEventListener("toggle",()=>{
+    if(!panel.open)return;
+    panels.forEach(other=>{if(other!==panel)other.open=false;});
+  }));
+}
+
+function checkAchievements(){
+  let changed=false;
+  ACHIEVEMENTS.filter(a=>!a.final).forEach(def=>{
+    const target=getAchievementTargetLevel(def);
+    const current=getAchievementUnlockedLevel(def);
+    if(target>current){
+      for(let i=current;i<target;i++){awardAchievementReward(def,i);showAchievementToast(def,i);}
+      achievementState.levels[def.id]=target;
+      changed=true;
+    }
+  });
+  checkAllAchievementsCompletion();
+  const finalDef=ACHIEVEMENTS.find(a=>a.final);
+  if(finalDef){
+    const target=getAchievementTargetLevel(finalDef);
+    const current=getAchievementUnlockedLevel(finalDef);
+    if(target>current){
+      awardAchievementReward(finalDef,0);
+      showAchievementToast(finalDef,0);
+      achievementState.levels[finalDef.id]=target;
+      changed=true;
+    }
+  }
+  saveAchievements();
+  renderAchievements();
+  applyGoldenPlayerNameUI();
+  renderAllRankingLists([startRankingList,victoryRankingList,gameOverRankingList].filter(Boolean));
+  return changed;
+}
+function getAchievementProgress(def){
+  const level=getAchievementUnlockedLevel(def);
+  const value=achievementValue(def.stat);
+  const total=def.phases.length;
+  const completed=level>=total;
+  const phase=def.phases[Math.min(level,total-1)]||def.phases[0];
+  const prevTarget=level>0?(def.phases[level-1]?.target||0):0;
+  const target=phase?.target||1;
+  const progress=completed?1:Math.max(0,Math.min(1,(value-prevTarget)/Math.max(1,target-prevTarget)));
+  return{level,value,total,completed,phase,target,progress};
+}
+function formatAchievementValue(n){return Math.floor(Number(n)||0).toLocaleString()}
+function renderAchievements(){
+  if(!achievementProgressText&&!achievementsContentEl)return;
+  const completed=ACHIEVEMENTS.filter(def=>getAchievementUnlockedLevel(def)>=def.phases.length).length;
+  if(achievementProgressText)achievementProgressText.textContent=`${completed}/${ACHIEVEMENTS.length}`;
+  if(!achievementsContentEl)return;
+  achievementsContentEl.innerHTML=ACHIEVEMENTS.map(def=>{
+    const p=getAchievementProgress(def);
+    const phaseText=p.completed?`Completado ${p.total}/${p.total}`:`Fase ${p.level+1}/${p.total}`;
+    const currentLabel=p.completed?def.phases[p.total-1].label:p.phase.label;
+    const valueText=p.completed?currentLabel:`${formatAchievementValue(p.value)} / ${formatAchievementValue(p.target)}`;
+    const reward=p.completed?`<span class="achievementDoneBadge">Completado</span>`:`<span class="achievementReward">En progreso</span>`;
+    return `<div class="achievementCard ${p.completed?"completed":""} ${def.final?"finalAchievement":""}">
+      <div class="achievementTop">
+        <div class="achievementIcon">${escapeHtml(def.icon)}</div>
+        <div class="achievementInfo">
+          <div class="achievementName">${escapeHtml(def.name)}</div>
+          <div class="achievementPhase">${escapeHtml(phaseText)} · ${escapeHtml(currentLabel)}</div>
+          <div class="achievementDesc">${escapeHtml(def.desc)}</div>
+          <div class="achievementBar"><div class="achievementFill" style="width:${Math.round(p.progress*100)}%"></div></div>
+          <div class="achievementMeta"><span>${escapeHtml(valueText)}</span>${reward}</div>
+        </div>
+      </div>
+    </div>`;
+  }).join("");
+}
+function registerFinalScoreAchievement(finalScore){if(!areRunAchievementsAllowed())return;setAchievementStatMax("maxScore",Number(finalScore?.total)||0,{run:true});setAchievementStatMax("maxWave",wave,{run:true});if(defeatedBossTypes?.size>=4)setAchievementStatMax("bossesInRun",4,{run:true});}
+function registerScalesSpent(amount){addAchievementStat("scalesSpent",amount,{})}
+function registerShopCoinsSpent(amount){addAchievementStat("shopCoinsSpent",amount,{run:true})}
+function registerFusionAchievements(){
+  if(!areRunAchievementsAllowed())return;
+  const pairs=Object.keys(doneFusionPairs||{});
+  setAchievementStatMax("fusionsCreated",pairs.length,{run:true});
+  const maxed=pairs.filter(pair=>getFusionProgress(pair)>=5).length;
+  setAchievementStatMax("fusionsMaxed",maxed,{run:true});
+}
+function recordNoDamageRoundIfClean(){
+  if(!areRunAchievementsAllowed())return;
+  if(!currentWaveHadDamage)currentNoDamageStreak++;
+  else currentNoDamageStreak=0;
+  setAchievementStatMax("noDamageStreak",currentNoDamageStreak,{run:true});
+  currentWaveHadDamage=false;
+}
+loadAchievements();
+achievementsRefreshBtn?.addEventListener("click",()=>{checkAchievements();renderAchievements()});
+achievementsPanel?.addEventListener("toggle",()=>{if(achievementsPanel.open){checkAchievements();renderAchievements()}});
+syncStartDropdowns();
+renderAchievements();
+applyGoldenPlayerNameUI();
+
 
 const keys={},mouse={x:canvas.width/2,y:canvas.height/2};
 const player={x:canvas.width/2,y:canvas.height/2,r:24,speed:270,angle:0,shootAnim:0,hurtAnim:0};
@@ -880,6 +1059,7 @@ autoModeUsedThisRun=!!autoMode;
 rankingEligibleThisRun=!autoModeUsedThisRun;
 rankingDisabledReason=rankingEligibleThisRun?"":"Ranking desactivado: la partida empezó con IA activada.";
 cosmeticAwardedThisRun=false;
+achievementRunBlocked=false;currentWaveHadDamage=false;currentNoDamageStreak=0;
 score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=0;lastAutoShot=0;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=1;thiefCoinsStolenThisWave=0;spawnCooldown=0;life=upgrades.maxLife;level=1;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;musicianSpawnedThisWave=false;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();bossEncounterCounts={giantCat:0,duck:0,seal:0,demon:0};giantFishEasterEggsUsed=0;bossVictoryAlreadyShown=false;bossVictoryScoreSaved=false;bossVictoryPending=false;dogRelaxTime=0;fusionMoveXpTimer=0;lastFusionShieldGuard=0;enemyIntroSeen={};finalChoiceLocked=false;demonSpawnPressure=0;thiefCoinsStolenThisWave=0;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
 demonOrbs.length=0;yarnBalls.length=0;powerStars.length=0;shockwaves.length=0;sparkles.length=0;tunaDrops.length=0;
 player.x=canvas.width/2;player.y=canvas.height/2;player.angle=0;player.shootAnim=0;player.hurtAnim=0;dogCompanion.x=player.x-50;dogCompanion.y=player.y+45;dogCompanion.shootCooldown=0;
@@ -1191,6 +1371,8 @@ floatingTexts.push({x:player.x,y:player.y-86,text:"🛡️ Guardia felina",life:
 const predictedLife=life-amount;
 if(upgrades.sevenLives&&predictedLife<7&&activateSevenLives())return false;
 life=predictedLife;
+currentWaveHadDamage=true;
+if(life===1&&!upgrades.sevenLives&&!isSevenLivesActive())setAchievementFlag("oneHpLuck",{run:true});
 player.hurtAnim=hurt;
 if(life<=0)endGame(deathText);
 return true;
@@ -1616,6 +1798,7 @@ function setFusionProgress(pair,value){
       upgradeMaxLevels[k]=5;
     }
   });
+  registerFusionAchievements();
   return lvl;
 }
 function addFusionProgress(pair,amount=1){
@@ -1884,7 +2067,7 @@ releaseGamePointer();
 const darkWave=reason==="wave"&&upgrades.darkPact;
 const choices=darkWave?getRandomScalableUpgradeChoices(1):getRandomUpgradeChoices(3);
 if(choices.length===0||allDirectUpgradesMaxed()){
-if(reason==="wave"&&waveUpgradePending){waveUpgradePending=false;wave++;
+if(reason==="wave"&&waveUpgradePending){waveUpgradePending=false;recordNoDamageRoundIfClean();wave++;
 thiefCoinsStolenThisWave=0;life=Math.min(upgrades.maxLife,life+upgrades.healOnWave);startWave()}
 giveLevelCoins("por tener mejoras al máximo");
 if(pendingUpgradeQueue.length)processPendingUpgradeQueue();
@@ -1913,7 +2096,7 @@ choosingUpgrade=false;levelUpPanel.style.display="none";canvas.style.cursor=upgr
 syncGamePointerLock();
 floatingTexts.push({x:player.x,y:player.y-55,text:upgrade.title,life:1.5,maxLife:1.5,big:false});
 refreshAdminPanelUI();
-if(waveUpgradePending){waveUpgradePending=false;wave++;life=Math.min(upgrades.maxLife,life+upgrades.healOnWave);startWave()}
+if(waveUpgradePending){waveUpgradePending=false;recordNoDamageRoundIfClean();wave++;life=Math.min(upgrades.maxLife,life+upgrades.healOnWave);startWave()}
 updateHud();
 if(pendingUpgradeQueue.length)processPendingUpgradeQueue();else maybeOpenShopOrFusion()
 })
@@ -2093,7 +2276,7 @@ if(upgrade.randomShopUpgrade){
   if(coins<randomPrice){openCoinShop();return}
   const hidden=upgrade.hiddenUpgrade;
   if(!hidden||typeof hidden.apply!=="function"){openCoinShop();return}
-  coins-=randomPrice;shopUpgradePurchases++;
+  coins-=randomPrice;registerShopCoinsSpent(randomPrice);shopUpgradePurchases++;
   hidden.apply();playShopBuySound();
   floatingTexts.push({x:player.x,y:player.y-65,text:`🎲 Sorpresa: ${hidden.title}`,life:1.3,maxLife:1.3,big:false});
   updateHud();refreshAdminPanelUI();checkGameCompletion();
@@ -2102,7 +2285,7 @@ if(upgrade.randomShopUpgrade){
   return;
 }
 if(coins<upgradePrice){openCoinShop();return}
-coins-=upgradePrice;shopUpgradePurchases++;
+coins-=upgradePrice;registerShopCoinsSpent(upgradePrice);shopUpgradePurchases++;
 upgrade.apply();playShopBuySound();
 floatingTexts.push({x:player.x,y:player.y-65,text:`Comprado por ${upgradePrice}🪙: ${upgrade.title}`,life:1.3,maxLife:1.3,big:false});
 updateHud();refreshAdminPanelUI();checkGameCompletion();
@@ -2663,6 +2846,7 @@ ${r.efficiencyBonus>0?`<div class="sRow"><span>⚡ Eficiencia (ronda ${wave})</s
 function showGameOverScreen(){
 const r=computeFinalScore();
 const scalesGained=earnScalesFromScore(r);
+registerFinalScoreAchievement(r);
 const isRecord=checkAndSaveRecord(r.total);
 const prevBest=isRecord?r.total:getHighScore();
 gameOverRankEmojiEl.textContent=r.rankEmoji;
@@ -2730,7 +2914,7 @@ return noUpgradeableLevels&&allUniqueOwned&&noFusionPairsLeft;
 
 function finishGame(){
 releaseGamePointer();
-unlockAdmin("Juego completado");
+setAchievementFlag("completeGame",{run:true});
 stopPowerStarLoop();
 gameOver=true;
 injectVictoryScore();
@@ -2792,9 +2976,11 @@ showCards("🔮 Fusión compatible",`Fusiones posibles con ${getAnyName(first.ke
 if(second.locked)return;
 const wasShopOpen=shopAvailable;
 coins-=cost;
+registerShopCoinsSpent(cost);
 if(shopAvailable)shopFusionPurchases++;
 const pair=sortedPair(first.key,second.key);
 doneFusionPairs[pair]=true;
+registerFusionAchievements();
 if(pair.includes("autoFire"))upgrades.holdShoot=true;
 const fusionName=getFusionNameFromPair(first.key,second.key);
 if(pair==="aimAssist+autoFire"){upgrades.combatAI=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🤖 IA de combate activada",life:1.8,maxLife:1.8,big:false})}
@@ -3076,6 +3262,8 @@ score+=5;
 grantFullLevel();
 shopBossPending=true;
 defeatedBossTypes.add(defeatedType);
+addAchievementStat("bossesTotal",1,{run:true});
+if(defeatedBossTypes.size>=4)setAchievementStatMax("bossesInRun",4,{run:true});
 boss=null;
 collectAllMapLootAfterBoss();
 cleanupRoundScreen({keepFloating:true,keepSoftEffects:true});
@@ -3121,7 +3309,7 @@ const now=performance.now();
 let delay=210/(upgrades.fireRate*getZoomiesFireMultiplier());
 if(fromHold&&upgrades.holdShoot)delay/=getHoldShootMultiplier();
 if(now-lastShot<delay)return;
-lastShot=now;shots++;if(runStats)runStats.shotsFired++;player.shootAnim=.12;
+lastShot=now;shots++;if(runStats)runStats.shotsFired++;addAchievementStat("shots",1,{run:true});player.shootAnim=.12;
 const angle=Math.atan2(mouse.y-player.y,mouse.x-player.x),giantFishEasterEgg=giantFishEasterEggsUsed<1&&hasFishSizeFusionForGiantFish()&&Math.random()<0.00001,isBigFish=giantFishEasterEgg||Math.random()<upgrades.bigFishChance,fishScale=upgrades.fishSize*(giantFishEasterEgg?7.5:(isBigFish?1.65:1)),lowLifeBonus=(life<upgrades.maxLife*.35?(upgrades.braveHeart?0.35:0)+(upgrades.cursedInstinct?0.45:0):0),fishDamage=upgrades.damage*(1+lowLifeBonus)*(giantFishEasterEgg?35:(isBigFish?2.1:1)),canPierce=giantFishEasterEgg||Math.random()<upgrades.pierceChance,boomerang=!giantFishEasterEgg&&Math.random()<upgrades.boomerangChance;
 function addFish(offsetAngle=0){
 const finalAngle=angle+offsetAngle;
@@ -3431,7 +3619,7 @@ if(cat.type==="yarn")explodeYarnCat(cat);
 if(cat.type==="glutton"){const tunaCount=2+Math.floor(Math.random()*2);for(let t=0;t<tunaCount;t++){tunaDrops.push({x:cat.x+(Math.random()*44-22),y:cat.y+(Math.random()*44-22),r:16,life:16,wobble:0});floatingTexts.push({x:cat.x,y:cat.y-38-t*18,text:"🐟 ¡Lata!",life:1.0,maxLife:1.0,big:false});}}
 if(cat.type==="mini")gainXP(2+Math.floor(wave/3));
 if(cat.type==="student"&&(cat.studyLevel||0)>0)gainXP((cat.studyLevel||0));
-score++;if(runStats)runStats.kills++;gainXP(1+Math.floor(wave/4));makeSmoke(cat.x,cat.y);playSoftPop();dropCoins(cat.x,cat.y,cat.rainbow?.25:.013);if(!cat.rainbow&&Math.random()<(!cat.type?.22:.10))tunaDrops.push({x:cat.x,y:cat.y+(Math.random()*20-10),r:16,life:16,wobble:0});floatingTexts.push({x:cat.x,y:cat.y-38,text:"🐟 ¡Lata!",life:1.0,maxLife:1.0,big:false});
+score++;if(runStats)runStats.kills++;addAchievementStat("cats",1,{run:true});gainXP(1+Math.floor(wave/4));makeSmoke(cat.x,cat.y);playSoftPop();dropCoins(cat.x,cat.y,cat.rainbow?.25:.013);if(!cat.rainbow&&Math.random()<(!cat.type?.22:.10))tunaDrops.push({x:cat.x,y:cat.y+(Math.random()*20-10),r:16,life:16,wobble:0});floatingTexts.push({x:cat.x,y:cat.y-38,text:"🐟 ¡Lata!",life:1.0,maxLife:1.0,big:false});
 if(cat.rainbow){rainbowChanceLevel=1;rainbowPendingUntilKilled=false;rainbowSelectedThisWave=false;floatingTexts.push({x:cat.x,y:cat.y-35,text:"🌈 Gatito arcoíris",life:1.2,maxLife:1.2,big:false});openRainbowLowestMenu()}
 else floatingTexts.push({x:cat.x,y:cat.y-30,text:"miau~",life:.8,maxLife:.8,big:false});
 if(cats[index]===cat)cats.splice(index,1);
@@ -4233,7 +4421,7 @@ if(cat.type==="yarn"){
     const stolen=Math.min(coins,getThiefStealPerTouch(),remaining);
     if(stolen>0){
       coins=Math.max(0,coins-stolen);
-      thiefCoinsStolenThisWave+=stolen;
+      thiefCoinsStolenThisWave+=stolen;addAchievementStat("coinsStolen",stolen,{run:true});
       cat.stolenCoins=(cat.stolenCoins||0)+stolen;
       cat.stealCooldown=1.8;
       cat.fleeTimer=2.8;
@@ -5979,7 +6167,7 @@ function autoPickChoice(choices,context){
 
 const ADMIN_PASSWORD="Patasmiquen";
 const ADMIN_UNLOCK_KEY="gatitos_peces_admin_unlocked";
-function isAdminUnlocked(){return localStorage.getItem(ADMIN_UNLOCK_KEY)==="1"||isGameCompleted()}
+function isAdminUnlocked(){return localStorage.getItem(ADMIN_UNLOCK_KEY)==="1"}
 function setAdminUnlocked(value=true){if(value)localStorage.setItem(ADMIN_UNLOCK_KEY,"1")}
 function refreshAdminLockUI(){
   const unlocked=isAdminUnlocked();
@@ -5994,7 +6182,7 @@ function refreshAdminLockUI(){
       else if(autoModeUsedThisRun)adminLog.textContent="Modo admin desbloqueado. IA desactivada, pero esta partida no entra al ranking porque se usó IA.";
       else adminLog.textContent="Modo admin desbloqueado.";
     }else{
-      adminLog.textContent="Modo admin bloqueado. Usa la contraseña o completa el juego.";
+      adminLog.textContent="Modo admin bloqueado. Usa la contraseña.";
     }
   }
 }
@@ -6007,7 +6195,7 @@ function unlockAdmin(reason="Contraseña correcta"){
 function requireAdmin(){
   refreshAdminLockUI();
   if(isAdminUnlocked())return true;
-  if(adminLog)adminLog.textContent="Bloqueado: completa el juego o escribe la contraseña.";
+  if(adminLog)adminLog.textContent="Bloqueado: escribe la contraseña.";
   return false;
 }
 function adminNumber(el,def=1,min=0,max=9999){

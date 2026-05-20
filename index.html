@@ -28,6 +28,20 @@
   <button type="button" class="themeChoice" data-theme="dark" aria-label="Tema oscuro">🌙</button>
 </div>
 
+
+<div class="startDropdownRow">
+<details id="achievementsPanel" class="achievementsPanel">
+<summary>🏆 Logros</summary>
+<div class="achievementsBox">
+  <div class="achievementsHeader">
+    <span>🏆 Progreso: <b id="achievementProgressText">0/0</b></span>
+    <button id="achievementsRefreshBtn" type="button">Actualizar</button>
+  </div>
+  <div class="achievementsNote">Los logros se guardan en este navegador. Al completarlos todos, tu nombre se vuelve dorado.</div>
+  <div id="achievementsContent" class="achievementsContent"></div>
+</div>
+</details>
+
 <details id="cosmeticsPanel" class="cosmeticsPanel">
 <summary>✨ Cosméticos</summary>
 <div class="cosmeticsBox">
@@ -48,6 +62,7 @@
 <div><span class="controlIcon">🔮</span><span>Combina <b>fusiones</b> al máximo</span></div>
 </div>
 </details>
+</div>
 <div class="onlineRankBox" id="startRankingBox">
   <div class="onlineRankTitle"><span>🏆 Ranking online</span><div class="onlineRankActions"><button class="onlineRankRefresh" id="refreshRankingBtn" type="button">Actualizar</button><button class="onlineRankRefresh" id="startRankingToggleAll" type="button">Ver todos</button></div></div>
   <label class="onlineRankDuplicateToggle"><input id="startRankingShowDuplicates" type="checkbox"/> Mostrar duplicados</label>
@@ -71,11 +86,11 @@
 <button id="adminToggle" type="button">ADMIN 🔒</button>
 <div id="adminPanel">
   <h3>🛠️ Modo admin <span id="adminStateTag" class="adminMini">bloqueado</span></h3>
-  <p>Panel de pruebas. Se desbloquea al completar todas las mejoras/fusiones o escribiendo la contraseña.</p>
+  <p>Panel de pruebas. Se desbloquea escribiendo la contraseña.</p>
   <div id="adminLock" class="adminBox">
     <div class="adminBoxTitle">Desbloqueo</div>
     <div class="adminRow"><label>Clave:</label><input id="adminPassword" type="password" placeholder="Contraseña" autocomplete="off"/><button class="adminButton gold" id="adminUnlockBtn">Desbloquear</button></div>
-    <div class="adminMini">También se desbloquea automáticamente al pasarte el juego completo.</div>
+    <div class="adminMini">Ya no se desbloquea al pasarte el juego: solo con contraseña.</div>
   </div>
   <div id="adminTools">
     <div class="adminBox adminBoxPartida">
