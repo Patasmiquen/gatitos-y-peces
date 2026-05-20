@@ -410,7 +410,7 @@ const ACHIEVEMENTS=[
   {id:"cats",icon:"🐱",name:"Mimos gatunos",stat:"cats",desc:"Mima gatitos a lo largo de tus partidas.",phases:[{target:100,label:"100 gatos",reward:0},{target:1000,label:"1.000 gatos",reward:0},{target:5000,label:"5.000 gatos",reward:0},{target:25000,label:"25.000 gatos",reward:0}]},
   {id:"thieves",icon:"😾",name:"Ladrones desgraciados",stat:"coinsStolen",desc:"Pierde monedas por culpa de los gatos ladrones.",phases:[{target:25,label:"25 monedas robadas",reward:0},{target:100,label:"100 monedas robadas",reward:0},{target:300,label:"300 monedas robadas",reward:0},{target:1000,label:"1.000 monedas robadas",reward:0}]},
   {id:"no_damage",icon:"🛡️",name:"Ni un rasguño",stat:"noDamageStreak",desc:"Aguanta rondas seguidas sin recibir daño.",phases:[{target:3,label:"3 rondas seguidas",reward:0},{target:5,label:"5 rondas seguidas",reward:0},{target:10,label:"10 rondas seguidas",reward:0}]},
-  {id:"one_hp",icon:"🍀",name:"Suerte pura",stat:"oneHpLuck",desc:"Quédate exactamente a 1 de vida sin activar una mejora de salvación.",phases:[{target:1,label:"Quedarte a 1 de vida",reward:0}]},
+  {id:"one_hp",icon:"🍀",name:"Suerte pura",stat:"oneHpLuck",desc:"Quédate al 1% de vida o menos sin activar una mejora de salvación.",phases:[{target:1,label:"Quedarte al 1% de vida",reward:0}]},
   {id:"scales_spent",icon:"🫧",name:"Caprichos brillantes",stat:"scalesSpent",desc:"Gasta escamas en cosméticos o packs.",phases:[{target:100,label:"100 escamas gastadas",reward:0},{target:500,label:"500 escamas gastadas",reward:0},{target:1500,label:"1.500 escamas gastadas",reward:0},{target:3000,label:"3.000 escamas gastadas",reward:0}]},
   {id:"score_million",icon:"🏆",name:"Puntuación de leyenda",stat:"maxScore",desc:"Alcanza puntuaciones cada vez más altas.",phases:[{target:50000,label:"50.000 puntos",reward:0},{target:250000,label:"250.000 puntos",reward:0},{target:1000000,label:"1.000.000 de puntos",reward:0}]},
   {id:"waves",icon:"🌊",name:"Superviviente",stat:"maxWave",desc:"Llega a rondas cada vez más altas.",phases:[{target:10,label:"Ronda 10",reward:0},{target:20,label:"Ronda 20",reward:0},{target:30,label:"Ronda 30",reward:0},{target:50,label:"Ronda 50",reward:0}]},
@@ -420,17 +420,15 @@ const ACHIEVEMENTS=[
   {id:"all_achievements",icon:"👑",name:"Lo has conseguido todo",stat:"allAchievements",final:true,desc:"Completa todos los demás logros y vuelve dorado tu nombre.",phases:[{target:1,label:"Todos los logros",reward:0}]}
 ];
 let achievementState={stats:{},levels:{},rewarded:{}};
-let achievementRunBlocked=false,currentWaveHadDamage=false,currentNoDamageStreak=0,achievementToastTimer=null;
+let currentWaveHadDamage=false,currentNoDamageStreak=0,achievementToastTimer=null;
 function loadAchievements(){
   const saved=safeJsonParse(localStorage.getItem(ACHIEVEMENT_KEYS.state)||"{}",{});
   achievementState={stats:Object.assign({},saved.stats||{}),levels:Object.assign({},saved.levels||{}),rewarded:Object.assign({},saved.rewarded||{})};
 }
 function saveAchievements(){try{localStorage.setItem(ACHIEVEMENT_KEYS.state,JSON.stringify(achievementState))}catch(e){}}
 function achievementValue(stat){return Number(achievementState.stats?.[stat]||0)}
-function areRunAchievementsAllowed(){return true}
-function blockAchievementsForRun(reason="admin"){if(gameStarted){achievementRunBlocked=true;renderAchievements();}}
-function setAchievementStatMax(stat,value,opts={}){if(opts.run&& !areRunAchievementsAllowed())return;const v=Math.max(0,Math.floor(Number(value)||0));if(v>achievementValue(stat)){achievementState.stats[stat]=v;checkAchievements();}}
-function addAchievementStat(stat,amount=1,opts={}){if(opts.run&& !areRunAchievementsAllowed())return;const v=Math.max(0,Math.floor(Number(amount)||0));if(v<=0)return;achievementState.stats[stat]=achievementValue(stat)+v;checkAchievements();}
+function setAchievementStatMax(stat,value,opts={}){const v=Math.max(0,Math.floor(Number(value)||0));if(v>achievementValue(stat)){achievementState.stats[stat]=v;checkAchievements();}}
+function addAchievementStat(stat,amount=1,opts={}){const v=Math.max(0,Math.floor(Number(amount)||0));if(v<=0)return;achievementState.stats[stat]=achievementValue(stat)+v;checkAchievements();}
 function setAchievementFlag(stat,opts={}){setAchievementStatMax(stat,1,opts)}
 function getAchievementUnlockedLevel(def){return Math.max(0,Math.floor(Number(achievementState.levels?.[def.id]||0)))}
 function getAchievementTargetLevel(def){
@@ -575,18 +573,16 @@ function renderAchievements(){
     </div>`;
   }).join("");
 }
-function registerFinalScoreAchievement(finalScore){if(!areRunAchievementsAllowed())return;setAchievementStatMax("maxScore",Number(finalScore?.total)||0,{run:true});setAchievementStatMax("maxWave",wave,{run:true});if(defeatedBossTypes?.size>=4)setAchievementStatMax("bossesInRun",4,{run:true});}
+function registerFinalScoreAchievement(finalScore){setAchievementStatMax("maxScore",Number(finalScore?.total)||0,{run:true});setAchievementStatMax("maxWave",wave,{run:true});if(defeatedBossTypes?.size>=4)setAchievementStatMax("bossesInRun",4,{run:true});}
 function registerScalesSpent(amount){addAchievementStat("scalesSpent",amount,{})}
 function registerShopCoinsSpent(amount){addAchievementStat("shopCoinsSpent",amount,{run:true})}
 function registerFusionAchievements(){
-  if(!areRunAchievementsAllowed())return;
   const pairs=Object.keys(doneFusionPairs||{});
   setAchievementStatMax("fusionsCreated",pairs.length,{run:true});
   const maxed=pairs.filter(pair=>getFusionProgress(pair)>=5).length;
   setAchievementStatMax("fusionsMaxed",maxed,{run:true});
 }
 function recordNoDamageRoundIfClean(){
-  if(!areRunAchievementsAllowed())return;
   if(!currentWaveHadDamage)currentNoDamageStreak++;
   else currentNoDamageStreak=0;
   setAchievementStatMax("noDamageStreak",currentNoDamageStreak,{run:true});
@@ -1083,7 +1079,7 @@ autoModeUsedThisRun=!!autoMode;
 rankingEligibleThisRun=!autoModeUsedThisRun;
 rankingDisabledReason=rankingEligibleThisRun?"":"Ranking desactivado: la partida empezó con IA activada.";
 cosmeticAwardedThisRun=false;
-achievementRunBlocked=false;currentWaveHadDamage=false;currentNoDamageStreak=0;
+currentWaveHadDamage=false;currentNoDamageStreak=0;
 score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=0;lastAutoShot=0;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=1;thiefCoinsStolenThisWave=0;spawnCooldown=0;life=upgrades.maxLife;level=1;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;musicianSpawnedThisWave=false;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();bossEncounterCounts={giantCat:0,duck:0,seal:0,demon:0};giantFishEasterEggsUsed=0;bossVictoryAlreadyShown=false;bossVictoryScoreSaved=false;bossVictoryPending=false;dogRelaxTime=0;fusionMoveXpTimer=0;lastFusionShieldGuard=0;enemyIntroSeen={};finalChoiceLocked=false;demonSpawnPressure=0;thiefCoinsStolenThisWave=0;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
 demonOrbs.length=0;yarnBalls.length=0;powerStars.length=0;shockwaves.length=0;sparkles.length=0;tunaDrops.length=0;
 player.x=canvas.width/2;player.y=canvas.height/2;player.angle=0;player.shootAnim=0;player.hurtAnim=0;dogCompanion.x=player.x-50;dogCompanion.y=player.y+45;dogCompanion.shootCooldown=0;
@@ -1396,7 +1392,8 @@ const predictedLife=life-amount;
 if(upgrades.sevenLives&&predictedLife<7&&activateSevenLives())return false;
 life=predictedLife;
 currentWaveHadDamage=true;
-if(life===1&&!upgrades.sevenLives&&!isSevenLivesActive())setAchievementFlag("oneHpLuck",{run:true});
+const lowLifeAchievementThreshold=Math.max(1,Math.ceil(upgrades.maxLife*.01));
+if(life>0&&life<=lowLifeAchievementThreshold&&!upgrades.sevenLives&&!isSevenLivesActive())setAchievementFlag("oneHpLuck",{run:true});
 player.hurtAnim=hurt;
 if(life<=0)endGame(deathText);
 return true;
