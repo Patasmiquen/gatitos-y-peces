@@ -6232,3 +6232,22 @@ restart();gameStarted=false;startPanel.style.display="flex";requestAnimationFram
 
 
 
+
+
+// Botón admin: desbloquear todas las skins
+if(adminPanel){
+    const unlockAllSkinsBtn = document.createElement('button');
+    unlockAllSkinsBtn.textContent = 'Desbloquear todas las skins';
+    unlockAllSkinsBtn.style.margin = '5px';
+    unlockAllSkinsBtn.addEventListener('click', () => {
+        for (let key in upgrades){
+            if(upgrades.hasOwnProperty(key)){
+                upgrades[key] = 5;
+            }
+        }
+        updateHud();
+        refreshAdminPanelUI();
+        console.log('Todas las skins desbloqueadas');
+    });
+    adminPanel.appendChild(unlockAllSkinsBtn);
+}
