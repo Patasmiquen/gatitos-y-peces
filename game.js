@@ -4830,9 +4830,12 @@ const starOn=isPowerStarActive();
 const sevenOn=isSevenLivesActive();
 const starEnding=starOn&&starTime<=3;
 const blinkInvisible=starEnding&&Math.sin(performance.now()*0.035)>0;
-const hurtScale=player.hurtAnim>0?1.08:1;
+const hurtBlink=player.hurtAnim>0;
+const hurtBlinkLow=hurtBlink&&Math.sin(performance.now()*0.07)>0;
+const hurtScale=hurtBlink?1.08:1;
 const starPulse=starOn?1+Math.sin(performance.now()*0.018)*.08:(sevenOn?1+Math.sin(performance.now()*0.025)*.05:1);
 ctx.scale(hurtScale*starPulse,hurtScale*starPulse);
+if(hurtBlink&&!starOn&&!sevenOn)ctx.globalAlpha=hurtBlinkLow?.42:.96;
 
 if(starOn){
   ctx.shadowColor=starEnding?"#ff4d8d":"#ffd166";
@@ -4853,6 +4856,17 @@ ctx.lineWidth=3;
 ctx.stroke();
 ctx.fillStyle="rgba(255,255,255,.16)";
 ctx.beginPath();ctx.arc(-player.r*.28,-player.r*.36,player.r*.28,0,Math.PI*2);ctx.fill();
+
+if(hurtBlink&&!starOn&&!sevenOn){
+  ctx.save();
+  ctx.globalAlpha=.45+.25*Math.abs(Math.sin(performance.now()*0.09));
+  ctx.strokeStyle="#fff5f7";
+  ctx.lineWidth=4;
+  ctx.beginPath();
+  ctx.arc(0,0,player.r+6,0,Math.PI*2);
+  ctx.stroke();
+  ctx.restore();
+}
 
 if(starOn){
   ctx.strokeStyle=starEnding?"#ff4d8d":"#fff176";
