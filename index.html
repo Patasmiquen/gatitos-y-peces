@@ -27,6 +27,16 @@
   <button type="button" class="themeChoice active" data-theme="light" aria-label="Tema claro">☀️</button>
   <button type="button" class="themeChoice" data-theme="dark" aria-label="Tema oscuro">🌙</button>
 </div>
+
+<details id="cosmeticsPanel" class="cosmeticsPanel">
+<summary>✨ Cosméticos</summary>
+<div class="cosmeticsBox">
+  <div class="cosmeticsHeader"><span>🫧 Escamas: <b id="scaleBalance">0</b></span><button id="cosmeticsResetBtn" type="button">Aspecto normal</button></div>
+  <div class="cosmeticsTabs"><button id="cosmeticsSkinsTab" type="button" class="active">Skins</button><button id="cosmeticsPacksTab" type="button">Packs</button></div>
+  <div id="cosmeticsContent" class="cosmeticsContent"></div>
+  <div class="cosmeticsNote">Las skins son solo visuales y se guardan en este navegador.</div>
+</div>
+</details>
 <details id="howToPlay">
 <summary>📖 Cómo jugar</summary>
 <div class="controls compactControls cleanControls">
@@ -68,22 +78,32 @@
     <div class="adminMini">También se desbloquea automáticamente al pasarte el juego completo.</div>
   </div>
   <div id="adminTools">
-    <div class="adminBox">
-      <div class="adminBoxTitle">Mejoras precisas</div>
-      <div class="adminRow"><label>Mejora:</label><select id="adminUpgradeSelect"></select><input id="adminUpgradeAmount" min="1" max="99" type="number" value="1"/><button class="adminButton" id="adminGiveUpgrade">Añadir</button><button class="adminButton secondary" id="adminMaxUpgrade">Max</button></div>
-      <div class="adminRow"><label>Única:</label><select id="adminUniqueSelect"></select><button class="adminButton" id="adminGiveUnique">Dar única</button></div>
-      <div class="adminRow"><button class="adminButton gold" id="adminMaxAll">Maxear todo</button><button class="adminButton dark" id="adminCompleteAll">Completar fusiones</button></div>
-    </div>
-    <div class="adminBox">
-      <div class="adminBoxTitle">Partida</div>
+    <div class="adminBox adminBoxPartida">
+      <div class="adminBoxTitle">🎮 Partida</div>
       <div class="adminRow"><label>Monedas:</label><input id="adminCoinAmount" min="1" max="9999" type="number" value="25"/><button class="adminButton secondary" id="adminCoins">Añadir</button><button class="adminButton gold" id="adminOpenShop">Abrir tienda</button></div>
       <div class="adminRow"><label>Nivel:</label><input id="adminLevelAmount" min="1" max="50" type="number" value="1"/><button class="adminButton secondary" id="adminLevel">Subir</button></div>
       <div class="adminRow"><label>Ronda:</label><input id="adminWaveValue" min="1" max="999" type="number" value="1"/><button class="adminButton dark" id="adminSetWave">Poner ronda</button></div>
       <div class="adminRow"><button class="adminButton" id="adminHeal">Curar vida</button><button class="adminButton danger" id="adminHurt">Quitar 25 vida</button></div>
       <div class="adminRow"><button class="adminButton gold" id="autoModeButton" type="button">🤖 Modo automático: OFF</button></div>
     </div>
-    <div class="adminBox">
-      <div class="adminBoxTitle">Eventos y enemigos</div>
+    <div class="adminBox adminBoxMejoras">
+      <div class="adminBoxTitle">⭐ Mejoras</div>
+      <div class="adminRow"><label>Mejora:</label><select id="adminUpgradeSelect"></select><input id="adminUpgradeAmount" min="1" max="99" type="number" value="1"/><button class="adminButton" id="adminGiveUpgrade">Añadir</button><button class="adminButton secondary" id="adminMaxUpgrade">Max</button></div>
+      <div class="adminRow"><label>Única:</label><select id="adminUniqueSelect"></select><button class="adminButton" id="adminGiveUnique">Dar única</button></div>
+      <div class="adminRow"><button class="adminButton gold" id="adminMaxAll">Maxear todo</button></div>
+    </div>
+    <div class="adminBox adminBoxFusiones">
+      <div class="adminBoxTitle">🔮 Fusiones</div>
+      <div class="adminRow"><button class="adminButton dark" id="adminCompleteAll">Completar fusiones</button></div>
+      <div class="adminMini">Completa las fusiones oficiales disponibles para pruebas.</div>
+    </div>
+    <div class="adminBox adminBoxCosmeticos">
+      <div class="adminBoxTitle">✨ Cosméticos</div>
+      <div class="adminRow"><button class="adminButton gold" id="adminUnlockAllCosmetics" type="button">Desbloquear todas las skins</button></div>
+      <div class="adminMini">Desbloquea todas las skins y packs del menú principal.</div>
+    </div>
+    <div class="adminBox adminBoxEventos">
+      <div class="adminBoxTitle">👹 Eventos y enemigos</div>
       <div class="adminRow"><button class="adminButton dark" id="adminBoss">Invocar jefe</button><button class="adminButton dark" id="adminDemon">Invocar demonio</button></div>
       <div class="adminRow"><button class="adminButton" id="adminAvalanche">Forzar avalancha</button><button class="adminButton" id="adminStar">Dar estrella</button></div>
       <div class="adminRow"><button class="adminButton dark" id="adminGiveDog">Dar perro</button><button class="adminButton danger" id="adminClearEnemies">Limpiar enemigos</button></div>

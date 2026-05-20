@@ -292,6 +292,111 @@ rankingLists.forEach(id=>{
 initRanking();
 loadOnlineRanking([startRankingList]);
 
+
+/* === Cosméticos permanentes === */
+const COSMETIC_KEYS={scales:"gatitos_cosmetic_scales",owned:"gatitos_cosmetic_owned",selected:"gatitos_cosmetic_selected"};
+const cosmeticPanel=document.getElementById("cosmeticsPanel"),scaleBalanceEl=document.getElementById("scaleBalance"),cosmeticsContentEl=document.getElementById("cosmeticsContent"),cosmeticsSkinsTab=document.getElementById("cosmeticsSkinsTab"),cosmeticsPacksTab=document.getElementById("cosmeticsPacksTab"),cosmeticsResetBtn=document.getElementById("cosmeticsResetBtn");
+const COSMETIC_CATEGORIES={player:"Jugador",fish:"Peces",enemy:"Enemigos",boss_duck:"Jefe pato",boss_seal:"Jefe foca",boss_demon:"Jefe demonio"};
+const COSMETICS=[
+  {id:"player_green",name:"Gatito verde",category:"player",price:100,preview:"🟢",desc:"Cambia el color del jugador."},
+  {id:"player_pink",name:"Gatito rosa",category:"player",price:100,preview:"🌸",desc:"Cambia el color del jugador."},
+  {id:"player_elegant",name:"Gatito elegante",category:"player",price:200,preview:"🎀",desc:"Jugador con detalle elegante.",pack:"elegant"},
+  {id:"fish_elegant",name:"Peces con sombrero y bigote",category:"fish",price:250,preview:"🎩",desc:"Peces con sombrerito y bigote.",pack:"elegant"},
+  {id:"fish_pirate",name:"Peces pirata",category:"fish",price:180,preview:"🏴‍☠️",desc:"Peces con parche pirata."},
+  {id:"fish_heart",name:"Peces corazón",category:"fish",price:180,preview:"💖",desc:"Peces con detalle de corazón."},
+  {id:"enemy_gray",name:"Gatos grises",category:"enemy",price:150,preview:"🐱",desc:"Gatos normales en tono gris."},
+  {id:"enemy_elegant",name:"Gatos con pajarita",category:"enemy",price:250,preview:"🎀",desc:"Los gatos enemigos llevan pajarita.",pack:"elegant"},
+  {id:"boss_duck_monocle",name:"Pato con monóculo",category:"boss_duck",price:250,preview:"🦆",desc:"El pato jefe va más distinguido.",pack:"elegant"},
+  {id:"boss_seal_tie",name:"Foca con falda",category:"boss_seal",price:250,preview:"🦭",desc:"La foca jefe lleva una falda coqueta.",pack:"elegant"},
+  {id:"boss_demon_cape",name:"Demonio con capa",category:"boss_demon",price:300,preview:"😈",desc:"El demonio jefe lleva capa.",pack:"elegant"}
+];
+const COSMETIC_PACKS=[{id:"elegant",name:"Pack Elegante",discount:.20,items:["player_elegant","fish_elegant","enemy_elegant","boss_duck_monocle","boss_seal_tie","boss_demon_cape"],desc:"Pajaritas, sombreros, monóculos, corbatas y capa."}];
+let cosmeticTab="skins";
+let cosmeticScales=0,ownedCosmetics=new Set(),selectedCosmetics={player:"default",fish:"default",enemy:"default",boss_duck:"default",boss_seal:"default",boss_demon:"default"};
+let cosmeticAwardedThisRun=false;
+function safeJsonParse(value,fallback){try{return JSON.parse(value)}catch(e){return fallback}}
+function loadCosmetics(){
+  cosmeticScales=Math.max(0,parseInt(localStorage.getItem(COSMETIC_KEYS.scales)||"0",10)||0);
+  ownedCosmetics=new Set(safeJsonParse(localStorage.getItem(COSMETIC_KEYS.owned)||"[]",[]));
+  selectedCosmetics=Object.assign({player:"default",fish:"default",enemy:"default",boss_duck:"default",boss_seal:"default",boss_demon:"default"},safeJsonParse(localStorage.getItem(COSMETIC_KEYS.selected)||"{}",{}));
+}
+function saveCosmetics(){
+  try{localStorage.setItem(COSMETIC_KEYS.scales,String(cosmeticScales));localStorage.setItem(COSMETIC_KEYS.owned,JSON.stringify([...ownedCosmetics]));localStorage.setItem(COSMETIC_KEYS.selected,JSON.stringify(selectedCosmetics));}catch(e){}
+}
+function getCosmetic(id){return COSMETICS.find(c=>c.id===id)||null}
+function isCosmeticOwned(id){return id==="default"||ownedCosmetics.has(id)}
+function selectedCosmetic(category){return selectedCosmetics[category]||"default"}
+function updateScaleBalance(){if(scaleBalanceEl)scaleBalanceEl.textContent=cosmeticScales.toLocaleString()}
+function equipCosmetic(id){const c=getCosmetic(id);if(!c||!isCosmeticOwned(id))return;selectedCosmetics[c.category]=id;saveCosmetics();renderCosmetics()}
+function resetCosmeticSelections(){selectedCosmetics={player:"default",fish:"default",enemy:"default",boss_duck:"default",boss_seal:"default",boss_demon:"default"};saveCosmetics();renderCosmetics()}
+function buyCosmetic(id){const c=getCosmetic(id);if(!c||ownedCosmetics.has(id)||cosmeticScales<c.price)return;cosmeticScales-=c.price;ownedCosmetics.add(id);selectedCosmetics[c.category]=id;saveCosmetics();renderCosmetics()}
+function getPackInfo(pack){
+  const items=pack.items.map(getCosmetic).filter(Boolean);
+  const owned=items.filter(i=>ownedCosmetics.has(i.id));
+  const missing=items.filter(i=>!ownedCosmetics.has(i.id));
+  const ownedValue=owned.reduce((s,i)=>s+i.price,0);
+  const missingValue=missing.reduce((s,i)=>s+i.price,0);
+  const totalValue=items.reduce((s,i)=>s+i.price,0);
+  const price=Math.ceil(missingValue*(1-pack.discount));
+  return{items,owned,missing,ownedValue,missingValue,totalValue,price,complete:missing.length===0};
+}
+function buyPack(id){const pack=COSMETIC_PACKS.find(p=>p.id===id);if(!pack)return;const info=getPackInfo(pack);if(info.complete||cosmeticScales<info.price)return;cosmeticScales-=info.price;info.missing.forEach(i=>ownedCosmetics.add(i.id));saveCosmetics();renderCosmetics()}
+function equipPack(id){const pack=COSMETIC_PACKS.find(p=>p.id===id);if(!pack)return;const info=getPackInfo(pack);if(!info.complete)return;info.items.forEach(i=>{selectedCosmetics[i.category]=i.id});saveCosmetics();renderCosmetics()}
+function renderCosmeticCard(c){
+  const owned=isCosmeticOwned(c.id),equipped=selectedCosmetic(c.category)===c.id;
+  const btn=equipped?`<button class="cosmeticButton owned" disabled>Equipada</button>`:owned?`<button class="cosmeticButton secondary" onclick="equipCosmetic('${c.id}')">Equipar</button>`:`<button class="cosmeticButton" ${cosmeticScales<c.price?"disabled":""} onclick="buyCosmetic('${c.id}')">Comprar ${c.price} escamas</button>`;
+  return `<div class="cosmeticCard ${equipped?"equipped":owned?"owned":""}"><div class="cosmeticPreview">${c.preview||"✨"}</div><div class="cosmeticName">${escapeHtml(c.name)}</div><div class="cosmeticMeta">${escapeHtml(COSMETIC_CATEGORIES[c.category]||c.category)} · ${escapeHtml(c.desc||"")}</div>${btn}</div>`;
+}
+function renderSkinsTab(){
+  const cats=["player","fish","enemy","boss_duck","boss_seal","boss_demon"];
+  return cats.map(cat=>{
+    const items=COSMETICS.filter(c=>c.category===cat);
+    const normal=`<div class="cosmeticCard ${selectedCosmetic(cat)==="default"?"equipped":"owned"}"><div class="cosmeticPreview">✨</div><div class="cosmeticName">Aspecto normal</div><div class="cosmeticMeta">${escapeHtml(COSMETIC_CATEGORIES[cat]||cat)} · Gratis</div>${selectedCosmetic(cat)==="default"?`<button class="cosmeticButton owned" disabled>Equipada</button>`:`<button class="cosmeticButton secondary" onclick="selectedCosmetics['${cat}']='default';saveCosmetics();renderCosmetics()">Equipar</button>`}</div>`;
+    return `<div><div class="cosmeticCategoryTitle">${escapeHtml(COSMETIC_CATEGORIES[cat]||cat)}</div><div class="cosmeticGrid">${normal}${items.map(renderCosmeticCard).join("")}</div></div>`;
+  }).join("");
+}
+function renderPacksTab(){
+  return COSMETIC_PACKS.map(pack=>{
+    const info=getPackInfo(pack);
+    const discount=Math.round(pack.discount*100);
+    const itemNames=info.items.map(i=>`${ownedCosmetics.has(i.id)?"✅":"⬜"} ${escapeHtml(i.name)} (${i.price})`).join("<br>");
+    const action=info.complete?`<button class="cosmeticButton secondary" onclick="equipPack('${pack.id}')">Equipar pack</button>`:`<button class="cosmeticButton" ${cosmeticScales<info.price?"disabled":""} onclick="buyPack('${pack.id}')">Comprar pack por ${info.price} escamas</button>`;
+    return `<div class="cosmeticCard packCard"><div class="cosmeticPreview">🎩</div><div class="cosmeticName">${escapeHtml(pack.name)}</div><div class="cosmeticMeta">${escapeHtml(pack.desc)} · Descuento ${discount}%</div><div class="packItems">${itemNames}</div><div class="packPriceLine">Ya tienes ${info.owned.length}/${info.items.length} · Restante suelto: ${info.missingValue} · Pack: ${info.complete?"completo":info.price+" escamas"}</div>${action}</div>`;
+  }).join("");
+}
+function renderCosmetics(){
+  updateScaleBalance();
+  if(cosmeticsSkinsTab)cosmeticsSkinsTab.classList.toggle("active",cosmeticTab==="skins");
+  if(cosmeticsPacksTab)cosmeticsPacksTab.classList.toggle("active",cosmeticTab==="packs");
+  if(cosmeticsContentEl)cosmeticsContentEl.innerHTML=cosmeticTab==="packs"?renderPacksTab():renderSkinsTab();
+}
+function earnScalesFromScore(finalScore){
+  if(cosmeticAwardedThisRun)return 0;
+  const total=Math.max(0,Math.floor(Number(finalScore?.total)||0));
+  const gained=total>0?Math.max(5,Math.min(150,Math.floor(total/300))):0;
+  if(gained>0){cosmeticScales+=gained;cosmeticAwardedThisRun=true;saveCosmetics();renderCosmetics();}
+  return gained;
+}
+function cosmeticRewardRow(gained){return gained>0?`<div class="sRow" style="color:#4cc9f0"><span>🫧 Escamas ganadas</span><span>+${gained.toLocaleString()} · Total ${cosmeticScales.toLocaleString()}</span></div>`:""}
+function getPlayerSkinColor(defaultColor){const s=selectedCosmetic("player");if(s==="player_green")return "#55c271";if(s==="player_pink")return "#ff8fab";if(s==="player_elegant")return "#5b4b8a";return defaultColor}
+function drawHeartShape(x,y,size,color){ctx.save();ctx.translate(x,y);ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(0,size*.92);ctx.bezierCurveTo(size*.92,size*.30,size*.98,-size*.46,0,-size*.12);ctx.bezierCurveTo(-size*.98,-size*.46,-size*.92,size*.30,0,size*.92);ctx.closePath();ctx.fill();ctx.restore()}
+function drawBowTieShape(x,y,size,leftColor="#ff7aa8",rightColor=leftColor,knotColor="#ffd166"){ctx.save();ctx.translate(x,y);ctx.fillStyle=leftColor;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-size*1.16,-size*.64);ctx.quadraticCurveTo(-size*1.46,0,-size*1.16,size*.64);ctx.closePath();ctx.fill();ctx.fillStyle=rightColor;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(size*1.16,-size*.64);ctx.quadraticCurveTo(size*1.46,0,size*1.16,size*.64);ctx.closePath();ctx.fill();ctx.fillStyle=knotColor;ctx.beginPath();ctx.roundRect(-size*.30,-size*.34,size*.60,size*.68,size*.20);ctx.fill();ctx.restore()}
+function getEnemySkinBaseColor(cat){if(selectedCosmetic("enemy")==="enemy_gray"&&(!cat.type||cat.type==="normal")){if(!cat.grayTone){const tones=["#b7bcc2","#9ea4ab","#878d95","#c7ccd1"];const seed=Math.abs(Math.round((cat.x||0)*17+(cat.y||0)*11+(cat.r||0)*13+(cat.hp||0)));cat.grayTone=tones[seed%tones.length]}return cat.grayTone}return cat.color}
+function drawPlayerSkinDetails(){const s=selectedCosmetic("player");if(s!=="player_elegant")return;ctx.save();ctx.shadowBlur=0;drawBowTieShape(0,14,7.2,"#f48fb1","#ff9ec4","#fff1a8");ctx.restore()}
+function drawFishSkinDetails(f){const s=selectedCosmetic("fish");if(s==="default")return;ctx.save();ctx.shadowBlur=0;ctx.lineWidth=1.6;if(s==="fish_elegant"){ctx.fillStyle="#171018";ctx.beginPath();ctx.roundRect(-1,-23,16,5,2);ctx.fill();ctx.fillRect(3,-31,8,9);ctx.fillStyle="#7a4c24";ctx.fillRect(3,-24,8,2);ctx.strokeStyle="#171018";ctx.beginPath();ctx.moveTo(2,5);ctx.quadraticCurveTo(7,1,10,6);ctx.quadraticCurveTo(7,8,2,5);ctx.moveTo(10,6);ctx.quadraticCurveTo(13,1,18,5);ctx.quadraticCurveTo(13,8,10,6);ctx.stroke();}else if(s==="fish_pirate"){ctx.strokeStyle="#171018";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-1,-7);ctx.quadraticCurveTo(5,-11,11,-7);ctx.stroke();ctx.fillStyle="#171018";ctx.beginPath();ctx.arc(8,-2,4.2,0,Math.PI*2);ctx.fill();ctx.fillStyle="#f8f0ff";ctx.beginPath();ctx.arc(6.6,-3.2,1.1,0,Math.PI*2);ctx.fill();}else if(s==="fish_heart"){ctx.fillStyle="#4cc9f0";ctx.beginPath();ctx.arc(8,-2,3.6,0,Math.PI*2);ctx.fill();drawHeartShape(8,-2,2.6,"#ff5d8f");}ctx.restore();}
+function drawEnemySkinDetails(cat){const s=selectedCosmetic("enemy");if(s!=="enemy_elegant")return;ctx.save();ctx.shadowBlur=0;drawBowTieShape(0,17,7.8,"#ff8fab","#ffa6c1","#fff1a8");ctx.restore()}
+function drawBossSkinUnderlay(type,r){if(type!=="demon"||selectedCosmetic("boss_demon")!=="boss_demon_cape")return;ctx.save();ctx.globalAlpha=.92;ctx.fillStyle="#2a1038";ctx.beginPath();ctx.moveTo(-r*.28,-r*.18);ctx.quadraticCurveTo(-r*.86,-r*.54,-r*1.10,r*.42);ctx.quadraticCurveTo(-r*.94,r*.98,-r*.36,r*.74);ctx.quadraticCurveTo(-r*.14,r*.52,-r*.18,r*.14);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(r*.28,-r*.18);ctx.quadraticCurveTo(r*.86,-r*.54,r*1.10,r*.42);ctx.quadraticCurveTo(r*.94,r*.98,r*.36,r*.74);ctx.quadraticCurveTo(r*.14,r*.52,r*.18,r*.14);ctx.closePath();ctx.fill();ctx.fillStyle="rgba(132,33,173,.45)";ctx.beginPath();ctx.moveTo(-r*.18,r*.10);ctx.quadraticCurveTo(-r*.46,r*.48,-r*.34,r*.70);ctx.quadraticCurveTo(-r*.18,r*.60,-r*.10,r*.28);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(r*.18,r*.10);ctx.quadraticCurveTo(r*.46,r*.48,r*.34,r*.70);ctx.quadraticCurveTo(r*.18,r*.60,r*.10,r*.28);ctx.closePath();ctx.fill();ctx.restore()}
+function drawBossSkinDetails(type,r){
+  if(type==="duck"&&selectedCosmetic("boss_duck")==="boss_duck_monocle"){ctx.fillStyle="#171018";ctx.beginPath();ctx.roundRect(-r*.58,-r*1.05,r*.72,r*.12,r*.04);ctx.fill();ctx.fillRect(-r*.42,-r*1.30,r*.40,r*.27);ctx.fillStyle="#7b2cbf";ctx.fillRect(-r*.42,-r*1.06,r*.40,r*.06);ctx.strokeStyle="#171018";ctx.lineWidth=Math.max(3,r*.035);ctx.beginPath();ctx.arc(-r*.28,-r*.68,r*.14,0,Math.PI*2);ctx.stroke();ctx.strokeStyle="rgba(23,16,24,.65)";ctx.lineWidth=Math.max(2,r*.02);ctx.beginPath();ctx.moveTo(-r*.17,-r*.57);ctx.quadraticCurveTo(r*.02,-r*.34,r*.14,-r*.06);ctx.stroke();}
+  if(type==="seal"&&selectedCosmetic("boss_seal")==="boss_seal_tie"){ctx.save();ctx.fillStyle="#a61e4d";ctx.beginPath();ctx.roundRect(-r*.10,r*.14,r*.64,r*.13,r*.05);ctx.fill();ctx.fillStyle="#c2255c";ctx.beginPath();ctx.moveTo(-r*.06,r*.24);ctx.lineTo(r*.50,r*.24);ctx.lineTo(r*.60,r*.44);ctx.lineTo(r*.40,r*.60);ctx.lineTo(r*.06,r*.60);ctx.lineTo(-r*.10,r*.42);ctx.closePath();ctx.fill();ctx.strokeStyle="#7a1638";ctx.lineWidth=Math.max(2,r*.02);ctx.beginPath();ctx.moveTo(-r*.02,r*.26);ctx.lineTo(-r*.02,r*.56);ctx.moveTo(r*.12,r*.24);ctx.lineTo(r*.12,r*.60);ctx.moveTo(r*.26,r*.24);ctx.lineTo(r*.26,r*.60);ctx.moveTo(r*.40,r*.24);ctx.lineTo(r*.40,r*.56);ctx.stroke();ctx.strokeStyle="#ffd166";ctx.lineWidth=Math.max(2,r*.018);ctx.beginPath();ctx.moveTo(-r*.06,r*.34);ctx.lineTo(r*.56,r*.34);ctx.moveTo(-r*.02,r*.46);ctx.lineTo(r*.50,r*.46);ctx.stroke();ctx.restore();}
+}
+loadCosmetics();
+cosmeticsSkinsTab?.addEventListener("click",()=>{cosmeticTab="skins";renderCosmetics()});
+cosmeticsPacksTab?.addEventListener("click",()=>{cosmeticTab="packs";renderCosmetics()});
+cosmeticsResetBtn?.addEventListener("click",resetCosmeticSelections);
+cosmeticPanel?.addEventListener("toggle",()=>{if(cosmeticPanel.open)renderCosmetics()});
+renderCosmetics();
+
 const keys={},mouse={x:canvas.width/2,y:canvas.height/2};
 const player={x:canvas.width/2,y:canvas.height/2,r:24,speed:270,angle:0,shootAnim:0,hurtAnim:0};
 const dogCompanion={x:canvas.width/2-50,y:canvas.height/2+45,r:15,shootCooldown:0,wag:0};
@@ -774,6 +879,7 @@ runStartWave=1;
 autoModeUsedThisRun=!!autoMode;
 rankingEligibleThisRun=!autoModeUsedThisRun;
 rankingDisabledReason=rankingEligibleThisRun?"":"Ranking desactivado: la partida empezó con IA activada.";
+cosmeticAwardedThisRun=false;
 score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=0;lastAutoShot=0;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=1;thiefCoinsStolenThisWave=0;spawnCooldown=0;life=upgrades.maxLife;level=1;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;musicianSpawnedThisWave=false;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();bossEncounterCounts={giantCat:0,duck:0,seal:0,demon:0};giantFishEasterEggsUsed=0;bossVictoryAlreadyShown=false;bossVictoryScoreSaved=false;bossVictoryPending=false;dogRelaxTime=0;fusionMoveXpTimer=0;lastFusionShieldGuard=0;enemyIntroSeen={};finalChoiceLocked=false;demonSpawnPressure=0;thiefCoinsStolenThisWave=0;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
 demonOrbs.length=0;yarnBalls.length=0;powerStars.length=0;shockwaves.length=0;sparkles.length=0;tunaDrops.length=0;
 player.x=canvas.width/2;player.y=canvas.height/2;player.angle=0;player.shootAnim=0;player.hurtAnim=0;dogCompanion.x=player.x-50;dogCompanion.y=player.y+45;dogCompanion.shootCooldown=0;
@@ -1979,7 +2085,7 @@ const choices=canFuse(fusionPrice)?[fusionChoice,...upgradeChoices]:[...upgradeC
 if(randomChoice)choices.push(randomChoice);
 choices.push({icon:"🚪",title:"Salir de la tienda",levelTag:"",desc:"Cierra la tienda y conserva las monedas que te queden.",special:true,skipShop:true});
 const randomLabel=randomChoice?`${randomPrice}🪙`:"—";
-const fusionLabel=fusionDiscountActive?`${fusionPrice}🪙 (rebajada)`: `${fusionPrice}🪙`;
+const fusionLabel=fusionDiscountActive?`${fusionPrice}🪙 (rebajada)`:`${fusionPrice}🪙`;
 showCards("🪙 Tienda de gatitos","Compra todo lo que quieras hasta que decidas salir 💖",`Mejora: ${upgradePrice}🪙 (+1 por compra) · Aleatoria: ${randomLabel} · Fusión: ${fusionLabel} (+3 por fusión)`,choices,upgrade=>{
 if(upgrade.skipShop){closeShopSession();return}
 if(upgrade.openFusionShop){openFusionChoice(fusionPrice);return}
@@ -2556,6 +2662,7 @@ ${r.efficiencyBonus>0?`<div class="sRow"><span>⚡ Eficiencia (ronda ${wave})</s
 }
 function showGameOverScreen(){
 const r=computeFinalScore();
+const scalesGained=earnScalesFromScore(r);
 const isRecord=checkAndSaveRecord(r.total);
 const prevBest=isRecord?r.total:getHighScore();
 gameOverRankEmojiEl.textContent=r.rankEmoji;
@@ -2570,6 +2677,7 @@ ${r.efficiencyBonus>0?`<div class="sRow"><span>⚡ Eficiencia (ronda ${wave})</s
 <div class="sRow"><span>🐱 Gatitos mimados</span><span>${score} gatitos: +${r.killPoints.toLocaleString()}</span></div>
 <div class="sRow"><span>🎯 Impactos</span><span>${r.impactCount||0} impactos: +${r.fishBonus.toLocaleString()}</span></div>
 <div class="sRow"><span>PUNTUACIÓN TOTAL</span><span>${r.total.toLocaleString()}</span></div>
+${cosmeticRewardRow(scalesGained)}
 ${isRecord?`<div class="sRow" style="color:#ffd166;font-size:13px">🏆 ¡Nuevo récord personal!</div>`:""}
 <div class="sRow" style="color:#888;font-size:12px"><span>Mejor puntuación</span><span>${prevBest.toLocaleString()}</span></div>`;
 releaseGamePointer();
@@ -2579,6 +2687,7 @@ submitOnlineScore(r,gameOverOnlineStatus,gameOverRankingList);
 }
 function injectVictoryScore(){
 const r=computeFinalScore();
+const scalesGained=earnScalesFromScore(r);
 const isVicRecord=checkAndSaveRecord(r.total);
 const prevVicBest=isVicRecord?r.total:getHighScore();
 victoryScoreAreaEl.innerHTML=`
@@ -2594,6 +2703,7 @@ ${r.efficiencyBonus>0?`<div class="sRow"><span>⚡ Eficiencia (ronda ${wave})</s
 <div class="sRow"><span>🐱 Gatitos mimados</span><span>${score} gatitos: +${r.killPoints.toLocaleString()}</span></div>
 <div class="sRow"><span>🎯 Impactos</span><span>${r.impactCount||0} impactos: +${r.fishBonus.toLocaleString()}</span></div>
 <div class="sRow"><span>TOTAL</span><span>${r.total.toLocaleString()}</span></div>
+${cosmeticRewardRow(scalesGained)}
 </div>`;
 if(!bossVictoryScoreSaved){
 bossVictoryScoreSaved=true;
@@ -4503,7 +4613,7 @@ if(starOn){
   if(sevenLivesTime<=2.2&&Math.sin(performance.now()*0.04)>0)ctx.globalAlpha=.62;
 }
 
-ctx.fillStyle=starOn?`hsl(${(performance.now()/6)%360},100%,70%)`:(sevenOn?"#80ed99":(player.hurtAnim>0?"#ff6b9a":"#7048e8"));
+ctx.fillStyle=starOn?`hsl(${(performance.now()/6)%360},100%,70%)`:(sevenOn?"#80ed99":(player.hurtAnim>0?"#ff6b9a":getPlayerSkinColor("#7048e8")));
 ctx.beginPath();
 ctx.arc(0,0,player.r,0,Math.PI*2);
 ctx.fill();
@@ -4542,6 +4652,7 @@ ctx.beginPath();
 ctx.arc(9,-7,2,0,Math.PI*2);
 ctx.arc(9,7,2,0,Math.PI*2);
 ctx.fill();
+drawPlayerSkinDetails();
 
 const kick=player.shootAnim>0?10:0;
 ctx.translate(36+kick,0);
@@ -4619,13 +4730,13 @@ ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.angle);ctx.scale(f.scale||1,f.sca
 ctx.shadowColor=f.giantEaster?"#ffd166":f.cardumenGigante?"#80d8ff":f.boomerang?"#80ed99":f.crit?"#ff6b6b":f.shieldShot?"#ffd166":"#4cc9f0";ctx.shadowBlur=f.giantEaster?28:(f.cardumenGigante?18:(f.crit?14:8));
 ctx.fillStyle=f.giantEaster?"#ffd166":f.cardumenGigante?"#80d8ff":f.boomerang?"#80ed99":f.crit?"#ff6b6b":f.shieldShot?"#ffd166":"#4cc9f0";ctx.beginPath();ctx.ellipse(0,0,16,8,0,0,Math.PI*2);ctx.fill();ctx.strokeStyle="rgba(255,255,255,.72)";ctx.lineWidth=1.6;ctx.stroke();
 ctx.fillStyle=f.giantEaster?"#fb8500":f.cardumenGigante?"#00b4d8":f.boomerang?"#57cc99":f.crit?"#e03131":f.shieldShot?"#ffb703":"#4895ef";ctx.beginPath();ctx.moveTo(-15,0);ctx.lineTo(-27,-9);ctx.lineTo(-27,9);ctx.closePath();ctx.fill();
-ctx.fillStyle="#111111";ctx.beginPath();ctx.arc(8,-2,2,0,Math.PI*2);ctx.fill();ctx.restore()
+ctx.fillStyle="#111111";ctx.beginPath();ctx.arc(8,-2,2,0,Math.PI*2);ctx.fill();drawFishSkinDetails(f);ctx.restore()
 }
 
 function drawCat(cat){
 drawEntityShadow(cat.x,cat.y,cat.r*.9,cat.r*.26,.17);
 ctx.save();ctx.translate(cat.x,cat.y);const spawnScale=cat.maxSpawnAnim?Math.max(.05,1-(cat.spawnAnim||0)/cat.maxSpawnAnim):1;ctx.scale(spawnScale,spawnScale);const knocked=Math.hypot(cat.knockVx||0,cat.knockVy||0)>60;if(knocked){ctx.save();ctx.globalAlpha=.28;ctx.strokeStyle="#ffd166";ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,cat.r+10+Math.sin(performance.now()*0.035)*3,0,Math.PI*2);ctx.stroke();ctx.restore();}const squeeze=cat.hitAnim>0?1.16:1;ctx.scale(squeeze,1/squeeze);
-if(cat.rainbow){const g=ctx.createLinearGradient(-cat.r,-cat.r,cat.r,cat.r);g.addColorStop(0,"#ff4d8d");g.addColorStop(.2,"#ffd166");g.addColorStop(.4,"#70e000");g.addColorStop(.6,"#4cc9f0");g.addColorStop(.8,"#9b5de5");g.addColorStop(1,"#ff4d8d");ctx.fillStyle=g}else ctx.fillStyle=cat.color;
+if(cat.rainbow){const g=ctx.createLinearGradient(-cat.r,-cat.r,cat.r,cat.r);g.addColorStop(0,"#ff4d8d");g.addColorStop(.2,"#ffd166");g.addColorStop(.4,"#70e000");g.addColorStop(.6,"#4cc9f0");g.addColorStop(.8,"#9b5de5");g.addColorStop(1,"#ff4d8d");ctx.fillStyle=g}else ctx.fillStyle=getEnemySkinBaseColor(cat);
 ctx.beginPath();ctx.arc(0,0,cat.r,0,Math.PI*2);ctx.fill();
 ctx.strokeStyle=cat.rainbow?"rgba(255,255,255,.75)":"rgba(255,255,255,.55)";ctx.lineWidth=2.5;ctx.stroke();
 ctx.fillStyle="rgba(255,255,255,.16)";ctx.beginPath();ctx.arc(-cat.r*.32,-cat.r*.36,cat.r*.24,0,Math.PI*2);ctx.fill();
@@ -4669,6 +4780,7 @@ if(cat.type==="sleepy"&&cat.sleepState!=="awake"){ctx.strokeStyle="#44222b";ctx.
 ctx.strokeStyle="#44222b";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,3);ctx.lineTo(0,9);ctx.stroke();
 ctx.beginPath();ctx.arc(-5,9,5,0,Math.PI);ctx.arc(5,9,5,0,Math.PI);ctx.stroke();
 ctx.strokeStyle="#5a2a3a";ctx.beginPath();ctx.moveTo(-15,4);ctx.lineTo(-31,0);ctx.moveTo(-15,9);ctx.lineTo(-32,11);ctx.moveTo(15,4);ctx.lineTo(31,0);ctx.moveTo(15,9);ctx.lineTo(32,11);ctx.stroke();
+drawEnemySkinDetails(cat);
 if(cat.maxHp>1){ctx.fillStyle="rgba(255,255,255,0.85)";ctx.fillRect(-18,-48,36,5);ctx.fillStyle=cat.rainbow?"#ffd166":cat.type==="thief"?"#ffd166":cat.type==="yarn"?"#b197fc":cat.type==="sleepy"?"#c8b6e2":cat.type==="glutton"?"#e8956d":cat.type==="musician"?"#d084c8":cat.type==="student"?"#74b9ff":"#ff8fab";ctx.fillRect(-18,-48,36*Math.max(0,cat.hp/cat.maxHp),5)}
 ctx.restore()
 }
@@ -4685,7 +4797,7 @@ ctx.translate(boss.x,boss.y);
 const sc=(boss.hitAnim>0?1.08:1)*(boss.type==="demon"?1+Math.sin(boss.wobble*4)*.035:1);
 ctx.scale(sc,sc);
 const r=boss.r;
-ctx.lineJoin="round";ctx.lineCap="round";
+ctx.lineJoin="round";ctx.lineCap="round";drawBossSkinUnderlay(boss.type,r);
 
 if(boss.type==="giantCat"){
   // Jefe gato: cabeza kawaii grande, contorno grueso, coloretes y bigotes como el referente.
@@ -4984,6 +5096,7 @@ if(boss.type==="giantCat"){
   if(dogKidnapped){ctx.fillStyle="#ffd6e7";ctx.font="bold 14px Arial";ctx.textAlign="center";ctx.fillText("PERRO ROBADO",0,r+30)}
   ctx.restore();
 }
+if(boss.type!=="demon")drawBossSkinDetails(boss.type,r);
 ctx.restore();
 
 ctx.save();
@@ -5937,6 +6050,17 @@ function refreshAdminPanelUI(){
   refreshAdminSelectLabels();
   if(typeof refreshAutoModeUI==="function")refreshAutoModeUI();
 }
+
+function adminUnlockAllCosmetics(){
+  if(typeof COSMETICS==="undefined"||typeof ownedCosmetics==="undefined")return;
+  const before=ownedCosmetics.size;
+  COSMETICS.forEach(c=>ownedCosmetics.add(c.id));
+  saveCosmetics();
+  renderCosmetics();
+  const gained=ownedCosmetics.size-before;
+  adminMessage(gained>0?`cosméticos desbloqueados · +${gained}`:"cosméticos ya desbloqueados");
+}
+
 function initAdminPanel(){
   if(!adminToggle||!adminPanel)return;
   refreshAdminSelectLabels();
@@ -5966,6 +6090,7 @@ function initAdminPanel(){
   document.getElementById("adminClearEnemies")?.addEventListener("click",()=>{if(!requireAdmin())return;cats.length=0;fishes.length=0;quacks.length=0;yarnBalls.length=0;demonOrbs.length=0;boss=null;adminMessage("enemigos limpiados")});
   document.getElementById("adminMaxAll")?.addEventListener("click",()=>{if(!requireAdmin())return;adminMaxAllUpgrades();refreshAdminPanelUI();});
   document.getElementById("adminCompleteAll")?.addEventListener("click",()=>{if(!requireAdmin())return;adminCompleteAllFusions();refreshAdminPanelUI();});
+  document.getElementById("adminUnlockAllCosmetics")?.addEventListener("click",()=>{if(!requireAdmin())return;adminUnlockAllCosmetics();refreshAdminPanelUI();});
   refreshAdminLockUI();
 }
 function adminAddUpgrade(key,amount=1){
