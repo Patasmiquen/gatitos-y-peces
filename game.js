@@ -220,10 +220,9 @@ async function loadOnlineRanking(targetEls=[startRankingList]){
 async function submitOnlineScore(finalScore, statusEl, rankingEl){
   initRanking();
 
-  const playedFromWave=Math.max(1,Math.floor(Number(runStartWave)||1));
   const aiScoreRun=!!(autoModeUsedThisRun||autoMode);
-  if(playedFromWave!==1||(!aiScoreRun&&!rankingEligibleThisRun)){
-    const disabledMsg=rankingDisabledReason||`Ranking desactivado: la partida empezó en ronda ${playedFromWave}.`;
+  if(!aiScoreRun&&!rankingEligibleThisRun){
+    const disabledMsg=rankingDisabledReason||"Ranking desactivado para esta partida.";
     setOnlineStatus(statusEl,disabledMsg,"error");
     await loadOnlineRanking([startRankingList,rankingEl].filter(Boolean));
     return;
