@@ -1277,7 +1277,8 @@ const avalancheCfg=getAvalancheConfig();
 // Avalancha progresiva:
 // - Siempre ocurre en la ronda posterior a un boss: 6, 11, 16, 21...
 // - Además puede aparecer de forma aleatoria en rondas avanzadas que no sean boss.
-const forcedPostBossAvalanche=wave>=6&&wave%5===1;
+const phaseForAvalanche=getGamePhase();
+const forcedPostBossAvalanche=phaseForAvalanche!=="main"&&wave>=6&&wave%5===1;
 const randomAvalanche=wave>=14&&wave%5!==0&&Math.random()<avalancheCfg.chance;
 avalancheThisWave=forcedPostBossAvalanche||randomAvalanche;
 avalancheDelay=avalancheThisWave?Math.max(2.8,waveDuration*(.58-avalancheCfg.intensity*.14)):999;
@@ -1287,14 +1288,18 @@ floatingTexts.push({x:canvas.width/2,y:115,text:wave%5===0?`Jefe ronda ${wave}`:
 }
 
 function getAvalancheConfig(){
-const intensity=Math.max(0,Math.min(1,(wave-6)/34));
+const phase=getGamePhase();
+let intensity=Math.max(0,Math.min(1,(wave-6)/34));
+if(phase==="main")intensity*=.55;
+else if(phase==="postBoss")intensity=Math.min(.82,intensity*.72+.12);
+else intensity=Math.min(1,.55+getEndlessPressure()*.018);
 return {
   intensity,
-  chance:Math.min(.42,.045+Math.max(0,wave-14)*.014),
-  duration:2.8+intensity*7.2,
-  amount:1+Math.floor(intensity*5),
-  interval:Math.max(.28,1.05-intensity*.62),
-  smallChance:Math.max(.32,1-intensity*.62)
+  chance:phase==="main"?Math.min(.22,.030+Math.max(0,wave-14)*.006):phase==="postBoss"?Math.min(.34,.045+Math.max(0,wave-20)*.008):Math.min(.55,.18+getEndlessPressure()*.010),
+  duration:phase==="main"?2.2+intensity*3.8:phase==="postBoss"?2.6+intensity*5.0:3.0+intensity*7.5,
+  amount:phase==="main"?1+Math.floor(intensity*2):phase==="postBoss"?1+Math.floor(intensity*3):2+Math.floor(intensity*5),
+  interval:phase==="main"?Math.max(.60,1.25-intensity*.38):phase==="postBoss"?Math.max(.42,1.12-intensity*.50):Math.max(.30,.95-intensity*.55),
+  smallChance:Math.max(.34,1-intensity*.58)
 };
 }
 
@@ -1665,10 +1670,12 @@ const previousBossEncounters=bossEncounterCounts[type]||0;
 bossEncounterCounts[type]=previousBossEncounters+1;
 const bossRepeatLevel=previousBossEncounters;
 const firstBossIntro=bossRepeatLevel===0;
+const phase=getGamePhase();
 const endlessBossMul=getEndlessBossMultiplier();
-const hpScale=(firstBossIntro?.72:(1+wave*.10+bossRepeatLevel*.18))*endlessBossMul;
-const speedScale=(firstBossIntro?.82:1)*(1+getEndlessPressure()*.035);
-const damageScale=(firstBossIntro?.74:1)*(1+getEndlessPressure()*.045);
+const baseWaveBossScale=phase==="main"?(1+wave*.055+bossRepeatLevel*.10):phase==="postBoss"?(1+wave*.070+bossRepeatLevel*.14):(1+wave*.085+bossRepeatLevel*.18);
+const hpScale=(firstBossIntro?.68:baseWaveBossScale)*endlessBossMul;
+const speedScale=(firstBossIntro?.78:1)*(phase==="main"?1:phase==="postBoss"?(1+getPostBossPressure()*.010):(1+getEndlessPressure()*.028));
+const damageScale=(firstBossIntro?.70:1)*(phase==="main"?1:phase==="postBoss"?(1+getPostBossPressure()*.012):(1+getEndlessPressure()*.038));
 if(bossRepeatLevel>0){
   floatingTexts.push({x:canvas.width/2,y:205,text:"👑 Jefe reforzado",life:1.6,maxLife:1.6,big:false});
 }else{
@@ -1691,7 +1698,7 @@ maxHp:hp,
 speed:(95+wave*2.2)*speedScale,
 shoot:firstBossIntro?1.25:.9,
 baseShoot,
-circleCount:firstBossIntro?Math.min(10,6+Math.floor(wave/8)):10+Math.min(10,Math.floor(wave/5))+Math.min(8,bossRepeatLevel*2)+Math.min(12,Math.floor(getEndlessPressure()/2)),
+circleCount:firstBossIntro?Math.min(8,5+Math.floor(wave/10)):(phase==="main"?Math.min(12,7+Math.floor(wave/10)+bossRepeatLevel):phase==="postBoss"?Math.min(16,9+Math.floor(wave/8)+bossRepeatLevel*2):12+Math.min(10,Math.floor(wave/5))+Math.min(8,bossRepeatLevel*2)+Math.min(10,Math.floor(getEndlessPressure()/3))),
 orbSpeed:(165+wave*5)*(firstBossIntro?.82:1)*(1+getEndlessPressure()*.05),
 hitAnim:0,
 wobble:0,
@@ -1710,7 +1717,7 @@ boss={type,x:canvas.width/2,y:-90,r:62+Math.min(28,wave*1.2),hp,maxHp:hp,speed:(
 }else if(type==="duck"){
 const hp=Math.round((90+wave*18)*hpScale);
 const duckShoot=Math.max(firstBossIntro?.72:.24,1.25-wave*.045-bossRepeatLevel*.10-getEndlessPressure()*.018);
-boss={type,x:canvas.width/2,y:canvas.height*.25,r:58+Math.min(20,wave*.9),hp,maxHp:hp,shoot:duckShoot,baseShoot:duckShoot,burst:firstBossIntro?1:Math.min(5,1+Math.floor(wave/15)+Math.floor(getEndlessPressure()/8)),quackSpeed:(190+wave*12)*(firstBossIntro?.82:1)*(1+getEndlessPressure()*.045),hitAnim:0,wobble:0}
+boss={type,x:canvas.width/2,y:canvas.height*.25,r:58+Math.min(20,wave*.9),hp,maxHp:hp,shoot:duckShoot,baseShoot:duckShoot,burst:firstBossIntro?1:(phase==="main"?Math.min(2,1+Math.floor(wave/25)):phase==="postBoss"?Math.min(3,1+Math.floor(wave/18)):Math.min(5,1+Math.floor(wave/15)+Math.floor(getEndlessPressure()/9))),quackSpeed:(190+wave*12)*(firstBossIntro?.82:1)*(1+getEndlessPressure()*.045),hitAnim:0,wobble:0}
 }else{
 const tx=Math.random()*(canvas.width-180)+90,ty=Math.random()*(canvas.height-180)+90;
 const hp=Math.round((95+wave*19)*hpScale);
@@ -3045,26 +3052,62 @@ const noFusionPairsLeft=!hasPendingFusionPairs();
 return noUpgradeableLevels&&allUniqueOwned&&noFusionPairsLeft;
 }
 
+function getGamePhase(){
+  if(finalCompletionContinue)return "endless";
+  if(defeatedBossTypes&&defeatedBossTypes.size>=4)return "postBoss";
+  return "main";
+}
+function getPostBossPressure(){
+  if(getGamePhase()!=="postBoss")return 0;
+  return Math.max(0,wave-20);
+}
 function getEndlessPressure(){
-  if(!finalCompletionContinue)return 0;
+  if(getGamePhase()!=="endless")return 0;
   const start=Math.max(1,Math.floor(Number(finalCompletionStartWave)||wave||1));
   return Math.max(0,Math.floor(wave-start));
 }
 function getEndlessSpawnMultiplier(){
+  const phase=getGamePhase();
+  if(phase==="main")return 1;
+  if(phase==="postBoss"){
+    const p=getPostBossPressure();
+    return Math.min(1.45,1+p*.018);
+  }
   const p=getEndlessPressure();
-  return p>0?1+p*.10+Math.pow(p,1.18)*.018:1;
+  return Math.min(3.1,1+p*.055+Math.pow(p,1.10)*.006);
 }
 function getEndlessEnemyHpMultiplier(){
+  const phase=getGamePhase();
+  if(phase==="main")return 1;
+  if(phase==="postBoss"){
+    const p=getPostBossPressure();
+    return Math.min(1.95,1+p*.040);
+  }
   const p=getEndlessPressure();
-  return p>0?1+p*.16+Math.pow(p,1.25)*.020:1;
+  return Math.min(8.5,1+p*.16+Math.pow(p,1.20)*.020);
 }
 function getEndlessEnemySpeedMultiplier(){
+  const phase=getGamePhase();
+  if(phase==="main")return 1;
+  if(phase==="postBoss"){
+    const p=getPostBossPressure();
+    return Math.min(1.28,1+p*.012);
+  }
   const p=getEndlessPressure();
-  return p>0?1+p*.045+Math.pow(p,1.18)*.006:1;
+  return Math.min(2.35,1+p*.035+Math.pow(p,1.12)*.004);
 }
 function getEndlessBossMultiplier(){
+  const phase=getGamePhase();
+  if(phase==="main")return 1;
+  if(phase==="postBoss"){
+    const p=getPostBossPressure();
+    return Math.min(2.15,1+p*.050);
+  }
   const p=getEndlessPressure();
-  return p>0?1+p*.20+Math.pow(p,1.28)*.026:1;
+  return Math.min(10,1+p*.18+Math.pow(p,1.23)*.025);
+}
+function getProjectileCap(kind){
+  return Infinity;
 }
 
 function finishGame(){
@@ -3322,13 +3365,16 @@ const rainbow=!small&&rainbowSelectedThisWave&&!rainbowSpawnedThisWave;
 if(rainbow)rainbowSpawnedThisWave=true;
 let catType="normal";
 if(!small&&!rainbow){
-  const thiefChance=wave>=14?Math.min(.16,.05+(wave-14)*.008):0;
-  const yarnChance=wave>=10?Math.min(.18,.06+(wave-10)*.01):0;
-  const sleepyChance=wave>=5?Math.min(.14,.04+(wave-5)*.012):0;
-  const glutChance=wave>=9?Math.min(.11,.03+(wave-9)*.009):0;
-  const musicChance=wave>=12?Math.min(.09,.025+(wave-12)*.008):0;
-  const studChance=wave>=15?Math.min(.10,.025+(wave-15)*.008):0;
-  const miniChance=wave>=7?Math.min(.13,.04+(wave-7)*.010):0;
+  const phase=getGamePhase();
+  const specialMul=phase==="main"?.72:phase==="postBoss"?1.0:1.18;
+  const visualMul=phase==="main"?.58:phase==="postBoss"?.88:1.08;
+  const thiefChance=wave>=14?Math.min(phase==="main"?.10:.16,(.04+(wave-14)*.006)*specialMul):0;
+  const yarnChance=wave>=10?Math.min(phase==="main"?.10:phase==="postBoss"?.15:.18,(.045+(wave-10)*.007)*visualMul):0;
+  const sleepyChance=wave>=5?Math.min(phase==="main"?.10:.14,(.035+(wave-5)*.008)*specialMul):0;
+  const glutChance=wave>=9?Math.min(phase==="main"?.08:.11,(.025+(wave-9)*.006)*specialMul):0;
+  const musicChance=wave>=12?Math.min(phase==="main"?.055:.09,(.018+(wave-12)*.005)*visualMul):0;
+  const studChance=wave>=15?Math.min(phase==="main"?.065:.10,(.020+(wave-15)*.006)*specialMul):0;
+  const miniChance=wave>=7?Math.min(phase==="main"?.09:.13,(.035+(wave-7)*.007)*specialMul):0;
   let acc=0,roll=Math.random();
   if(roll<(acc+=thiefChance))catType="thief";
   else if(roll<(acc+=yarnChance))catType="yarn";
@@ -3604,7 +3650,7 @@ function playDemonShotSound(){
 
 function makeQuack(){
 if(!gameStarted||paused||gameOver||choosingUpgrade||!boss||boss.type!=="duck")return;
-if(quacks.length>=18)return;
+if(quacks.length>=getProjectileCap("quack"))return;
 const angle=Math.atan2(player.y-boss.y,player.x-boss.x),speed=boss.quackSpeed||190+wave*8,word=Math.random()<.5?"QUACK!":"QUACK?";
 quacks.push({x:boss.x+Math.cos(angle)*65,y:boss.y+Math.sin(angle)*65,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,r:24,life:4,text:word,hp:2+Math.floor(wave/10)})
 }
@@ -4461,8 +4507,8 @@ if(waveTime<=0&&!boss){
 if(waveTime<=0&&boss)waveTime=0;
 
 spawnCooldown-=dt;
-if(spawnCooldown<=0&&!boss){spawnCat();spawnCooldown=Math.max(.055,Math.max(.18,1.05-wave*.045)/getEndlessSpawnMultiplier())}
-if(spawnCooldown<=0&&boss&&boss.type!=="giantCat"){spawnCat();spawnCooldown=Math.max(.12,Math.max(.45,1.5-wave*.04)/getEndlessSpawnMultiplier())}
+if(spawnCooldown<=0&&!boss){spawnCat();spawnCooldown=Math.max(getGamePhase()==="endless"?.075:.20,Math.max(.28,1.10-wave*.033)/getEndlessSpawnMultiplier())}
+if(spawnCooldown<=0&&boss&&boss.type!=="giantCat"){spawnCat();spawnCooldown=Math.max(getGamePhase()==="endless"?.16:.50,Math.max(.55,1.55-wave*.030)/getEndlessSpawnMultiplier())}
 
 let mx=0,my=0;
 if(keys.w)my--;if(keys.s)my++;if(keys.a)mx--;if(keys.d)mx++;
