@@ -183,12 +183,18 @@ function getScoreIdentityKey(data){
   return `${cleanPlayerName(data?.name)||"Jugador"}|${Number(data?.score||0)}|${Number(data?.wave||0)}|${Number(data?.level||0)}|${Number(data?.bosses||0)}|${Number(data?.impacts||0)}`;
 }
 function scoreDocIdFromKey(key){
-  let h=2166136261;
-  for(let i=0;i<key.length;i++){
-    h^=key.charCodeAt(i);
-    h=Math.imul(h,16777619);
+  // ID más fuerte que el hash antiguo de 32 bits.
+  // Evita que dos puntuaciones distintas acaben usando el mismo documento.
+  let h1=2166136261,h2=2166136261;
+  const text=String(key||"");
+  for(let i=0;i<text.length;i++){
+    const c=text.charCodeAt(i);
+    h1^=c;
+    h1=Math.imul(h1,16777619);
+    h2^=(c+i+97);
+    h2=Math.imul(h2,16777619);
   }
-  return "score_"+(h>>>0).toString(36);
+  return "score_"+(h1>>>0).toString(36)+"_"+(h2>>>0).toString(36);
 }
 function dedupeScoreRows(rows){
   const seen=new Set();
@@ -261,9 +267,17 @@ async function submitOnlineScore(finalScore, statusEl, rankingEl){
     const scoreRef=rankingDb.collection("scores").doc(scoreDocId);
     const existing=await scoreRef.get();
     if(existing.exists){
-      if(data.goldenName)await scoreRef.set({goldenName:true},{merge:true});
-      lastScoreUploadKey=uploadKey;
-      setOnlineStatus(statusEl,"Puntuación ya enviada al ranking.","ok");
+      const existingKey=getScoreIdentityKey(existing.data()||{});
+      if(existingKey===uploadKey){
+        if(data.goldenName)await scoreRef.set({goldenName:true},{merge:true});
+        lastScoreUploadKey=uploadKey;
+        setOnlineStatus(statusEl,"Puntuación ya enviada al ranking.","ok");
+      }else{
+        const safeAltId=scoreDocId+"_alt_"+Date.now().toString(36)+"_"+Math.floor(Math.random()*1e6).toString(36);
+        await rankingDb.collection("scores").doc(safeAltId).set(data);
+        lastScoreUploadKey=uploadKey;
+        setOnlineStatus(statusEl,"Puntuación guardada en el ranking online 💖","ok");
+      }
     }else{
       await scoreRef.set(data);
       lastScoreUploadKey=uploadKey;
