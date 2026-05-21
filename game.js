@@ -259,6 +259,7 @@ async function submitOnlineScore(finalScore, statusEl, rankingEl){
   const scoreDocId=scoreDocIdFromKey(uploadKey);
   if(uploadKey===lastScoreUploadKey||uploadingScoreKeys.has(uploadKey)){
     setOnlineStatus(statusEl,"Puntuación ya enviada al ranking.","ok");
+    await loadOnlineRanking([startRankingList,rankingEl].filter(Boolean));
     return;
   }
   uploadingScoreKeys.add(uploadKey);
@@ -993,14 +994,42 @@ g.connect(ac.destination);
 }
 
 
+function clearMovementKeys(){
+  keys.w=false;keys.a=false;keys.s=false;keys.d=false;
+}
+function clearAllInputKeys(){
+  Object.keys(keys).forEach(k=>keys[k]=false);
+  mouseIsDown=false;
+}
+function isTypingTarget(target){
+  const tag=(target?.tagName||"").toLowerCase();
+  return tag==="input"||tag==="textarea"||tag==="select"||target?.isContentEditable;
+}
+function keyName(e){
+  return String(e?.key||"").toLowerCase();
+}
 window.addEventListener("keydown",e=>{
-const k=e.key.toLowerCase();
-keys[k]=true;
+const k=keyName(e);
+if(isTypingTarget(e.target)){
+  if(k===" "||k==="spacebar")return;
+  if(k!=="r")return;
+}
+if(["w","a","s","d"].includes(k))keys[k]=true;
+else keys[k]=true;
 if(k===" "||k==="spacebar"){e.preventDefault();if(gameStarted&&!gameOver&&!choosingUpgrade)togglePause()}
 // La R solo reinicia desde Game Over. En el menú inicial no hace nada.
 if(k==="r"&&gameStarted&&gameOver&&startPanel.style.display==="none"){restart()}
 });
-window.addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
+window.addEventListener("keyup",e=>{
+  const k=keyName(e);
+  keys[k]=false;
+  if(["w","a","s","d"].includes(k))keys[k]=false;
+});
+window.addEventListener("blur",clearAllInputKeys);
+window.addEventListener("pagehide",clearAllInputKeys);
+document.addEventListener("visibilitychange",()=>{if(document.hidden)clearAllInputKeys();});
+window.addEventListener("focus",clearMovementKeys);
+document.addEventListener("mouseleave",clearMovementKeys);
 canvas.addEventListener("mousemove",e=>{
   if(document.pointerLockElement===canvas){
     mouse.x=Math.max(0,Math.min(canvas.width,mouse.x+(e.movementX||0)));
@@ -1095,6 +1124,7 @@ startButton.addEventListener("click",()=>{
 });
 
 function returnToMainMenu(){
+  clearAllInputKeys();
   releaseGamePointer();
   mouseIsDown=false;
   paused=false;
@@ -1132,6 +1162,7 @@ return need;
 }
 
 function restart(){
+clearAllInputKeys();
 stopPowerStarLoop();
 backgroundFishSeed=Math.floor(Math.random()*1000000);
 autoRunChoices=[];autoRunStartTime=performance.now();autoLastPlayerX=player.x;autoLastPlayerY=player.y;autoStuckTimer=0;autoEmergencyEscapeUntil=0;
@@ -2983,8 +3014,16 @@ ${r.efficiencyBonus>0?`<div class="sRow"><span>⚡ Eficiencia (ronda ${wave})</s
 <div class="sRow"><span>TOTAL</span><span>${r.total.toLocaleString()}</span></div>
 ${cosmeticRewardRow(scalesGained)}
 </div>`;
-if(!bossVictoryScoreSaved){
-bossVictoryScoreSaved=true;
+const victoryUploadKey=getScoreIdentityKey({
+  name:getPlayerName()||"Jugador",
+  score:r.total,
+  wave,
+  level,
+  bosses:defeatedBossTypes?.size||0,
+  impacts:r.impactCount||0
+});
+if(bossVictoryScoreSaved!==victoryUploadKey){
+bossVictoryScoreSaved=victoryUploadKey;
 setOnlineStatus(victoryOnlineStatus,"Guardando victoria en el ranking online...","info");
 autoLearnFromFinalScore(r,"victory");
 submitOnlineScore(r,victoryOnlineStatus,victoryRankingList);
@@ -4264,6 +4303,7 @@ return rows;
 }
 
 function openPause(){
+clearMovementKeys();
 paused=true;
 releaseGamePointer();
 renderPauseMenu();
@@ -4271,6 +4311,7 @@ pausePanel.style.display="flex";
 }
 
 function closePause(){
+clearMovementKeys();
 paused=false;
 pausePanel.style.display="none";
 requestGamePointerLock();
