@@ -322,7 +322,7 @@ loadOnlineRanking([startRankingList]);
 /* === Cosméticos permanentes === */
 const COSMETIC_KEYS={scales:"gatitos_cosmetic_scales",owned:"gatitos_cosmetic_owned",selected:"gatitos_cosmetic_selected"};
 const cosmeticPanel=document.getElementById("cosmeticsPanel"),scaleBalanceEl=document.getElementById("scaleBalance"),cosmeticsContentEl=document.getElementById("cosmeticsContent"),cosmeticsSkinsTab=document.getElementById("cosmeticsSkinsTab"),cosmeticsPacksTab=document.getElementById("cosmeticsPacksTab"),cosmeticsResetBtn=document.getElementById("cosmeticsResetBtn");
-const COSMETIC_CATEGORIES={player:"Jugador",fish:"Peces",enemy:"Enemigos",boss_duck:"Jefe pato",boss_seal:"Jefe foca",boss_demon:"Jefe demonio"};
+const COSMETIC_CATEGORIES={player:"Jugador",fish:"Peces",enemy:"Enemigos",boss_giant:"Jefe gato gigante",boss_duck:"Jefe pato",boss_seal:"Jefe foca",boss_demon:"Jefe demonio"};
 const COSMETICS=[
   {id:"player_green",name:"Gatito verde",category:"player",price:100,preview:"🟢",desc:"Cambia el color del jugador."},
   {id:"player_pink",name:"Gatito rosa",category:"player",price:100,preview:"🌸",desc:"Cambia el color del jugador."},
@@ -334,17 +334,24 @@ const COSMETICS=[
   {id:"enemy_elegant",name:"Gatos con pajarita",category:"enemy",price:250,preview:"🎀",desc:"Los gatos enemigos llevan pajarita.",pack:"elegant"},
   {id:"boss_duck_monocle",name:"Pato con monóculo",category:"boss_duck",price:250,preview:"🦆",desc:"El pato jefe va más distinguido.",pack:"elegant"},
   {id:"boss_seal_tie",name:"Foca con falda",category:"boss_seal",price:250,preview:"🦭",desc:"La foca jefe lleva una falda coqueta.",pack:"elegant"},
-  {id:"boss_demon_cape",name:"Demonio con capa",category:"boss_demon",price:300,preview:"😈",desc:"El demonio jefe lleva capa.",pack:"elegant"}
+  {id:"boss_demon_cape",name:"Demonio con capa",category:"boss_demon",price:300,preview:"😈",desc:"El demonio jefe lleva capa.",pack:"elegant"},
+  {id:"player_low_poly",name:"Jugador low poly",category:"player",price:180,preview:"🟦",desc:"El jugador se convierte en un cubo low poly.",pack:"low_poly"},
+  {id:"fish_low_poly",name:"Peces low poly",category:"fish",price:180,preview:"🟦",desc:"Los peces se convierten en cubitos.",pack:"low_poly"},
+  {id:"enemy_low_poly",name:"Gatos low poly",category:"enemy",price:220,preview:"🟫",desc:"Los gatos enemigos se convierten en cubos.",pack:"low_poly"},
+  {id:"boss_giant_low_poly",name:"Gato jefe low poly",category:"boss_giant",price:260,preview:"🟨",desc:"El gato jefe se convierte en un cubo enorme.",pack:"low_poly"},
+  {id:"boss_duck_low_poly",name:"Pato low poly",category:"boss_duck",price:260,preview:"🟨",desc:"El pato jefe se convierte en un cubo.",pack:"low_poly"},
+  {id:"boss_seal_low_poly",name:"Foca low poly",category:"boss_seal",price:260,preview:"⬜",desc:"La foca jefe se convierte en un cubo.",pack:"low_poly"},
+  {id:"boss_demon_low_poly",name:"Demonio low poly",category:"boss_demon",price:300,preview:"🟥",desc:"El demonio jefe se convierte en un cubo oscuro.",pack:"low_poly"}
 ];
-const COSMETIC_PACKS=[{id:"elegant",name:"Pack Elegante",discount:.20,items:["player_elegant","fish_elegant","enemy_elegant","boss_duck_monocle","boss_seal_tie","boss_demon_cape"],desc:"Pajaritas, sombreros, monóculos, corbatas y capa."}];
+const COSMETIC_PACKS=[{id:"elegant",name:"Pack Elegante",discount:.20,items:["player_elegant","fish_elegant","enemy_elegant","boss_duck_monocle","boss_seal_tie","boss_demon_cape"],desc:"Pajaritas, sombreros, monóculos, corbatas y capa."},{id:"low_poly",name:"Pack Low Poly",discount:.25,items:["player_low_poly","fish_low_poly","enemy_low_poly","boss_giant_low_poly","boss_duck_low_poly","boss_seal_low_poly","boss_demon_low_poly"],desc:"Todo el juego se vuelve una colección de cubos low poly."}];
 let cosmeticTab="skins";
-let cosmeticScales=0,ownedCosmetics=new Set(),selectedCosmetics={player:"default",fish:"default",enemy:"default",boss_duck:"default",boss_seal:"default",boss_demon:"default"};
+let cosmeticScales=0,ownedCosmetics=new Set(),selectedCosmetics={player:"default",fish:"default",enemy:"default",boss_giant:"default",boss_duck:"default",boss_seal:"default",boss_demon:"default"};
 let cosmeticAwardedThisRun=false;
 function safeJsonParse(value,fallback){try{return JSON.parse(value)}catch(e){return fallback}}
 function loadCosmetics(){
   cosmeticScales=Math.max(0,parseInt(localStorage.getItem(COSMETIC_KEYS.scales)||"0",10)||0);
   ownedCosmetics=new Set(safeJsonParse(localStorage.getItem(COSMETIC_KEYS.owned)||"[]",[]));
-  selectedCosmetics=Object.assign({player:"default",fish:"default",enemy:"default",boss_duck:"default",boss_seal:"default",boss_demon:"default"},safeJsonParse(localStorage.getItem(COSMETIC_KEYS.selected)||"{}",{}));
+  selectedCosmetics=Object.assign({player:"default",fish:"default",enemy:"default",boss_giant:"default",boss_duck:"default",boss_seal:"default",boss_demon:"default"},safeJsonParse(localStorage.getItem(COSMETIC_KEYS.selected)||"{}",{}));
 }
 function saveCosmetics(){
   try{localStorage.setItem(COSMETIC_KEYS.scales,String(cosmeticScales));localStorage.setItem(COSMETIC_KEYS.owned,JSON.stringify([...ownedCosmetics]));localStorage.setItem(COSMETIC_KEYS.selected,JSON.stringify(selectedCosmetics));}catch(e){}
@@ -354,7 +361,7 @@ function isCosmeticOwned(id){return id==="default"||ownedCosmetics.has(id)}
 function selectedCosmetic(category){return selectedCosmetics[category]||"default"}
 function updateScaleBalance(){if(scaleBalanceEl)scaleBalanceEl.textContent=cosmeticScales.toLocaleString()}
 function equipCosmetic(id){const c=getCosmetic(id);if(!c||!isCosmeticOwned(id))return;selectedCosmetics[c.category]=id;saveCosmetics();renderCosmetics()}
-function resetCosmeticSelections(){selectedCosmetics={player:"default",fish:"default",enemy:"default",boss_duck:"default",boss_seal:"default",boss_demon:"default"};saveCosmetics();renderCosmetics()}
+function resetCosmeticSelections(){selectedCosmetics={player:"default",fish:"default",enemy:"default",boss_giant:"default",boss_duck:"default",boss_seal:"default",boss_demon:"default"};saveCosmetics();renderCosmetics()}
 function buyCosmetic(id){const c=getCosmetic(id);if(!c||ownedCosmetics.has(id)||cosmeticScales<c.price)return;cosmeticScales-=c.price;registerScalesSpent(c.price);ownedCosmetics.add(id);selectedCosmetics[c.category]=id;saveCosmetics();renderCosmetics()}
 function getPackInfo(pack){
   const items=pack.items.map(getCosmetic).filter(Boolean);
@@ -404,7 +411,79 @@ function earnScalesFromScore(finalScore){
   return gained;
 }
 function cosmeticRewardRow(gained){return gained>0?`<div class="sRow" style="color:#4cc9f0"><span>🫧 Escamas ganadas</span><span>+${gained.toLocaleString()} · Total ${cosmeticScales.toLocaleString()}</span></div>`:""}
-function getPlayerSkinColor(defaultColor){const s=selectedCosmetic("player");if(s==="player_green")return "#55c271";if(s==="player_pink")return "#ff8fab";if(s==="player_elegant")return "#5b4b8a";return defaultColor}
+function getPlayerSkinColor(defaultColor){const s=selectedCosmetic("player");if(s==="player_green")return "#55c271";if(s==="player_pink")return "#ff8fab";if(s==="player_elegant")return "#5b4b8a";if(s==="player_low_poly")return "#4dabf7";return defaultColor}
+function isLowPolyCategory(category,id){return selectedCosmetic(category)===id}
+function drawLowPolyCube(size,fill="#74c0fc",stroke="#1c2b36",accent="#d0ebff"){
+  const s=size;
+  ctx.save();
+  ctx.lineJoin="round";ctx.lineCap="round";ctx.shadowBlur=0;
+  ctx.fillStyle=fill;ctx.strokeStyle=stroke;ctx.lineWidth=Math.max(2,s*.075);
+  ctx.beginPath();ctx.rect(-s*.5,-s*.5,s,s);ctx.fill();ctx.stroke();
+  ctx.fillStyle=accent;ctx.globalAlpha=.34;ctx.beginPath();ctx.moveTo(-s*.5,-s*.5);ctx.lineTo(s*.5,-s*.5);ctx.lineTo(s*.18,-s*.18);ctx.lineTo(-s*.5,-s*.12);ctx.closePath();ctx.fill();
+  ctx.globalAlpha=.22;ctx.fillStyle="#000";ctx.beginPath();ctx.moveTo(s*.5,-s*.5);ctx.lineTo(s*.5,s*.5);ctx.lineTo(s*.16,s*.18);ctx.lineTo(s*.18,-s*.18);ctx.closePath();ctx.fill();
+  ctx.restore();
+}
+function drawLowPolyFace(size,eyeColor="#101820"){
+  ctx.save();
+  ctx.fillStyle=eyeColor;
+  const e=Math.max(3,size*.095);
+  ctx.fillRect(-size*.20,-size*.12,e,e);
+  ctx.fillRect(size*.12,-size*.12,e,e);
+  ctx.fillRect(-size*.06,size*.14,size*.12,Math.max(2,size*.045));
+  ctx.restore();
+}
+function drawLowPolyPlayer(){
+  drawEntityShadow(player.x,player.y,player.r*1.02,player.r*.30,.18);
+  ctx.save();ctx.translate(player.x,player.y);ctx.rotate(player.angle);
+  const starOn=isPowerStarActive(),sevenOn=isSevenLivesActive(),hurtBlink=player.hurtAnim>0;
+  if(hurtBlink&&!starOn&&!sevenOn)ctx.globalAlpha=Math.sin(performance.now()*0.07)>0?.42:.96;
+  const color=starOn?`hsl(${(performance.now()/6)%360},100%,70%)`:(sevenOn?"#80ed99":(player.hurtAnim>0?"#ff6b9a":"#4dabf7"));
+  drawLowPolyCube(player.r*1.72,color,"#1c2b36","#d0ebff");
+  drawLowPolyFace(player.r*1.72);
+  ctx.fillStyle="#ff8fab";ctx.fillRect(player.r*.48,-player.r*.12,player.r*.50,player.r*.24);
+  ctx.restore();
+}
+function drawLowPolyCat(cat){
+  drawEntityShadow(cat.x,cat.y,cat.r*.9,cat.r*.25,.16);
+  ctx.save();ctx.translate(cat.x,cat.y);
+  const spawnScale=cat.maxSpawnAnim?Math.max(.05,1-(cat.spawnAnim||0)/cat.maxSpawnAnim):1;ctx.scale(spawnScale,spawnScale);
+  const squeeze=cat.hitAnim>0?1.10:1;ctx.scale(squeeze,1/squeeze);
+  const base=cat.rainbow?"#ffd43b":cat.type==="thief"?"#343a40":cat.type==="yarn"?"#b197fc":cat.type==="sleepy"?"#c8b6e2":cat.type==="mini"?"#ffb347":cat.type==="glutton"?"#e8956d":cat.type==="musician"?"#d084c8":cat.type==="student"?"#74b9ff":"#c08457";
+  drawLowPolyCube(cat.r*1.70,base,"#2b2118","#ffe8cc");
+  drawLowPolyFace(cat.r*1.70,cat.type==="thief"?"#fff":"#1f2026");
+  if(cat.type==="yarn"){ctx.strokeStyle="#fff";ctx.lineWidth=2;ctx.strokeRect(-cat.r*.32,cat.r*.24,cat.r*.64,cat.r*.18);}
+  if(cat.maxHp>1){ctx.fillStyle="rgba(255,255,255,0.85)";ctx.fillRect(-18,-48,36,5);ctx.fillStyle=cat.rainbow?"#ffd166":cat.type==="thief"?"#ffd166":cat.type==="yarn"?"#b197fc":cat.type==="sleepy"?"#c8b6e2":cat.type==="glutton"?"#e8956d":cat.type==="musician"?"#d084c8":cat.type==="student"?"#74b9ff":"#ff8fab";ctx.fillRect(-18,-48,36*Math.max(0,cat.hp/cat.maxHp),5)}
+  ctx.restore();
+}
+function drawLowPolyFish(f){
+  const angle=Number.isFinite(f.angle)?f.angle:Math.atan2(f.vy||0,f.vx||1);
+  const body=f.giantEaster?"#ffd166":f.cardumenGigante?"#80d8ff":f.boomerang?"#ff9f1c":f.crit?"#ff6b6b":f.shieldShot?"#ffd166":"#4cc9f0";
+  const accent=f.giantEaster?"#fff0a6":f.cardumenGigante?"#caf0f8":f.boomerang?"#ffd6a5":f.crit?"#ffc2d1":f.shieldShot?"#fff3bf":"#caf0f8";
+  const outline=f.shieldShot?"#ffb703":"#12394a";
+  drawEntityShadow(f.x,f.y,10*(f.scale||1),4*(f.scale||1),.08);
+  ctx.save();ctx.translate(f.x,f.y);ctx.rotate(angle);ctx.scale(f.scale||1,f.scale||1);
+  drawLowPolyCube(20,body,outline,accent);
+  ctx.fillStyle="#023047";ctx.fillRect(3,-3,4,4);
+  ctx.restore();
+}
+
+function drawLowPolyBoss(type,r){
+  const cfg={
+    giantCat:["#ffd43b","#3a2f00","#fff3bf"],
+    duck:["#ffd43b","#5c3d00","#fff3bf"],
+    seal:["#ced4da","#2f3e46","#f8f9fa"],
+    demon:["#4c1036","#16051f","#ff5d8f"]
+  }[type]||["#adb5bd","#212529","#f8f9fa"];
+  ctx.save();
+  ctx.rotate(Math.sin((boss?.wobble||0)*1.3)*.025);
+  drawLowPolyCube(r*1.55,cfg[0],cfg[1],cfg[2]);
+  drawLowPolyFace(r*1.55,type==="demon"?"#ffccd5":"#101820");
+  if(type==="giantCat"){ctx.fillStyle="#ffb5a8";ctx.fillRect(-r*.52,-r*.74,r*.28,r*.20);ctx.fillRect(r*.24,-r*.74,r*.28,r*.20);}
+  if(type==="duck"){ctx.fillStyle="#fb8500";ctx.fillRect(r*.22,-r*.06,r*.48,r*.18);}
+  if(type==="seal"){ctx.fillStyle="#74c0fc";ctx.fillRect(-r*.38,r*.42,r*.76,r*.12);}
+  if(type==="demon"){ctx.fillStyle="#ff4d8d";ctx.fillRect(-r*.52,-r*.78,r*.24,r*.28);ctx.fillRect(r*.28,-r*.78,r*.24,r*.28);}
+  ctx.restore();
+}
 function drawHeartShape(x,y,size,color){ctx.save();ctx.translate(x,y);ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(0,size*.92);ctx.bezierCurveTo(size*.92,size*.30,size*.98,-size*.46,0,-size*.12);ctx.bezierCurveTo(-size*.98,-size*.46,-size*.92,size*.30,0,size*.92);ctx.closePath();ctx.fill();ctx.restore()}
 function drawBowTieShape(x,y,size,leftColor="#ff7aa8",rightColor=leftColor,knotColor="#ffd166"){ctx.save();ctx.translate(x,y);ctx.fillStyle=leftColor;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-size*1.16,-size*.64);ctx.quadraticCurveTo(-size*1.46,0,-size*1.16,size*.64);ctx.closePath();ctx.fill();ctx.fillStyle=rightColor;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(size*1.16,-size*.64);ctx.quadraticCurveTo(size*1.46,0,size*1.16,size*.64);ctx.closePath();ctx.fill();ctx.fillStyle=knotColor;ctx.beginPath();ctx.roundRect(-size*.30,-size*.34,size*.60,size*.68,size*.20);ctx.fill();ctx.restore()}
 function getEnemySkinBaseColor(cat){if(selectedCosmetic("enemy")==="enemy_gray"&&(!cat.type||cat.type==="normal")){if(!cat.grayTone){const tones=["#b7bcc2","#9ea4ab","#878d95","#c7ccd1"];const seed=Math.abs(Math.round((cat.x||0)*17+(cat.y||0)*11+(cat.r||0)*13+(cat.hp||0)));cat.grayTone=tones[seed%tones.length]}return cat.grayTone}return cat.color}
@@ -5010,6 +5089,7 @@ ctx.restore();
 }
 
 function drawPlayer(){
+if(selectedCosmetic("player")==="player_low_poly"){drawLowPolyPlayer();return;}
 drawEntityShadow(player.x,player.y,player.r*1.05,player.r*.34,.20);
 ctx.save();
 ctx.translate(player.x,player.y);
@@ -5151,6 +5231,10 @@ const shieldLvl=effectLevel("shield");
 const shieldR=52+shieldLvl*4,orbs=2+Math.min(4,shieldLvl),orbSize=12+Math.min(12,shieldLvl*1.7);
 for(let i=0;i<orbs;i++){
 const a=shieldAngle+i*Math.PI*2/orbs,x=player.x+Math.cos(a)*shieldR,y=player.y+Math.sin(a)*shieldR;
+if(selectedCosmetic("fish")==="fish_low_poly"){
+  drawLowPolyFish({x,y,angle:a+Math.PI/2,scale:Math.max(.70,orbSize/16),shieldShot:true});
+  continue;
+}
 ctx.save();ctx.translate(x,y);ctx.rotate(a+Math.PI/2);
 ctx.fillStyle=shieldLvl>=5?"#ffd166":"#90e0ef";ctx.beginPath();ctx.ellipse(0,0,orbSize,orbSize*.55,0,0,Math.PI*2);ctx.fill();
 ctx.fillStyle=shieldLvl>=5?"#ffb703":"#48cae4";ctx.beginPath();ctx.moveTo(-orbSize*.85,0);ctx.lineTo(-orbSize*1.6,-orbSize*.55);ctx.lineTo(-orbSize*1.6,orbSize*.55);ctx.closePath();ctx.fill();
@@ -5159,6 +5243,8 @@ ctx.fillStyle="#111";ctx.beginPath();ctx.arc(7,-2,2,0,Math.PI*2);ctx.fill();ctx.
 }
 
 function drawFish(f){
+if(selectedCosmetic("fish")==="fish_low_poly"){drawLowPolyFish(f);return;}
+
 drawEntityShadow(f.x,f.y,18*(f.scale||1),5*(f.scale||1),.10);
 ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.angle);ctx.scale(f.scale||1,f.scale||1);
 ctx.shadowColor=f.giantEaster?"#ffd166":f.cardumenGigante?"#80d8ff":f.boomerang?"#80ed99":f.crit?"#ff6b6b":f.shieldShot?"#ffd166":"#4cc9f0";ctx.shadowBlur=f.giantEaster?28:(f.cardumenGigante?18:(f.crit?14:8));
@@ -5168,6 +5254,7 @@ ctx.fillStyle="#111111";ctx.beginPath();ctx.arc(8,-2,2,0,Math.PI*2);ctx.fill();d
 }
 
 function drawCat(cat){
+if(selectedCosmetic("enemy")==="enemy_low_poly"){drawLowPolyCat(cat);return;}
 drawEntityShadow(cat.x,cat.y,cat.r*.9,cat.r*.26,.17);
 ctx.save();ctx.translate(cat.x,cat.y);const spawnScale=cat.maxSpawnAnim?Math.max(.05,1-(cat.spawnAnim||0)/cat.maxSpawnAnim):1;ctx.scale(spawnScale,spawnScale);const knocked=Math.hypot(cat.knockVx||0,cat.knockVy||0)>60;if(knocked){ctx.save();ctx.globalAlpha=.28;ctx.strokeStyle="#ffd166";ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,cat.r+10+Math.sin(performance.now()*0.035)*3,0,Math.PI*2);ctx.stroke();ctx.restore();}const squeeze=cat.hitAnim>0?1.16:1;ctx.scale(squeeze,1/squeeze);
 if(cat.rainbow){const g=ctx.createLinearGradient(-cat.r,-cat.r,cat.r,cat.r);g.addColorStop(0,"#ff4d8d");g.addColorStop(.2,"#ffd166");g.addColorStop(.4,"#70e000");g.addColorStop(.6,"#4cc9f0");g.addColorStop(.8,"#9b5de5");g.addColorStop(1,"#ff4d8d");ctx.fillStyle=g}else ctx.fillStyle=getEnemySkinBaseColor(cat);
@@ -5219,6 +5306,17 @@ if(cat.maxHp>1){ctx.fillStyle="rgba(255,255,255,0.85)";ctx.fillRect(-18,-48,36,5
 ctx.restore()
 }
 
+function drawBossHealthBar(){
+if(!boss||!isFinitePos(boss)||!boss.maxHp)return;
+ctx.save();
+ctx.shadowColor="rgba(0,0,0,.45)";ctx.shadowBlur=10;
+ctx.fillStyle="rgba(20,10,24,.62)";ctx.beginPath();ctx.roundRect(boss.x-76,boss.y-boss.r-38,152,18,9);ctx.fill();
+ctx.shadowBlur=0;ctx.fillStyle="rgba(255,255,255,.82)";ctx.beginPath();ctx.roundRect(boss.x-70,boss.y-boss.r-32,140,8,4);ctx.fill();
+const hpGrad=ctx.createLinearGradient(boss.x-70,boss.y,boss.x+70,boss.y);hpGrad.addColorStop(0,boss.type==="demon"?"#7209b7":"#ff4d6d");hpGrad.addColorStop(1,boss.type==="demon"?"#ff4d8d":"#ffd166");
+ctx.fillStyle=hpGrad;ctx.beginPath();ctx.roundRect(boss.x-70,boss.y-boss.r-32,140*Math.max(0,boss.hp/boss.maxHp),8,4);ctx.fill();
+ctx.restore();
+}
+
 function drawBoss(){
 if(!boss||!isFinitePos(boss))return;
 const now=performance.now()/1000;
@@ -5231,7 +5329,9 @@ ctx.translate(boss.x,boss.y);
 const sc=(boss.hitAnim>0?1.08:1)*(boss.type==="demon"?1+Math.sin(boss.wobble*4)*.035:1);
 ctx.scale(sc,sc);
 const r=boss.r;
-ctx.lineJoin="round";ctx.lineCap="round";drawBossSkinUnderlay(boss.type,r);
+ctx.lineJoin="round";ctx.lineCap="round";
+if((boss.type==="giantCat"&&selectedCosmetic("boss_giant")==="boss_giant_low_poly")||(boss.type==="duck"&&selectedCosmetic("boss_duck")==="boss_duck_low_poly")||(boss.type==="seal"&&selectedCosmetic("boss_seal")==="boss_seal_low_poly")||(boss.type==="demon"&&selectedCosmetic("boss_demon")==="boss_demon_low_poly")){drawLowPolyBoss(boss.type,r);ctx.restore();drawBossHealthBar();return;}
+drawBossSkinUnderlay(boss.type,r);
 
 if(boss.type==="giantCat"){
   // Jefe gato: cabeza kawaii grande, contorno grueso, coloretes y bigotes como el referente.
@@ -5533,12 +5633,7 @@ if(boss.type==="giantCat"){
 if(boss.type!=="demon")drawBossSkinDetails(boss.type,r);
 ctx.restore();
 
-ctx.save();
-ctx.shadowColor="rgba(0,0,0,.45)";ctx.shadowBlur=10;
-ctx.fillStyle="rgba(20,10,24,.62)";ctx.beginPath();ctx.roundRect(boss.x-76,boss.y-boss.r-38,152,18,9);ctx.fill();
-ctx.shadowBlur=0;ctx.fillStyle="rgba(255,255,255,.82)";ctx.beginPath();ctx.roundRect(boss.x-70,boss.y-boss.r-32,140,8,4);ctx.fill();
-const hpGrad=ctx.createLinearGradient(boss.x-70,boss.y,boss.x+70,boss.y);hpGrad.addColorStop(0,boss.type==="demon"?"#7209b7":"#ff4d6d");hpGrad.addColorStop(1,boss.type==="demon"?"#ff4d8d":"#ffd166");ctx.fillStyle=hpGrad;ctx.beginPath();ctx.roundRect(boss.x-70,boss.y-boss.r-32,140*Math.max(0,boss.hp/boss.maxHp),8,4);ctx.fill();
-ctx.restore();
+drawBossHealthBar();
 }
 
 function drawQuack(q){
