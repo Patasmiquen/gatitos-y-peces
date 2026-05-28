@@ -742,7 +742,7 @@ let giantFishEasterEggsUsed=0;
 let mouseIsDown=false;
 let selectedTarget=null;
 let fusionMoveXpTimer=0;
-let lastFusionShieldGuard=0;
+let lastFusionShieldGuard=0,zoomiesEscapeHits=0,forcedZoomiesUntil=0,safeTeleportInvulnUntil=0;
 let screenShake=0,screenShakeX=0,screenShakeY=0,lastStarTrail=0;
 const fishes=[],cats=[],hearts=[],smokes=[],floatingTexts=[],pawPrints=[],quacks=[],coinsDrops=[],dogBones=[],demonOrbs=[],yarnBalls=[],powerStars=[],shockwaves=[],sparkles=[],tunaDrops=[];
 let audioCtx=null;
@@ -767,7 +767,7 @@ let demonSpawnPressure=0;
 let thiefCoinsStolenThisWave=0;
 perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
 
-const upgrades={fireRate:1,fishSpeed:1,damage:1,moveSpeed:1,maxLife:100,bigFishChance:0,doubleFishChance:0,pierceChance:0,fishSize:1,catSlow:0,healOnWave:8,lifeSteal:0,xpBoost:1,boomerangChance:0,shield:false,shieldLevel:0,autoFire:false,autoFireLevel:0,critChance:0,zoomies:false,zoomiesHyper:false,zoomiesCannon:false,zoomiesCrit:false,aimAssist:false,moralSupport:false,darkPact:false,catInstinct:false,boyfriendDog:false,boyfriendDogSpirit:false,boyfriendDogReturned:false,bigCursor:false,coinMagnetRange:0,combatAI:false,assistedShot:false,perfectAim:false,moraleFire:false,braveHeart:false,reflexBurst:false,valorCasa:false,cursedInstinct:false,fusionBonusPower:0,sevenLives:false,holdShoot:false};
+const upgrades={fireRate:1,fishSpeed:1,damage:1,moveSpeed:1,maxLife:100,bigFishChance:0,doubleFishChance:0,pierceChance:0,fishSize:1,catSlow:0,healOnWave:8,lifeSteal:0,xpBoost:1,boomerangChance:0,shield:false,shieldLevel:0,autoFire:false,autoFireLevel:0,critChance:0,zoomies:false,zoomiesHyper:false,zoomiesCannon:false,zoomiesCrit:false,aimAssist:false,moralSupport:false,darkPact:false,catInstinct:false,boyfriendDog:false,boyfriendDogSpirit:false,boyfriendDogReturned:false,bigCursor:false,coinMagnetRange:0,combatAI:false,assistedShot:false,perfectAim:false,moraleFire:false,braveHeart:false,reflexBurst:false,valorCasa:false,cursedInstinct:false,zoomiesEscape:false,fusionBonusPower:0,sevenLives:false,holdShoot:false};
 const upgradeLevels={moveSpeed:0,fireRate:0,fishSpeed:0,bigFish:0,doubleFish:0,pierce:0,damage:0,catSlow:0,healOnWave:0,fishSize:0,maxLife:0,lifeSteal:0,xpBoost:0,boomerang:0,shield:0,coinMagnet:0,omniBurst:0,yarnBounce:0,autoFire:0,critChance:0};
 const upgradeMaxLevels={moveSpeed:5,fireRate:5,fishSpeed:5,bigFish:5,doubleFish:5,pierce:5,damage:5,catSlow:5,healOnWave:5,fishSize:5,maxLife:5,lifeSteal:5,xpBoost:5,boomerang:5,shield:5,coinMagnet:5,omniBurst:5,yarnBounce:5,autoFire:5,critChance:5};
 const fusedBaseLevels={}; // niveles ya "conservados" por fusiones: mantienen stats aunque la mejora vuelva a 0/5
@@ -1229,7 +1229,7 @@ menuButton.addEventListener("click",returnToMainMenuWithConfirm);
 if(gameOverMenuBtn)gameOverMenuBtn.addEventListener("click",returnToMainMenuWithConfirm);
 
 function resetUpgrades(){
-Object.assign(upgrades,{fireRate:1,fishSpeed:1,damage:1,moveSpeed:1,maxLife:100,bigFishChance:0,doubleFishChance:0,pierceChance:0,fishSize:1,catSlow:0,healOnWave:8,lifeSteal:0,xpBoost:1,boomerangChance:0,shield:false,shieldLevel:0,autoFire:false,autoFireLevel:0,critChance:0,zoomies:false,zoomiesHyper:false,zoomiesCannon:false,zoomiesCrit:false,aimAssist:false,moralSupport:false,darkPact:false,catInstinct:false,boyfriendDog:false,boyfriendDogSpirit:false,boyfriendDogReturned:false,bigCursor:false,coinMagnetRange:0,combatAI:false,assistedShot:false,perfectAim:false,moraleFire:false,braveHeart:false,reflexBurst:false,valorCasa:false,cursedInstinct:false,fusionBonusPower:0,sevenLives:false,holdShoot:false});
+Object.assign(upgrades,{fireRate:1,fishSpeed:1,damage:1,moveSpeed:1,maxLife:100,bigFishChance:0,doubleFishChance:0,pierceChance:0,fishSize:1,catSlow:0,healOnWave:8,lifeSteal:0,xpBoost:1,boomerangChance:0,shield:false,shieldLevel:0,autoFire:false,autoFireLevel:0,critChance:0,zoomies:false,zoomiesHyper:false,zoomiesCannon:false,zoomiesCrit:false,aimAssist:false,moralSupport:false,darkPact:false,catInstinct:false,boyfriendDog:false,boyfriendDogSpirit:false,boyfriendDogReturned:false,bigCursor:false,coinMagnetRange:0,combatAI:false,assistedShot:false,perfectAim:false,moraleFire:false,braveHeart:false,reflexBurst:false,valorCasa:false,cursedInstinct:false,zoomiesEscape:false,fusionBonusPower:0,sevenLives:false,holdShoot:false});
 Object.keys(upgradeLevels).forEach(k=>upgradeLevels[k]=0);Object.keys(upgradeMaxLevels).forEach(k=>upgradeMaxLevels[k]=5);Object.keys(fusedBaseLevels).forEach(k=>delete fusedBaseLevels[k]);fusedUpgradeNames={};doneFusionPairs={};fusionProgressLevels={};
 }
 
@@ -1243,6 +1243,7 @@ return need;
 function restart(){
 clearAllInputKeys();
 stopPowerStarLoop();
+zoomiesEscapeHits=0;forcedZoomiesUntil=0;safeTeleportInvulnUntil=0;
 backgroundFishSeed=Math.floor(Math.random()*1000000);
 autoRunChoices=[];autoRunStartTime=performance.now();autoLastPlayerX=player.x;autoLastPlayerY=player.y;autoStuckTimer=0;autoEmergencyEscapeUntil=0;
 resetUpgrades();
@@ -1535,7 +1536,8 @@ floatingTexts.push({x:player.x,y:player.y-80,text:"⭐ ¡Invencible!",life:1.8,m
 function isPowerStarActive(){return starActive&&starTime>0}
 function getStarSpeedMultiplier(){return isPowerStarActive()?1.55:1}
 function isSevenLivesActive(){return upgrades.sevenLives&&sevenLivesTime>0}
-function isPlayerProtected(){return isPowerStarActive()||isSevenLivesActive()}
+function isSafeTeleportInvulnerable(){return performance.now()<safeTeleportInvulnUntil}
+function isPlayerProtected(){return isPowerStarActive()||isSevenLivesActive()||isSafeTeleportInvulnerable()}
 function activateSevenLives(){
   if(!upgrades.sevenLives||sevenLivesUsedThisWave||sevenLivesCooldown>0||gameOver)return false;
   sevenLivesUsedThisWave=true;
@@ -1551,6 +1553,92 @@ function activateSevenLives(){
   floatingTexts.push({x:player.x,y:player.y-92,text:"🐱 ¡Siete vidas!",life:1.8,maxLife:1.8,big:true});
   return true;
 }
+function getDangerAtPoint(x,y){
+let danger=0;
+const margin=72;
+const edge=Math.min(x,y,canvas.width-x,canvas.height-y);
+if(edge<margin)danger+=(margin-edge)*8;
+
+cats.forEach(cat=>{
+  if(!isFinitePos(cat)||cat.dead)return;
+  const d=Math.max(1,Math.hypot(cat.x-x,cat.y-y)-(cat.r||18));
+  danger+=Math.max(0,540-d)*((cat.small?.72:1)+(cat.type==="yarn"?.35:0)+(cat.type==="glutton"?.25:0));
+  if(d<90)danger+=900;
+});
+
+if(boss&&isFinitePos(boss)&&boss.hp>0){
+  const d=Math.max(1,Math.hypot(boss.x-x,boss.y-y)-(boss.r||55));
+  danger+=Math.max(0,780-d)*2.25;
+  if(d<150)danger+=1900;
+}
+
+quacks.forEach(q=>{if(!isFinitePos(q))return;const d=Math.max(1,Math.hypot(q.x-x,q.y-y)-(q.r||20));danger+=Math.max(0,360-d)*1.8;if(d<90)danger+=700;});
+demonOrbs.forEach(o=>{if(!isFinitePos(o))return;const d=Math.max(1,Math.hypot(o.x-x,o.y-y)-(o.r||12));danger+=Math.max(0,350-d)*1.7;if(d<80)danger+=650;});
+yarnBalls.forEach(o=>{if(!isFinitePos(o))return;const d=Math.max(1,Math.hypot(o.x-x,o.y-y)-(o.r||12));danger+=Math.max(0,330-d)*1.45;if(d<75)danger+=520;});
+
+return danger;
+}
+
+function findSafestTeleportSpot(){
+const margin=90;
+let best={x:player.x,y:player.y,score:getDangerAtPoint(player.x,player.y)};
+const samples=[];
+const cols=5,rows=4;
+for(let iy=0;iy<rows;iy++){
+  for(let ix=0;ix<cols;ix++){
+    samples.push({x:margin+(canvas.width-margin*2)*(ix+.5)/cols,y:margin+(canvas.height-margin*2)*(iy+.5)/rows});
+  }
+}
+for(let i=0;i<18;i++)samples.push({x:margin+Math.random()*(canvas.width-margin*2),y:margin+Math.random()*(canvas.height-margin*2)});
+samples.forEach(p=>{
+  const moveCost=Math.hypot(p.x-player.x,p.y-player.y)*.06;
+  const centerBias=Math.hypot(p.x-canvas.width/2,p.y-canvas.height/2)*.018;
+  const score=getDangerAtPoint(p.x,p.y)+moveCost+centerBias;
+  if(score<best.score)best={x:p.x,y:p.y,score};
+});
+return best;
+}
+
+function activateZoomiesEscape(){
+if(!upgrades.zoomiesEscape&&!hasDoneFusionPair("catInstinct+zoomies"))return false;
+const spot=findSafestTeleportSpot();
+if(!spot||!Number.isFinite(spot.x)||!Number.isFinite(spot.y))return false;
+
+const oldX=player.x,oldY=player.y;
+makeSmoke(oldX,oldY);
+shockwaves.push({x:oldX,y:oldY,r:8,maxR:120,life:.42,maxLife:.42,color:"#4cc9f0",line:5});
+
+player.x=Math.max(player.r+16,Math.min(canvas.width-player.r-16,spot.x));
+player.y=Math.max(player.r+16,Math.min(canvas.height-player.r-16,spot.y));
+mouse.x=player.x+Math.cos(player.angle)*95;
+mouse.y=player.y+Math.sin(player.angle)*95;
+
+forcedZoomiesUntil=Math.max(forcedZoomiesUntil,performance.now()+2600);
+safeTeleportInvulnUntil=Math.max(safeTeleportInvulnUntil,performance.now()+1000);
+player.hurtAnim=Math.max(player.hurtAnim,.35);
+
+makeSmoke(player.x,player.y);
+makeHearts(player.x,player.y);
+shockwaves.push({x:player.x,y:player.y,r:10,maxR:170,life:.58,maxLife:.58,color:"#9b5de5",line:6});
+floatingTexts.push({x:player.x,y:player.y-94,text:"💨 Huida felina",life:1.35,maxLife:1.35,big:false});
+floatingTexts.push({x:player.x,y:player.y-68,text:"1s invulnerable",life:.95,maxLife:.95,big:false});
+
+triggerCatInstinct(true);
+return true;
+}
+
+function registerZoomiesEscapeHit(){
+if(!upgrades.zoomiesEscape&&!hasDoneFusionPair("catInstinct+zoomies"))return false;
+zoomiesEscapeHits=Math.min(5,zoomiesEscapeHits+1);
+const remaining=5-zoomiesEscapeHits;
+if(remaining>0){
+  floatingTexts.push({x:player.x,y:player.y-74,text:`💨 Huida felina ${zoomiesEscapeHits}/5`,life:.75,maxLife:.75,big:false});
+  return false;
+}
+zoomiesEscapeHits=0;
+return activateZoomiesEscape();
+}
+
 function takePlayerDamage(amount,deathText,hurt=.2){
 if(runStats){runStats.damageTaken+=(Number.isFinite(amount)?amount:0);runStats.damageEvents++;}
 if(isPlayerProtected()){
@@ -1572,6 +1660,7 @@ currentWaveHadDamage=true;
 const lowLifeAchievementThreshold=Math.max(1,Math.ceil(upgrades.maxLife*.01));
 if(life>0&&life<=lowLifeAchievementThreshold&&!upgrades.sevenLives&&!isSevenLivesActive())setAchievementFlag("oneHpLuck",{run:true});
 player.hurtAnim=hurt;
+if(life>0)registerZoomiesEscapeHit();
 if(life<=0)endGame(deathText);
 return true;
 }
@@ -1995,13 +2084,14 @@ function getFusionProgress(pair){
 function setFusionProgress(pair,value){
   pair=sortedPair(...String(pair||"").split("+"));
   const rep=getFusionRepresentativeKey(pair);
-  const lvl=Math.max(0,Math.min(5,Math.floor(Number(value)||0)));
+  const parts=pair.split("+");
+  const hasScalablePart=parts.some(k=>Object.prototype.hasOwnProperty.call(upgradeLevels,k));
+  const lvl=hasScalablePart?Math.max(0,Math.min(5,Math.floor(Number(value)||0))):5;
   fusionProgressLevels[pair]=lvl;
   if(Object.prototype.hasOwnProperty.call(upgradeLevels,rep)){
     upgradeLevels[rep]=lvl;
     upgradeMaxLevels[rep]=5;
   }
-  const parts=pair.split("+");
   parts.forEach(k=>{
     if(k!==rep&&Object.prototype.hasOwnProperty.call(upgradeLevels,k)){
       upgradeLevels[k]=0;
@@ -2525,7 +2615,7 @@ autoFire:["aimAssist", "bigCursor", "moralSupport"],
 bigCursor:["aimAssist", "autoFire", "moralSupport", "damage", "pierce", "critChance", "fishSize", "boomerang"],
 bigFish:["damage", "doubleFish", "fireRate", "fishSize", "pierce", "yarnBounce"],
 boomerang:["doubleFish", "fireRate", "fishSpeed", "omniBurst", "pierce", "yarnBounce", "bigCursor", "catInstinct"],
-catInstinct:["aimAssist", "darkPact", "moralSupport", "shield", "maxLife", "catSlow", "moveSpeed", "healOnWave", "coinMagnet", "boomerang", "omniBurst"],
+catInstinct:["aimAssist", "darkPact", "moralSupport", "zoomies", "shield", "maxLife", "catSlow", "moveSpeed", "healOnWave", "coinMagnet", "boomerang", "omniBurst"],
 catSlow:["coinMagnet", "fishSize", "maxLife", "moveSpeed", "shield"],
 coinMagnet:["catSlow", "healOnWave", "moveSpeed", "xpBoost", "catInstinct", "darkPact"],
 critChance:["damage", "doubleFish", "autoFire", "zoomies"],
@@ -2544,7 +2634,7 @@ omniBurst:["boomerang", "damage", "doubleFish", "fireRate", "fishSpeed", "xpBoos
 pierce:["bigFish", "boomerang", "damage", "fishSize", "fishSpeed", "yarnBounce"],
 shield:["catInstinct", "catSlow", "damage", "fishSize", "lifeSteal", "maxLife"],
 xpBoost:["coinMagnet", "healOnWave", "moveSpeed", "omniBurst"],
-zoomies:["moveSpeed", "fireRate", "autoFire", "critChance", "fishSpeed", "doubleFish", "boomerang"],
+zoomies:["moveSpeed", "fireRate", "autoFire", "critChance", "fishSpeed", "doubleFish", "boomerang", "catInstinct"],
 yarnBounce:["bigFish", "boomerang", "damage", "doubleFish", "fishSize", "fishSpeed", "omniBurst", "pierce"]
 };
 
@@ -2623,6 +2713,7 @@ const fusionNameMap={
 "catInstinct+catSlow":"Instinto helado",
 "catInstinct+moveSpeed":"Reflejo veloz",
 "catInstinct+healOnWave":"Instinto sanador",
+"catInstinct+zoomies":"Huida felina",
 "fishSpeed+zoomies":"Peces hiperactivos",
 "doubleFish+zoomies":"Banco hiperactivo",
 "boomerang+zoomies":"Boomerang frenético",
@@ -2703,6 +2794,7 @@ const fusionEffectDescMap={
 "fireRate+zoomies":"Durante Zoomies disparas muchísimo más rápido. Es una ventana corta de daño explosivo.",
 "autoFire+zoomies":"Durante Zoomies, el disparo automático se vuelve mucho más agresivo y mantiene presión sin que tengas que clicar tanto.",
 "critChance+zoomies":"Durante Zoomies aumenta mucho la probabilidad de crítico, convirtiendo el subidón en una fase de burst.",
+"catInstinct+zoomies":"Cada 5 golpes recibidos, tu instinto te teletransporta a una zona segura, activa Zoomies al instante, dispara el Instinto gatuno aunque tengas vida alta y te da 1 segundo de invulnerabilidad.",
 };
 
 function normalizeFusionMap(map){
@@ -2770,6 +2862,7 @@ const fusionShortDescMap={
 "fireRate+zoomies":"Durante Zoomies disparas muchísimo.",
 "autoFire+zoomies":"Auto-disparo loco durante Zoomies.",
 "critChance+zoomies":"Zoomies con golpes críticos.",
+"catInstinct+zoomies":"Cada 5 golpes, escape instantáneo con Zoomies e invulnerabilidad breve.",
 "aimAssist+damage":"Los disparos guiados pegan más.",
 "aimAssist+pierce":"Los peces guiados atraviesan mejor.",
 "aimAssist+fishSpeed":"Peces rápidos y guiados.",
@@ -2871,6 +2964,7 @@ function getFusionExtraBonusDesc(pair){
   if(pair==="bigCursor+boomerang")return "Bonus de fusión: boomerangs con retorno marcado.";
   if(pair==="boomerang+catInstinct")return "Bonus de fusión: el instinto redirige boomerangs.";
   if(pair==="catInstinct+omniBurst")return "Bonus de fusión: ráfaga defensiva al activar instinto.";
+  if(pair==="catInstinct+zoomies")return "Bonus de fusión: cada 5 golpes recibidos activa Huida felina.";
   if(pair==="coinMagnet+darkPact")return "Bonus de fusión: Voluntad Oscura da más monedas.";
   if(has("lifeSteal")&&has("shield"))return "Bonus de fusión: el escudo roba vida.";
   if(has("lifeSteal"))return "Bonus de fusión: más robo de vida.";
@@ -3213,15 +3307,19 @@ releaseGamePointer();
 if(!canFuse(cost)){openCoinShop();return}
 const maxed=getMaxedFusionKeys();
 // Paso 1: solo claves que tienen AL MENOS 1 pareja válida en maxed
-const firstChoices=maxed.filter(k=>maxed.some(other=>other!==k&&areFusionCompatible(k,other)&&!hasFusionBeenDone(k,other))).map(k=>({
+const firstChoices=maxed.filter(k=>maxed.some(other=>other!==k&&areFusionCompatible(k,other)&&!hasFusionBeenDone(k,other))).map(k=>{
+const lvl=Object.prototype.hasOwnProperty.call(upgradeLevels,k)?(upgradeLevels[k]||0):1;
+const normalDesc=isUniqueKey(k)?(uniqueFusionMeta[k]?.desc||"Mejora única."):getUpgradeDisplayDesc(k,Math.max(1,lvl));
+return{
 icon:getAnyIcon(k),
 key:k,
 title:getAnyName(k),
 levelTag:isUniqueKey(k)?"1/1":`${upgradeLevels[k]}/${upgradeMaxLevels[k]}`,
-desc:"Primera mejora compatible para fusionar.",
+desc:normalDesc,
 special:true,
 fusion:true
-}));
+};
+});
 const backToShop=()=>{choosingUpgrade=false;levelUpPanel.style.display="none";fusionBackBtn.style.display="none";if(shopAvailable)openCoinShop()};
 showCards("🔮 Fusión de mejoras","Elige la primera mejora",`Después elegirás una compatible. Cuesta ${cost} monedas.`,firstChoices,first=>{
 // Paso 2: catálogo completo — todas las fusiones posibles con first.key (desbloqueadas y bloqueadas)
@@ -3269,6 +3367,7 @@ if(pair==="bigCursor+moralSupport"){upgrades.braveHeart=true;floatingTexts.push(
 if(pair==="aimAssist+catInstinct"){upgrades.reflexBurst=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🐱‍👤 Reflejos perfectos",life:1.8,maxLife:1.8,big:false})}
 if(pair==="catInstinct+moralSupport"){upgrades.valorCasa=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🏠 Valor de casa",life:1.8,maxLife:1.8,big:false})}
 if(pair==="catInstinct+darkPact"){upgrades.cursedInstinct=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🖤 Instinto maldito",life:1.8,maxLife:1.8,big:false})}
+if(pair==="catInstinct+zoomies"){upgrades.zoomiesEscape=true;zoomiesEscapeHits=0;floatingTexts.push({x:player.x,y:player.y-95,text:"💨 Huida felina",life:1.8,maxLife:1.8,big:false})}
 if(pair==="catInstinct+maxLife"){upgrades.sevenLives=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🐱 Siete vidas de gato",life:2,maxLife:2,big:false})}
 if(pair==="catInstinct+coinMagnet"){floatingTexts.push({x:player.x,y:player.y-95,text:"🧲 Instinto recolector",life:1.8,maxLife:1.8,big:false})}
 if(pair==="bigCursor+boomerang"){floatingTexts.push({x:player.x,y:player.y-95,text:"🪃 Retorno marcado",life:1.8,maxLife:1.8,big:false})}
@@ -3573,6 +3672,7 @@ if(allBossTypes.every(t=>defeatedBossTypes.has(t))&&victoryPanel&&!gameOver&&!bo
 
 function isZoomiesActive(){
 if(!upgrades.zoomies)return false;
+if(performance.now()<forcedZoomiesUntil)return true;
 const now=performance.now()/1000;
 const period=upgrades.zoomiesHyper?5.2:7.2;
 const active=upgrades.zoomiesHyper?2.35:1.65;
@@ -4248,15 +4348,18 @@ function shootCatInstinctBurst(){
   floatingTexts.push({x:player.x,y:player.y-154,text:"💥 Ráfaga felina",life:1.15,maxLife:1.15,big:false});
 }
 
-function triggerCatInstinct(){
-if(!upgrades.catInstinct||life>upgrades.maxLife*.3)return;
+function triggerCatInstinct(forcedInstinct=false){
+if(!upgrades.catInstinct)return false;
+if(!forcedInstinct&&life>upgrades.maxLife*.3)return false;
 const maxUses=upgrades.valorCasa?2:1;
-if(catInstinctUsesThisWave>=maxUses)return;
+if(!forcedInstinct){
+if(catInstinctUsesThisWave>=maxUses)return false;
 catInstinctUsesThisWave++;
 catInstinctUsedThisWave=catInstinctUsesThisWave>=maxUses;
+}
 
 playCatInstinctSound();
-const force=420+upgrades.maxLife*2.2+(upgrades.cursedInstinct?180:0);
+const pushForce=420+upgrades.maxLife*2.2+(upgrades.cursedInstinct?180:0);
 const radius=upgrades.cursedInstinct?720:620;
 shockwaves.push({x:player.x,y:player.y,r:10,maxR:radius*.55,life:.55,maxLife:.55,color:upgrades.cursedInstinct?"#ff4d8d":"#ffd166",line:7});
 shockwaves.push({x:player.x,y:player.y,r:4,maxR:radius*.82,life:.85,maxLife:.85,color:upgrades.valorCasa?"#80ed99":"#ffafcc",line:4});
@@ -4285,7 +4388,7 @@ cats.forEach(cat=>{
   if(!isFinitePos(cat))return;
   const dx=cat.x-player.x,dy=cat.y-player.y,d=Math.hypot(dx,dy)||1;
   const falloff=Math.max(.28,1-Math.min(d/radius,.78));
-  const push=(force*falloff)+(cat.small?110:0);
+  const push=(pushForce*falloff)+(cat.small?110:0);
   cat.knockVx=(cat.knockVx||0)+(dx/d)*push;
   cat.knockVy=(cat.knockVy||0)+(dy/d)*push;
   cat.hitAnim=.28;
@@ -4308,8 +4411,8 @@ demonOrbs.forEach(o=>{
 });
 if(boss){
   const dx=boss.x-player.x,dy=boss.y-player.y,d=Math.hypot(dx,dy)||1;
-  boss.knockVx=(boss.knockVx||0)+(dx/d)*(force*.34);
-  boss.knockVy=(boss.knockVy||0)+(dy/d)*(force*.34);
+  boss.knockVx=(boss.knockVx||0)+(dx/d)*(pushForce*.34);
+  boss.knockVy=(boss.knockVy||0)+(dy/d)*(pushForce*.34);
   boss.hitAnim=.28;
 }
 if(upgrades.reflexBurst){
@@ -4319,6 +4422,7 @@ if(upgrades.reflexBurst){
     fishes.push({x:player.x+Math.cos(a)*54,y:player.y+Math.sin(a)*54,vx:Math.cos(a)*620*upgrades.fishSpeed,vy:Math.sin(a)*620*upgrades.fishSpeed,angle:a,damage:Math.max(1,upgrades.damage*.9),life:1.25,scale:upgrades.fishSize*.85,pierce:true,boomerang:false,returning:false,age:0,hitIds:new Set(),shieldShot:true});
   });
 }
+return true;
 }
 
 function getOriginalUpgradeName(key){
@@ -4327,6 +4431,92 @@ return (UPGRADE_META[key]&&UPGRADE_META[key].name)||(uniqueFusionMeta[key]&&uniq
 
 function getOriginalUpgradeIcon(key){
 return (UPGRADE_META[key]&&UPGRADE_META[key].icon)||(uniqueFusionMeta[key]&&uniqueFusionMeta[key].icon)||"✨";
+}
+
+function pausePct(n){return `${Math.round(Number(n||0)*100)}%`}
+function getScalableDetail(key){
+  const lvl=Math.max(0,Number(upgradeLevels[key]||0));
+  const max=Math.max(1,Number(upgradeMaxLevels[key]||5));
+  const fusedPair=getFusedPairForKey(key);
+  const base=fusedBaseLevels[key]||0;
+  const post=fusionPostLevel(key);
+  const current=fusedPair?(base*.13+post*.07):(lvl*.13);
+  const simpleCurrent=fusedPair?((base*.13)+(post*.07)):(lvl*.10);
+  const next=fusedPair?(base*.13+Math.min(5,post+1)*.07):(Math.min(max,lvl+1)*.13);
+  const label=fusedPair?`Fusión ${post}/5 + base conservada ${base}/5`:`Mejora ${lvl}/${max}`;
+  const lines=[];
+  lines.push(`${label}.`);
+  if(fusedPair){
+    lines.push(`Conserva la fuerza anterior y añade progreso de fusión. Bonus aproximado actual: ${pausePct(simpleCurrent)} visual / ${pausePct(current)} real según fórmula interna.`);
+    if(post<5)lines.push(`Siguiente nivel de fusión: aprox. ${pausePct(base*.13+Math.min(5,post+1)*.07)}.`);
+    else lines.push(`Fusión al máximo.`);
+  }else{
+    lines.push(`Bonus aproximado actual: ${pausePct(lvl*.10)} visual (${pausePct(current)} en la fórmula interna).`);
+    if(lvl<max)lines.push(`Siguiente nivel: aprox. ${pausePct((lvl+1)*.10)} visual.`);
+    else lines.push(`Mejora al máximo.`);
+  }
+
+  const specific={
+    moveSpeed:"Aumenta la velocidad de movimiento.",
+    fireRate:"Reduce el tiempo entre disparos.",
+    fishSpeed:"Aumenta la velocidad de los peces.",
+    damage:"Aumenta el daño base.",
+    bigFish:"Aumenta la probabilidad de lanzar peces grandes.",
+    doubleFish:"Aumenta la probabilidad de peces extra.",
+    pierce:"Aumenta la probabilidad de atravesar enemigos.",
+    catSlow:"Ralentiza enemigos hasta un límite.",
+    healOnWave:"Aumenta la curación al pasar ronda.",
+    fishSize:"Aumenta el tamaño de los peces y mejora sinergias.",
+    maxLife:"Aumenta la vida máxima.",
+    lifeSteal:"Convierte parte del daño en curación.",
+    xpBoost:"Aumenta la experiencia ganada.",
+    boomerang:"Aumenta la probabilidad de peces boomerang.",
+    shield:"Mejora los peces del escudo.",
+    coinMagnet:"Aumenta el rango del imán de monedas.",
+    omniBurst:"Mejora las ráfagas circulares.",
+    yarnBounce:"Mejora los rebotes de ovillo.",
+    autoFire:"Mejora el disparo automático.",
+    critChance:"Aumenta la probabilidad de crítico."
+  };
+  if(specific[key])lines.push(specific[key]);
+  return lines.join(" ");
+}
+function getUniqueDetail(key){
+  const owned=hasUniqueUpgrade(key);
+  const base=uniqueFusionMeta[key]?.desc||"Mejora única.";
+  const extra={
+    aimAssist:"Hace que los peces corrijan su trayectoria hacia objetivos cercanos.",
+    bigCursor:"Hace más visible la mirilla y abre fusiones relacionadas con marcas/objetivos.",
+    moralSupport:"Activa apoyo ocasional y desbloquea fusiones defensivas o emocionales.",
+    darkPact:"Reduce elección pero potencia el progreso oscuro.",
+    catInstinct:"Activa una respuesta defensiva cuando la vida está baja.",
+    zoomies:"Activa momentos de velocidad alta de forma periódica.",
+    autoFire:"Permite disparo automático y sinergias de automatización."
+  }[key]||"";
+  return `${owned?"Conseguida":"Bloqueada todavía"}. ${base} ${extra}`.trim();
+}
+function getFusionDetail(pair){
+  pair=sortedPair(...String(pair||"").split("+"));
+  const [a,b]=pair.split("+");
+  const base=getFusionEffectDesc(a,b);
+  const level=getFusionProgress(pair);
+  const hasScalable=pair.split("+").some(k=>Object.prototype.hasOwnProperty.call(upgradeLevels,k));
+  const lines=[base];
+  if(hasScalable){
+    const rep=getFusionRepresentativeKey(pair);
+    const baseLv=fusedBaseLevels[rep]||0;
+    const post=fusionPostLevel(rep);
+    lines.push(`Nivel de fusión ${level}/5. Conserva ${baseLv}/5 de la mejora base y suma ${post}/5 de progreso posterior.`);
+    lines.push(`Bonus aproximado: ${pausePct(baseLv*.10+post*.10)} visual (${pausePct(baseLv*.13+post*.07)} real según fórmula interna).`);
+  }else{
+    lines.push(`Fusión única entre dos mejoras únicas. Cuenta como completa al conseguirla.`);
+  }
+  if(pair==="catInstinct+zoomies")lines.push("Cada 5 golpes recibidos activa Huida felina: teletransporte seguro, Zoomies instantáneo, Instinto gatuno forzado e invulnerabilidad breve.");
+  if(pair==="darkPact+moralSupport")lines.push("Incluye la mecánica especial del perro protector y el demonio.");
+  return lines.join(" ");
+}
+function makePauseRowId(r,idx){
+  return escapeHtml(String(r.pair||r.key||r.name||idx).replace(/"/g,""));
 }
 
 function getAllUpgradeRows(){
@@ -4361,12 +4551,15 @@ max=1;
 }
 
 rows.push({
+key:pairKey,
+pair:pairKey,
 icon,
 name:(pairKey==="darkPact+moralSupport"&&upgrades.boyfriendDogReturned?"Te dije que seguiría contigo 🐶":(pairKey==="darkPact+moralSupport"&&upgrades.boyfriendDogSpirit?"Tu novio ha hecho este juego 🕯️":fusionName)),
 level,
 max,
 components:componentNames,
 desc:`${getFusionEffectDesc(a,b)}`,
+detail:getFusionDetail(pairKey),
 locked:false,
 maxed:level>=max,
 fusion:true
@@ -4376,13 +4569,13 @@ fusion:true
 Object.keys(upgradeLevels).forEach(key=>{
 if(fusedKeys.has(key))return;
 const lvl=upgradeLevels[key],max=(upgradeMaxLevels[key]||5),meta=UPGRADE_META[key];
-rows.push({icon:meta.icon,name:getUpgradeDisplayName(key),level:lvl,max,desc:getUpgradeDisplayDesc(key,Math.max(1,lvl)),locked:lvl===0,maxed:lvl>=max||isUpgradeFinal(key),fusion:false});
+rows.push({key,icon:meta.icon,name:getUpgradeDisplayName(key),level:lvl,max,desc:getUpgradeDisplayDesc(key,Math.max(1,lvl)),detail:getScalableDetail(key),locked:lvl===0,maxed:lvl>=max||isUpgradeFinal(key),fusion:false});
 });
 
 uniqueFusionKeys.forEach(key=>{
 if(fusedKeys.has(key))return;
 const meta=uniqueFusionMeta[key];
-rows.push({icon:meta.icon,name:getAnyName(key),level:hasUniqueUpgrade(key)?1:0,max:1,desc:meta.desc,locked:!hasUniqueUpgrade(key),maxed:hasUniqueUpgrade(key),fusion:false});
+rows.push({key,icon:meta.icon,name:getAnyName(key),level:hasUniqueUpgrade(key)?1:0,max:1,desc:meta.desc,detail:getUniqueDetail(key),locked:!hasUniqueUpgrade(key),maxed:hasUniqueUpgrade(key),fusion:false});
 });
 return rows;
 }
@@ -4417,15 +4610,35 @@ rows.sort((a,b)=>{
   return a.name.localeCompare(b.name,"es");
 });
 return rows;
-})().map(r=>`
-<div class="pauseUpgrade ${getOwnedVisualTierClass(r)} ${r.maxed?'maxed':''} ${r.locked?'locked':''} ${r.fusion?'fusion':''}">
-  <div class="pauseUpgradeName">${r.icon} ${r.name}</div>
-  <div class="pauseUpgradeLevel">${r.level}/${r.max}${r.maxed?' ⭐':''}</div>
-  ${r.components?`<div class="pauseUpgradeComponents">Incluye: ${r.components}</div>`:""}
-  <div class="pauseUpgradeDesc">${r.desc}</div>
-</div>
-`).join("");
+})().map((r,idx)=>{
+const rowId=makePauseRowId(r,idx);
+return `
+<div class="pauseUpgrade ${getOwnedVisualTierClass(r)} ${r.maxed?'maxed':''} ${r.locked?'locked':''} ${r.fusion?'fusion':''}" data-pause-row="${rowId}" title="Click derecho para girar la tarjeta">
+  <div class="pauseUpgradeInner">
+    <div class="pauseUpgradeFace pauseUpgradeFront">
+      <div class="pauseUpgradeName">${r.icon} ${r.name}</div>
+      <div class="pauseUpgradeLevel">${r.level}/${r.max}${r.maxed?' ⭐':''}</div>
+      ${r.components?`<div class="pauseUpgradeComponents">Incluye: ${r.components}</div>`:""}
+      <div class="pauseUpgradeDesc">${r.desc}</div>
+      <div class="pauseFlipHint">Click derecho: detalles</div>
+    </div>
+    <div class="pauseUpgradeFace pauseUpgradeBack">
+      <div class="pauseUpgradeName">📖 ${r.name}</div>
+      <div class="pauseUpgradeLevel">Detalle</div>
+      <div class="pauseUpgradeDesc">${r.detail||r.desc}</div>
+      <div class="pauseFlipHint">Click derecho: volver</div>
+    </div>
+  </div>
+</div>`;
+}).join("");
 }
+
+pauseUpgradesList?.addEventListener("contextmenu",e=>{
+  const card=e.target.closest(".pauseUpgrade");
+  if(!card||!pauseUpgradesList.contains(card))return;
+  e.preventDefault();
+  card.classList.toggle("flipped");
+});
 
 function openPause(){
 clearMovementKeys();
@@ -6681,6 +6894,10 @@ function adminApplyRandomFusionPair(a,b){
   fusionProgressLevels[pair]=0;
   setFusionProgress(pair,0);
   applyFusionBonus(pair,a,b);
+  if(pair==="catInstinct+zoomies"){
+    upgrades.zoomiesEscape=true;
+    zoomiesEscapeHits=0;
+  }
   return true;
 }
 function adminOpenShop(){
@@ -6750,7 +6967,7 @@ function adminCompleteAllFusions(){
   adminMaxAllUpgrades();
   adminClearFusionState();
 
-  const pairs=adminBuildRandomFusionSet(["catInstinct+coinMagnet","bigCursor+boomerang","boomerang+catInstinct","catInstinct+omniBurst","coinMagnet+darkPact"]);
+  const pairs=adminBuildRandomFusionSet(["catInstinct+zoomies","catInstinct+coinMagnet","bigCursor+boomerang","boomerang+catInstinct","catInstinct+omniBurst","coinMagnet+darkPact"]);
   let applied=0;
   pairs.forEach(([a,b])=>{if(adminApplyRandomFusionPair(a,b))applied++;});
 
