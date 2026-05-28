@@ -4791,32 +4791,34 @@ return rows;
 })().map((r,idx)=>{
 const rowId=makePauseRowId(r,idx);
 return `
-<div class="pauseUpgrade ${getOwnedVisualTierClass(r)} ${r.maxed?'maxed':''} ${r.locked?'locked':''} ${r.fusion?'fusion':''}" data-pause-row="${rowId}" title="Click derecho para girar la tarjeta">
+<div class="pauseUpgrade ${getOwnedVisualTierClass(r)} ${r.maxed?'maxed':''} ${r.locked?'locked':''} ${r.fusion?'fusion':''}" data-pause-row="${rowId}" title="Click izquierdo o derecho para girar la tarjeta">
   <div class="pauseUpgradeInner">
     <div class="pauseUpgradeFace pauseUpgradeFront">
       <div class="pauseUpgradeName">${r.icon} ${r.name}</div>
       <div class="pauseUpgradeLevel">${r.level}/${r.max}${r.maxed?' ⭐':''}</div>
       ${r.components?`<div class="pauseUpgradeComponents">Incluye: ${r.components}</div>`:""}
       <div class="pauseUpgradeDesc">${r.desc}</div>
-      <div class="pauseFlipHint">Click derecho: detalles</div>
+      <div class="pauseFlipHint">Click: detalles</div>
     </div>
     <div class="pauseUpgradeFace pauseUpgradeBack">
       <div class="pauseUpgradeName">📖 ${r.name}</div>
       <div class="pauseUpgradeLevel">Detalle</div>
       <div class="pauseUpgradeDesc">${r.detail||r.desc}</div>
-      <div class="pauseFlipHint">Click derecho: volver</div>
+      <div class="pauseFlipHint">Click: volver</div>
     </div>
   </div>
 </div>`;
 }).join("");
 }
 
-pauseUpgradesList?.addEventListener("contextmenu",e=>{
+function togglePauseUpgradeCard(e){
   const card=e.target.closest(".pauseUpgrade");
   if(!card||!pauseUpgradesList.contains(card))return;
   e.preventDefault();
   card.classList.toggle("flipped");
-});
+}
+pauseUpgradesList?.addEventListener("click",togglePauseUpgradeCard);
+pauseUpgradesList?.addEventListener("contextmenu",togglePauseUpgradeCard);
 
 function openPause(){
 clearMovementKeys();
