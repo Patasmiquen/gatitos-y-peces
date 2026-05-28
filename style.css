@@ -917,20 +917,34 @@ body.panel-theme-dark .onlineRankBox{background:rgba(255,255,255,.06);border-col
 @media(max-width:760px){.startDropdownRow{grid-template-columns:1fr;gap:10px}.startDropdownRow>details>summary{min-height:52px}.startDropdownContentSlot{max-width:100%}}
 
 
-.musicToggle{
-position:fixed;
-left:15px;
-bottom:15px;
-z-index:36;
+.musicMenuControls{
+display:grid;
+grid-template-columns:auto auto minmax(130px,240px) 48px;
+align-items:center;
+justify-content:center;
+gap:10px;
+margin:14px auto 6px;
+padding:10px 14px;
+border-radius:22px;
+background:rgba(255,255,255,.10);
+border:1px solid rgba(255,255,255,.18);
+max-width:620px;
+box-shadow:0 8px 24px rgba(0,0,0,.12);
+}
+.musicMenuControls button{
 border:none;
 border-radius:999px;
-padding:10px 14px;
-font-size:16px;
-font-weight:900;
+padding:10px 16px;
+font-weight:1000;
 cursor:pointer;
-background:linear-gradient(135deg,#4cc9f0,#9b5de5);
 color:white;
-box-shadow:0 10px 26px rgba(76,201,240,.28);
+background:linear-gradient(135deg,#4cc9f0,#9b5de5);
+box-shadow:0 7px 18px rgba(76,201,240,.24);
 }
-.musicToggle.off{background:linear-gradient(135deg,#777,#444);opacity:.82}
-.musicToggle:hover{transform:translateY(-2px);filter:brightness(1.06)}
+.musicMenuControls button.off{background:linear-gradient(135deg,#777,#444);opacity:.85}
+.musicMenuControls label,.musicMenuControls span{font-weight:900;color:var(--text);font-size:14px}
+.musicMenuControls input[type="range"]{accent-color:#ff7aa8;cursor:pointer;width:100%}
+@media(max-width:760px){
+.musicMenuControls{grid-template-columns:1fr;max-width:92%;gap:8px}
+.musicMenuControls button{width:100%}
+}

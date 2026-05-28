@@ -12,14 +12,14 @@ const playerNameInput=document.getElementById("playerNameInput"),nameWarning=doc
 const autoModeButton=document.getElementById("autoModeButton");
 
 const MUSIC_KEY="gatitos_music_enabled";
+const MUSIC_VOL_KEY="gatitos_music_volume";
 let musicEnabled=localStorage.getItem(MUSIC_KEY)!=="0";
+let musicVolume=Math.max(0,Math.min(1,Number(localStorage.getItem(MUSIC_VOL_KEY)??"0.28")));
 let currentMusicTrack="";
 let musicFadeTimer=null;
-const musicButton=document.createElement("button");
-musicButton.id="musicToggle";
-musicButton.className="musicToggle";
-musicButton.type="button";
-document.body.appendChild(musicButton);
+const musicMenuToggle=document.getElementById("musicMenuToggle");
+const musicVolumeRange=document.getElementById("musicVolumeRange");
+const musicVolumeValue=document.getElementById("musicVolumeValue");
 const bgMusic=new Audio("audio/Rondas.mp3");
 const bossMusic=new Audio("audio/Jefes.mp3");
 [bgMusic,bossMusic].forEach(a=>{
@@ -27,12 +27,24 @@ const bossMusic=new Audio("audio/Jefes.mp3");
   a.preload="auto";
   a.volume=0;
 });
-function updateMusicButton(){
-  musicButton.textContent=musicEnabled?"🎵 Música":"🔇 Música";
-  musicButton.classList.toggle("off",!musicEnabled);
+function getMusicTargetVolume(track){
+  const mul=track==="boss"?1.12:.88;
+  return Math.max(0,Math.min(.70,musicVolume*mul));
 }
-function saveMusicEnabled(){
-  try{localStorage.setItem(MUSIC_KEY,musicEnabled?"1":"0")}catch(e){}
+function updateMusicButton(){
+  const label=musicEnabled?"🎵 Música":"🔇 Música";
+  if(musicMenuToggle){
+    musicMenuToggle.textContent=musicEnabled?"🎵 Música activada":"🔇 Música desactivada";
+    musicMenuToggle.classList.toggle("off",!musicEnabled);
+  }
+  if(musicVolumeRange)musicVolumeRange.value=String(Math.round(musicVolume*100));
+  if(musicVolumeValue)musicVolumeValue.textContent=`${Math.round(musicVolume*100)}%`;
+}
+function saveMusicSettings(){
+  try{
+    localStorage.setItem(MUSIC_KEY,musicEnabled?"1":"0");
+    localStorage.setItem(MUSIC_VOL_KEY,String(musicVolume));
+  }catch(e){}
 }
 function fadeAudio(audio,target,duration=650){
   if(!audio)return;
@@ -52,7 +64,7 @@ function stopMusicTrack(audio){
   setTimeout(()=>{if(audio.volume<=0.02){audio.pause();}},460);
 }
 function playMusicTrack(track,force=false){
-  if(!musicEnabled||!gameStarted||gameOver){
+  if(!musicEnabled||musicVolume<=0||!gameStarted||gameOver){
     pauseAllMusic();
     return;
   }
@@ -62,14 +74,17 @@ function playMusicTrack(track,force=false){
   }
   const target=track==="boss"?bossMusic:bgMusic;
   const other=track==="boss"?bgMusic:bossMusic;
-  if(!force&&currentMusicTrack===track&&!target.paused)return;
+  if(!force&&currentMusicTrack===track&&!target.paused){
+    fadeAudio(target,getMusicTargetVolume(track),220);
+    return;
+  }
   currentMusicTrack=track;
   other.pause();
   other.volume=0;
   try{
     target.play().catch(()=>{});
   }catch(e){}
-  fadeAudio(target,track==="boss"?.32:.24,700);
+  fadeAudio(target,getMusicTargetVolume(track),700);
 }
 function pauseAllMusic(){
   [bgMusic,bossMusic].forEach(a=>{try{a.pause()}catch(e){}});
@@ -81,7 +96,7 @@ function stopAllMusic(){
   });
 }
 function syncMusic(){
-  if(!musicEnabled||!gameStarted||gameOver){
+  if(!musicEnabled||musicVolume<=0||!gameStarted||gameOver){
     pauseAllMusic();
     return;
   }
@@ -91,12 +106,20 @@ function syncMusic(){
   }
   playMusicTrack(boss&&boss.hp>0?"boss":"round");
 }
-musicButton.addEventListener("click",()=>{
+function toggleMusicEnabled(){
   musicEnabled=!musicEnabled;
-  saveMusicEnabled();
+  saveMusicSettings();
   updateMusicButton();
   if(musicEnabled)syncMusic();
   else stopAllMusic();
+}
+musicMenuToggle?.addEventListener("click",toggleMusicEnabled);
+musicVolumeRange?.addEventListener("input",e=>{
+  musicVolume=Math.max(0,Math.min(1,(Number(e.target.value)||0)/100));
+  if(musicVolume>0&&!musicEnabled)musicEnabled=true;
+  saveMusicSettings();
+  updateMusicButton();
+  syncMusic();
 });
 updateMusicButton();
 
@@ -4533,53 +4556,53 @@ return (UPGRADE_META[key]&&UPGRADE_META[key].icon)||(uniqueFusionMeta[key]&&uniq
 }
 
 function pausePct(n){return `${Math.round(Number(n||0)*100)}%`}
+function getPauseActualLevel(key){
+  const fusedPair=getFusedPairForKey(key);
+  if(fusedPair)return getFusionProgress(fusedPair);
+  return Math.max(0,Number(upgradeLevels[key]||0));
+}
+function getPauseActualPercent(key){
+  const lvl=getPauseActualLevel(key);
+  return Math.round(lvl*10);
+}
 function getScalableDetail(key){
   const lvl=Math.max(0,Number(upgradeLevels[key]||0));
   const max=Math.max(1,Number(upgradeMaxLevels[key]||5));
   const fusedPair=getFusedPairForKey(key);
-  const base=fusedBaseLevels[key]||0;
-  const post=fusionPostLevel(key);
-  const current=fusedPair?(base*.13+post*.07):(lvl*.13);
-  const simpleCurrent=fusedPair?((base*.13)+(post*.07)):(lvl*.10);
-  const next=fusedPair?(base*.13+Math.min(5,post+1)*.07):(Math.min(max,lvl+1)*.13);
-  const label=fusedPair?`Fusión ${post}/5 + base conservada ${base}/5`:`Mejora ${lvl}/${max}`;
+  const fusionLevel=fusedPair?getFusionProgress(fusedPair):0;
+  const shownLevel=fusedPair?fusionLevel:lvl;
+  const shownMax=fusedPair?5:max;
+  const p=getPauseActualPercent(key);
   const lines=[];
-  lines.push(`${label}.`);
-  if(fusedPair){
-    lines.push(`Conserva la fuerza anterior y añade progreso de fusión. Bonus aproximado actual: ${pausePct(simpleCurrent)} visual / ${pausePct(current)} real según fórmula interna.`);
-    if(post<5)lines.push(`Siguiente nivel de fusión: aprox. ${pausePct(base*.13+Math.min(5,post+1)*.07)}.`);
-    else lines.push(`Fusión al máximo.`);
-  }else{
-    lines.push(`Bonus aproximado actual: ${pausePct(lvl*.10)} visual (${pausePct(current)} en la fórmula interna).`);
-    if(lvl<max)lines.push(`Siguiente nivel: aprox. ${pausePct((lvl+1)*.10)} visual.`);
-    else lines.push(`Mejora al máximo.`);
-  }
+  lines.push(`${fusedPair?`Fusión ${shownLevel}/${shownMax}`:`Mejora ${shownLevel}/${shownMax}`}.`);
 
-  const specific={
-    moveSpeed:"Aumenta la velocidad de movimiento.",
-    fireRate:"Reduce el tiempo entre disparos.",
-    fishSpeed:"Aumenta la velocidad de los peces.",
-    damage:"Aumenta el daño base.",
-    bigFish:"Aumenta la probabilidad de lanzar peces grandes.",
-    doubleFish:"Aumenta la probabilidad de peces extra.",
-    pierce:"Aumenta la probabilidad de atravesar enemigos.",
-    catSlow:"Ralentiza enemigos hasta un límite.",
-    healOnWave:"Aumenta la curación al pasar ronda.",
-    fishSize:"Aumenta el tamaño de los peces y mejora sinergias.",
-    maxLife:"Aumenta la vida máxima.",
-    lifeSteal:"Convierte parte del daño en curación.",
-    xpBoost:"Aumenta la experiencia ganada.",
-    boomerang:"Aumenta la probabilidad de peces boomerang.",
-    shield:"Mejora los peces del escudo.",
-    coinMagnet:"Aumenta el rango del imán de monedas.",
-    omniBurst:"Mejora las ráfagas circulares.",
-    yarnBounce:"Mejora los rebotes de ovillo.",
-    autoFire:"Mejora el disparo automático.",
-    critChance:"Aumenta la probabilidad de crítico."
+  const detail={
+    moveSpeed:`Te mueves un ${p}% más rápido.`,
+    fireRate:`Disparas aproximadamente un ${p}% más rápido.`,
+    fishSpeed:`Los peces vuelan un ${p}% más rápido.`,
+    damage:`Tus peces hacen un ${p}% más de daño.`,
+    bigFish:`Tienes aproximadamente un ${p}% más de probabilidad de lanzar peces grandes.`,
+    doubleFish:`Tienes aproximadamente un ${p}% más de probabilidad de lanzar peces extra.`,
+    pierce:`Tienes aproximadamente un ${p}% más de probabilidad de atravesar enemigos.`,
+    catSlow:`Los enemigos se ralentizan aproximadamente un ${p}%.`,
+    healOnWave:`Recuperas más vida al superar ronda.`,
+    fishSize:`Los peces son un ${p}% más grandes.`,
+    maxLife:`Tienes más vida máxima.`,
+    lifeSteal:`Recuperas vida al hacer daño.`,
+    xpBoost:`Ganas aproximadamente un ${p}% más de experiencia.`,
+    boomerang:`Tienes aproximadamente un ${p}% más de probabilidad de lanzar peces boomerang.`,
+    shield:`El escudo tiene ${shownLevel}/5 de potencia.`,
+    coinMagnet:`El imán de monedas tiene ${shownLevel}/5 de potencia.`,
+    omniBurst:`La ráfaga circular tiene ${shownLevel}/5 de potencia.`,
+    yarnBounce:`Los rebotes de ovillo tienen ${shownLevel}/5 de potencia.`,
+    autoFire:`El disparo automático tiene ${shownLevel}/5 de potencia.`,
+    critChance:`Tienes aproximadamente un ${p}% más de probabilidad de crítico.`
   };
-  if(specific[key])lines.push(specific[key]);
+  lines.push(detail[key]||`Potencia actual: ${shownLevel}/${shownMax}.`);
+  if(shownLevel>=shownMax)lines.push(fusedPair?"Fusión al máximo.":"Mejora al máximo.");
   return lines.join(" ");
 }
+
 function getUniqueDetail(key){
   const owned=hasUniqueUpgrade(key);
   const base=uniqueFusionMeta[key]?.desc||"Mejora única.";
@@ -4602,18 +4625,17 @@ function getFusionDetail(pair){
   const hasScalable=pair.split("+").some(k=>Object.prototype.hasOwnProperty.call(upgradeLevels,k));
   const lines=[base];
   if(hasScalable){
-    const rep=getFusionRepresentativeKey(pair);
-    const baseLv=fusedBaseLevels[rep]||0;
-    const post=fusionPostLevel(rep);
-    lines.push(`Nivel de fusión ${level}/5. Conserva ${baseLv}/5 de la mejora base y suma ${post}/5 de progreso posterior.`);
-    lines.push(`Bonus aproximado: ${pausePct(baseLv*.10+post*.10)} visual (${pausePct(baseLv*.13+post*.07)} real según fórmula interna).`);
+    lines.push(`Nivel actual de la fusión: ${level}/5.`);
+    lines.push(`Potencia aproximada actual: ${Math.round(level*10)}%.`);
+    if(level>=5)lines.push("Fusión al máximo.");
   }else{
-    lines.push(`Fusión única entre dos mejoras únicas. Cuenta como completa al conseguirla.`);
+    lines.push("Fusión única entre dos mejoras únicas. Ya está completa al conseguirla.");
   }
   if(pair==="catInstinct+zoomies")lines.push("Cada 5 golpes recibidos activa Huida felina: teletransporte seguro, Zoomies instantáneo, Instinto gatuno forzado e invulnerabilidad breve.");
   if(pair==="darkPact+moralSupport")lines.push("Incluye la mecánica especial del perro protector y el demonio.");
   return lines.join(" ");
 }
+
 function makePauseRowId(r,idx){
   return escapeHtml(String(r.pair||r.key||r.name||idx).replace(/"/g,""));
 }
