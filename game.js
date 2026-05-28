@@ -448,7 +448,7 @@ const COSMETICS=[
   {id:"player_green",name:"Gatito verde",category:"player",price:100,preview:"🟢",desc:"Cambia el color del jugador."},
   {id:"player_pink",name:"Gatito rosa",category:"player",price:100,preview:"🌸",desc:"Cambia el color del jugador."},
   {id:"player_elegant",name:"Gatito elegante",category:"player",price:200,preview:"🎀",desc:"Jugador con detalle elegante.",pack:"elegant"},
-  {id:"fish_elegant",name:"Peces con sombrero y bigote",category:"fish",price:250,preview:"🎩",desc:"Peces con sombrerito y bigote.",pack:"elegant"},
+  {id:"fish_elegant",name:"Peces con sombrero",category:"fish",price:250,preview:"🎩",desc:"Peces con sombrerito elegante.",pack:"elegant"},
   {id:"fish_pirate",name:"Peces pirata",category:"fish",price:180,preview:"🏴‍☠️",desc:"Peces con parche pirata."},
   {id:"fish_heart",name:"Peces corazón",category:"fish",price:180,preview:"💖",desc:"Peces con detalle de corazón."},
   {id:"enemy_gray",name:"Gatos grises",category:"enemy",price:150,preview:"🐱",desc:"Gatos normales en tono gris."},
@@ -609,7 +609,61 @@ function drawHeartShape(x,y,size,color){ctx.save();ctx.translate(x,y);ctx.fillSt
 function drawBowTieShape(x,y,size,leftColor="#ff7aa8",rightColor=leftColor,knotColor="#ffd166"){ctx.save();ctx.translate(x,y);ctx.fillStyle=leftColor;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-size*1.16,-size*.64);ctx.quadraticCurveTo(-size*1.46,0,-size*1.16,size*.64);ctx.closePath();ctx.fill();ctx.fillStyle=rightColor;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(size*1.16,-size*.64);ctx.quadraticCurveTo(size*1.46,0,size*1.16,size*.64);ctx.closePath();ctx.fill();ctx.fillStyle=knotColor;ctx.beginPath();ctx.roundRect(-size*.30,-size*.34,size*.60,size*.68,size*.20);ctx.fill();ctx.restore()}
 function getEnemySkinBaseColor(cat){if(selectedCosmetic("enemy")==="enemy_gray"&&(!cat.type||cat.type==="normal")){if(!cat.grayTone){const tones=["#b7bcc2","#9ea4ab","#878d95","#c7ccd1"];const seed=Math.abs(Math.round((cat.x||0)*17+(cat.y||0)*11+(cat.r||0)*13+(cat.hp||0)));cat.grayTone=tones[seed%tones.length]}return cat.grayTone}return cat.color}
 function drawPlayerSkinDetails(){const s=selectedCosmetic("player");if(s!=="player_elegant")return;ctx.save();ctx.shadowBlur=0;drawBowTieShape(0,14,7.2,"#f48fb1","#ff9ec4","#fff1a8");ctx.restore()}
-function drawFishSkinDetails(f){const s=selectedCosmetic("fish");if(s==="default")return;ctx.save();ctx.shadowBlur=0;ctx.lineWidth=1.6;if(s==="fish_elegant"){ctx.fillStyle="#171018";ctx.beginPath();ctx.roundRect(-1,-23,16,5,2);ctx.fill();ctx.fillRect(3,-31,8,9);ctx.fillStyle="#7a4c24";ctx.fillRect(3,-24,8,2);ctx.strokeStyle="#171018";ctx.beginPath();ctx.moveTo(2,5);ctx.quadraticCurveTo(7,1,10,6);ctx.quadraticCurveTo(7,8,2,5);ctx.moveTo(10,6);ctx.quadraticCurveTo(13,1,18,5);ctx.quadraticCurveTo(13,8,10,6);ctx.stroke();}else if(s==="fish_pirate"){ctx.strokeStyle="#171018";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-1,-7);ctx.quadraticCurveTo(5,-11,11,-7);ctx.stroke();ctx.fillStyle="#171018";ctx.beginPath();ctx.arc(8,-2,4.2,0,Math.PI*2);ctx.fill();ctx.fillStyle="#f8f0ff";ctx.beginPath();ctx.arc(6.6,-3.2,1.1,0,Math.PI*2);ctx.fill();}else if(s==="fish_heart"){ctx.fillStyle="#4cc9f0";ctx.beginPath();ctx.arc(8,-2,3.6,0,Math.PI*2);ctx.fill();drawHeartShape(8,-2,2.6,"#ff5d8f");}ctx.restore();}
+function drawFishSkinDetails(f){
+const s=selectedCosmetic("fish");
+if(s==="default")return;
+ctx.save();
+ctx.shadowBlur=0;
+ctx.lineWidth=1.6;
+
+if(s==="fish_elegant"){
+  /* Solo sombrero, más pegado a la cabeza del pez.
+     Como drawFish ya hace ctx.scale(f.scale), este sombrero también escala. */
+  ctx.fillStyle="#171018";
+  ctx.beginPath();
+  ctx.roundRect(-2,-19,17,5.5,2);
+  ctx.fill();
+  ctx.beginPath();
+  ctx.roundRect(1,-25,10,-8,2.2);
+  ctx.fill();
+  ctx.fillStyle="rgba(255,255,255,.10)";
+  ctx.beginPath();
+  ctx.roundRect(3,-23.5,2.6,-5.2,1);
+  ctx.fill();
+  ctx.fillStyle="#ff8fab";
+  ctx.fillRect(-1,-19,15,1.4);
+}
+
+if(s==="fish_pirate"){
+  ctx.strokeStyle="#3b2240";
+  ctx.lineWidth=2.2;
+  ctx.beginPath();
+  ctx.moveTo(2,-8);
+  ctx.quadraticCurveTo(7,-12,13,-9);
+  ctx.stroke();
+  ctx.fillStyle="#2b1730";
+  ctx.beginPath();
+  ctx.ellipse(8,-2,5.5,4.8,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle="rgba(255,255,255,.85)";
+  ctx.lineWidth=1.1;
+  ctx.beginPath();
+  ctx.moveTo(4,-2);
+  ctx.lineTo(12,-2);
+  ctx.moveTo(8,-6);
+  ctx.lineTo(8,2);
+  ctx.stroke();
+}
+
+if(s==="fish_heart"){
+  ctx.fillStyle="#4cc9f0";
+  ctx.beginPath();
+  ctx.arc(8,-2,3.6,0,Math.PI*2);
+  ctx.fill();
+  drawHeartShape(8,-2,2.6,"#ff5d8f");
+}
+ctx.restore();
+}
 function drawEnemySkinDetails(cat){const s=selectedCosmetic("enemy");if(s!=="enemy_elegant")return;ctx.save();ctx.shadowBlur=0;drawBowTieShape(0,17,7.8,"#ff8fab","#ffa6c1","#fff1a8");ctx.restore()}
 function drawBossSkinUnderlay(type,r){if(type!=="demon"||selectedCosmetic("boss_demon")!=="boss_demon_cape")return;ctx.save();ctx.globalAlpha=.92;ctx.fillStyle="#2a1038";ctx.beginPath();ctx.moveTo(-r*.28,-r*.18);ctx.quadraticCurveTo(-r*.86,-r*.54,-r*1.10,r*.42);ctx.quadraticCurveTo(-r*.94,r*.98,-r*.36,r*.74);ctx.quadraticCurveTo(-r*.14,r*.52,-r*.18,r*.14);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(r*.28,-r*.18);ctx.quadraticCurveTo(r*.86,-r*.54,r*1.10,r*.42);ctx.quadraticCurveTo(r*.94,r*.98,r*.36,r*.74);ctx.quadraticCurveTo(r*.14,r*.52,r*.18,r*.14);ctx.closePath();ctx.fill();ctx.fillStyle="rgba(132,33,173,.45)";ctx.beginPath();ctx.moveTo(-r*.18,r*.10);ctx.quadraticCurveTo(-r*.46,r*.48,-r*.34,r*.70);ctx.quadraticCurveTo(-r*.18,r*.60,-r*.10,r*.28);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(r*.18,r*.10);ctx.quadraticCurveTo(r*.46,r*.48,r*.34,r*.70);ctx.quadraticCurveTo(r*.18,r*.60,r*.10,r*.28);ctx.closePath();ctx.fill();ctx.restore()}
 function drawBossSkinDetails(type,r){
@@ -2867,60 +2921,60 @@ const fusionNameMap={
 };
 
 const fusionEffectDescMap={
-"damage+pierce":"Tus peces mantienen el daño alto y además atraviesan enemigos. Al seguir subiendo esta fusión, cada disparo se vuelve más fiable contra grupos y jefes.",
-"bigFish+damage":"Los peces grandes pegan mucho más fuerte. Es una fusión pensada para borrar enemigos duros y castigar jefes.",
-"damage+doubleFish":"Cada disparo extra también aprovecha tu daño acumulado, así que las ráfagas dobles limpian mucho mejor.",
-"doubleFish+fireRate":"Disparas más veces y con más peces por disparo. Ideal para llenar la pantalla de proyectiles.",
-"fireRate+fishSpeed":"Los peces salen más rápido y llegan antes al objetivo. Se nota especialmente contra enemigos móviles.",
-"boomerang+fireRate":"Lanzas boomerangs con más frecuencia, así que la pantalla se llena de peces que van y vuelven.",
-"fishSpeed+pierce":"Los peces rápidos atraviesan enemigos con más facilidad, funcionando como proyectiles fantasma.",
-"boomerang+fishSpeed":"Los boomerangs tienen más alcance efectivo y vuelven mejor desde lejos.",
-"boomerang+pierce":"Los peces que vuelven pueden atravesar enemigos, haciendo daño tanto de ida como de vuelta.",
-"boomerang+doubleFish":"Lanzas más boomerangs a la vez, creando una tormenta circular alrededor del jugador.",
-"damage+lifeSteal":"El daño alto también te cura más, haciendo que atacar sea una forma real de sobrevivir.",
-"lifeSteal+maxLife":"Aumenta tu aguante y convierte parte del daño en curación, perfecta para builds tanque.",
-"healOnWave+lifeSteal":"Te recuperas entre rondas y durante el combate, creando una regeneración muy estable.",
-"healOnWave+maxLife":"Más vida máxima y más curación al superar rondas. Aguantas mucho mejor las rondas largas.",
-"catSlow+shield":"Los enemigos se acercan más lento y el escudo tiene más tiempo para golpearlos antes de tocarte.",
-"fishSize+shield":"Los peces del escudo crecen y golpean con más presencia, sin tapar al personaje.",
-"damage+shield":"El escudo deja de ser solo defensa: sus peces hacen más daño al contacto.",
-"coinMagnet+xpBoost":"Recoges recursos y subes de nivel más rápido, acelerando muchísimo la progresión.",
-"catInstinct+coinMagnet":"Cuando se activa el instinto gatuno, atrae monedas y latas cercanas hacia ti. Al subir esta fusión, aumenta el rango de atracción.",
-"bigCursor+boomerang":"Los boomerangs quedan marcados por la mirilla y, al volver, buscan enemigos cercanos antes de regresar. Al subir esta fusión, corrigen mejor su trayectoria.",
-"boomerang+catInstinct":"Cuando se activa Instinto gatuno, los boomerangs que haya en pantalla se reorientan hacia enemigos cercanos y duran un poco más.",
-"catInstinct+omniBurst":"Cuando se activa Instinto gatuno, dispara una ráfaga circular defensiva. Al subir esta fusión, salen más peces.",
-"coinMagnet+darkPact":"Voluntad Oscura se vuelve codiciosa: al elegir por ti al final de ronda, gana monedas extra. Al subir esta fusión, aumenta la recompensa.",
-"healOnWave+xpBoost":"Subes de nivel con más estabilidad porque ganas experiencia y recuperas vida entre rondas.",
-"coinMagnet+moveSpeed":"Te mueves rápido y recoges monedas desde más lejos, ideal para jugar agresivo sin perder recursos.",
-"fireRate+omniBurst":"La ráfaga circular se activa con mejor ritmo y combina muy bien con una cadencia alta.",
-"damage+omniBurst":"La explosión circular de peces pega mucho más fuerte, perfecta para limpiar pantalla.",
-"boomerang+omniBurst":"Las ráfagas generan mucha presión alrededor del personaje y se combinan con proyectiles de largo recorrido.",
-"aimAssist+autoFire":"La patita automática ya no dispara a ciegas: apunta al enemigo más cercano, prioriza objetivos útiles y dispara más rápido. Se nota mucho en jefes y enemigos lejanos.",
-"autoFire+bigCursor":"El disparo automático gana asistencia extra y mejor ritmo. Aunque no apuntes perfecto, el juego ayuda a mantener presión constante.",
-"aimAssist+bigCursor":"Los peces giran mucho más fuerte hacia los enemigos y corrigen mejor la trayectoria. Es la fusión de puntería más cómoda.",
-"autoFire+moralSupport":"El apoyo moral potencia la ofensiva: el disparo automático gana velocidad y se siente como una patita más agresiva.",
-"bigCursor+moralSupport":"Cuando estás a poca vida, entras en modo emergencia: mejoras tu ritmo ofensivo y puedes aguantar mejor momentos peligrosos.",
-"darkPact+moralSupport":"Desbloquea el perro acompañante. Te sigue y dispara huesos automáticamente a enemigos cercanos. Una vez por partida, si vas a morir, dará su vida por ti y te curará completamente.",
-"boomerang+yarnBounce":"Los peces pueden volver y además rebotar hacia otros objetivos, creando cadenas muy buenas contra grupos.",
-"pierce+yarnBounce":"Los peces atraviesan y después pueden buscar otro objetivo cercano con rebote de ovillo.",
-"fishSpeed+yarnBounce":"Los rebotes salen más rápidos y alcanzan mejor a enemigos lejanos.",
-"doubleFish+yarnBounce":"Más peces significa más oportunidades de rebote. Muy buena para limpiar oleadas.",
-"bigFish+yarnBounce":"Los rebotes pueden salir desde impactos grandes, haciendo que los peces enormes sean más útiles contra grupos.",
-"fishSize+yarnBounce":"Peces más grandes con rebote: más facilidad para impactar y encadenar enemigos.",
-"omniBurst+yarnBounce":"La ráfaga circular puede generar muchos rebotes, convirtiéndose en una limpieza de pantalla.",
-"damage+yarnBounce":"Los rebotes pegan más fuerte, así que no solo saltan a otros enemigos: también duelen.",
-"aimAssist+catInstinct":"Cuando se activa el instinto gatuno, además de empujar, dispara una ráfaga guiada a enemigos cercanos.",
-"catInstinct+moralSupport":"El instinto puede ayudarte más veces por ronda y además recupera vida al activarse.",
-"catInstinct+darkPact":"El instinto gatuno se vuelve maldito: empuja con más fuerza y te da una recuperación agresiva en situaciones críticas.",
-"catInstinct+maxLife":"Cuando la vida cae por debajo de 7, activas 7 segundos de protección. Tiene recarga y solo puede salvarte una vez por ronda.",
-"critChance+damage":"Los críticos aprovechan mejor el daño acumulado. Es la fusión ideal para pegar golpes enormes.",
-"critChance+doubleFish":"Cada pez extra puede criticar, así que cuantos más disparos salgan, más probabilidades tienes de reventar enemigos.",
-"autoFire+critChance":"La patita automática dispara más rápido y puede activar críticos constantemente. Muy buena para daño pasivo contra jefes.",
-"moveSpeed+zoomies":"Los Zoomies duran más y te vuelves mucho más rápido durante el subidón.",
-"fireRate+zoomies":"Durante Zoomies disparas muchísimo más rápido. Es una ventana corta de daño explosivo.",
-"autoFire+zoomies":"Durante Zoomies, el disparo automático se vuelve mucho más agresivo y mantiene presión sin que tengas que clicar tanto.",
-"critChance+zoomies":"Durante Zoomies aumenta mucho la probabilidad de crítico, convirtiendo el subidón en una fase de burst.",
-"catInstinct+zoomies":"Cada 5 golpes recibidos, tu instinto te teletransporta a una zona segura, activa Zoomies al instante, dispara el Instinto gatuno aunque tengas vida alta y te da 1 segundo de invulnerabilidad.",
+"damage+pierce":"Peces fuertes que atraviesan enemigos.",
+"bigFish+damage":"Peces grandes con golpes brutales.",
+"damage+doubleFish":"Más peces y más daño por disparo.",
+"doubleFish+fireRate":"Más disparos y más peces.",
+"fireRate+fishSpeed":"Peces rápidos y mucha cadencia.",
+"boomerang+fireRate":"Más boomerangs en pantalla.",
+"fishSpeed+pierce":"Peces rápidos que atraviesan.",
+"boomerang+fishSpeed":"Boomerangs más veloces.",
+"boomerang+pierce":"Boomerangs que atraviesan.",
+"boomerang+doubleFish":"Más boomerangs a la vez.",
+"damage+lifeSteal":"Pegar fuerte también cura.",
+"lifeSteal+maxLife":"Más vida y más curación.",
+"healOnWave+lifeSteal":"Te curas entre rondas y peleando.",
+"healOnWave+maxLife":"Más vida y mejor descanso.",
+"catSlow+shield":"Enemigos lentos y escudo útil.",
+"fishSize+shield":"Escudo con peces grandes.",
+"damage+shield":"El escudo también pega.",
+"coinMagnet+xpBoost":"Recoges y subes más rápido.",
+"catInstinct+coinMagnet":"El instinto atrae recursos.",
+"bigCursor+boomerang":"Boomerangs más guiados.",
+"boomerang+catInstinct":"El instinto redirige boomerangs.",
+"catInstinct+omniBurst":"El instinto lanza una ráfaga.",
+"coinMagnet+darkPact":"Pacto oscuro más codicioso.",
+"healOnWave+xpBoost":"Progresas y te recuperas mejor.",
+"coinMagnet+moveSpeed":"Corres y recoges mejor.",
+"fireRate+omniBurst":"Más cadencia y ráfagas.",
+"damage+omniBurst":"Ráfagas más destructivas.",
+"boomerang+omniBurst":"Presión circular constante.",
+"aimAssist+autoFire":"Auto-disparo con mejor puntería.",
+"autoFire+bigCursor":"Auto-disparo más cómodo.",
+"aimAssist+bigCursor":"Puntería mucho más guiada.",
+"autoFire+moralSupport":"Apoyo que acelera tu ofensiva.",
+"bigCursor+moralSupport":"Mejor reacción en apuros.",
+"darkPact+moralSupport":"Tu perro te acompaña y puede salvarte.",
+"boomerang+yarnBounce":"Vuelven y rebotan.",
+"pierce+yarnBounce":"Atraviesan y rebotan.",
+"fishSpeed+yarnBounce":"Rebotes más rápidos.",
+"doubleFish+yarnBounce":"Más peces, más rebotes.",
+"bigFish+yarnBounce":"Peces grandes que rebotan.",
+"fishSize+yarnBounce":"Peces grandes con rebote.",
+"omniBurst+yarnBounce":"Ráfagas con rebotes.",
+"damage+yarnBounce":"Rebotes más dolorosos.",
+"aimAssist+catInstinct":"Instinto con respuesta guiada.",
+"catInstinct+moralSupport":"Tu instinto te cuida más.",
+"catInstinct+darkPact":"Instinto oscuro y agresivo.",
+"catInstinct+maxLife":"Si quedas casi sin vida, te protege unos segundos.",
+"critChance+damage":"Críticos más dolorosos.",
+"critChance+doubleFish":"Más peces con críticos.",
+"autoFire+critChance":"Auto-disparo con críticos.",
+"moveSpeed+zoomies":"Zoomies más rápidos.",
+"fireRate+zoomies":"Zoomies con mucha cadencia.",
+"autoFire+zoomies":"Auto-disparo loco en Zoomies.",
+"critChance+zoomies":"Zoomies con más críticos.",
+"catInstinct+zoomies":"Zoomies e instintos más agudos. Ojo: te recoloca.",
 };
 
 function normalizeFusionMap(map){
@@ -2936,59 +2990,59 @@ normalizeFusionMap(fusionEffectDescMap);
 
 
 const fusionShortDescMap={
-"damage+pierce":"Tus peces pegan fuerte y atraviesan mejor.",
-"bigFish+damage":"Los peces grandes hacen golpes brutales.",
+"damage+pierce":"Peces fuertes que atraviesan enemigos.",
+"bigFish+damage":"Peces grandes con golpes brutales.",
 "damage+doubleFish":"Más peces y más daño por disparo.",
-"doubleFish+fireRate":"Disparas más peces en menos tiempo.",
-"fireRate+fishSpeed":"Peces rápidos y disparos rápidos.",
-"boomerang+fireRate":"Más peces que van y vuelven.",
-"fishSpeed+pierce":"Proyectiles rápidos que atraviesan.",
-"boomerang+fishSpeed":"Boomerangs más veloces y cómodos.",
-"boomerang+pierce":"Los peces atraviesan al ir y volver.",
-"boomerang+doubleFish":"Lanzas más boomerangs a la vez.",
-"damage+lifeSteal":"Pegar fuerte también te cura.",
-"lifeSteal+maxLife":"Más vida y más curación al atacar.",
+"doubleFish+fireRate":"Más disparos y más peces.",
+"fireRate+fishSpeed":"Peces rápidos y mucha cadencia.",
+"boomerang+fireRate":"Más boomerangs en pantalla.",
+"fishSpeed+pierce":"Peces rápidos que atraviesan.",
+"boomerang+fishSpeed":"Boomerangs más veloces.",
+"boomerang+pierce":"Boomerangs que atraviesan.",
+"boomerang+doubleFish":"Más boomerangs a la vez.",
+"damage+lifeSteal":"Pegar fuerte también cura.",
+"lifeSteal+maxLife":"Más vida y más curación.",
 "healOnWave+lifeSteal":"Te curas entre rondas y peleando.",
-"healOnWave+maxLife":"Build tanque: más vida y descanso.",
-"catSlow+shield":"Zona segura alrededor de ti.",
+"healOnWave+maxLife":"Más vida y mejor descanso.",
+"catSlow+shield":"Enemigos lentos y escudo útil.",
 "fishSize+shield":"Escudo con peces grandes.",
-"damage+shield":"El escudo también pega más.",
-"coinMagnet+xpBoost":"Recoges y progresas más rápido.",
-"catInstinct+coinMagnet":"Tu instinto atrae monedas y latas.",
-"bigCursor+boomerang":"Boomerangs que vuelven marcando objetivos.",
-"boomerang+catInstinct":"Tu instinto redirige los boomerangs.",
-"catInstinct+omniBurst":"Tu instinto dispara una ráfaga defensiva.",
-"coinMagnet+darkPact":"Voluntad Oscura da más monedas.",
-"healOnWave+xpBoost":"Subes mejor y te recuperas al pasar ronda.",
-"coinMagnet+moveSpeed":"Corres y recoges monedas más fácil.",
-"fireRate+omniBurst":"Más disparo y más ráfagas.",
-"damage+omniBurst":"La explosión circular pega más.",
-"boomerang+omniBurst":"Ráfagas con presión alrededor.",
-"aimAssist+autoFire":"Disparo automático con mejor puntería.",
-"autoFire+bigCursor":"El disparo automático ayuda más al apuntar.",
-"aimAssist+bigCursor":"Puntería cómoda y muy guiada.",
-"autoFire+moralSupport":"El apoyo moral anima tu ofensiva.",
-"bigCursor+moralSupport":"Cuando vas mal, reaccionas mejor.",
-"darkPact+moralSupport":"Aparece tu perro acompañante. Te ayuda y puede salvarte una vez.",
-"boomerang+yarnBounce":"Los peces vuelven y rebotan.",
-"pierce+yarnBounce":"Atraviesas y encadenas rebotes.",
+"damage+shield":"El escudo también pega.",
+"coinMagnet+xpBoost":"Recoges y subes más rápido.",
+"catInstinct+coinMagnet":"El instinto atrae recursos.",
+"bigCursor+boomerang":"Boomerangs más guiados.",
+"boomerang+catInstinct":"El instinto redirige boomerangs.",
+"catInstinct+omniBurst":"El instinto lanza una ráfaga.",
+"coinMagnet+darkPact":"Pacto oscuro más codicioso.",
+"healOnWave+xpBoost":"Progresas y te recuperas mejor.",
+"coinMagnet+moveSpeed":"Corres y recoges mejor.",
+"fireRate+omniBurst":"Más cadencia y ráfagas.",
+"damage+omniBurst":"Ráfagas más destructivas.",
+"boomerang+omniBurst":"Presión circular constante.",
+"aimAssist+autoFire":"Auto-disparo con mejor puntería.",
+"autoFire+bigCursor":"Auto-disparo más cómodo.",
+"aimAssist+bigCursor":"Puntería mucho más guiada.",
+"autoFire+moralSupport":"Apoyo que acelera tu ofensiva.",
+"bigCursor+moralSupport":"Mejor reacción en apuros.",
+"darkPact+moralSupport":"Tu perro te acompaña y puede salvarte.",
+"boomerang+yarnBounce":"Vuelven y rebotan.",
+"pierce+yarnBounce":"Atraviesan y rebotan.",
 "fishSpeed+yarnBounce":"Rebotes más rápidos.",
-"doubleFish+yarnBounce":"Más peces significa más rebotes.",
-"bigFish+yarnBounce":"Peces grandes que encadenan mejor.",
+"doubleFish+yarnBounce":"Más peces, más rebotes.",
+"bigFish+yarnBounce":"Peces grandes que rebotan.",
 "fishSize+yarnBounce":"Peces grandes con rebote.",
-"omniBurst+yarnBounce":"La ráfaga puede encadenar rebotes.",
-"damage+yarnBounce":"Los rebotes también duelen.",
-"aimAssist+catInstinct":"Cuando estás en peligro, respondes mejor.",
+"omniBurst+yarnBounce":"Ráfagas con rebotes.",
+"damage+yarnBounce":"Rebotes más dolorosos.",
+"aimAssist+catInstinct":"Instinto con respuesta guiada.",
 "catInstinct+moralSupport":"Tu instinto te cuida más.",
-"catInstinct+darkPact":"Instinto más agresivo y oscuro.",
+"catInstinct+darkPact":"Instinto oscuro y agresivo.",
 "critChance+damage":"Críticos más dolorosos.",
-"critChance+doubleFish":"Más peces con opción a crítico.",
+"critChance+doubleFish":"Más peces con críticos.",
 "autoFire+critChance":"Auto-disparo con críticos.",
-"moveSpeed+zoomies":"Zoomies más rápidos y largos.",
-"fireRate+zoomies":"Durante Zoomies disparas muchísimo.",
-"autoFire+zoomies":"Auto-disparo loco durante Zoomies.",
-"critChance+zoomies":"Zoomies con golpes críticos.",
-"catInstinct+zoomies":"Cada 5 golpes, escape instantáneo con Zoomies e invulnerabilidad breve.",
+"moveSpeed+zoomies":"Zoomies más rápidos.",
+"fireRate+zoomies":"Zoomies con mucha cadencia.",
+"autoFire+zoomies":"Auto-disparo loco en Zoomies.",
+"critChance+zoomies":"Zoomies con más críticos.",
+"catInstinct+zoomies":"Zoomies e instintos más agudos. Ojo: te recoloca.",
 "aimAssist+damage":"Los disparos guiados pegan más.",
 "aimAssist+pierce":"Los peces guiados atraviesan mejor.",
 "aimAssist+fishSpeed":"Peces rápidos y guiados.",
@@ -3015,21 +3069,21 @@ const fusionShortDescMap={
 "doubleFish+zoomies":"Más peces durante el caos.",
 "boomerang+zoomies":"Boomerangs más locos y rápidos.",
 "bigFish+doubleFish":"A veces dispara dos peces grandes extra.",
-"bigFish+fireRate":"Los peces grandes llueven sin parar. Una avalancha de escamas y daño.",
+"bigFish+fireRate":"Más peces grandes, más presión.",
 "bigFish+fishSize":"Peces mucho más grandes.",
-"bigFish+pierce":"Un pez enorme que atraviesa a todos los enemigos en línea recta.",
+"bigFish+pierce":"Pez enorme que atraviesa enemigos.",
 "catInstinct+shield":"A veces reduce un golpe y empuja enemigos.",
 "catSlow+coinMagnet":"Los enemigos sueltan más monedas.",
 "catSlow+fishSize":"Pez gigante y helado.",
-"catSlow+maxLife":"El frío protege el cuerpo. Ralentizas a los enemigos y ganas más vida máxima.",
-"catSlow+moveSpeed":"Te deslizas velozmente mientras los enemigos se arrastran en el hielo.",
+"catSlow+maxLife":"Ralentizas más y aguantas mejor.",
+"catSlow+moveSpeed":"Te mueves rápido mientras ellos van lentos.",
 "coinMagnet+healOnWave":"Las monedas también curan un poco.",
-"doubleFish+omniBurst":"Dos peces por ola y ráfagas en todas direcciones. El caos es total.",
+"doubleFish+omniBurst":"Más peces y más caos alrededor.",
 "fishSize+pierce":"Peces grandes que perforan.",
 "fishSpeed+omniBurst":"Ráfagas mucho más rápidas.",
 "lifeSteal+shield":"El escudo cura al golpear.",
-"maxLife+moralSupport":"El apoyo de tu novio te da fuerzas para aguantar mucho más.",
-"maxLife+shield":"Máxima vida y máxima defensa. Una fortaleza que nada puede derribar.",
+"maxLife+moralSupport":"Más aguante gracias al apoyo.",
+"maxLife+shield":"Vida y defensa muy reforzadas.",
 "moveSpeed+xpBoost":"Moverte también da experiencia poco a poco.",
 "omniBurst+xpBoost":"Las ráfagas también dan experiencia.",
 };
@@ -3090,7 +3144,7 @@ function getFusionExtraBonusDesc(pair){
   if(pair==="bigCursor+boomerang")return "Bonus de fusión: boomerangs con retorno marcado.";
   if(pair==="boomerang+catInstinct")return "Bonus de fusión: el instinto redirige boomerangs.";
   if(pair==="catInstinct+omniBurst")return "Bonus de fusión: ráfaga defensiva al activar instinto.";
-  if(pair==="catInstinct+zoomies")return "Bonus de fusión: cada 5 golpes recibidos activa Huida felina.";
+  if(pair==="catInstinct+zoomies")return "Bonus de fusión: teletransporte (peligro).";
   if(pair==="coinMagnet+darkPact")return "Bonus de fusión: Voluntad Oscura da más monedas.";
   if(has("lifeSteal")&&has("shield"))return "Bonus de fusión: el escudo roba vida.";
   if(has("lifeSteal"))return "Bonus de fusión: más robo de vida.";
@@ -4631,14 +4685,11 @@ function getFusionDetail(pair){
   const hasScalable=pair.split("+").some(k=>Object.prototype.hasOwnProperty.call(upgradeLevels,k));
   const lines=[base];
   if(hasScalable){
-    lines.push(`Nivel actual de la fusión: ${level}/5.`);
-    lines.push(`Potencia aproximada actual: ${Math.round(level*10)}%.`);
-    if(level>=5)lines.push("Fusión al máximo.");
+    lines.push(`Nivel ${level}/5 · potencia aprox. ${Math.round(level*10)}%.`);
   }else{
-    lines.push("Fusión única entre dos mejoras únicas. Ya está completa al conseguirla.");
+    lines.push("Fusión única completa.");
   }
-  if(pair==="catInstinct+zoomies")lines.push("Cada 5 golpes recibidos activa Huida felina: teletransporte seguro, Zoomies instantáneo, Instinto gatuno forzado e invulnerabilidad breve.");
-  if(pair==="darkPact+moralSupport")lines.push("Incluye la mecánica especial del perro protector y el demonio.");
+  if(pair==="darkPact+moralSupport")lines.push("El perro puede salvarte una vez.");
   return lines.join(" ");
 }
 
