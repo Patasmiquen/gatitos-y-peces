@@ -263,6 +263,8 @@ function renderRankingList(el,items){
   if(!items||!items.length){el.innerHTML='<div class="onlineRankStatus">Todavía no hay puntuaciones. Sé la primera persona 💖</div>';return;}
   const me=cleanPlayerName(playerNameInput?.value||currentPlayerName);
   const exactRows=dedupeScoreRows(lastRankingRawRows);
+  const rankNameCounts=new Map();
+  exactRows.forEach(row=>{const key=rankingNameKey(row?.name);rankNameCounts.set(key,(rankNameCounts.get(key)||0)+1);});
   const rows=items.map((row,index)=>({...row,_shownRank:index+1,_nameKey:rankingNameKey(row?.name)}));
   el.innerHTML=rows.map((s,i)=>{
     const safeName=escapeHtml(cleanPlayerName(s.name)||"Jugador");
@@ -272,7 +274,7 @@ function renderRankingList(el,items){
     const meta=`Ronda ${Number(s.wave||0)} · Nivel ${Number(s.level||0)} · Jefes ${Number(s.bosses||0)}/4`;
     const medal=i===0?"🥇":i===1?"🥈":i===2?"🥉":`#${i+1}`;
     const realRank=s._fullRank&&s._fullRank!==i+1?` · puesto real #${s._fullRank}`:"";
-    const duplicateCount=exactRows.filter(r=>rankingNameKey(r?.name)===s._nameKey).length;
+    const duplicateCount=rankNameCounts.get(s._nameKey)||1;
     const dupeHint=duplicateCount>1&&!rankingShowDuplicates?` · ${duplicateCount} partidas`:"";
     const detailsOpen=expandedRankingNameKey&&expandedRankingNameKey===s._nameKey;
     const details=detailsOpen?renderRankingNameDetails(s._nameKey):"";
@@ -464,7 +466,7 @@ const COSMETICS=[
   {id:"boss_seal_low_poly",name:"Foca low poly",category:"boss_seal",price:260,preview:"⬜",desc:"La foca jefe se convierte en un cubo.",pack:"low_poly"},
   {id:"boss_demon_low_poly",name:"Demonio low poly",category:"boss_demon",price:300,preview:"🟥",desc:"El demonio jefe se convierte en un cubo oscuro.",pack:"low_poly"}
 ];
-const COSMETIC_PACKS=[{id:"elegant",name:"Pack Elegante",discount:.20,items:["player_elegant","fish_elegant","enemy_elegant","boss_duck_monocle","boss_seal_tie","boss_demon_cape"],desc:"Pajaritas, sombreros, monóculos, corbatas y capa."},{id:"low_poly",name:"Pack Low Poly",discount:.25,items:["player_low_poly","fish_low_poly","enemy_low_poly","boss_giant_low_poly","boss_duck_low_poly","boss_seal_low_poly","boss_demon_low_poly"],desc:"Todo el juego se vuelve una colección de cubos low poly."}];
+const COSMETIC_PACKS=[{id:"elegant",name:"Pack Elegante",discount:.20,items:["player_elegant","fish_elegant","enemy_elegant","boss_duck_monocle","boss_seal_tie","boss_demon_cape"],desc:"Pajaritas, sombreros, monóculos, falda y capa."},{id:"low_poly",name:"Pack Low Poly",discount:.25,items:["player_low_poly","fish_low_poly","enemy_low_poly","boss_giant_low_poly","boss_duck_low_poly","boss_seal_low_poly","boss_demon_low_poly"],desc:"Todo el juego se vuelve una colección de cubos low poly."}];
 let cosmeticTab="skins";
 let cosmeticScales=0,ownedCosmetics=new Set(),selectedCosmetics={player:"default",fish:"default",enemy:"default",boss_giant:"default",boss_duck:"default",boss_seal:"default",boss_demon:"default"};
 let cosmeticAwardedThisRun=false;

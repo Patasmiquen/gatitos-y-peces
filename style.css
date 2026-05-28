@@ -108,7 +108,7 @@ canvas{display:block;position:fixed;left:50%;top:50%;transform:translate(-50%,-5
 .pauseButton.secondary{background:#4cc9f0}
 .pauseButton.menuButton{background:linear-gradient(135deg,#9b5de5,#6d23b6)}
 #pauseUpgradesList{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
-.pauseUpgrade{min-height:174px;perspective:900px;cursor:context-menu}
+.pauseUpgrade{min-height:174px;perspective:900px;cursor:pointer}
 .pauseUpgradeInner{position:relative;width:100%;min-height:174px;transition:transform .45s cubic-bezier(.2,.75,.2,1);transform-style:preserve-3d}
 .pauseUpgrade.flipped .pauseUpgradeInner{transform:rotateY(180deg)}
 .pauseUpgradeFace{position:absolute;inset:0;backface-visibility:hidden;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:12px;overflow:auto}
