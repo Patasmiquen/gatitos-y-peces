@@ -903,12 +903,12 @@ body.panel-theme-dark .onlineRankBox{background:rgba(255,255,255,.06);border-col
 
 
 /* === Fila de desplegables del menú inicial === */
-.startDropdownRow{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start;margin:14px auto 8px;max-width:980px}
+.startDropdownRow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:start;margin:14px auto 8px;max-width:1120px}
 .startDropdownRow>details{margin:0!important;max-width:none!important;width:100%;text-align:center}
 .startDropdownRow>details>summary{width:100%!important;min-width:0!important;min-height:56px;box-sizing:border-box;white-space:nowrap;margin:0!important;display:flex;align-items:center;justify-content:center}
 .startDropdownContentSlot{width:100%;max-width:860px;margin:12px auto 8px;box-sizing:border-box}
 .startDropdownContentSlot:not(.visible){display:none}
-.startDropdownContentSlot .achievementsBox,.startDropdownContentSlot .cosmeticsBox,.startDropdownContentSlot .controls{margin:0 auto!important;width:100%;box-sizing:border-box}
+.startDropdownContentSlot .achievementsBox,.startDropdownContentSlot .cosmeticsBox,.startDropdownContentSlot .controls,.startDropdownContentSlot .patchNotesBox{margin:0 auto!important;width:100%;box-sizing:border-box}
 .startDropdownContentSlot .controls{display:grid;max-width:600px}
 .goldenPlayerName{color:#ffd166!important;text-shadow:0 0 8px rgba(255,209,102,.45);font-weight:900}
 #playerNameInput.goldenPlayerName{border-color:#ffd166!important;box-shadow:0 0 0 3px rgba(255,209,102,.22),0 0 18px rgba(255,209,102,.20);background:rgba(255,248,220,.98)}
@@ -965,3 +965,27 @@ box-shadow:0 10px 28px rgba(76,201,240,.14), inset 0 0 0 1px rgba(255,255,255,.0
 font-size:15px;
 min-width:170px;
 }
+
+
+/* === Notas de parche === */
+.patchNotesPanel{margin:14px auto 6px;max-width:680px;text-align:left}
+.patchNotesPanel summary{list-style:none;display:flex;align-items:center;justify-content:center;gap:8px;margin:0 auto;padding:13px 22px;width:max-content;max-width:100%;border-radius:999px;background:linear-gradient(135deg,rgba(128,237,153,.95),rgba(76,201,240,.92));color:#173b32;font-weight:1000;cursor:pointer;box-shadow:0 12px 28px rgba(76,201,240,.22),inset 0 1px 0 rgba(255,255,255,.36);transition:transform .14s ease,filter .14s ease,box-shadow .14s ease}
+.patchNotesPanel summary::-webkit-details-marker{display:none}
+.patchNotesPanel summary:hover{transform:translateY(-2px) scale(1.025);filter:brightness(1.06);box-shadow:0 16px 34px rgba(76,201,240,.30),inset 0 1px 0 rgba(255,255,255,.45)}
+.patchNotesPanel summary::after{content:"▾";font-size:13px;transition:transform .18s ease}
+.patchNotesPanel[open] summary::after{transform:rotate(180deg)}
+.patchNotesBox{margin:14px auto 8px;background:rgba(20,15,20,.42);border:1px solid rgba(255,255,255,.18);border-radius:22px;padding:16px;box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+.patchNotesHeader{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;color:#ffe6f0;font-size:16px;font-weight:1000;margin-bottom:8px}
+.patchNotesHeader span:last-child{font-size:12px;opacity:.82;background:rgba(255,255,255,.13);padding:6px 10px;border-radius:999px}
+.patchNotesNote{font-size:12px;opacity:.78;text-align:center;margin:4px 0 12px;color:#ffe6f0}
+.patchNotesContent{display:grid;gap:10px;max-height:470px;overflow:auto;padding-right:4px;scrollbar-width:thin;scrollbar-color:rgba(128,237,153,.75) rgba(255,255,255,.10)}
+.patchNoteEntry{background:rgba(255,246,251,.96);color:#294136;border-radius:16px;padding:13px;border:2px solid rgba(128,237,153,.58);box-shadow:0 8px 18px rgba(0,0,0,.12);text-align:left}
+.patchNoteEntry.latest{border-color:#ffd166;background:linear-gradient(180deg,rgba(255,246,251,.98),rgba(239,255,244,.96))}
+.patchNoteTop{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:7px}
+.patchNoteVersion{font-weight:1000;color:#0b7285}
+.patchNoteDate{font-size:11px;font-weight:900;opacity:.72;white-space:nowrap}
+.patchNoteTitle{font-weight:1000;color:#4b2636;margin-bottom:6px}
+.patchNoteEntry ul{margin:0;padding-left:18px}
+.patchNoteEntry li{font-size:13px;line-height:1.33;margin:3px 0}
+.patchNoteSource{margin-top:7px;font-size:10px;opacity:.55;font-weight:900}
+@media(max-width:760px){.patchNotesContent{max-height:390px}.patchNoteTop{flex-direction:column;gap:2px}.patchNoteDate{white-space:normal}}

@@ -755,9 +755,9 @@ function applyGoldenPlayerNameUI(){
 }
 function syncStartDropdowns(){
   const slot=document.getElementById("startDropdownContentSlot");
-  const panels=[achievementsPanel,cosmeticPanel,document.getElementById("howToPlay")].filter(Boolean);
+  const panels=[achievementsPanel,cosmeticPanel,document.getElementById("howToPlay"),document.getElementById("patchNotesPanel")].filter(Boolean);
   const items=panels.map(panel=>{
-    const content=panel.id==="achievementsPanel"?panel.querySelector(".achievementsBox"):panel.id==="cosmeticsPanel"?panel.querySelector(".cosmeticsBox"):panel.querySelector(".controls");
+    const content=panel.id==="achievementsPanel"?panel.querySelector(".achievementsBox"):panel.id==="cosmeticsPanel"?panel.querySelector(".cosmeticsBox"):panel.id==="patchNotesPanel"?panel.querySelector(".patchNotesBox"):panel.querySelector(".controls");
     return{panel,content,parent:content?.parentNode||panel};
   }).filter(item=>item.content);
   function restoreClosedContent(openPanel=null){
@@ -869,6 +869,7 @@ function recordNoDamageRoundIfClean(){
 loadAchievements();
 achievementsRefreshBtn?.addEventListener("click",()=>{checkAchievements();renderAchievements()});
 achievementsPanel?.addEventListener("toggle",()=>{if(achievementsPanel.open){checkAchievements();renderAchievements()}});
+renderPatchNotes();
 syncStartDropdowns();
 renderAchievements();
 applyGoldenPlayerNameUI();
@@ -2416,6 +2417,29 @@ function markRecommended(choices){return choices;}
 function escapeHtml(str){
 return String(str??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]||ch));
 }
+function renderPatchNotes(){
+  const content=document.getElementById("patchNotesContent");
+  const count=document.getElementById("patchNotesCount");
+  const notes=Array.isArray(window.PATCH_NOTES)?window.PATCH_NOTES:[];
+  if(count)count.textContent=`${notes.length} versiones`;
+  if(!content)return;
+  if(!notes.length){
+    content.innerHTML='<div class="patchNoteEntry"><div class="patchNoteTitle">No hay notas todavía.</div></div>';
+    return;
+  }
+  content.innerHTML=notes.map((note,index)=>{
+    const changes=Array.isArray(note.changes)?note.changes:[];
+    const list=changes.map(change=>`<li>${escapeHtml(change)}</li>`).join("");
+    const source=note.source?`<div class="patchNoteSource">Archivo base: ${escapeHtml(note.source)}</div>`:"";
+    return `<article class="patchNoteEntry ${index===0?"latest":""}">
+      <div class="patchNoteTop"><div class="patchNoteVersion">${escapeHtml(note.version||"v???")}</div><div class="patchNoteDate">${escapeHtml(note.date||"")}</div></div>
+      <div class="patchNoteTitle">${escapeHtml(note.title||"Actualización")}</div>
+      <ul>${list}</ul>
+      ${source}
+    </article>`;
+  }).join("");
+}
+
 function formatCardText(str){
 return escapeHtml(str)
   .replace(/&lt;br\s*\/?&gt;/gi,"<br>")

@@ -69,6 +69,17 @@
 <div><span class="controlIcon">🔮</span><span>Combina <b>fusiones</b> al máximo</span></div>
 </div>
 </details>
+<details id="patchNotesPanel" class="patchNotesPanel">
+<summary>📝 Notas de parche</summary>
+<div class="patchNotesBox">
+  <div class="patchNotesHeader">
+    <span>📝 Historial de versiones</span>
+    <span id="patchNotesCount">0 versiones</span>
+  </div>
+  <div class="patchNotesNote">Versiones ordenadas de más reciente a más antigua. Los nombres están normalizados para que todo siga el mismo estilo.</div>
+  <div id="patchNotesContent" class="patchNotesContent"></div>
+</div>
+</details>
 </div>
 <div id="startDropdownContentSlot" class="startDropdownContentSlot"></div>
 <div class="onlineRankBox" id="startRankingBox">
@@ -202,9 +213,19 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js"></script>
 <script>
-const gameScript = document.createElement("script");
-gameScript.src = "game.js?v=" + Date.now();
-document.body.appendChild(gameScript);
+const patchNotesScript = document.createElement("script");
+patchNotesScript.src = "patch-notes.js?v=" + Date.now();
+patchNotesScript.onload = () => {
+  const gameScript = document.createElement("script");
+  gameScript.src = "game.js?v=" + Date.now();
+  document.body.appendChild(gameScript);
+};
+patchNotesScript.onerror = () => {
+  const gameScript = document.createElement("script");
+  gameScript.src = "game.js?v=" + Date.now();
+  document.body.appendChild(gameScript);
+};
+document.body.appendChild(patchNotesScript);
 </script>
 </body>
 </html>
