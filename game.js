@@ -1,3 +1,30 @@
+// Compatible storage: a blocked browser or malformed save must not stop the game.
+const gameStorage=(()=>{
+  const memory=new Map();
+  let unavailable=false;
+  function warn(){
+    if(unavailable)return;
+    unavailable=true;
+    console.warn("El almacenamiento local no está disponible; el progreso de esta sesión es temporal.");
+  }
+  return {
+    getItem(key){
+      if(memory.has(key))return memory.get(key);
+      try{return localStorage.getItem(key)}catch(e){warn();return null}
+    },
+    setItem(key,value){
+      value=String(value);memory.set(key,value);
+      try{localStorage.setItem(key,value)}catch(e){warn()}
+    },
+    get unavailable(){return unavailable}
+  };
+})();
+function savedObject(value){return value&&typeof value==="object"&&!Array.isArray(value)?value:{}}
+function safeCount(value,fallback=0){const n=Number(value);return Number.isFinite(n)?Math.max(0,Math.min(Number.MAX_SAFE_INTEGER,Math.floor(n))):fallback}
+let simulationMs=0,frameAccumulator=0,updatingWorld=false;
+const END_GAME_FRAME=Symbol("end-game-frame");
+function gameNow(){return simulationMs}
+
 
 
 const canvas=document.getElementById("game"),ctx=canvas.getContext("2d");
@@ -7,14 +34,12 @@ const gameOverPanel=document.getElementById("gameOverPanel"),gameOverRestartBtn=
 const fusionBackBtn=document.getElementById("fusionBackBtn");
 const objectiveMainEl=document.getElementById("objectiveMain"),objectiveFusionEl=document.getElementById("objectiveFusion"),helpEl=document.getElementById("help");
 const pausePanel=document.getElementById("pausePanel"),pauseStats=document.getElementById("pauseStats"),pauseRecordBadge=document.getElementById("pauseRecordBadge"),pauseUpgradesList=document.getElementById("pauseUpgradesList"),resumeButton=document.getElementById("resumeButton"),restartButton=document.getElementById("restartButton"),menuButton=document.getElementById("menuButton"),perfNotice=document.getElementById("perfNotice"),themeButtons=[...document.querySelectorAll(".themeChoice")];
-const adminToggle=document.getElementById("adminToggle"),adminPanel=document.getElementById("adminPanel"),adminUpgradeSelect=document.getElementById("adminUpgradeSelect"),adminUniqueSelect=document.getElementById("adminUniqueSelect"),adminLog=document.getElementById("adminLog"),adminLock=document.getElementById("adminLock"),adminTools=document.getElementById("adminTools"),adminStateTag=document.getElementById("adminStateTag"),adminPassword=document.getElementById("adminPassword"),adminUnlockBtn=document.getElementById("adminUnlockBtn"),adminUpgradeAmount=document.getElementById("adminUpgradeAmount"),adminCoinAmount=document.getElementById("adminCoinAmount"),adminLevelAmount=document.getElementById("adminLevelAmount"),adminWaveValue=document.getElementById("adminWaveValue");
 const playerNameInput=document.getElementById("playerNameInput"),nameWarning=document.getElementById("nameWarning"),refreshRankingBtn=document.getElementById("refreshRankingBtn"),startRankingList=document.getElementById("startRankingList"),victoryRankingList=document.getElementById("victoryRankingList"),gameOverRankingList=document.getElementById("gameOverRankingList"),victoryOnlineStatus=document.getElementById("victoryOnlineStatus"),gameOverOnlineStatus=document.getElementById("gameOverOnlineStatus");
-const autoModeButton=document.getElementById("autoModeButton");
 
 const MUSIC_KEY="gatitos_music_enabled";
 const MUSIC_VOL_KEY="gatitos_music_volume";
-let musicEnabled=localStorage.getItem(MUSIC_KEY)!=="0";
-let musicVolume=Math.max(0,Math.min(1,Number(localStorage.getItem(MUSIC_VOL_KEY)??"0.28")));
+let musicEnabled=gameStorage.getItem(MUSIC_KEY)!=="0";
+let musicVolume=Math.max(0,Math.min(1,(Number.isFinite(Number(gameStorage.getItem(MUSIC_VOL_KEY)??"0.28"))?Number(gameStorage.getItem(MUSIC_VOL_KEY)??"0.28"):0.28)));
 let currentMusicTrack="";
 let musicFadeTimer=null;
 const musicMenuToggle=document.getElementById("musicMenuToggle");
@@ -46,15 +71,17 @@ function updateMusicButton(){
 }
 function saveMusicSettings(){
   try{
-    localStorage.setItem(MUSIC_KEY,musicEnabled?"1":"0");
-    localStorage.setItem(MUSIC_VOL_KEY,String(musicVolume));
+    gameStorage.setItem(MUSIC_KEY,musicEnabled?"1":"0");
+    gameStorage.setItem(MUSIC_VOL_KEY,String(musicVolume));
   }catch(e){}
 }
 function fadeAudio(audio,target,duration=650){
   if(!audio)return;
+  const token=audio._fadeToken=(audio._fadeToken||0)+1;
   const start=audio.volume||0;
   const t0=performance.now();
   function step(){
+    if(audio._fadeToken!==token)return;
     const p=Math.min(1,(performance.now()-t0)/duration);
     audio.volume=start+(target-start)*p;
     if(p<1)requestAnimationFrame(step);
@@ -91,12 +118,13 @@ function playMusicTrack(track,force=false){
   fadeAudio(target,getMusicTargetVolume(track),700);
 }
 function pauseAllMusic(){
-  [bgMusic,bossMusic].forEach(a=>{try{a.pause()}catch(e){}});
+  if(typeof starAudio!=="undefined"&&starAudio?.gain){try{starAudio.gain.gain.setValueAtTime(.0001,audioCtx.currentTime)}catch(e){}}
+  [bgMusic,bossMusic].forEach(a=>{try{a._fadeToken=(a._fadeToken||0)+1;a.pause()}catch(e){}});
 }
 function stopAllMusic(){
   currentMusicTrack="";
   [bgMusic,bossMusic].forEach(a=>{
-    try{a.pause();a.currentTime=0;a.volume=0}catch(e){}
+    try{a._fadeToken=(a._fadeToken||0)+1;a.pause();a.currentTime=0;a.volume=0}catch(e){}
   });
 }
 function syncMusic(){
@@ -156,12 +184,12 @@ function pointerToGame(e){
   };
 }
 resize();window.addEventListener("resize",resize);
-let panelTheme=localStorage.getItem("gatitosPanelTheme")||"light";
+let panelTheme=gameStorage.getItem("gatitosPanelTheme")||"light";
 function applyPanelTheme(theme){
   panelTheme=theme==="dark"?"dark":"light";
   document.body.classList.toggle("panel-theme-dark",panelTheme==="dark");
   themeButtons.forEach(btn=>btn.classList.toggle("active",btn.dataset.theme===panelTheme));
-  try{localStorage.setItem("gatitosPanelTheme",panelTheme)}catch(e){}
+  try{gameStorage.setItem("gatitosPanelTheme",panelTheme)}catch(e){}
 
   
 }
@@ -170,7 +198,7 @@ themeButtons.forEach(btn=>btn.addEventListener("click",()=>applyPanelTheme(btn.d
 applyPanelTheme(panelTheme);
 
 /* === Ranking online con Firebase === */
-const GAME_VERSION="v59-no-theme-switch";
+const GAME_VERSION=window.GAME_BUILD||"v.144";
 const PLAYER_NAME_KEY="gatitos_player_name";
 const firebaseConfig={
   apiKey:"AIzaSyD2DJyvaXseXX2ZNZrUCmjXqa1fYytanRA",
@@ -195,6 +223,7 @@ const rankingDuplicateChecks={start:document.getElementById("startRankingShowDup
 let rankingExpanded=false;
 let rankingShowDuplicates=false;
 let lastRankingRawRows=[];
+let rankingCursor=null,rankingHasMore=false,rankingRequestId=0;
 let expandedRankingNameKey="";
 function initRanking(){
   try{
@@ -211,11 +240,11 @@ function cleanPlayerName(value){
 function getPlayerName(){
   const typed=cleanPlayerName(playerNameInput?.value||"");
   if(typed)return typed;
-  return cleanPlayerName(localStorage.getItem(PLAYER_NAME_KEY)||"");
+  return cleanPlayerName(gameStorage.getItem(PLAYER_NAME_KEY)||"");
 }
 function savePlayerName(name){
   currentPlayerName=cleanPlayerName(name)||"Jugador";
-  try{localStorage.setItem(PLAYER_NAME_KEY,currentPlayerName)}catch(e){}
+  try{gameStorage.setItem(PLAYER_NAME_KEY,currentPlayerName)}catch(e){}
   if(playerNameInput)playerNameInput.value=currentPlayerName;
   return currentPlayerName;
 }
@@ -250,7 +279,7 @@ function updateRankingControlVisibility(){
   rankingLists.forEach(id=>{
     const btn=rankingToggleAllBtns[id];
     const chk=rankingDuplicateChecks[id];
-    if(btn)btn.textContent=rankingExpanded?"Ver top":"Ver todos";
+    if(btn)btn.textContent=rankingExpanded?"Ver top":"Ver más";
     if(chk){
       chk.checked=!!rankingShowDuplicates;
       chk.closest(".onlineRankDuplicateToggle")?.classList.toggle("visible",rankingExpanded);
@@ -278,7 +307,7 @@ function renderRankingList(el,items){
     const dupeHint=duplicateCount>1&&!rankingShowDuplicates?` · ${duplicateCount} partidas`:"";
     const detailsOpen=expandedRankingNameKey&&expandedRankingNameKey===s._nameKey;
     const details=detailsOpen?renderRankingNameDetails(s._nameKey):"";
-    return `<div class="onlineRankRow ${isMe?"me":""} ${isGold?"goldenRankRow":""}" data-rank-name="${escapeHtml(s._nameKey)}" title="Click para ver sus otras posiciones"><div class="onlineRankPos">${medal}</div><div class="onlineRankName ${isGold?"goldenName":""}">${safeName}</div><div class="onlineRankScore">${total}</div><div class="onlineRankMeta">${escapeHtml(meta+realRank+dupeHint)}</div>${details}</div>`;
+    return `<div role="button" tabindex="0" class="onlineRankRow ${isMe?"me":""} ${isGold?"goldenRankRow":""}" data-rank-name="${escapeHtml(s._nameKey)}" title="Click para ver sus otras posiciones"><div class="onlineRankPos">${medal}</div><div class="onlineRankName ${isGold?"goldenName":""}">${safeName}</div><div class="onlineRankScore">${total}</div><div class="onlineRankMeta">${escapeHtml(meta+realRank+dupeHint)}</div>${details}</div>`;
   }).join("");
   el.querySelectorAll(".onlineRankRow").forEach(row=>row.addEventListener("click",()=>{
     const key=row.dataset.rankName||"";
@@ -286,9 +315,14 @@ function renderRankingList(el,items){
     renderAllRankingLists();
   }));
 }
+rankingLists.forEach(id=>rankingListEls[id]?.addEventListener("keydown",e=>{
+  if(e.key!=="Enter"&&e.key!==" ")return;
+  const row=e.target.closest(".onlineRankRow");
+  if(row){e.preventDefault();row.click();}
+}));
 function renderRankingNameDetails(nameKey){
   const rows=getRankingPositionsForName(nameKey);
-  if(rows.length<=1)return `<div class="onlineRankDetails">Solo tiene una puntuación guardada.</div>`;
+  if(rows.length<=1)return `<div class="onlineRankDetails">Solo aparece una puntuación en los resultados cargados.</div>`;
   const positions=rows.slice(0,12).map(r=>`#${r._fullRank}: ${Number(r.score||0).toLocaleString()} pts · R${Number(r.wave||0)} · Nv${Number(r.level||0)}`).join("<br>");
   const more=rows.length>12?`<br>… y ${rows.length-12} más`:"";
   return `<div class="onlineRankDetails"><b>También aparece en:</b><br>${positions}${more}</div>`;
@@ -297,10 +331,18 @@ function renderAllRankingLists(targetEls=[startRankingList,victoryRankingList,ga
   updateRankingControlVisibility();
   const rows=getRowsForRankingView();
   const limited=rankingExpanded?rows:rows.slice(0,10);
-  targetEls.forEach(el=>renderRankingList(el,limited));
+  targetEls.forEach(el=>{
+    renderRankingList(el,limited);
+    if(el&&rankingExpanded&&rankingHasMore){
+      const more=document.createElement("button");
+      more.className="onlineRankRefresh";more.type="button";more.textContent="Cargar más puntuaciones";
+      more.addEventListener("click",()=>{more.disabled=true;loadOnlineRanking(rankingLists.map(id=>rankingListEls[id]).filter(Boolean),true)});
+      el.appendChild(more);
+    }
+  });
 }
 function getRankQueryLimit(){
-  return rankingExpanded?0:500;
+  return 100;
 }
 function getScoreIdentityKey(data){
   return `${cleanPlayerName(data?.name)||"Jugador"}|${Number(data?.score||0)}|${Number(data?.wave||0)}|${Number(data?.level||0)}|${Number(data?.bosses||0)}|${Number(data?.impacts||0)}`;
@@ -328,41 +370,39 @@ function dedupeScoreRows(rows){
     return true;
   });
 }
-async function loadOnlineRanking(targetEls=[startRankingList]){
+async function loadOnlineRanking(targetEls=[startRankingList],append=false){
   initRanking();
-  targetEls.forEach(el=>{if(el)el.innerHTML='<div class="onlineRankStatus">Cargando ranking...</div>';});
+  const requestId=++rankingRequestId;
+  targetEls.forEach(el=>{if(el&&!append)el.innerHTML='<div class="onlineRankStatus">Cargando ranking...</div>';});
   updateRankingControlVisibility();
   if(!firebaseReady||!rankingDb){targetEls.forEach(el=>renderRankingList(el,[]));return;}
+  if(append&&!rankingHasMore)return;
   try{
-    const limit=getRankQueryLimit();
-    const query=rankingDb.collection("scores").orderBy("score","desc");
-    const snap=limit>0?await query.limit(limit).get():await query.get();
-    const rows=[];
-    snap.forEach(doc=>rows.push(doc.data()));
-    lastRankingRawRows=rows.sort((a,b)=>Number(b.score||0)-Number(a.score||0));
+    let query=rankingDb.collection("scores").orderBy("score","desc").limit(getRankQueryLimit());
+    if(append&&rankingCursor)query=query.startAfter(rankingCursor);
+    const snap=await query.get();
+    if(requestId!==rankingRequestId)return;
+    const docs=[];snap.forEach(doc=>docs.push(doc));
+    const rows=docs.map(doc=>doc.data()).filter(row=>row&&Number.isFinite(Number(row.score)));
+    rankingCursor=docs[docs.length-1]||null;
+    rankingHasMore=docs.length===getRankQueryLimit();
+    lastRankingRawRows=(append?lastRankingRawRows.concat(rows):rows).sort((a,b)=>Number(b.score||0)-Number(a.score||0));
     renderAllRankingLists(targetEls);
   }catch(e){
+    if(requestId!==rankingRequestId)return;
     console.warn("No se pudo cargar ranking",e);
-    targetEls.forEach(el=>{if(el)el.innerHTML='<div class="onlineRankStatus">No se pudo cargar el ranking. Revisa reglas/conexión.</div>';});
+    targetEls.forEach(el=>{if(el)el.innerHTML='<div class="onlineRankStatus">No se pudo cargar el ranking. Pulsa Actualizar para reintentarlo.</div>';});
   }
 }
 async function submitOnlineScore(finalScore, statusEl, rankingEl){
   initRanking();
 
-  const aiScoreRun=!!(autoModeUsedThisRun||autoMode);
+  const aiScoreRun=false;
   if(!aiScoreRun&&!rankingEligibleThisRun){
     const disabledMsg=rankingDisabledReason||"Ranking desactivado para esta partida.";
     setOnlineStatus(statusEl,disabledMsg,"error");
     await loadOnlineRanking([startRankingList,rankingEl].filter(Boolean));
     return;
-  }
-  if(aiScoreRun){
-    const saveAI=window.confirm("Esta partida se ha jugado con modo IA. ¿Quieres guardar igualmente esta puntuación en el ranking?");
-    if(!saveAI){
-      setOnlineStatus(statusEl,"Puntuación de IA no guardada por elección del jugador.","info");
-      await loadOnlineRanking([startRankingList,rankingEl].filter(Boolean));
-      return;
-    }
   }
   const name=savePlayerName(getPlayerName()||"Jugador");
   if(!firebaseReady||!rankingDb){setOnlineStatus(statusEl,"Ranking online no disponible en este momento.","error");return;}
@@ -416,7 +456,7 @@ async function submitOnlineScore(finalScore, statusEl, rankingEl){
   }
 }
 if(playerNameInput){
-  playerNameInput.value=cleanPlayerName(localStorage.getItem(PLAYER_NAME_KEY)||"");
+  playerNameInput.value=cleanPlayerName(gameStorage.getItem(PLAYER_NAME_KEY)||"");
   playerNameInput.addEventListener("input",()=>{
     const clean=cleanPlayerName(playerNameInput.value);
     if(playerNameInput.value!==clean)playerNameInput.value=clean;
@@ -469,15 +509,20 @@ const COSMETICS=[
 const COSMETIC_PACKS=[{id:"elegant",name:"Pack Elegante",discount:.20,items:["player_elegant","fish_elegant","enemy_elegant","boss_duck_monocle","boss_seal_tie","boss_demon_cape"],desc:"Pajaritas, sombreros, monóculos, falda y capa."},{id:"low_poly",name:"Pack Low Poly",discount:.25,items:["player_low_poly","fish_low_poly","enemy_low_poly","boss_giant_low_poly","boss_duck_low_poly","boss_seal_low_poly","boss_demon_low_poly"],desc:"Todo el juego se vuelve una colección de cubos low poly."}];
 let cosmeticTab="skins";
 let cosmeticScales=0,ownedCosmetics=new Set(),selectedCosmetics={player:"default",fish:"default",enemy:"default",boss_giant:"default",boss_duck:"default",boss_seal:"default",boss_demon:"default"};
-let cosmeticAwardedThisRun=false;
+let cosmeticAwardedThisRun=false,cosmeticScalesAwardedThisRun=0;
 function safeJsonParse(value,fallback){try{return JSON.parse(value)}catch(e){return fallback}}
 function loadCosmetics(){
-  cosmeticScales=Math.max(0,parseInt(localStorage.getItem(COSMETIC_KEYS.scales)||"0",10)||0);
-  ownedCosmetics=new Set(safeJsonParse(localStorage.getItem(COSMETIC_KEYS.owned)||"[]",[]));
-  selectedCosmetics=Object.assign({player:"default",fish:"default",enemy:"default",boss_giant:"default",boss_duck:"default",boss_seal:"default",boss_demon:"default"},safeJsonParse(localStorage.getItem(COSMETIC_KEYS.selected)||"{}",{}));
+  cosmeticScales=safeCount(gameStorage.getItem(COSMETIC_KEYS.scales));
+  const rawOwned=safeJsonParse(gameStorage.getItem(COSMETIC_KEYS.owned)||"[]",[]);
+  ownedCosmetics=new Set((Array.isArray(rawOwned)?rawOwned:[]).filter(id=>COSMETICS.some(c=>c.id===id)));
+  const rawSelected=savedObject(safeJsonParse(gameStorage.getItem(COSMETIC_KEYS.selected)||"{}",{}));
+  Object.keys(selectedCosmetics).forEach(category=>{
+    const id=rawSelected[category];
+    selectedCosmetics[category]=ownedCosmetics.has(id)&&COSMETICS.some(c=>c.id===id&&c.category===category)?id:"default";
+  });
 }
 function saveCosmetics(){
-  try{localStorage.setItem(COSMETIC_KEYS.scales,String(cosmeticScales));localStorage.setItem(COSMETIC_KEYS.owned,JSON.stringify([...ownedCosmetics]));localStorage.setItem(COSMETIC_KEYS.selected,JSON.stringify(selectedCosmetics));}catch(e){}
+  try{gameStorage.setItem(COSMETIC_KEYS.scales,String(cosmeticScales));gameStorage.setItem(COSMETIC_KEYS.owned,JSON.stringify([...ownedCosmetics]));gameStorage.setItem(COSMETIC_KEYS.selected,JSON.stringify(selectedCosmetics));}catch(e){}
 }
 function getCosmetic(id){return COSMETICS.find(c=>c.id===id)||null}
 function isCosmeticOwned(id){return id==="default"||ownedCosmetics.has(id)}
@@ -527,12 +572,13 @@ function renderCosmetics(){
   if(cosmeticsContentEl)cosmeticsContentEl.innerHTML=cosmeticTab==="packs"?renderPacksTab():renderSkinsTab();
 }
 function earnScalesFromScore(finalScore){
-  if(cosmeticAwardedThisRun)return 0;
-  const total=Math.max(0,Math.floor(Number(finalScore?.total)||0));
-  const gained=total>0?Math.max(5,Math.min(150,Math.floor(total/300))):0;
-  if(gained>0){cosmeticScales+=gained;cosmeticAwardedThisRun=true;saveCosmetics();renderCosmetics();}
+  const total=safeCount(finalScore?.total);
+  const entitled=total>0?Math.max(5,Math.min(150,Math.floor(total/300))):0;
+  const gained=Math.max(0,entitled-cosmeticScalesAwardedThisRun);
+  if(gained>0){cosmeticScales+=gained;cosmeticScalesAwardedThisRun+=gained;cosmeticAwardedThisRun=true;saveCosmetics();renderCosmetics();}
   return gained;
 }
+
 function cosmeticRewardRow(gained){return gained>0?`<div class="sRow" style="color:#4cc9f0"><span>🫧 Escamas ganadas</span><span>+${gained.toLocaleString()} · Total ${cosmeticScales.toLocaleString()}</span></div>`:""}
 function getPlayerSkinColor(defaultColor){const s=selectedCosmetic("player");if(s==="player_green")return "#55c271";if(s==="player_pink")return "#ff8fab";if(s==="player_elegant")return "#5b4b8a";if(s==="player_low_poly")return "#4dabf7";return defaultColor}
 function isLowPolyCategory(category,id){return selectedCosmetic(category)===id}
@@ -697,14 +743,38 @@ const ACHIEVEMENTS=[
   {id:"shop_spender",icon:"🪙",name:"Compradora gatuna",stat:"shopCoinsSpent",desc:"Gasta monedas en la tienda de mejoras.",phases:[{target:25,label:"25 monedas gastadas",reward:0},{target:100,label:"100 monedas gastadas",reward:0},{target:250,label:"250 monedas gastadas",reward:0},{target:500,label:"500 monedas gastadas",reward:0}]},
   {id:"all_achievements",icon:"👑",name:"Lo has conseguido todo",stat:"allAchievements",final:true,desc:"Completa todos los demás logros y vuelve dorado tu nombre.",phases:[{target:1,label:"Todos los logros",reward:0}]}
 ];
-let achievementState={stats:{},levels:{},rewarded:{}};
+let achievementState={stats:{},levels:{},rewarded:{},fusionCreatedPairs:[],fusionMaxedPairs:[],legacyFusionCreated:0,legacyFusionMaxed:0};
+let achievementSaveTimer=null,achievementUiDirty=false;
 let currentWaveHadDamage=false,currentNoDamageStreak=0,achievementToastTimer=null;
 function loadAchievements(){
-  const saved=safeJsonParse(localStorage.getItem(ACHIEVEMENT_KEYS.state)||"{}",{});
-  achievementState={stats:Object.assign({},saved.stats||{}),levels:Object.assign({},saved.levels||{}),rewarded:Object.assign({},saved.rewarded||{})};
+  const saved=savedObject(safeJsonParse(gameStorage.getItem(ACHIEVEMENT_KEYS.state)||"{}",{}));
+  const stats={};
+  Object.entries(savedObject(saved.stats)).forEach(([k,v])=>{if(k!=="__proto__")stats[k]=safeCount(v)});
+  const levels={};
+  ACHIEVEMENTS.forEach(def=>{levels[def.id]=Math.min(def.phases.length,safeCount(savedObject(saved.levels)[def.id]))});
+  const pairs=value=>[...new Set((Array.isArray(value)?value:[]).filter(p=>typeof p==="string"&&/^[a-zA-Z]+\+[a-zA-Z]+$/.test(p)))];
+  achievementState={schemaVersion:2,stats,levels,rewarded:savedObject(saved.rewarded),
+    fusionCreatedPairs:pairs(saved.fusionCreatedPairs),fusionMaxedPairs:pairs(saved.fusionMaxedPairs),
+    legacyFusionCreated:safeCount(saved.schemaVersion===2?saved.legacyFusionCreated:stats.fusionsCreated),
+    legacyFusionMaxed:safeCount(saved.schemaVersion===2?saved.legacyFusionMaxed:stats.fusionsMaxed)};
 }
-function saveAchievements(){try{localStorage.setItem(ACHIEVEMENT_KEYS.state,JSON.stringify(achievementState))}catch(e){}}
-function achievementValue(stat){return Number(achievementState.stats?.[stat]||0)}
+function saveAchievements(){
+  if(achievementSaveTimer!==null)clearTimeout(achievementSaveTimer);
+  achievementSaveTimer=null;
+  gameStorage.setItem(ACHIEVEMENT_KEYS.state,JSON.stringify(achievementState));
+}
+function scheduleAchievementSave(){
+  achievementUiDirty=true;
+  if(achievementSaveTimer!==null)return;
+  achievementSaveTimer=setTimeout(()=>{
+    saveAchievements();
+    if(achievementsPanel?.open)renderAchievements();
+  },500);
+}
+window.addEventListener("pagehide",saveAchievements);
+document.addEventListener("visibilitychange",()=>{if(document.hidden)saveAchievements()});
+
+function achievementValue(stat){return safeCount(achievementState.stats?.[stat])}
 function setAchievementStatMax(stat,value,opts={}){const v=Math.max(0,Math.floor(Number(value)||0));if(v>achievementValue(stat)){achievementState.stats[stat]=v;checkAchievements();}}
 function addAchievementStat(stat,amount=1,opts={}){const v=Math.max(0,Math.floor(Number(amount)||0));if(v<=0)return;achievementState.stats[stat]=achievementValue(stat)+v;checkAchievements();}
 function setAchievementFlag(stat,opts={}){setAchievementStatMax(stat,1,opts)}
@@ -808,10 +878,13 @@ function checkAchievements(){
       changed=true;
     }
   }
-  saveAchievements();
-  renderAchievements();
-  applyGoldenPlayerNameUI();
-  renderAllRankingLists([startRankingList,victoryRankingList,gameOverRankingList].filter(Boolean));
+  scheduleAchievementSave();
+  if(changed){
+    saveAchievements();
+    if(achievementsPanel?.open)renderAchievements();
+    applyGoldenPlayerNameUI();
+    renderAllRankingLists([startRankingList,victoryRankingList,gameOverRankingList].filter(Boolean));
+  }
   return changed;
 }
 function getAchievementProgress(def){
@@ -827,6 +900,7 @@ function getAchievementProgress(def){
 }
 function formatAchievementValue(n){return Math.floor(Number(n)||0).toLocaleString()}
 function renderAchievements(){
+  achievementUiDirty=false;
   if(!achievementProgressText&&!achievementsContentEl)return;
   const completed=ACHIEVEMENTS.filter(def=>getAchievementUnlockedLevel(def)>=def.phases.length).length;
   if(achievementProgressText)achievementProgressText.textContent=`${completed}/${ACHIEVEMENTS.length}`;
@@ -855,11 +929,20 @@ function registerFinalScoreAchievement(finalScore){setAchievementStatMax("maxSco
 function registerScalesSpent(amount){addAchievementStat("scalesSpent",amount,{})}
 function registerShopCoinsSpent(amount){addAchievementStat("shopCoinsSpent",amount,{run:true})}
 function registerFusionAchievements(){
-  const pairs=Object.keys(doneFusionPairs||{});
-  setAchievementStatMax("fusionsCreated",pairs.length,{run:true});
-  const maxed=pairs.filter(pair=>getFusionProgress(pair)>=5).length;
-  setAchievementStatMax("fusionsMaxed",maxed,{run:true});
+  const created=new Set(achievementState.fusionCreatedPairs||[]);
+  const maxed=new Set(achievementState.fusionMaxedPairs||[]);
+  Object.keys(doneFusionPairs||{}).forEach(pair=>{
+    created.add(pair);
+    // A newly registered pair still has its pre-fusion levels until setFusionProgress.
+    if(Object.prototype.hasOwnProperty.call(fusionProgressLevels,pair)&&getFusionProgress(pair)>=5)maxed.add(pair);
+  });
+  achievementState.fusionCreatedPairs=[...created];
+  achievementState.fusionMaxedPairs=[...maxed];
+  setAchievementStatMax("fusionsCreated",safeCount(achievementState.legacyFusionCreated)+created.size,{run:true});
+  setAchievementStatMax("fusionsMaxed",safeCount(achievementState.legacyFusionMaxed)+maxed.size,{run:true});
+  scheduleAchievementSave();
 }
+
 function recordNoDamageRoundIfClean(){
   if(!currentWaveHadDamage)currentNoDamageStreak++;
   else currentNoDamageStreak=0;
@@ -885,7 +968,7 @@ function isPanelActuallyVisible(el){
   const style=window.getComputedStyle(el);
   return style.display!=="none"&&style.visibility!=="hidden"&&style.opacity!=="0";
 }
-function isAdminInterfaceOpen(){return !!adminPanel&&isPanelActuallyVisible(adminPanel)}
+
 function shouldLockGamePointer(){
   // Desactivado: el bloqueo real del cursor rompía el click derecho para fijar enemigos.
   return false;
@@ -901,6 +984,7 @@ function requestGamePointerLock(){
 }
 function syncGamePointerLock(){
   releaseGamePointer();
+  syncMusic();
 }
 document.addEventListener("pointerlockchange",()=>{
   if(document.pointerLockElement===canvas)document.exitPointerLock?.();
@@ -1162,7 +1246,7 @@ function applyRecommendationsToChoices(choices,context="generic"){
 
   // Recomendaciones no forzadas: solo aparece etiqueta si una opción encaja claramente.
   // Se aplica a tienda, subida de nivel, rondas, fusiones y gato arcoíris.
-  if(!firstShopReached||context==="admin")return choices;
+  if(!firstShopReached||context==="internal")return choices;
 
   const needs=getRecommendationNeeds();
   const valid=list
@@ -1273,7 +1357,7 @@ if(isTypingTarget(e.target)){
 }
 if(["w","a","s","d"].includes(k))keys[k]=true;
 else keys[k]=true;
-if(k===" "||k==="spacebar"){e.preventDefault();if(gameStarted&&!gameOver&&!choosingUpgrade)togglePause()}
+if(k===" "||k==="spacebar"){e.preventDefault();if(e.repeat)return;if(gameStarted&&!gameOver&&!choosingUpgrade)togglePause()}
 // La R solo reinicia desde Game Over. En el menú inicial no hace nada.
 if(k==="r"&&gameStarted&&gameOver&&startPanel.style.display==="none"){restart()}
 });
@@ -1282,9 +1366,14 @@ window.addEventListener("keyup",e=>{
   keys[k]=false;
   if(["w","a","s","d"].includes(k))keys[k]=false;
 });
-window.addEventListener("blur",clearAllInputKeys);
+window.addEventListener("blur",()=>{
+  clearAllInputKeys();
+  if(gameStarted&&!gameOver&&!choosingUpgrade&&!paused)openPause();
+});
 window.addEventListener("pagehide",clearAllInputKeys);
-document.addEventListener("visibilitychange",()=>{if(document.hidden)clearAllInputKeys();});
+document.addEventListener("visibilitychange",()=>{
+  if(document.hidden){clearAllInputKeys();if(gameStarted&&!gameOver&&!choosingUpgrade&&!paused)openPause();}
+});
 window.addEventListener("focus",clearMovementKeys);
 document.addEventListener("mouseleave",clearMovementKeys);
 canvas.addEventListener("mousemove",e=>{
@@ -1296,7 +1385,7 @@ canvas.addEventListener("mousemove",e=>{
   }
 });
 canvas.addEventListener("mousedown",e=>{
-mouseIsDown=true;
+if(e.button===0){mouseIsDown=true;const p=pointerToGame(e);mouse.x=p.x;mouse.y=p.y;}
 if(e.button===0&&!gameOver&&gameStarted&&!paused&&!choosingUpgrade)shootFish();
 if(e.button===2&&!gameOver&&gameStarted&&!paused&&!choosingUpgrade){
   e.preventDefault();
@@ -1304,7 +1393,7 @@ if(e.button===2&&!gameOver&&gameStarted&&!paused&&!choosingUpgrade){
   selectTargetAt(p.x,p.y);
 }
 });
-window.addEventListener("mouseup",()=>{mouseIsDown=false});
+window.addEventListener("mouseup",e=>{if(e.button===0)mouseIsDown=false});
 resumeButton.addEventListener("click",closePause);
 victoryFinishBtn.addEventListener("click",()=>{
   finalChoiceLocked=true;
@@ -1398,8 +1487,8 @@ function returnToMainMenu(){
   gameOverPanel.style.display="none";
   messageEl.classList.remove("dogSave");
   messageEl.style.display="none";
-  restart(1);
   gameStarted=false;
+  restart();
   paused=false;
   choosingUpgrade=false;
   startPanel.style.display="flex";
@@ -1421,7 +1510,13 @@ return need;
 }
 
 function restart(){
+saveAchievements();
 clearAllInputKeys();
+simulationMs=0;frameAccumulator=0;
+selectedTarget=null;lastStarTrail=0;screenShake=0;screenShakeX=0;screenShakeY=0;
+if(autoChoiceTimer)clearTimeout(autoChoiceTimer);
+autoChoiceToken++;autoChoiceMenu=null;
+pausePanel.style.display="none";
 stopPowerStarLoop();
 zoomiesEscapeHits=0;forcedZoomiesUntil=0;safeTeleportInvulnUntil=0;
 backgroundFishSeed=Math.floor(Math.random()*1000000);
@@ -1431,14 +1526,14 @@ runStartWave=1;
 autoModeUsedThisRun=!!autoMode;
 rankingEligibleThisRun=!autoModeUsedThisRun;
 rankingDisabledReason=rankingEligibleThisRun?"":"Ranking desactivado: la partida empezó con IA activada.";
-cosmeticAwardedThisRun=false;
+cosmeticAwardedThisRun=false;cosmeticScalesAwardedThisRun=0;
 currentWaveHadDamage=false;currentNoDamageStreak=0;
-score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=0;lastAutoShot=0;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=1;thiefCoinsStolenThisWave=0;spawnCooldown=0;life=upgrades.maxLife;level=1;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;musicianSpawnedThisWave=false;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();bossEncounterCounts={giantCat:0,duck:0,seal:0,demon:0};giantFishEasterEggsUsed=0;bossVictoryAlreadyShown=false;bossVictoryScoreSaved=false;bossVictoryPending=false;dogRelaxTime=0;fusionMoveXpTimer=0;lastFusionShieldGuard=0;enemyIntroSeen={};finalChoiceLocked=false;finalCompletionContinue=false;finalCompletionStartWave=0;demonSpawnPressure=0;thiefCoinsStolenThisWave=0;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
+score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=-Infinity;lastAutoShot=-Infinity;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=1;thiefCoinsStolenThisWave=0;spawnCooldown=0;life=upgrades.maxLife;level=1;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;musicianSpawnedThisWave=false;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();bossEncounterCounts={giantCat:0,duck:0,seal:0,demon:0};giantFishEasterEggsUsed=0;bossVictoryAlreadyShown=false;bossVictoryScoreSaved=false;bossVictoryPending=false;dogRelaxTime=0;fusionMoveXpTimer=0;lastFusionShieldGuard=0;enemyIntroSeen={};finalChoiceLocked=false;finalCompletionContinue=false;finalCompletionStartWave=0;demonSpawnPressure=0;thiefCoinsStolenThisWave=0;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
 demonOrbs.length=0;yarnBalls.length=0;powerStars.length=0;shockwaves.length=0;sparkles.length=0;tunaDrops.length=0;
 player.x=canvas.width/2;player.y=canvas.height/2;player.angle=0;player.shootAnim=0;player.hurtAnim=0;dogCompanion.x=player.x-50;dogCompanion.y=player.y+45;dogCompanion.shootCooldown=0;
 fishes.length=0;cats.length=0;hearts.length=0;smokes.length=0;floatingTexts.length=0;pawPrints.length=0;quacks.length=0;coinsDrops.length=0;dogBones.length=0;demonOrbs.length=0;yarnBalls.length=0;shockwaves.length=0;sparkles.length=0;
 canvas.style.cursor="crosshair";
-messageEl.classList.remove("dogSave");messageEl.style.display="none";levelUpPanel.style.display="none";gameOverPanel.style.display="none";victoryPanel.style.display="none";life=upgrades.maxLife;startWave();updateHud()
+messageEl.classList.remove("dogSave");messageEl.style.display="none";levelUpPanel.style.display="none";gameOverPanel.style.display="none";victoryPanel.style.display="none";life=upgrades.maxLife;startWave();updateHud();syncMusic()
 }
 
 function queueUpgradeMenus(reason,count){
@@ -1447,10 +1542,15 @@ function queueUpgradeMenus(reason,count){
   processPendingUpgradeQueue();
 }
 function processPendingUpgradeQueue(){
-  if(choosingUpgrade||gameOver||paused||!gameStarted)return;
-  if(!pendingUpgradeQueue.length){maybeOpenShopOrFusion();return;}
+  if(updatingWorld||choosingUpgrade||gameOver||paused||!gameStarted)return;
+  if(!pendingUpgradeQueue.length){
+    if(bossVictoryPending){showBossVictoryPanel();return;}
+    maybeOpenShopOrFusion();
+    return;
+  }
   const next=pendingUpgradeQueue.shift();
-  openUpgradeMenu(next,{fromQueue:true});
+  if(next==="rainbow")openRainbowLowestMenu();
+  else openUpgradeMenu(next,{fromQueue:true});
 }
 function cleanupRoundScreen(opts={}){
   const keepFloating=!!opts.keepFloating;
@@ -1716,7 +1816,7 @@ floatingTexts.push({x:player.x,y:player.y-80,text:"⭐ ¡Invencible!",life:1.8,m
 function isPowerStarActive(){return starActive&&starTime>0}
 function getStarSpeedMultiplier(){return isPowerStarActive()?1.55:1}
 function isSevenLivesActive(){return upgrades.sevenLives&&sevenLivesTime>0}
-function isSafeTeleportInvulnerable(){return performance.now()<safeTeleportInvulnUntil}
+function isSafeTeleportInvulnerable(){return gameNow()<safeTeleportInvulnUntil}
 function isPlayerProtected(){return isPowerStarActive()||isSevenLivesActive()||isSafeTeleportInvulnerable()}
 function activateSevenLives(){
   if(!upgrades.sevenLives||sevenLivesUsedThisWave||sevenLivesCooldown>0||gameOver)return false;
@@ -1793,8 +1893,8 @@ player.y=Math.max(player.r+16,Math.min(canvas.height-player.r-16,spot.y));
 mouse.x=player.x+Math.cos(player.angle)*95;
 mouse.y=player.y+Math.sin(player.angle)*95;
 
-forcedZoomiesUntil=Math.max(forcedZoomiesUntil,performance.now()+2600);
-safeTeleportInvulnUntil=Math.max(safeTeleportInvulnUntil,performance.now()+1000);
+forcedZoomiesUntil=Math.max(forcedZoomiesUntil,gameNow()+2600);
+safeTeleportInvulnUntil=Math.max(safeTeleportInvulnUntil,gameNow()+1000);
 player.hurtAnim=Math.max(player.hurtAnim,.35);
 
 makeSmoke(player.x,player.y);
@@ -1820,14 +1920,16 @@ return activateZoomiesEscape();
 }
 
 function takePlayerDamage(amount,deathText,hurt=.2){
-if(runStats){runStats.damageTaken+=(Number.isFinite(amount)?amount:0);runStats.damageEvents++;}
+if(gameOver||!gameStarted||paused||choosingUpgrade)return false;
+amount=Number.isFinite(amount)?Math.max(0,amount):0;
+if(amount<=0)return false;
 if(isPlayerProtected()){
 player.hurtAnim=.08;
 if(Math.random()<.22)floatingTexts.push({x:player.x,y:player.y-56,text:isSevenLivesActive()?"🐱 protegido":"⭐ invulnerable",life:.65,maxLife:.65,big:false});
 return false;
 }
-if(hasDoneFusionPair("catInstinct+shield")&&upgrades.shield&&performance.now()-lastFusionShieldGuard>10000){
-lastFusionShieldGuard=performance.now();
+if(hasDoneFusionPair("catInstinct+shield")&&upgrades.shield&&gameNow()-lastFusionShieldGuard>10000){
+lastFusionShieldGuard=gameNow();
 amount*=0.35;
 shockwaves.push({x:player.x,y:player.y,r:8,maxR:150,life:.55,maxLife:.55,color:"#90e0ef",line:6});
 cats.forEach(cat=>{if(!isFinitePos(cat))return;const dx=cat.x-player.x,dy=cat.y-player.y,d=Math.hypot(dx,dy)||1;if(d<330){cat.knockVx=(cat.knockVx||0)+(dx/d)*420;cat.knockVy=(cat.knockVy||0)+(dy/d)*420;cat.hitAnim=.18;}});
@@ -1835,6 +1937,7 @@ floatingTexts.push({x:player.x,y:player.y-86,text:"🛡️ Guardia felina",life:
 }
 const predictedLife=life-amount;
 if(upgrades.sevenLives&&predictedLife<7&&activateSevenLives())return false;
+if(runStats){runStats.damageTaken+=Math.min(Math.max(0,life),amount);runStats.damageEvents++;}
 life=predictedLife;
 currentWaveHadDamage=true;
 const lowLifeAchievementThreshold=Math.max(1,Math.ceil(upgrades.maxLife*.10));
@@ -2475,7 +2578,19 @@ return `${upgrade.recommended?`<div class="recommendedTag">✨ RECOMENDADO</div>
 }
 function showCards(title,phrase,subtitle,choices,onPick,onBack,context="generic"){
 choices=applyRecommendationsToChoices(choices,context);
+const pick=onPick;
+let resolved=false;
+onPick=upgrade=>{
+  if(resolved||!choosingUpgrade||gameOver||upgrade?.locked)return;
+  resolved=true;
+  pick(upgrade);
+  processPendingUpgradeQueue();
+  checkGameCompletion();
+  syncMusic();
+};
 choosingUpgrade=true;
+clearAllInputKeys();
+pauseAllMusic();
 releaseGamePointer();
 canvas.style.cursor="crosshair";
 document.body.style.cursor="auto";
@@ -2601,8 +2716,8 @@ if(darkWave&&upgrade.key){
 choosingUpgrade=false;levelUpPanel.style.display="none";canvas.style.cursor=upgrades.bigCursor?"none":"crosshair";
 syncGamePointerLock();
 floatingTexts.push({x:player.x,y:player.y-55,text:upgrade.title,life:1.5,maxLife:1.5,big:false});
-refreshAdminPanelUI();
-if(waveUpgradePending){waveUpgradePending=false;recordNoDamageRoundIfClean();wave++;life=Math.min(upgrades.maxLife,life+upgrades.healOnWave);startWave()}
+
+if(reason==="wave"&&waveUpgradePending){waveUpgradePending=false;recordNoDamageRoundIfClean();wave++;life=Math.min(upgrades.maxLife,life+upgrades.healOnWave);startWave()}
 updateHud();
 if(pendingUpgradeQueue.length)processPendingUpgradeQueue();else maybeOpenShopOrFusion()
 })
@@ -2695,7 +2810,7 @@ function getLowestUpgradeChoices(){
 return getShopUpgradeChoices(3);
 }
 function maybeOpenShopOrFusion(){
-if(choosingUpgrade||gameOver||!gameStarted||paused)return;
+if(updatingWorld||pendingUpgradeQueue.length||bossVictoryPending||choosingUpgrade||gameOver||!gameStarted||paused)return;
 if(finalCompletionContinue||isGameCompleted()){shopBossPending=false;shopAvailable=false;fusionAvailable=false;return;}
 if(canFuse()&&!fusionAvailable){fusionAvailable=true;floatingTexts.push({x:player.x,y:player.y-70,text:"🔮 Fusión disponible",life:1.4,maxLife:1.4,big:false})}
 if(shopBossPending&&!shopAvailable){shopBossPending=false;startShopSession()}
@@ -2786,7 +2901,7 @@ if(upgrade.randomShopUpgrade){
   coins-=randomPrice;registerShopCoinsSpent(randomPrice);shopUpgradePurchases++;
   hidden.apply();playShopBuySound();
   floatingTexts.push({x:player.x,y:player.y-65,text:`🎲 Sorpresa: ${hidden.title}`,life:1.3,maxLife:1.3,big:false});
-  updateHud();refreshAdminPanelUI();checkGameCompletion();
+  updateHud();checkGameCompletion();
   if(isGameCompleted())return;
   openCoinShop();
   return;
@@ -2795,7 +2910,7 @@ if(coins<upgradePrice){openCoinShop();return}
 coins-=upgradePrice;registerShopCoinsSpent(upgradePrice);shopUpgradePurchases++;
 upgrade.apply();playShopBuySound();
 floatingTexts.push({x:player.x,y:player.y-65,text:`Comprado por ${upgradePrice}🪙: ${upgrade.title}`,life:1.3,maxLife:1.3,big:false});
-updateHud();refreshAdminPanelUI();checkGameCompletion();
+updateHud();checkGameCompletion();
 if(isGameCompleted())return;
 openCoinShop();
 },null,"shop")
@@ -3309,8 +3424,8 @@ return keys.some((a,i)=>keys.slice(i+1).some(b=>areFusionCompatible(a,b)&&!hasFu
 
 /* ─── RÉCORD LOCAL ─────────────────────────────────────────── */
 const HS_KEY="gatitos_peces_hs";
-function getHighScore(){return parseInt(localStorage.getItem(HS_KEY)||"0",10)||0}
-function saveHighScore(s){localStorage.setItem(HS_KEY,String(s))}
+function getHighScore(){return safeCount(gameStorage.getItem(HS_KEY))}
+function saveHighScore(s){gameStorage.setItem(HS_KEY,String(s))}
 function checkAndSaveRecord(total){
 const prev=getHighScore();
 if(total>prev){saveHighScore(total);return true;}
@@ -3357,7 +3472,7 @@ ${r.efficiencyBonus>0?`<div class="sRow"><span>⚡ Eficiencia (ronda ${wave})</s
 function showGameOverScreen(){
 const r=computeFinalScore();
 const scalesGained=earnScalesFromScore(r);
-registerFinalScoreAchievement(r);
+registerFinalScoreAchievement(r);saveAchievements();
 const isRecord=checkAndSaveRecord(r.total);
 const prevBest=isRecord?r.total:getHighScore();
 gameOverRankEmojiEl.textContent=r.rankEmoji;
@@ -3382,6 +3497,7 @@ submitOnlineScore(r,gameOverOnlineStatus,gameOverRankingList);
 }
 function injectVictoryScore(){
 const r=computeFinalScore();
+registerFinalScoreAchievement(r);saveAchievements();
 const scalesGained=earnScalesFromScore(r);
 const isVicRecord=checkAndSaveRecord(r.total);
 const prevVicBest=isVicRecord?r.total:getHighScore();
@@ -3491,6 +3607,8 @@ function getProjectileCap(kind){
 
 function finishGame(){
 releaseGamePointer();
+pauseAllMusic();
+choosingUpgrade=false;levelUpPanel.style.display="none";
 setAchievementFlag("completeGame",{run:true});
 stopPowerStarLoop();
 gameOver=true;
@@ -3502,7 +3620,7 @@ document.querySelector("#victoryBox h1").textContent="🌟 ¡Juego completado!";
 document.querySelector("#victoryBox .victoryMsg").innerHTML=`<span class="vLine vMain">Has maxeado todas las mejoras y agotado todas las fusiones posibles.</span><span class="vLine vSub">Has alcanzado el poder absoluto gatuno. ✨🏆</span>`;
 floatingTexts.push({x:canvas.width/2,y:canvas.height/2-110,text:"¡FINAL COMPLETADO!",life:4,maxLife:4,big:true})
 }
-function checkGameCompletion(){if(!gameOver&&!finalCompletionContinue&&isGameCompleted())finishGame()}
+function checkGameCompletion(){if(!updatingWorld&&!pendingUpgradeQueue.length&&(!choosingUpgrade||shopAvailable)&&!gameOver&&!finalCompletionContinue&&isGameCompleted())finishGame()}
 
 function canFuse(cost=5){
 const maxed=getMaxedFusionKeys();
@@ -3601,7 +3719,7 @@ fusedUpgradeNames[second.key]=fusionName;
 fusionAvailable=false;shopAvailable=false;choosingUpgrade=false;levelUpPanel.style.display="none";
 syncGamePointerLock();
 floatingTexts.push({x:player.x,y:player.y-75,text:`🔮 ${fusionName}`,life:1.8,maxLife:1.8,big:false});
-updateHud();refreshAdminPanelUI();checkGameCompletion();
+updateHud();checkGameCompletion();
 if(!gameOver&&wasShopOpen)openCoinShop();else maybeOpenShopOrFusion()
 },()=>{fusionBackBtn.style.display="none";openFusionChoice(cost)},"fusionPartner")
 },backToShop,"fusionFirst")
@@ -3648,7 +3766,7 @@ levelUpPanel.style.display="none";
 canvas.style.cursor=upgrades.bigCursor?"none":"crosshair";
 syncGamePointerLock();
 updateHud();
-refreshAdminPanelUI();
+
 checkGameCompletion();
 }
 
@@ -3665,7 +3783,7 @@ levelUpPanel.style.display="none";
 canvas.style.cursor=upgrades.bigCursor?"none":"crosshair";
 syncGamePointerLock();
 floatingTexts.push({x:player.x,y:player.y-65,text:"🌈 "+upgrade.title,life:1.3,maxLife:1.3,big:false});
-updateHud();refreshAdminPanelUI();checkGameCompletion();
+updateHud();checkGameCompletion();
 });
 }
 
@@ -3870,17 +3988,18 @@ const allBossTypes=["giantCat","duck","seal","demon"];
 if(allBossTypes.every(t=>defeatedBossTypes.has(t))&&victoryPanel&&!gameOver&&!bossVictoryAlreadyShown){
   shopBossPending=false;
   shopAvailable=true;
-  showBossVictoryPanel();
+  bossVictoryPending=true;
+  processPendingUpgradeQueue();
 }else{
-  maybeOpenShopOrFusion();
+  processPendingUpgradeQueue();
 }
 }
 }
 
 function isZoomiesActive(){
 if(!upgrades.zoomies)return false;
-if(performance.now()<forcedZoomiesUntil)return true;
-const now=performance.now()/1000;
+if(gameNow()<forcedZoomiesUntil)return true;
+const now=gameNow()/1000;
 const period=upgrades.zoomiesHyper?5.2:7.2;
 const active=upgrades.zoomiesHyper?2.35:1.65;
 return (now%period)<active;
@@ -3905,7 +4024,7 @@ return !!doneFusionPairs[sortedPair("bigFish","doubleFish")];
 }
 
 function shootFish(fromHold=false){
-const now=performance.now();
+const now=gameNow();
 let delay=210/(upgrades.fireRate*getZoomiesFireMultiplier());
 if(fromHold&&upgrades.holdShoot)delay/=getHoldShootMultiplier();
 if(now-lastShot<delay)return;
@@ -3943,7 +4062,7 @@ if(upgrades.moralSupport&&Math.random()<.16)floatingTexts.push({x:player.x+Math.
 }
 
 function shootAutoFish(){
-const now=performance.now();
+const now=gameNow();
 let delay=520-Math.min(360,effectLevel("autoFire")*70);
 if(upgrades.assistedShot)delay-=35;
 if(upgrades.combatAI)delay-=55;
@@ -3957,7 +4076,7 @@ if(upgrades.combatAI||upgrades.assistedShot){
 const target=findNearestEnemy(player.x,player.y,upgrades.combatAI?99999:760);
 if(target){mouse.x=target.x;mouse.y=target.y}
 }
-const saved=lastShot;lastShot=0;shootFish();lastShot=saved;
+const saved=lastShot;lastShot=-Infinity;shootFish();lastShot=saved;
 mouse.x=oldMouseX;mouse.y=oldMouseY
 }
 
@@ -4067,9 +4186,11 @@ if(dist<player.r+boss.r-8){takePlayerDamage((boss.contactDamage||18)*dt,"El jefe
 boss.shoot-=dt;
 if(boss.shoot<=0){
 boss.shoot=boss.baseShoot||Math.max(.42,1.25-wave*.045);
-const duckBoss=boss;
-for(let i=0;i<(boss.burst||1);i++)setTimeout(()=>{if(boss===duckBoss&&boss&&boss.type==="duck"&&!gameOver&&!paused&&!choosingUpgrade)makeQuack()},i*130);
+boss.pendingQuacks=Array.from({length:boss.burst||1},(_,i)=>gameNow()+i*130);
 floatingTexts.push({x:boss.x,y:boss.y-70,text:Math.random()<.5?"QUACK!":"QUACK?",life:.7,maxLife:.7,big:false})
+}
+if(boss.pendingQuacks){
+while(boss.pendingQuacks.length&&boss.pendingQuacks[0]<=gameNow()){boss.pendingQuacks.shift();makeQuack();}
 }
 }else if(boss.type==="seal"){
 if(boss.state==="jumping"){
@@ -4082,7 +4203,7 @@ boss.x=boss.targetX;boss.y=boss.targetY;makeSmoke(boss.x,boss.y);
 if(Math.hypot(player.x-boss.x,player.y-boss.y)<boss.r+player.r+38){takePlayerDamage((boss.slamDamage||18),"La foca ha caído encima de ti 🦭",.2)}
 boss.jumps++;
 if(boss.jumps>=boss.jumpsBeforeRest){
-boss.state="stunned";boss.stunTimer=boss.stunDuration||2.4;boss.jumps=0;boss.jumpsBeforeRest=Math.max(2,5-Math.floor(wave/15)+(boss.repeatLevel||0));boss.hp-=Math.max(4,boss.maxHp*.055);floatingTexts.push({x:boss.x,y:boss.y-boss.r-25,text:"La foca se ha mareado",life:1.4,maxLife:1.4,big:false})
+boss.state="stunned";boss.stunTimer=boss.stunDuration||2.4;boss.jumps=0;boss.jumpsBeforeRest=Math.max(2,5-Math.floor(wave/15)+(boss.repeatLevel||0));boss.hp-=Math.max(4,boss.maxHp*.055);if(boss.hp<=0){damageBoss(0);return;}floatingTexts.push({x:boss.x,y:boss.y-boss.r-25,text:"La foca se ha mareado",life:1.4,maxLife:1.4,big:false})
 }else startSealJump()
 }
 }else{
@@ -4148,16 +4269,21 @@ activateDogRescueRelax();
 messageEl.classList.add("dogSave");
 messageEl.innerHTML=`🐶 Daria mi vida por ti<br><small>Aun en el mas allá te seguiré cuidando</small>`;
 messageEl.style.display="block";
-setTimeout(()=>{if(!gameOver){messageEl.style.display="none";messageEl.classList.remove("dogSave")}},2100);
+const runToken=autoChoiceToken;
+setTimeout(()=>{if(runToken===autoChoiceToken&&!gameOver){messageEl.style.display="none";messageEl.classList.remove("dogSave")}},2100);
 return true;
 }
 
 function endGame(text){
+if(gameOver)return;
 if(triggerDogSacrifice())return;
 stopPowerStarLoop();
 stopAllMusic();
-life=0;gameOver=true;
+life=0;gameOver=true;choosingUpgrade=false;
+levelUpPanel.style.display="none";pendingUpgradeQueue=[];
+clearAllInputKeys();
 showGameOverScreen();
+if(updatingWorld)throw END_GAME_FRAME;
 }
 
 function updateShield(dt){
@@ -4165,7 +4291,7 @@ if(!upgrades.shield)return;
 const shieldLvl=effectLevel("shield");
 shieldAngle+=dt*(2.2+shieldLvl*.18);
 shieldAttack();
-const now=performance.now();
+const now=gameNow();
 if(now-lastShieldHit<160)return;
 const shieldR=52+shieldLvl*4,orbs=2+Math.min(4,shieldLvl),orbSize=12+Math.min(12,shieldLvl*1.7);
 for(let i=0;i<orbs;i++){
@@ -4226,8 +4352,8 @@ if(cat.type==="yarn")explodeYarnCat(cat);
 if(cat.type==="glutton"){const tunaCount=2+Math.floor(Math.random()*2);for(let t=0;t<tunaCount;t++){tunaDrops.push({x:cat.x+(Math.random()*44-22),y:cat.y+(Math.random()*44-22),r:16,life:16,wobble:0});floatingTexts.push({x:cat.x,y:cat.y-38-t*18,text:"🐟 ¡Lata!",life:1.0,maxLife:1.0,big:false});}}
 if(cat.type==="mini")gainXP(2+Math.floor(wave/3));
 if(cat.type==="student"&&(cat.studyLevel||0)>0)gainXP((cat.studyLevel||0));
-score++;if(runStats)runStats.kills++;addAchievementStat("cats",1,{run:true});gainXP(1+Math.floor(wave/4));makeSmoke(cat.x,cat.y);playSoftPop();dropCoins(cat.x,cat.y,cat.rainbow?.25:.013);if(!cat.rainbow&&Math.random()<(!cat.type?.22:.10))tunaDrops.push({x:cat.x,y:cat.y+(Math.random()*20-10),r:16,life:16,wobble:0});floatingTexts.push({x:cat.x,y:cat.y-38,text:"🐟 ¡Lata!",life:1.0,maxLife:1.0,big:false});
-if(cat.rainbow){rainbowChanceLevel=1;rainbowPendingUntilKilled=false;rainbowSelectedThisWave=false;floatingTexts.push({x:cat.x,y:cat.y-35,text:"🌈 Gatito arcoíris",life:1.2,maxLife:1.2,big:false});openRainbowLowestMenu()}
+score++;if(runStats)runStats.kills++;addAchievementStat("cats",1,{run:true});gainXP(1+Math.floor(wave/4));makeSmoke(cat.x,cat.y);playSoftPop();dropCoins(cat.x,cat.y,cat.rainbow?.25:.013);if(!cat.rainbow&&Math.random()<.10){tunaDrops.push({x:cat.x,y:cat.y+(Math.random()*20-10),r:16,life:16,wobble:0});floatingTexts.push({x:cat.x,y:cat.y-38,text:"🐟 ¡Lata!",life:1.0,maxLife:1.0,big:false});}
+if(cat.rainbow){rainbowChanceLevel=1;rainbowPendingUntilKilled=false;rainbowSelectedThisWave=false;floatingTexts.push({x:cat.x,y:cat.y-35,text:"🌈 Gatito arcoíris",life:1.2,maxLife:1.2,big:false});queueUpgradeMenus("rainbow",1)}
 else floatingTexts.push({x:cat.x,y:cat.y-30,text:"miau~",life:.8,maxLife:.8,big:false});
 if(cats[index]===cat)cats.splice(index,1);
 else{const i=cats.indexOf(cat);if(i!==-1)cats.splice(i,1)}
@@ -4321,7 +4447,7 @@ floatingTexts.push({x:player.x,y:player.y-70,text:"💥 ¡Ráfaga gatuna!",life:
 function updateOmniBurst(){
 const lvl=effectLevel("omniBurst");
 if(lvl<=0)return;
-const now=performance.now();
+const now=gameNow();
 const cooldown=Math.max(3200,9000/(1+lvl*.13));
 if(now-lastOmniBurst>=cooldown){
 lastOmniBurst=now;
@@ -4817,7 +4943,7 @@ return rows;
 })().map((r,idx)=>{
 const rowId=makePauseRowId(r,idx);
 return `
-<div class="pauseUpgrade ${getOwnedVisualTierClass(r)} ${r.maxed?'maxed':''} ${r.locked?'locked':''} ${r.fusion?'fusion':''}" data-pause-row="${rowId}" title="Click izquierdo o derecho para girar la tarjeta">
+<div role="button" tabindex="0" aria-label="${escapeHtml(r.name)}: mostrar detalles" class="pauseUpgrade ${getOwnedVisualTierClass(r)} ${r.maxed?'maxed':''} ${r.locked?'locked':''} ${r.fusion?'fusion':''}" data-pause-row="${rowId}" title="Click izquierdo o derecho para girar la tarjeta">
   <div class="pauseUpgradeInner">
     <div class="pauseUpgradeFace pauseUpgradeFront">
       <div class="pauseUpgradeName">${r.icon} ${r.name}</div>
@@ -4843,11 +4969,12 @@ function togglePauseUpgradeCard(e){
   e.preventDefault();
   card.classList.toggle("flipped");
 }
+pauseUpgradesList?.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" ")togglePauseUpgradeCard(e)});
 pauseUpgradesList?.addEventListener("click",togglePauseUpgradeCard);
 pauseUpgradesList?.addEventListener("contextmenu",togglePauseUpgradeCard);
 
 function openPause(){
-clearMovementKeys();
+clearAllInputKeys();
 paused=true;
 releaseGamePointer();
 renderPauseMenu();
@@ -4856,10 +4983,11 @@ pauseAllMusic();
 }
 
 function closePause(){
-clearMovementKeys();
+clearAllInputKeys();
 paused=false;
 pausePanel.style.display="none";
 requestGamePointerLock();
+processPendingUpgradeQueue();
 syncMusic();
 }
 
@@ -4940,6 +5068,14 @@ function getEntityLimit(base,mid,low){
 
 function update(dt){
 if(!gameStarted||gameOver||choosingUpgrade||paused)return;
+updatingWorld=true;
+simulationMs+=dt*1000;
+try{updateWorld(dt)}catch(err){if(err!==END_GAME_FRAME)throw err}
+finally{updatingWorld=false;}
+processPendingUpgradeQueue();
+checkGameCompletion();
+}
+function updateWorld(dt){
 if(autoMode)updateAutoPlayer(dt);
 if(runStats){runStats.elapsed+=dt;if(life<upgrades.maxLife*.35)runStats.lowHpTime+=dt;}
 triggerCatInstinct();if(dogRelaxTime>0)dogRelaxTime=Math.max(0,dogRelaxTime-dt);updateAvalanche(dt);
@@ -4977,14 +5113,14 @@ if(sevenLivesTime>0){
   }
 }
 
-if(isSevenLivesActive()&&performance.now()-lastStarTrail>55){
-  lastStarTrail=performance.now();
+if(isSevenLivesActive()&&gameNow()-lastStarTrail>55){
+  lastStarTrail=gameNow();
   for(let i=0;i<3;i++){const a=Math.random()*Math.PI*2; sparkles.push({x:player.x+Math.cos(a)*16,y:player.y+Math.sin(a)*16,vx:Math.cos(a)*(20+Math.random()*55),vy:Math.sin(a)*(20+Math.random()*55),size:3+Math.random()*4,life:.42,maxLife:.42,color:i%2?"#80ed99":"#ffd166"});}
 }
 
-if(isPowerStarActive()&&performance.now()-lastStarTrail>45){
-  lastStarTrail=performance.now();
-  for(let i=0;i<5;i++){const a=Math.random()*Math.PI*2; sparkles.push({x:player.x-Math.cos(player.angle)*18+Math.cos(a)*18,y:player.y-Math.sin(player.angle)*18+Math.sin(a)*18,vx:Math.cos(a)*(25+Math.random()*65),vy:Math.sin(a)*(25+Math.random()*65),size:3+Math.random()*4,life:.45,maxLife:.45,color:`hsl(${(performance.now()/5+i*45)%360},100%,70%)`});}
+if(isPowerStarActive()&&gameNow()-lastStarTrail>45){
+  lastStarTrail=gameNow();
+  for(let i=0;i<5;i++){const a=Math.random()*Math.PI*2; sparkles.push({x:player.x-Math.cos(player.angle)*18+Math.cos(a)*18,y:player.y-Math.sin(player.angle)*18+Math.sin(a)*18,vx:Math.cos(a)*(25+Math.random()*65),vy:Math.sin(a)*(25+Math.random()*65),size:3+Math.random()*4,life:.45,maxLife:.45,color:`hsl(${(gameNow()/5+i*45)%360},100%,70%)`});}
 }
 waveTime-=dt;
 if(waveTime<=0&&!boss){
@@ -4993,7 +5129,7 @@ if(waveTime<=0&&!boss){
     cleanupRoundScreen({keepFloating:true,keepSoftEffects:true});
     wave++;
     thiefCoinsStolenThisWave=0;
-    currentWaveHadDamage=false;
+    recordNoDamageRoundIfClean();
     life=Math.min(upgrades.maxLife,life+Math.max(1,upgrades.healOnWave*.35));
     startWave();
     updateHud();
@@ -5001,7 +5137,7 @@ if(waveTime<=0&&!boss){
   }
   if(bossVictoryPending){cleanupRoundScreen({keepFloating:true,keepSoftEffects:true});showBossVictoryPanel();return}
   if(shopBossPending){cleanupRoundScreen({keepFloating:true,keepSoftEffects:true});maybeOpenShopOrFusion();return}
-  if(!waveUpgradePending){waveUpgradePending=true;cleanupRoundScreen();openUpgradeMenu("wave");}
+  if(!waveUpgradePending){waveUpgradePending=true;cleanupRoundScreen();queueUpgradeMenus("wave",1);}
   return
 }
 if(waveTime<=0&&boss)waveTime=0;
@@ -5069,7 +5205,7 @@ for(let j=fishes.length-1;j>=0;j--){
 const fish=fishes[j];if(!isFinitePos(fish))continue;
 if(Math.hypot(fish.x-orb.x,fish.y-orb.y)<orb.r+12*(fish.scale||1)){makeSmoke(orb.x,orb.y);demonOrbs.splice(i,1);if(!fish.pierce)fishes.splice(j,1);break}
 }
-if(orb.life<=0||orb.x<-120||orb.x>canvas.width+120||orb.y<-120||orb.y>canvas.height+120)demonOrbs.splice(i,1)
+if(demonOrbs[i]===orb&&(orb.life<=0||orb.x<-120||orb.x>canvas.width+120||orb.y<-120||orb.y>canvas.height+120))demonOrbs.splice(i,1)
 }
 
 for(let i=yarnBalls.length-1;i>=0;i--){
@@ -5175,7 +5311,7 @@ if(cat.type==="yarn"){
   if(cat.rushTimer<=0){cat.sleepState="sleeping";floatingTexts.push({x:cat.x,y:cat.y-38,text:"💤 vuelve a dormir",life:.7,maxLife:.7,big:false});}
   }
 }else if(cat.type==="mini"){
-  const perp=-Math.atan2(dx,dy);const zz=Math.sin((cat.zigzagPhase||0)+performance.now()*.005)*34;
+  const perp=-Math.atan2(dx,dy);const zz=Math.sin((cat.zigzagPhase||0)+gameNow()*.005)*34;
   cat.x+=(dx/dist)*cat.speed*dt+Math.cos(perp)*zz*dt;cat.y+=(dy/dist)*cat.speed*dt+Math.sin(perp)*zz*dt;
 }else if(cat.type==="glutton"){
   cat.x+=(dx/dist)*cat.speed*dt+Math.cos(cat.wobble)*4*dt;cat.y+=(dy/dist)*cat.speed*dt+Math.sin(cat.wobble)*4*dt;
@@ -6226,16 +6362,26 @@ ctx.shadowBlur=0;
 drawReticle();
 }
 
+let audioStateSignature="";
 function loop(now){
 try{
 const safeNow=Number.isFinite(now)?now:performance.now();
-const rawDt=Math.max(0,Math.min((safeNow-lastFrame)/1000,.12));
+const rawDt=Math.max(0,Math.min((safeNow-lastFrame)/1000,.25));
 updatePerformanceMode(rawDt);
-const dt=Math.max(0,Math.min(rawDt,lowPerfMode?.05:.033));
 lastFrame=safeNow;
 cleanBrokenEntities();
-update(dt);
+// Fixed 60 Hz simulation keeps homing, movement and cooldowns consistent across refresh rates.
+if(gameStarted&&!gameOver&&!choosingUpgrade&&!paused){
+  frameAccumulator+=rawDt;
+  while(frameAccumulator>=1/60){
+    frameAccumulator-=1/60;
+    update(1/60);
+    if(gameOver||choosingUpgrade||paused){frameAccumulator=0;break;}
+  }
+}else frameAccumulator=0;
 cleanBrokenEntities();
+const audioState=[gameStarted,gameOver,paused,choosingUpgrade,boss?.type||"round",musicEnabled,musicVolume].join("|");
+if(audioState!==audioStateSignature){audioStateSignature=audioState;syncMusic();}
 render();
 }catch(err){
 showSoftError(err);
@@ -6247,7 +6393,7 @@ requestAnimationFrame(loop)
 
 
 
-/* ─── MODO AUTOMÁTICO AVANZADO CON MEMORIA ────────────────── */
+/* ─── SISTEMA DE RECOMENDACIONES AVANZADAS ────────────────── */
 let autoMode=false;
 let autoChoiceToken=0;
 let autoBadge=null;
@@ -6266,7 +6412,7 @@ const AUTO_MEMORY_KEY="gatitos_auto_ai_memory_v2";
 
 function autoLoadMemory(){
   try{
-    const raw=localStorage.getItem(AUTO_MEMORY_KEY);
+    const raw=gameStorage.getItem(AUTO_MEMORY_KEY);
     if(!raw)return {runs:0,best:0,globalAvg:0,choices:{}};
     const mem=JSON.parse(raw);
     mem.runs=mem.runs||0;
@@ -6277,71 +6423,24 @@ function autoLoadMemory(){
   }catch(e){return {runs:0,best:0,globalAvg:0,choices:{}}}
 }
 function autoSaveMemory(mem){
-  try{localStorage.setItem(AUTO_MEMORY_KEY,JSON.stringify(mem))}catch(e){}
+  try{gameStorage.setItem(AUTO_MEMORY_KEY,JSON.stringify(mem))}catch(e){}
 }
 let autoMemory=autoLoadMemory();
 
-function initAutoMode(){
-  autoBadge=document.createElement("div");
-  autoBadge.className="autoBadge";
-  autoBadge.textContent="🤖 IA avanzada";
-  document.body.appendChild(autoBadge);
-
-  try{autoMode=localStorage.getItem("gatitos_auto_mode")==="1"&&isAdminUnlocked()}catch(e){autoMode=false}
-  refreshAutoModeUI();
-
-  if(autoModeButton){
-    autoModeButton.addEventListener("click",()=>{
-      setAutoMode(!autoMode);
-      if(autoMode){
-        floatingTexts.push({x:canvas.width/2,y:120,text:"🤖 IA avanzada activada",life:1.5,maxLife:1.5,big:true});
-        if(autoChoiceMenu)autoScheduleChoice(autoChoiceMenu.choices,autoChoiceMenu.onPick,autoChoiceMenu.context);
-      }
-    });
-  }
-
-  setInterval(()=>{if(autoMode)autoTryPickChoice(false)},450);
-}
-
+function initAutoMode(){autoMode=false;autoModeUsedThisRun=false;}
 function markRankingInvalidByAI(){
-  autoModeUsedThisRun=true;
-  rankingEligibleThisRun=false;
-  rankingDisabledReason="Ranking desactivado: se usó el modo IA.";
+  autoMode=false;
+  autoModeUsedThisRun=false;
+  rankingEligibleThisRun=true;
+  rankingDisabledReason="";
 }
-
-function setAutoMode(value){
-  if(value&&!isAdminUnlocked()){
-    autoMode=false;
-    try{localStorage.setItem("gatitos_auto_mode","0")}catch(e){}
-    if(typeof adminMessage==="function")adminMessage("El modo IA solo se desbloquea desde ADMIN.");
-    refreshAutoModeUI();
-    if(typeof refreshAdminLockUI==="function")refreshAdminLockUI();
-    return;
-  }
-  autoMode=!!value;
-  if(autoMode&&gameStarted&&!gameOver){
-    markRankingInvalidByAI();
-  }
-  try{localStorage.setItem("gatitos_auto_mode",autoMode?"1":"0")}catch(e){}
-  if(!autoMode){
-    ["w","a","s","d"].forEach(k=>keys[k]=false);
-  }
-  refreshAutoModeUI();
-  if(typeof refreshAdminLockUI==="function")refreshAdminLockUI();
-}
+function setAutoMode(value){autoMode=false;autoModeUsedThisRun=false;}
 function refreshAutoModeUI(){
-  const adminUnlocked=typeof isAdminUnlocked==="function"&&isAdminUnlocked();
-  if(!adminUnlocked&&autoMode)autoMode=false;
-  if(autoModeButton){
-    autoModeButton.style.display=adminUnlocked?"inline-block":"none";
-    autoModeButton.textContent=autoMode?"🤖 Modo automático: ON":"🤖 Modo automático: OFF";
-    autoModeButton.classList.toggle("active",autoMode);
-  }
-  if(autoBadge)autoBadge.classList.toggle("visible",autoMode&&gameStarted&&!gameOver);
+  if(autoBadge)autoBadge.classList.remove("visible");
 }
 function autoRegisterChoiceMenu(choices,onPick,context){
   autoChoiceMenu={choices,onPick,context,createdAt:performance.now(),picked:false};
-  autoScheduleChoice(choices,onPick,context);
+  if(autoMode)autoScheduleChoice(choices,onPick,context);
 }
 function autoTryPickChoice(force=false){
   if(!autoMode||!autoChoiceMenu||autoChoiceMenu.picked||!choosingUpgrade||paused||gameOver)return;
@@ -6516,7 +6615,7 @@ function autoApplyEmergencyEscape(v,danger){
 function updateAutoPlayer(dt){
   if(gameStarted&&!gameOver)markRankingInvalidByAI();
   refreshAutoModeUI();
-  if(typeof refreshAdminLockUI==="function")refreshAdminLockUI();
+  
   if(!autoRunStartTime)autoRunStartTime=performance.now();
   const target=autoFindBestTarget();
   autoUpdateAimAndShoot(target);
@@ -6927,276 +7026,7 @@ function autoPickChoice(choices,context){
 /* ─────────────────────────────────────────────────────────── */
 
 
-const ADMIN_PASSWORD="Eperiopatataquesopure";
-const ADMIN_UNLOCK_KEY="gatitos_peces_admin_unlocked_v2";
-try{
-  localStorage.removeItem("gatitos_peces_admin_unlocked");
-}catch(e){}
-function isAdminUnlocked(){return localStorage.getItem(ADMIN_UNLOCK_KEY)==="1"}
-function setAdminUnlocked(value=true){if(value)localStorage.setItem(ADMIN_UNLOCK_KEY,"1")}
-function refreshAdminLockUI(){
-  const unlocked=isAdminUnlocked();
-  if(adminToggle){adminToggle.textContent=unlocked?"ADMIN ✨":"ADMIN 🔒";adminToggle.classList.toggle("unlocked",unlocked)}
-  if(adminLock)adminLock.style.display=unlocked?"none":"block";
-  if(adminTools)adminTools.style.display=unlocked?"block":"none";
-  if(adminStateTag)adminStateTag.textContent=unlocked?"desbloqueado":"bloqueado";
-  if(adminLog){
-    if(unlocked){
-      if(autoMode&&gameStarted)adminLog.textContent="Modo admin desbloqueado. IA activa: esta partida no entra al ranking.";
-      else if(autoMode&&!gameStarted)adminLog.textContent="Modo admin desbloqueado. IA activada: si empiezas así, no contará para ranking.";
-      else if(autoModeUsedThisRun)adminLog.textContent="Modo admin desbloqueado. IA desactivada, pero esta partida no entra al ranking porque se usó IA.";
-      else adminLog.textContent="Modo admin desbloqueado.";
-    }else{
-      adminLog.textContent="Modo admin bloqueado. Usa la contraseña.";
-    }
-  }
-}
-function unlockAdmin(reason="Contraseña correcta"){
-  setAdminUnlocked(true);
-  refreshAdminLockUI();
-  if(typeof refreshAutoModeUI==="function")refreshAutoModeUI();
-  adminMessage("Admin desbloqueado · "+reason);
-}
-function requireAdmin(){
-  refreshAdminLockUI();
-  if(isAdminUnlocked())return true;
-  if(adminLog)adminLog.textContent="Bloqueado: escribe la contraseña.";
-  return false;
-}
-function adminNumber(el,def=1,min=0,max=9999){
-  const v=parseInt(el?.value,10);
-  if(!Number.isFinite(v))return def;
-  return Math.max(min,Math.min(max,v));
-}
-function adminMessage(text){refreshAdminPanelUI();if(adminLog)adminLog.textContent=`${text} · ${adminFusionStatsText()}`;if(typeof floatingTexts!=="undefined")floatingTexts.push({x:canvas.width/2,y:95,text:"🛠️ "+text,life:1.4,maxLife:1.4,big:false});}
-function adminFusionStatsText(){
-  const total=typeof getAllOfficialFusionPairs==="function"?getAllOfficialFusionPairs().length:Object.keys(fusionNameMap||{}).length;
-  const done=Object.keys(doneFusionPairs||{}).length;
-  const hasCollector=!!(doneFusionPairs&&doneFusionPairs[sortedPair("catInstinct","coinMagnet")]);
-  return `${done}/${total} fusiones activas${hasCollector?" · Instinto recolector activo":""}`;
-}
-function refreshAdminSelectLabels(){
-  const scalable=Object.keys(upgradeLevels);
-  const unique=uniqueFusionKeys;
-  if(adminUpgradeSelect){
-    const selected=adminUpgradeSelect.value;
-    adminUpgradeSelect.innerHTML=scalable.map(k=>{
-      const pair=getFusedPairForKey(k);
-      const fused=pair?` · ${getFusionNameFromPair(...pair.split("+"))} ${getFusionProgress(pair)}/5`:"";
-      const final=isUpgradeFinal(k)?" · DEF":"";
-      return `<option value="${k}">${getAnyIcon(k)} ${getOriginalUpgradeName(k)} · ${upgradeLevels[k]}/${upgradeMaxLevels[k]}${final}${fused}</option>`;
-    }).join("");
-    if(selected&&scalable.includes(selected))adminUpgradeSelect.value=selected;
-  }
-  if(adminUniqueSelect){
-    const selected=adminUniqueSelect.value;
-    adminUniqueSelect.innerHTML=unique.map(k=>{
-      const pair=getFusedPairForKey(k);
-      const owned=hasUniqueUpgrade(k)?"1/1":"0/1";
-      const fused=pair?` · ${getFusionNameFromPair(...pair.split("+"))}`:"";
-      return `<option value="${k}">${getAnyIcon(k)} ${getOriginalUpgradeName(k)} · ${owned}${fused}</option>`;
-    }).join("");
-    if(selected&&unique.includes(selected))adminUniqueSelect.value=selected;
-  }
-}
-function refreshAdminPanelUI(){
-  refreshAdminSelectLabels();
-  if(typeof refreshAutoModeUI==="function")refreshAutoModeUI();
-}
-
-function adminUnlockAllCosmetics(){
-  if(typeof COSMETICS==="undefined"||typeof ownedCosmetics==="undefined")return;
-  const before=ownedCosmetics.size;
-  COSMETICS.forEach(c=>ownedCosmetics.add(c.id));
-  saveCosmetics();
-  renderCosmetics();
-  const gained=ownedCosmetics.size-before;
-  adminMessage(gained>0?`cosméticos desbloqueados · +${gained}`:"cosméticos ya desbloqueados");
-}
-
-function initAdminPanel(){
-  if(!adminToggle||!adminPanel)return;
-  refreshAdminSelectLabels();
-  window.adminRefreshSelectLabels=refreshAdminSelectLabels;
-  window.adminRefreshPanelUI=refreshAdminPanelUI;
-  adminToggle.addEventListener("click",()=>{adminPanel.style.display=adminPanel.style.display==="block"?"none":"block";refreshAdminLockUI();refreshAdminPanelUI();syncGamePointerLock();});
-  adminUnlockBtn?.addEventListener("click",()=>{
-    const pass=(adminPassword?.value||"").trim();
-    if(pass===ADMIN_PASSWORD){unlockAdmin("contraseña correcta");if(adminPassword)adminPassword.value="";}
-    else{if(adminLog)adminLog.textContent="Contraseña incorrecta.";if(adminPassword)adminPassword.select();}
-  });
-  adminPassword?.addEventListener("keydown",e=>{if(e.key==="Enter")adminUnlockBtn?.click();});
-  document.getElementById("adminGiveUpgrade")?.addEventListener("click",()=>{if(!requireAdmin())return;adminAddUpgrade(adminUpgradeSelect.value,adminNumber(adminUpgradeAmount,1,1,99));refreshAdminPanelUI();});
-  document.getElementById("adminMaxUpgrade")?.addEventListener("click",()=>{if(!requireAdmin())return;adminAddUpgrade(adminUpgradeSelect.value,999);refreshAdminPanelUI();});
-  document.getElementById("adminGiveUnique")?.addEventListener("click",()=>{if(!requireAdmin())return;adminGiveUnique(adminUniqueSelect.value)});
-  document.getElementById("adminGiveDog")?.addEventListener("click",()=>{if(!requireAdmin())return;adminGiveDog()});
-  document.getElementById("adminCoins")?.addEventListener("click",()=>{if(!requireAdmin())return;const n=adminNumber(adminCoinAmount,25,1,9999);coins+=n;updateHud();adminMessage(`+${n} monedas`)});
-  document.getElementById("adminOpenShop")?.addEventListener("click",()=>{if(!requireAdmin())return;adminOpenShop();});
-  document.getElementById("adminLevel")?.addEventListener("click",()=>{if(!requireAdmin())return;const n=adminNumber(adminLevelAmount,1,1,50);level+=n;xpNeed=getXpNeedForLevel(level);updateHud();queueUpgradeMenus("level",n);adminMessage(`+${n} nivel${n===1?"":"es"} · ${n} elección${n===1?"":"es"} pendiente${n===1?"":"s"}`)});
-  document.getElementById("adminSetWave")?.addEventListener("click",()=>{if(!requireAdmin())return;const n=adminNumber(adminWaveValue,1,1,999);const skipped=Math.max(0,n-wave);wave=n;level=Math.max(level,n);xpNeed=getXpNeedForLevel(level);waveUpgradePending=false;startWave();updateHud();if(skipped>0)queueUpgradeMenus("wave",skipped);adminMessage(`ronda fijada en ${n}${skipped>0?` · ${skipped} mejora${skipped===1?"":"s"} de ronda pendiente${skipped===1?"":"s"}`:""}`)});
-  document.getElementById("adminHeal")?.addEventListener("click",()=>{if(!requireAdmin())return;life=upgrades.maxLife;updateHud();adminMessage("vida restaurada")});
-  document.getElementById("adminHurt")?.addEventListener("click",()=>{if(!requireAdmin())return;life=Math.max(1,life-25);updateHud();adminMessage("-25 vida")});
-  document.getElementById("adminBoss")?.addEventListener("click",()=>{if(!requireAdmin())return;adminSpawnBoss(false)});
-  document.getElementById("adminDemon")?.addEventListener("click",()=>{if(!requireAdmin())return;adminSpawnBoss(true)});
-  document.getElementById("adminAvalanche")?.addEventListener("click",()=>{if(!requireAdmin())return;avalancheThisWave=true;avalancheActive=true;avalancheTime=getAvalancheConfig().duration;avalancheSpawnTimer=0;adminMessage("avalancha forzada")});
-  document.getElementById("adminStar")?.addEventListener("click",()=>{if(!requireAdmin())return;activatePowerStar();adminMessage("estrella activada")});
-  document.getElementById("adminClearEnemies")?.addEventListener("click",()=>{if(!requireAdmin())return;cats.length=0;fishes.length=0;quacks.length=0;yarnBalls.length=0;demonOrbs.length=0;boss=null;adminMessage("enemigos limpiados")});
-  document.getElementById("adminMaxAll")?.addEventListener("click",()=>{if(!requireAdmin())return;adminMaxAllUpgrades();refreshAdminPanelUI();});
-  document.getElementById("adminCompleteAll")?.addEventListener("click",()=>{if(!requireAdmin())return;adminCompleteAllFusions();refreshAdminPanelUI();});
-  document.getElementById("adminUnlockAllCosmetics")?.addEventListener("click",()=>{if(!requireAdmin())return;adminUnlockAllCosmetics();refreshAdminPanelUI();});
-  refreshAdminLockUI();
-}
-function adminAddUpgrade(key,amount=1){
-  if(!Object.prototype.hasOwnProperty.call(upgradeLevels,key))return;
-  const before=upgradeLevels[key]||0;
-  upgradeLevels[key]=Math.min(upgradeMaxLevels[key]||5,before+amount);
-  applyUpgradeStatsFromLevels();
-  if(key==="maxLife")life=upgrades.maxLife;
-  updateHud();renderPauseMenu();
-  adminMessage(`${getOriginalUpgradeName(key)} ${upgradeLevels[key]}/${upgradeMaxLevels[key]}`);
-}
-function adminGiveUnique(key){
-  if(key==="aimAssist")upgrades.aimAssist=true;
-  if(key==="bigCursor")upgrades.bigCursor=true;
-  if(key==="moralSupport")upgrades.moralSupport=true;
-  if(key==="darkPact")upgrades.darkPact=true;
-  if(key==="catInstinct")upgrades.catInstinct=true;
-  if(key==="zoomies")upgrades.zoomies=true;
-  updateHud();renderPauseMenu();adminMessage(`única dada: ${getOriginalUpgradeName(key)}`);
-}
-function adminGiveDog(){
-  upgrades.darkPact=true;upgrades.moralSupport=true;upgrades.boyfriendDog=true;upgrades.boyfriendDogSpirit=false;dogKidnapped=false;dogSacrificeUsed=false;forceDemonNextBoss=true;
-  doneFusionPairs[sortedPair("darkPact","moralSupport")]=true;
-  fusedUpgradeNames.darkPact="Tu novio ha hecho este juego";fusedUpgradeNames.moralSupport="Tu novio ha hecho este juego";
-  updateHud();renderPauseMenu();adminMessage("perro dado · próximo jefe demonio");
-}
-function adminMaxAllUpgrades(){
-  Object.keys(upgradeLevels).forEach(k=>upgradeLevels[k]=upgradeMaxLevels[k]||5);
-  uniqueFusionKeys.forEach(k=>adminGiveUnique(k));
-  applyUpgradeStatsFromLevels();life=upgrades.maxLife;updateHud();renderPauseMenu();adminMessage("todas las mejoras al máximo");
-}
-function adminShuffleArray(arr){
-  const copy=[...arr];
-  for(let i=copy.length-1;i>0;i--){
-    const j=Math.floor(Math.random()*(i+1));
-    [copy[i],copy[j]]=[copy[j],copy[i]];
-  }
-  return copy;
-}
-function adminClearFusionState(){
-  doneFusionPairs={};
-  fusedUpgradeNames={};
-  fusionProgressLevels={};
-  Object.keys(fusedBaseLevels).forEach(k=>delete fusedBaseLevels[k]);
-  upgrades.fusionBonusPower=0;
-}
-function adminApplyRandomFusionPair(a,b){
-  if(!a||!b||a===b||!areFusionCompatible(a,b))return false;
-  const pair=sortedPair(a,b);
-  if(!isOfficialFusionPairKey(pair))return false;
-  if(doneFusionPairs[pair]||fusedUpgradeNames[a]||fusedUpgradeNames[b])return false;
-  doneFusionPairs[pair]=true;
-  const name=getFusionNameFromPair(a,b);
-  fusedUpgradeNames[a]=name;
-  fusedUpgradeNames[b]=name;
-  fusionProgressLevels[pair]=0;
-  setFusionProgress(pair,0);
-  applyFusionBonus(pair,a,b);
-  if(pair==="catInstinct+zoomies"){
-    upgrades.zoomiesEscape=true;
-    zoomiesEscapeHits=0;
-  }
-  return true;
-}
-function adminOpenShop(){
-  if(!gameStarted){
-    gameStarted=true;
-    startPanel.style.display="none";
-    restart(1);
-  }
-  paused=false;
-  if(pausePanel)pausePanel.style.display="none";
-  choosingUpgrade=false;
-  shopAvailable=true;
-  openCoinShop();
-  adminMessage("tienda abierta");
-}
-function isOfficialFusionPairKey(pair){
-  return !!(FUSION_BY_PAIR[pair]||fusionNameMap[pair]||fusionShortDescMap[pair]||fusionEffectDescMap[pair]);
-}
-function adminBuildRandomFusionSet(preferredPairs=[]){
-  // El admin aleatoriza un conjunto de fusiones oficiales sin repetir ninguna mejora base.
-  // Las parejas preferidas se intentan incluir primero para probar fusiones nuevas.
-  rebuildFusionDataCatalogue();
-  const officialPairs=adminShuffleArray(FUSION_DATA.map(f=>f.pair))
-    .map(pair=>sortedPair(...pair.split("+")))
-    .filter((pair,idx,arr)=>arr.indexOf(pair)===idx)
-    .filter(pair=>{
-      const [a,b]=pair.split("+");
-      return areFusionCompatible(a,b)&&isOfficialFusionPairKey(pair);
-    });
-
-  const allKeys=[...new Set([...Object.keys(upgradeLevels),...uniqueFusionKeys])];
-  const preferred=preferredPairs
-    .map(pair=>sortedPair(...String(pair).split("+")))
-    .filter(pair=>officialPairs.includes(pair));
-  let bestSelected=[];
-  let bestUsedCount=0;
-
-  for(let attempt=0;attempt<300;attempt++){
-    const used=new Set();
-    const selected=[];
-    preferred.forEach(pair=>{
-      const [a,b]=pair.split("+");
-      if(!allKeys.includes(a)||!allKeys.includes(b))return;
-      if(used.has(a)||used.has(b))return;
-      selected.push([a,b]);
-      used.add(a);
-      used.add(b);
-    });
-    adminShuffleArray(officialPairs).forEach(pair=>{
-      const [a,b]=pair.split("+");
-      if(!allKeys.includes(a)||!allKeys.includes(b))return;
-      if(used.has(a)||used.has(b))return;
-      selected.push([a,b]);
-      used.add(a);
-      used.add(b);
-    });
-    if(used.size>bestUsedCount){
-      bestUsedCount=used.size;
-      bestSelected=selected;
-    }
-    if(bestUsedCount===allKeys.length)break;
-  }
-
-  return bestSelected;
-}
-function adminCompleteAllFusions(){
-  adminMaxAllUpgrades();
-  adminClearFusionState();
-
-  const pairs=adminBuildRandomFusionSet(["catInstinct+zoomies","catInstinct+coinMagnet","bigCursor+boomerang","boomerang+catInstinct","catInstinct+omniBurst","coinMagnet+darkPact"]);
-  let applied=0;
-  pairs.forEach(([a,b])=>{if(adminApplyRandomFusionPair(a,b))applied++;});
-
-  Object.keys(upgradeLevels).forEach(k=>{upgradeLevels[k]=upgradeMaxLevels[k]||5;});
-  applyUpgradeStatsFromLevels();
-  life=upgrades.maxLife;
-  updateHud();
-  renderPauseMenu();
-  adminMessage(`set aleatorio sin repetir bases · ${applied} fusiones`);
-  checkGameCompletion();
-}
-function adminSpawnBoss(forceDemon=false){
-  if(!gameStarted){gameStarted=true;startPanel.style.display="none";restart(1);}
-  cats.length=0;fishes.length=0;quacks.length=0;yarnBalls.length=0;demonOrbs.length=0;boss=null;
-  if(forceDemon){upgrades.boyfriendDog=true;dogKidnapped=false;forceDemonNextBoss=true;wave=Math.max(15,wave);}
-  spawnBoss();
-  waveTime=0;
-  adminMessage(forceDemon?"demonio invocado":"jefe invocado");
-}
 initAutoMode();
-initAdminPanel();
 
 restart();gameStarted=false;startPanel.style.display="flex";requestAnimationFrame(loop);
 
@@ -7204,3 +7034,31 @@ restart();gameStarted=false;startPanel.style.display="flex";requestAnimationFram
 
 
 
+
+if(gameStorage.unavailable){
+  const note=document.createElement("p");
+  note.className="storageNotice";
+  note.textContent="El navegador no permite guardar el progreso. Esta sesión funciona, pero los nuevos logros y cosméticos se perderán al cerrar.";
+  document.getElementById("startBox").appendChild(note);
+}
+// Firebase is optional: its CDN must never delay the local game's startup.
+async function loadRankingDependencies(){
+  if(window.firebase?.firestore){initRanking();return;}
+  async function script(src){
+    return new Promise((resolve,reject)=>{
+      const el=document.createElement("script");
+      const timer=setTimeout(()=>{el.remove();reject(new Error("Tiempo de carga agotado"))},12000);
+      el.src=src;el.async=true;
+      el.onload=()=>{clearTimeout(timer);resolve()};
+      el.onerror=()=>{clearTimeout(timer);el.remove();reject(new Error("Ranking sin conexión"))};
+      document.head.appendChild(el);
+    });
+  }
+  try{
+    if(!window.firebase)await script("https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js");
+    if(!window.firebase?.firestore)await script("https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore-compat.js");
+    initRanking();
+    await loadOnlineRanking([startRankingList]);
+  }catch(e){firebaseReady=false;renderAllRankingLists();}
+}
+loadRankingDependencies();

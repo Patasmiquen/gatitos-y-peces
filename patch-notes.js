@@ -1,5 +1,19 @@
 window.PATCH_NOTES = [
   {
+    "version": window.GAME_BUILD || "v.144",
+    "date": "18/09/2026",
+    "title": "Correcciones de estabilidad y progreso",
+    "changes": [
+      "Las fusiones diferentes cuentan entre partidas y conservan el progreso anterior.",
+      "Las recompensas de nivel, arcoíris y jefes se resuelven sin perder elecciones.",
+      "Corregidos el daño después de morir, el clic derecho y los temporizadores en pausa.",
+      "La música vuelve correctamente al cerrar mejoras y tienda.",
+      "Las victorias registran los logros y continuar una partida concede la diferencia de escamas.",
+      "Arranque tolerante a guardados defectuosos y a fallos de conexión del ranking.",
+      "Ranking por páginas y simulación con paso fijo."
+    ]
+  },
+  {
     "version": "v.143",
     "date": "29/05/2026",
     "title": "Notas de parche integradas",
@@ -74,7 +88,7 @@ window.PATCH_NOTES = [
     "date": "21/05/2026",
     "title": "Ranking e IA",
     "changes": [
-      "Las partidas con IA pueden guardarse si el jugador acepta.",
+      "Función histórica de pruebas: el piloto automático está desactivado en esta edición pública.",
       "Corregido el guardado de puntuación tras completar el juego.",
       "Mejorado el sistema para evitar puntuaciones duplicadas raras."
     ]

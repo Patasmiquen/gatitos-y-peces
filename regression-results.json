@@ -1,0 +1,98 @@
+[
+  {
+    "name": "Startup and original catalogue preserved",
+    "passed": true
+  },
+  {
+    "name": "Malformed and unavailable storage do not block startup",
+    "passed": true
+  },
+  {
+    "name": "Valid old cosmetics and achievement progress survive migration",
+    "passed": true
+  },
+  {
+    "name": "Distinct fusions accumulate across runs, repeats do not",
+    "passed": true
+  },
+  {
+    "name": "95 fusion creations and final upgrades have finite stats and correct costs",
+    "passed": true
+  },
+  {
+    "name": "New scalable fusion is not prematurely counted as maxed",
+    "passed": true
+  },
+  {
+    "name": "Rainbow and XP grant TWO choices in order",
+    "passed": true
+  },
+  {
+    "name": "Multiple earned levels are all delivered",
+    "passed": true
+  },
+  {
+    "name": "Wave upgrade advances exactly one round",
+    "passed": true
+  },
+  {
+    "name": "All four boss death paths reward level and open shop",
+    "passed": true
+  },
+  {
+    "name": "Fourth boss reward comes before victory; continue opens shop",
+    "passed": true
+  },
+  {
+    "name": "End-of-build victory and infinite mode still work",
+    "passed": true
+  },
+  {
+    "name": "Death aborts the frame before healing/loot and cannot submit twice",
+    "passed": true
+  },
+  {
+    "name": "Dog rescue interrupts death without ending the run",
+    "passed": true
+  },
+  {
+    "name": "Protected and reduced damage statistics reflect actual life loss",
+    "passed": true
+  },
+  {
+    "name": "Right button never holds fire; right release does not release left",
+    "passed": true
+  },
+  {
+    "name": "Pause freezes gameplay clock and protection expiry",
+    "passed": true
+  },
+  {
+    "name": "Music pauses in menus and resumes after choices",
+    "passed": true
+  },
+  {
+    "name": "Victory records score/wave achievements",
+    "passed": true
+  },
+  {
+    "name": "Scales award only the additional entitlement after continuing",
+    "passed": true
+  },
+  {
+    "name": "Clean rounds in infinite mode update streak",
+    "passed": true
+  },
+  {
+    "name": "Achievements do not write storage for every shot",
+    "passed": true
+  },
+  {
+    "name": "Same ten-second movement at 30, 60 and 120 rendered FPS",
+    "passed": true
+  },
+  {
+    "name": "Restart clears pause/input, target, queues and music state",
+    "passed": true
+  }
+]
