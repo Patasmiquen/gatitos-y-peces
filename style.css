@@ -1016,3 +1016,5 @@ body:has(#startPanel:not([style*="display: none"])) #objectivePanel{visibility:h
 @font-face{font-family:"Gatitos UI";font-style:normal;font-weight:400;font-display:swap;src:url("fonts/nunito-latin-400-normal.woff2") format("woff2")}
 @font-face{font-family:"Gatitos UI";font-style:normal;font-weight:700 1000;font-display:swap;src:url("fonts/nunito-latin-700-normal.woff2") format("woff2")}
 html,body,button,input{font-family:"Gatitos UI","Segoe UI",Arial,sans-serif,"Segoe UI Emoji","Apple Color Emoji","Noto Emoji"}
+
+.pawCoinIcon{display:inline-block;width:1.3em;height:1.3em;vertical-align:-.25em;background:url("coin-paw.svg") center/contain no-repeat;margin:0 .1em}.shopCoinBadge .pawCoinIcon{width:32px;height:32px;flex-shrink:0}

@@ -1,4 +1,5 @@
 window.PATCH_NOTES = [
+  {"version":"v.146","date":"19/09/2026","title":"Monedas gatunas y nuevos jefes","changes":["Monedas con patita dibujada, tanto en la partida como en los menús.","Nuevos diseños ilustrados para los cuatro jefes, conservando sus ataques.","Variantes low poly con siluetas diferentes: orejas y bigotes, pico y cola, aletas o cuernos.","Paquete de distribución limpio, sin capturas, pruebas ni informes."]},
   {"version":"v.145","date":"19/09/2026","title":"Un aspecto más cuidado y tranquilo","changes":["Gatitos y peces redibujados, conservando la patita y las señales de combate.","Menús más limpios y progresión de colores en tarjetas conservada.","Vistas reales de las skins, incluidos los jefes, y detalles cosméticos pulidos.","Fondo animado conservado con menos destellos; fuente de respaldo para iconos."]},
   {
     "version": "v.144",
