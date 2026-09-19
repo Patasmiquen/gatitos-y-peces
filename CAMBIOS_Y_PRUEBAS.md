@@ -1,3 +1,5 @@
+> Historial de v.144. Para los cambios y comprobaciones actuales, consulta CAMBIOS_GRAFICOS_Y_PRUEBAS.md.
+
 # Correcciones y verificación — v.144
 
 Fecha: 18/09/2026.

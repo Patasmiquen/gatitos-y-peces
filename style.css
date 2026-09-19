@@ -1,3 +1,4 @@
+@import url("fonts/emoji.css");
 *{box-sizing:border-box;margin:0;padding:0;user-select:none}
 html,body{width:100%;height:100%;overflow:hidden;background:#1f1b2e;font-family:Arial,sans-serif}
 canvas{display:block;position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:#1f1b2e;cursor:crosshair;box-shadow:0 0 0 9999px #1f1b2e}
@@ -949,3 +950,69 @@ min-width:170px;
 button:focus-visible,[role="button"]:focus-visible,summary:focus-visible{outline:3px solid #4cc9f0;outline-offset:3px}
 .storageNotice{color:#8b253d;background:#fff0cc;padding:10px;border-radius:12px;font-size:13px!important}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+
+/* v145 — calmer surfaces; the existing tier/type classes remain authoritative. */
+html,body{font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif}
+#hud,#help,#message,#startBox,#levelUpBox,#pauseBox,#victoryBox,#gameOverBox{backdrop-filter:none;-webkit-backdrop-filter:none}
+#startPanel{background:rgba(22,17,36,.72)}
+#levelUpPanel,#pausePanel,#victoryPanel,#gameOverPanel{background:rgba(19,14,31,.76)}
+#startBox,#levelUpBox,#pauseBox,#victoryBox,#gameOverBox{border-radius:24px!important;box-shadow:0 16px 48px rgba(9,6,19,.28)!important}
+#startBox{border:1px solid rgba(214,190,235,.3)!important}
+#startBox h1{font-size:clamp(26px,3.2vw,42px);letter-spacing:-1px;text-shadow:none;margin-bottom:12px}
+#startBox .shortIntro{font-weight:normal;line-height:1.5}
+#startButton{border:1px solid #ffaaca;background:linear-gradient(180deg,#fda6c6,#ef86b1);color:#412941;box-shadow:0 4px 12px rgba(37,16,37,.16);border-radius:14px;padding:14px 40px}
+#startButton:hover,.victoryBtn:hover,.pauseButton:hover,#fusionBackBtn:hover{transform:translateY(-2px);filter:brightness(1.035)}
+.startDropdownRow summary,.patchNotesPanel summary{box-shadow:none!important;border-radius:12px!important;font-size:14px!important;transform:none!important}
+.musicMenuControls{box-shadow:none!important;border:1px solid rgba(156,131,170,.18);border-radius:14px}
+.onlineRankBox,.achievementsBox,.cosmeticsBox,.patchNotesBox{box-shadow:none!important;border-radius:16px!important}
+#hud{min-width:230px;padding:12px 16px;border-radius:18px;border:1px solid rgba(202,174,230,.24);background:rgba(32,24,48,.88);box-shadow:0 4px 14px rgba(14,10,24,.12);font-size:14px;line-height:1.55;text-shadow:none}
+.barBox{height:8px;margin:5px 0 9px;border:0;background:rgba(221,204,242,.14);box-shadow:none}
+.barFill{box-shadow:none}
+#lifeBar{background:linear-gradient(90deg,#f078b0,#f9a5c5)}
+#xpBar{background:linear-gradient(90deg,#eac56c,#f8d995)}
+#timeBar{background:linear-gradient(90deg,#65bfd8,#a5dce8)}
+#help{background:rgba(32,24,48,.75);font-size:12px;box-shadow:none;border-color:rgba(202,174,230,.2)}
+#objectivePanel{box-shadow:none!important}
+#levelUpBox{padding:24px!important}
+#levelUpBox h2{font-size:28px;text-shadow:none;margin-bottom:6px}
+#upgradeCards{gap:14px}
+.upgradeCard,body.panel-theme-dark .upgradeCard{border-radius:18px!important;box-shadow:0 3px 9px rgba(30,18,42,.09)!important;transition:transform .15s ease,border-color .15s ease!important}
+.upgradeCard:hover,body.panel-theme-dark .upgradeCard:hover{transform:translateY(-3px)!important;box-shadow:0 6px 16px rgba(30,18,42,.15)!important}
+.upgradeCard::before,.upgradeCard::after{display:none}
+.upgradeCard.locked:hover{transform:none!important}
+.upgradeIconBubble{box-shadow:none!important;border-radius:12px!important;width:46px;height:46px;font-size:26px}
+.upgradeTitle{font-size:18px;line-height:1.25}
+.upgradeDesc{font-size:14px;line-height:1.45}
+.upgradeLevelTag{box-shadow:none;font-size:12px;padding:4px 8px}
+.upgradeFusionBonus{box-shadow:none!important;border-radius:10px!important}
+/* Levels 1–2 rose, 3–4 cyan, evolution gold. Unique cards keep their own palettes. */
+body:not(.panel-theme-dark) .upgradeCard.upgradeTierBase:not(.fusionCard):not(.specialUpgrade):not(.darkUpgrade):not(.easterUpgrade){background:linear-gradient(160deg,#fffafd,#f9edf5);border-color:#e8b8d0}
+body:not(.panel-theme-dark) .upgradeCard.upgradeTierBoost:not(.fusionCard){background:linear-gradient(160deg,#f8fdff,#e9f5fa);border-color:#70c8e1}
+body:not(.panel-theme-dark) .upgradeCard.upgradeTierMax:not(.fusionCard):not(.specialUpgrade):not(.aimAssistUpgrade):not(.bigCursorUpgrade):not(.catInstinctUpgrade):not(.zoomiesUpgrade):not(.apoyoMoralUpgrade):not(.voluntadOscuraUpgrade){background:linear-gradient(160deg,#fffdf5,#fff1cc);border-color:#e8bf62}
+.upgradeCard.fusionTierMax,body.panel-theme-dark .upgradeCard.fusionTierMax{animation:none!important}
+.shopCoinBadge{box-shadow:none!important;background:#f9d997!important;color:#523d24!important;border:1px solid #dfb966!important}
+.pauseUpgrade{box-shadow:none!important;border-radius:14px!important}
+#pauseBox .pauseMusicControls{box-shadow:none!important}
+.cosmeticGrid{gap:12px}
+.cosmeticCard{box-shadow:none!important;border-radius:16px!important;overflow:hidden}
+.cosmeticPreview{height:94px;display:flex;align-items:center;justify-content:center;background:linear-gradient(145deg,rgba(198,175,223,.14),rgba(139,197,223,.12));border-radius:12px;margin-bottom:10px}
+.cosmeticPreview img{display:block;object-fit:contain;width:128px;height:88px}
+.cosmeticName{font-size:15px}
+.cosmeticMeta{line-height:1.4}
+.cosmeticButton{box-shadow:none!important;border-radius:10px!important}
+.cosmeticCard.equipped{border-color:#b087d0!important;box-shadow:inset 0 0 0 1px #b087d0!important}
+@media(max-width:760px){#hud{min-width:190px;font-size:12px;padding:9px 12px}.barBox{width:168px}#levelUpBox{padding:18px!important}#levelUpBox h2{font-size:23px}.upgradeTitle{font-size:17px}}
+@media(prefers-reduced-motion:reduce){.upgradeCard:hover,#startButton:hover{transform:none!important}}
+
+/* Native colour emoji first, bundled outline fallback when the system has no emoji font. */
+html,body,button,input{font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif,"Segoe UI Emoji","Apple Color Emoji","Noto Emoji",sans-serif}
+body:has(#startPanel:not([style*="display: none"])) #hud,
+body:has(#startPanel:not([style*="display: none"])) #help,
+body:has(#startPanel:not([style*="display: none"])) #message,
+body:has(#startPanel:not([style*="display: none"])) #objectivePanel{visibility:hidden}
+#startBox h1{display:flex;justify-content:center;align-items:center;gap:16px}
+.titleCat{width:58px;height:58px;flex-shrink:0}
+@media(max-width:760px){.titleCat{width:42px;height:42px}#startBox h1{gap:10px}}
+@font-face{font-family:"Gatitos UI";font-style:normal;font-weight:400;font-display:swap;src:url("fonts/nunito-latin-400-normal.woff2") format("woff2")}
+@font-face{font-family:"Gatitos UI";font-style:normal;font-weight:700 1000;font-display:swap;src:url("fonts/nunito-latin-700-normal.woff2") format("woff2")}
+html,body,button,input{font-family:"Gatitos UI","Segoe UI",Arial,sans-serif,"Segoe UI Emoji","Apple Color Emoji","Noto Emoji"}

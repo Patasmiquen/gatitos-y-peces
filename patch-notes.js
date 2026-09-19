@@ -1,6 +1,7 @@
 window.PATCH_NOTES = [
+  {"version":"v.145","date":"19/09/2026","title":"Un aspecto más cuidado y tranquilo","changes":["Gatitos y peces redibujados, conservando la patita y las señales de combate.","Menús más limpios y progresión de colores en tarjetas conservada.","Vistas reales de las skins, incluidos los jefes, y detalles cosméticos pulidos.","Fondo animado conservado con menos destellos; fuente de respaldo para iconos."]},
   {
-    "version": window.GAME_BUILD || "v.144",
+    "version": "v.144",
     "date": "18/09/2026",
     "title": "Correcciones de estabilidad y progreso",
     "changes": [

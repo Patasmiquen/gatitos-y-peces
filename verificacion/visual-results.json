@@ -1,0 +1,32 @@
+{
+  "skins": [
+    "player_green",
+    "player_pink",
+    "player_elegant",
+    "fish_elegant",
+    "fish_pirate",
+    "fish_heart",
+    "enemy_gray",
+    "enemy_elegant",
+    "boss_duck_monocle",
+    "boss_seal_tie",
+    "boss_demon_cape",
+    "player_low_poly",
+    "fish_low_poly",
+    "enemy_low_poly",
+    "boss_giant_low_poly",
+    "boss_duck_low_poly",
+    "boss_seal_low_poly",
+    "boss_demon_low_poly"
+  ],
+  "thumbnailCount": 25,
+  "thumbnailStateIsolation": true,
+  "combatStates": true,
+  "errors": [],
+  "perf": {
+    "frames": 120,
+    "cats": 100,
+    "fish": 180,
+    "ms": 2116.9000000000233
+  }
+}

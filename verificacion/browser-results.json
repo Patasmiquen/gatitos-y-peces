@@ -1,0 +1,82 @@
+{
+  "browserVersion": "153.0.8010.0",
+  "results": [
+    {
+      "name": "Initial menu and no-name validation",
+      "passed": true
+    },
+    {
+      "name": "All four menu dropdowns open with content and close others",
+      "passed": true
+    },
+    {
+      "name": "Start and real audio playback",
+      "passed": true
+    },
+    {
+      "name": "Keyboard movement and mouse firing",
+      "passed": true
+    },
+    {
+      "name": "Pause freezes simulation and resumes music",
+      "passed": true
+    },
+    {
+      "name": "Right mouse selects target without firing",
+      "passed": true
+    },
+    {
+      "name": "Real card clicks preserve rainbow plus level reward",
+      "passed": true
+    },
+    {
+      "name": "Browser boss combat, reward and shop: giantCat",
+      "passed": true
+    },
+    {
+      "name": "Browser boss combat, reward and shop: duck",
+      "passed": true
+    },
+    {
+      "name": "Browser boss combat, reward and shop: seal",
+      "passed": true
+    },
+    {
+      "name": "Browser boss combat, reward and shop: demon",
+      "passed": true
+    },
+    {
+      "name": "Purchase and real two-stage fusion UI",
+      "passed": true
+    },
+    {
+      "name": "Fourth boss reward then victory and continue",
+      "passed": true
+    },
+    {
+      "name": "Death frame, game-over screen, restart and menu",
+      "passed": true
+    },
+    {
+      "name": "Saved cosmetics, achievements, name and volume survive reload",
+      "passed": true
+    },
+    {
+      "name": "Menu remains usable at 800x600 and 1920x1080",
+      "passed": true
+    },
+    {
+      "name": "Corrupt storage is recoverable in real browser",
+      "passed": true
+    },
+    {
+      "name": "Long accelerated simulation and mixed entity rendering",
+      "passed": true
+    },
+    {
+      "name": "No uncaught game errors",
+      "passed": true
+    }
+  ],
+  "errors": []
+}
