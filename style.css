@@ -1018,3 +1018,5 @@ body:has(#startPanel:not([style*="display: none"])) #objectivePanel{visibility:h
 html,body,button,input{font-family:"Gatitos UI","Segoe UI",Arial,sans-serif,"Segoe UI Emoji","Apple Color Emoji","Noto Emoji"}
 
 .pawCoinIcon{display:inline-block;width:1.3em;height:1.3em;vertical-align:-.25em;background:url("coin-paw.svg") center/contain no-repeat;margin:0 .1em}.shopCoinBadge .pawCoinIcon{width:32px;height:32px;flex-shrink:0}
+
+.randomSkinsControls{margin:12px 0;padding:12px;border:1px solid #a88ac0;border-radius:12px}.randomSkinsControls button{padding:9px 14px;border:0;border-radius:10px;background:#ded0ed;color:#41264d;cursor:pointer}.randomSkinsControls button[aria-pressed="true"]{background:#9de0bd;color:#204c39}.randomSkinsControls p{font-size:12px;line-height:1.4;margin-top:8px}.recommendReason{font-size:12px;line-height:1.35;margin:0 0 10px;color:inherit;font-weight:normal}

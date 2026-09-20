@@ -509,6 +509,8 @@ const COSMETICS=[
 ];
 const COSMETIC_PACKS=[{id:"elegant",name:"Pack Elegante",discount:.20,items:["player_elegant","fish_elegant","enemy_elegant","boss_duck_monocle","boss_seal_tie","boss_demon_cape"],desc:"Pajaritas, sombreros, monóculos, falda y capa."},{id:"low_poly",name:"Pack Low Poly",discount:.25,items:["player_low_poly","fish_low_poly","enemy_low_poly","boss_giant_low_poly","boss_duck_low_poly","boss_seal_low_poly","boss_demon_low_poly"],desc:"Todo el juego se vuelve una colección de cubos low poly."}];
 let cosmeticTab="skins";
+let randomSkinsEnabled=gameStorage.getItem("gatitos_random_skins")==="true";
+let runCosmeticSelections=null;
 let cosmeticScales=0,ownedCosmetics=new Set(),selectedCosmetics={player:"default",fish:"default",enemy:"default",boss_giant:"default",boss_duck:"default",boss_seal:"default",boss_demon:"default"};
 let cosmeticAwardedThisRun=false,cosmeticScalesAwardedThisRun=0;
 function safeJsonParse(value,fallback){try{return JSON.parse(value)}catch(e){return fallback}}
@@ -527,7 +529,7 @@ function saveCosmetics(){
 }
 function getCosmetic(id){return COSMETICS.find(c=>c.id===id)||null}
 function isCosmeticOwned(id){return id==="default"||ownedCosmetics.has(id)}
-function selectedCosmetic(category){return selectedCosmetics[category]||"default"}
+function selectedCosmetic(category){return (runCosmeticSelections||selectedCosmetics)[category]||"default"}
 function updateScaleBalance(){if(scaleBalanceEl)scaleBalanceEl.textContent=cosmeticScales.toLocaleString()}
 function equipCosmetic(id){const c=getCosmetic(id);if(!c||!isCosmeticOwned(id))return;selectedCosmetics[c.category]=id;saveCosmetics();renderCosmetics()}
 function resetCosmeticSelections(){selectedCosmetics={player:"default",fish:"default",enemy:"default",boss_giant:"default",boss_duck:"default",boss_seal:"default",boss_demon:"default"};saveCosmetics();renderCosmetics()}
@@ -567,6 +569,7 @@ function renderPacksTab(){
   }).join("");
 }
 function renderCosmetics(){
+updateRandomSkinsButton();
   updateScaleBalance();
   if(cosmeticsSkinsTab)cosmeticsSkinsTab.classList.toggle("active",cosmeticTab==="skins");
   if(cosmeticsPacksTab)cosmeticsPacksTab.classList.toggle("active",cosmeticTab==="packs");
@@ -1105,7 +1108,7 @@ Object.keys(FUSION_RECOMMENDATION_PROFILE).forEach(pair=>{
   const normalized=parts.sort().join("+");
   if(!FUSION_RECOMMENDATION_PROFILE[normalized])FUSION_RECOMMENDATION_PROFILE[normalized]=FUSION_RECOMMENDATION_PROFILE[pair];
 });
-function freshRunStats(){return{damageTaken:0,damageEvents:0,lowHpTime:0,enemiesNearTime:0,kills:0,shotsFired:0,fishHits:0,fishMisses:0,bossDamage:0,coinsGenerated:0,coinsCollected:0,coinsMissed:0,elapsed:0,lastShopAt:0};}
+function freshRunStats(){return{damageTaken:0,damageEvents:0,lowHpTime:0,enemiesNearTime:0,kills:0,shotsFired:0,fishHits:0,fishHitProjectiles:0,fishMisses:0,bossDamage:0,coinsGenerated:0,coinsCollected:0,coinsMissed:0,elapsed:0,lastShopAt:0};}
 function clamp01(v){return Math.max(0,Math.min(1,Number.isFinite(v)?v:0))}
 function emptyProfile(){return Object.fromEntries(RECOMMEND_DIMENSIONS.map(k=>[k,0]))}
 function mergeProfiles(a,b,wa=1,wb=1){const p=emptyProfile();RECOMMEND_DIMENSIONS.forEach(k=>{p[k]=clamp01((a?.[k]||0)*wa+(b?.[k]||0)*wb)});return p}
@@ -1113,14 +1116,15 @@ function getRecommendationNeeds(){
   const st=runStats||freshRunStats(),mins=Math.max(.35,(st.elapsed||1)/60);
   const hpRatio=clamp01(life/Math.max(1,upgrades.maxLife||100));
   const killsPerMin=(st.kills||0)/mins;
-  const hitRate=(st.fishHits||0)/Math.max(1,(st.fishHits||0)+(st.fishMisses||0));
+  const hitSamples=(st.fishHitProjectiles||0)+(st.fishMisses||0);
+  const hitRate=((st.fishHitProjectiles||0)+6)/(hitSamples+10);
   const damagePerMin=(st.damageTaken||0)/mins;
   const nearRatio=clamp01((st.enemiesNearTime||0)/Math.max(1,st.elapsed||1));
   const lowHpRatio=clamp01((st.lowHpTime||0)/Math.max(1,st.elapsed||1));
-  const coinRate=(st.coinsCollected||0)/Math.max(1,(st.coinsCollected||0)+(st.coinsMissed||0));
+  const coinRate=((st.coinsCollected||0)+4)/((st.coinsCollected||0)+(st.coinsMissed||0)+5);
   const bossPressure=boss?0.25:0;
   return{
-    damage:clamp01(.30+(killsPerMin<18?(18-killsPerMin)/18*.45:0)+(hitRate>.55?0.1:0)+bossPressure+wave*.006),
+    damage:clamp01(.30+(st.elapsed>30&&killsPerMin<18?(18-killsPerMin)/18*.45:0)+(hitRate>.55?0.1:0)+bossPressure+wave*.006),
     defense:clamp01(.15+(1-hpRatio)*.45+damagePerMin/70*.35+nearRatio*.25),
     healing:clamp01(.10+(1-hpRatio)*.55+lowHpRatio*.65+damagePerMin/90*.25),
     mobility:clamp01(.12+nearRatio*.55+(1-hitRate)*.15+damagePerMin/100*.18),
@@ -1186,48 +1190,38 @@ function recommendationContextFit(key,context,needs){
   if((needs?.consistency||0)>.55&&["aimAssist","fishSpeed","fishSize","autoFire","bigCursor"].includes(key))bonus+=.08;
   return clamp01(bonus);
 }
+function recommendationPairFit(a,b,needs){
+const pair=sortedPair(a,b),prof=FUSION_RECOMMENDATION_PROFILE[pair]||mergeProfiles(profileForKey(a),profileForKey(b),.55,.55);
+return recommendationProfileFit(prof,needs)*.85+.12;
+}
 function scoreRecommendationChoice(choice,needs,context="generic"){
-  if(!choice||choice.locked||choice.skipShop)return -999;
-
-  if(choice.openFusionShop){
-    if(!canFuse(getEffectiveShopFusionPrice()))return -999;
-    const bestPair=autoBestAvailableFusionPairScore();
-    const noAffordableUpgrade=context==="shop"&&coins<getShopUpgradePrice()&&coins>=getEffectiveShopFusionPrice();
-    return clamp01(bestPair/1650*.72+(noAffordableUpgrade ? .22 : 0)+.08);
-  }
-
-  const key=recommendationKeyForChoice(choice);
-  const prof=profileForChoice(choice);
-  const profileFit=recommendationProfileFit(prof,needs);
-  const strategicFit=recommendationStrategicFitForKey(key);
-  const oldRec=key?clamp01((scoreUpgradeRecommendation(key)?.score||0)/100):0;
-  const contextFit=recommendationContextFit(key,context,needs);
-  const pair=recommendationFusionPairForChoice(choice);
-  const fusionFit=pair?clamp01(autoPairValue(pair)/1650):0;
-
-  let score=profileFit*.42+strategicFit*.30+oldRec*.15+contextFit*.13;
-  if(pair)score=Math.max(score,profileFit*.30+fusionFit*.46+oldRec*.16+contextFit*.08);
-  if(choice.first&&choice.key)score+=.08;
-  if(choice.fusion)score+=.04;
-
-  if(choice.randomShopUpgrade){
-    return -999;
-  }
-
-  if(key&&Object.prototype.hasOwnProperty.call(upgradeLevels,key)){
-    const lv=upgradeLevels[key]||0;
-    const max=upgradeMaxLevels[key]||5;
-    if(max-lv<=1&&autoFusionFutureValue(key)>350)score+=.07;
-    if(lv===0&&strategicFit<.34)score-=.04;
-  }
-
-  if(["bigCursor","moralSupport","darkPact"].includes(key)&&autoFusionFutureValue(key)<420&&autoFusionRouteValue(key)<420)score-=.16;
-  if(key&&isUpgradeFinal(key))score-=10;
-
-  return clamp01(score);
+if(!choice||choice.locked||choice.skipShop||choice.randomShopUpgrade)return -999;
+if(context==="shop"&&Number.isFinite(choice.price)&&choice.price>coins)return -999;
+const key=choice.key;
+if(choice.openFusionShop||context==="fusionFirst"){
+ const keys=getMaxedFusionKeys().filter(k=>!fusedUpgradeNames[k]);let best=-999;
+ for(const a of keys)for(const b of keys)if((!key||key===a)&&areFusionCompatible(a,b)&&!hasFusionBeenDone(a,b))best=Math.max(best,recommendationPairFit(a,b,needs));
+ return choice.openFusionShop&&!canFuse(getEffectiveShopFusionPrice())?-999:best;
+}
+if(choice.first&&key)return recommendationPairFit(choice.first,key,needs);
+if(!key)return -999;
+const pair=getFusedPairForKey(key);
+if(pair?getFusionProgress(pair)>=5:isUniqueKey(key)?hasUniqueUpgrade(key):isMax(key))return -999;
+const prof=profileForChoice(choice),hp=life/Math.max(1,upgrades.maxLife);
+let score=recommendationProfileFit(prof,needs)*.80+recommendationContextFit(key,context,needs)*.35;
+const parts=pair?pair.split("+"):[key];
+const gains=parts.filter(k=>k in upgradeLevels).map(k=>{const cur=coreUpgradeStat(k),next=coreUpgradeStat(k,Math.min(5,fusionPostLevel(k)+1));return Math.max(0,(next-cur)/Math.max(1,cur));});
+if(gains.length)score+=Math.min(.14,Math.max(...gains)*.7);
+if(hp<.4){if(parts.includes("maxLife"))score+=.42;else if(parts.includes("catInstinct")||parts.includes("shield")||parts.includes("lifeSteal"))score+=.15;}
+if(parts.includes("healOnWave")&&boss)score-=.14;
+if(parts.includes("coinMagnet")&&!(runStats?.coinsMissed>0))score-=.12;
+if(parts.includes("xpBoost")&&hp<.4)score-=.18;
+if(parts.includes("bigCursor")&&!pair)score-=.18;
+if(!pair&&!isUniqueKey(key)&&(upgradeMaxLevels[key]-upgradeLevels[key])===1&&getMaxedFusionKeys().some(k=>k!==key&&areFusionCompatible(key,k)&&!fusedUpgradeNames[k]))score+=.12;
+return Math.max(0,score);
 }
 function recommendationReasonForProfile(prof,needs){
-  const labels={damage:"Tu limpieza de enemigos va algo lenta.",defense:"Te vendrá bien aguantar más presión.",healing:"Necesitas recuperar vida con más seguridad.",mobility:"Te ayudará a reposicionarte mejor.",economy:"Te ayudará a aprovechar mejor las monedas.",control:"Tienes demasiada presión cerca.",consistency:"Hará tus ataques más constantes.",automation:"Te dará más comodidad al atacar.",area:"Te ayudará contra grupos grandes.",scaling:"Escala bien para rondas largas."};
+  const labels={damage:"Refuerza el daño para eliminar enemigos.",defense:"Te vendrá bien aguantar más presión.",healing:"Mejora tu capacidad de recuperar vida.",mobility:"Te ayudará a reposicionarte mejor.",economy:"Te ayudará a aprovechar mejor las monedas.",control:"Ayuda a controlar a los enemigos cercanos.",consistency:"Hará tus ataques más constantes.",automation:"Te dará más comodidad al atacar.",area:"Te ayudará contra grupos grandes.",scaling:"Escala bien para rondas largas."};
   let best="damage",bestScore=-1;
   RECOMMEND_DIMENSIONS.forEach(k=>{const v=(prof[k]||0)*(needs[k]||0);if(v>bestScore){bestScore=v;best=k;}});
   return labels[best]||"Encaja mejor con tu partida actual.";
@@ -1238,7 +1232,7 @@ function applyRecommendationsToChoices(choices,context="generic"){
 
   // Recomendaciones no forzadas: solo aparece etiqueta si una opción encaja claramente.
   // Se aplica a tienda, subida de nivel, rondas, fusiones y gato arcoíris.
-  if(!firstShopReached||context==="internal")return choices;
+  if(context==="internal")return choices;
 
   const needs=getRecommendationNeeds();
   const valid=list
@@ -1258,13 +1252,14 @@ function applyRecommendationsToChoices(choices,context="generic"){
 
   // Evita recomendaciones forzadas: si la mejor opción no destaca claramente,
   // no se marca nada aunque haya una pequeña ventaja matemática.
-  if(best.score<minScore)return choices;
+  if(best.score<minScore||valid.length<2||lead<.045)return choices;
   if(best.score<.68&&lead<.085)return choices;
   if(best.score<.58&&clusterLead<.12)return choices;
   if(valid.length>=3&&best.score<.64&&clusterLead<.075)return choices;
 
   best.choice.recommended=true;
   best.choice.recommendScore=best.score;
+  best.choice.recommendReason=best.choice.openFusionShop||context.startsWith("fusion")?"Combina mejoras disponibles que encajan con tu situación.":(life<upgrades.maxLife*.4&&(best.choice.key==="maxLife"||getFusedPairForKey(best.choice.key)?.split("+").includes("maxLife"))?"Tienes poca vida: aumenta tu vida máxima y te cura al elegirla.":recommendationReasonForProfile(profileForChoice(best.choice),needs));
   return choices;
 }
 
@@ -1479,7 +1474,7 @@ function returnToMainMenu(){
   gameOverPanel.style.display="none";
   messageEl.classList.remove("dogSave");
   messageEl.style.display="none";
-  gameStarted=false;
+  gameStarted=false;runCosmeticSelections=null;
   restart();
   paused=false;
   choosingUpgrade=false;
@@ -1502,6 +1497,7 @@ return need;
 }
 
 function restart(){
+if(gameStarted)rollRandomSkins();else runCosmeticSelections=null;
 saveAchievements();
 clearAllInputKeys();
 simulationMs=0;frameAccumulator=0;
@@ -2269,7 +2265,7 @@ if(pair){
   return `${getFusionNameFromPair(a,b)} Nv.${getFusionVisualNextLevel(pair)}`;
 }
 const n=nextLevel(key),displayName=getUpgradeDisplayName(key);
-if(isPercentLimitedKey(key)&&nextPercentValue(key)>=100)return `${displayName} DEFINITIVA`;
+if(isPercentLimitedKey(key)&&nextLevel(key)>=upgradeMaxLevels[key])return `${displayName} DEFINITIVA`;
 if(n===5)return `${displayName} EVOLUCIÓN`;
 return `${displayName} Nv.${n}`
 }
@@ -2277,66 +2273,43 @@ function upgradeDesc(key){return getUpgradeDisplayDesc(key,nextLevel(key))}
 function pct(n){return Math.min(100,Math.round(n*13))}
 
 // post-fusión: pre-fusion levels aportan 13%/lv, post-fusion levels aportan 7%/lv → tope 100%
-function fusionStatScale(key,preRate,postRate){
+function fusionStatScale(key,preRate,postRate,cap=5*(preRate+postRate),post=fusionPostLevel(key)){
 const base=fusedBaseLevels[key]||0;
-const curr=fusionPostLevel(key);
-return base>0?base*preRate+curr*postRate:curr*preRate;
+if(!hasFusionComponent(key))return Math.min(cap,(base+post)*preRate);
+const initial=Math.min(cap,base*preRate);
+return initial+(cap-initial)*Math.min(5,Math.max(0,post))/5;
+}
+function coreUpgradeStat(key,post=fusionPostLevel(key)){
+const lv=(fusedBaseLevels[key]||0)+post;
+if(["moveSpeed","fireRate","fishSpeed","damage","xpBoost"].includes(key))return 1+fusionStatScale(key,.13,.07,1,post);
+if(["bigFish","doubleFish","pierce","boomerang","critChance"].includes(key))return fusionStatScale(key,.13,.07,.95,post);
+if(key==="catSlow")return fusionStatScale(key,.13,.07,.85,post);
+if(key==="lifeSteal")return fusionStatScale(key,.013,.013,.13,post);
+if(key==="yarnBounce")return fusionStatScale(key,.13,.07,1,post);
+if(key==="maxLife")return 100+lv*20+(lv>=5?80:0);
+if(key==="healOnWave")return 8+lv*5+(lv>=5?20:0);
+if(key==="coinMagnet")return lv>0?90+lv*45+(lv>=5?100:0):0;
+if(key==="fishSize"){const initial=Math.min(1.45,((fusedBaseLevels[key]||0)+getFishSizeFusionBonus())*.12);const bonus=hasFusionComponent(key)?initial+(1.45-initial)*Math.min(5,post)/5:Math.min(1.45,(lv+getFishSizeFusionBonus())*.12);return (1+bonus)*(hasDoneFusionPair("bigFish+fishSize")?1.18:1);}
+return lv;
 }
 // porcentaje del PRÓXIMO nivel (para etiqueta DEF)
 function nextPercentValue(key){
-const base=fusedBaseLevels[key]||0;
-const curr=fusionPostLevel(key);
-return Math.min(100,base>0?base*13+(curr+1)*7:(curr+1)*13);
+const value=coreUpgradeStat(key,Math.min(5,fusionPostLevel(key)+1));
+return Math.round((value-(["moveSpeed","fireRate","fishSpeed","damage","fishSize","xpBoost"].includes(key)?1:0))*1000)/10;
 }
-function percentValue(key){
-return Math.min(100,Math.round(fusionStatScale(key,13,7)))
-}
-function isDefinitivePercent(key){
-return percentValue(key)>=100
-}
-function percentText(key){
-return isDefinitivePercent(key)?"100% · DEFINITIVA":`${percentValue(key)}%`
-}
-function prospectivePercentText(key){
-const next=nextPercentValue(key);
-return next>=100?"100% · DEFINITIVA":`${next}%`
-}
-function canScaleMore(key){
-return percentValue(key)<100
-}
+function percentValue(key){return getPauseActualPercent(key)}
+function isDefinitivePercent(key){return isUpgradeFinal(key)}
+function percentText(key){return `${percentValue(key)}%${isUpgradeFinal(key)?" · DEFINITIVA":""}`}
+function prospectivePercentText(key){return `${nextPercentValue(key)}%${nextLevel(key)>=upgradeMaxLevels[key]?" · DEFINITIVA":""}`}
+function canScaleMore(key){return !isUpgradeFinal(key)&&coreUpgradeStat(key,Math.min(5,fusionPostLevel(key)+1))>coreUpgradeStat(key)}
 
 
 function applyUpgradeStatsFromLevels(){
-// Ayudante: 13%/lv sin fusión, 7%/lv post-fusión → tope natural 65% y 100%
-const s=k=>Math.min(1,fusionStatScale(k,0.13,0.07));
-// Stats no-porcentaje: siguen usando effectLevel (no tienen pantalla de %)
-upgrades.maxLife=100+effectLevel("maxLife")*20+(effectLevel("maxLife")>=5?80:0);
-upgrades.healOnWave=8+effectLevel("healOnWave")*5+(effectLevel("healOnWave")>=5?20:0);
-upgrades.shieldLevel=effectLevel("shield");
-upgrades.shield=effectLevel("shield")>0;
-upgrades.coinMagnetRange=effectLevel("coinMagnet")>0?90+effectLevel("coinMagnet")*45+(effectLevel("coinMagnet")>=5?100:0):0;
-upgrades.autoFireLevel=effectLevel("autoFire");
-upgrades.autoFire=upgrades.autoFireLevel>0;
-// Stats multiplicativas: 65% sin fusión, 100% con fusión al máximo
-upgrades.moveSpeed=1+s("moveSpeed");
-upgrades.fireRate=1+s("fireRate");
-upgrades.fishSpeed=1+s("fishSpeed");
-upgrades.damage=1+s("damage");
-const fishSizeFusionLevel=effectLevel("fishSize")+getFishSizeFusionBonus();
-upgrades.fishSize=1+Math.min(1.45,fishSizeFusionLevel*.12);
-if(hasDoneFusionPair("bigFish+fishSize"))upgrades.fishSize*=1.18;
-upgrades.xpBoost=1+Math.min(1,s("xpBoost"));
-// Probabilidades (topes duros: 95% o 85%)
-const bigFishFusionLevel=effectLevel("bigFish");
-upgrades.bigFishChance=Math.min(.95,bigFishFusionLevel*.13);
-upgrades.doubleFishChance=Math.min(.95,s("doubleFish"));
-upgrades.pierceChance=Math.min((upgrades.autoFire&&upgrades.aimAssist)?0.78:0.95,s("pierce"));
-upgrades.catSlow=Math.min(.85,s("catSlow"));
-upgrades.boomerangChance=Math.min(.95,s("boomerang"));
-upgrades.critChance=Math.min((upgrades.autoFire&&upgrades.aimAssist)?0.78:0.95,s("critChance"));
-// lifeSteal: 1.3%/lv en ambas fases → tope 6.5% sin fusión, 13% con fusión
-upgrades.lifeSteal=Math.min(.13,fusionStatScale("lifeSteal",0.013,0.013));
-life=Math.min(life,upgrades.maxLife)
+for(const key of ["maxLife","healOnWave","moveSpeed","fireRate","fishSpeed","damage","fishSize","xpBoost","catSlow","lifeSteal"])upgrades[key]=coreUpgradeStat(key);
+for(const key of ["bigFish","doubleFish","pierce","boomerang","critChance"])upgrades[key==="critChance"?key:key+"Chance"]=coreUpgradeStat(key);
+upgrades.shieldLevel=effectLevel("shield");upgrades.shield=upgrades.shieldLevel>0;
+upgrades.autoFireLevel=effectLevel("autoFire");upgrades.autoFire=upgrades.autoFireLevel>0;
+upgrades.coinMagnetRange=coreUpgradeStat("coinMagnet");life=Math.min(life,upgrades.maxLife);
 }
 
 
@@ -2417,12 +2390,12 @@ if(pair){
       if(getFusionProgress(pair)>=5)return;
       const newLevel=addFusionProgress(pair,1);
       applyUpgradeStatsFromLevels();
-      if(rep==="maxLife")life=Math.min(upgrades.maxLife,life+25+(newLevel>=5?45:0));
+      if(pair.split("+").includes("maxLife"))life=Math.min(upgrades.maxLife,life+25+(newLevel>=5?45:0));
     }
   }
 }
 const meta=UPGRADE_META[key];
-return {icon:meta.icon,key,title:makeUpgradeTitle(key),levelTag:(isPercentLimitedKey(key)&&nextPercentValue(key)>=100)?"DEF":`${upgradeLevels[key]+1}/${upgradeMaxLevels[key]}`,desc:upgradeDesc(key),apply:()=>{if(isUpgradeFinal(key))return;upgradeLevels[key]++;applyUpgradeStatsFromLevels();if(key==="maxLife")life=Math.min(upgrades.maxLife,life+25+(upgradeLevels[key]>=5?45:0))}}
+return {icon:meta.icon,key,title:makeUpgradeTitle(key),levelTag:(isPercentLimitedKey(key)&&nextLevel(key)>=upgradeMaxLevels[key])?"DEF":`${upgradeLevels[key]+1}/${upgradeMaxLevels[key]}`,desc:upgradeDesc(key),apply:()=>{if(isUpgradeFinal(key))return;upgradeLevels[key]++;applyUpgradeStatsFromLevels();if(key==="maxLife")life=Math.min(upgrades.maxLife,life+25+(upgradeLevels[key]>=5?45:0))}}
 }
 
 function getUpgradePool(){
@@ -2566,7 +2539,7 @@ const iconText=String(upgrade.icon||"✨").trim();
 const iconParts=iconText.split(/\s+/).filter(Boolean);
 const isComboIcon=iconParts.length>1;
 const iconHTML=isComboIcon?iconParts.slice(0,2).map(i=>`<span class="miniIcon">${escapeHtml(i)}</span>`).join(""):escapeHtml(iconText);
-return `${upgrade.recommended?`<div class="recommendedTag">✨ RECOMENDADO</div>`:""}<div class="upgradeCardTop"><div class="upgradeIconBubble${isComboIcon?" comboIconBubble":""}">${iconHTML}</div><div class="upgradeBadges">${upgrade.levelTag?`<span class="upgradeLevelTag">${upgrade.levelTag}</span>`:""}</div></div><div class="upgradeTitle">${escapeHtml(upgrade.title)}</div><div class="upgradeDesc"><span class="upgradeDescMain">${formatCardText(desc)}</span>${bonus?`<span class="upgradeFusionBonus">${formatCardText(bonus)}</span>`:""}${upgrade.lockReason?`<span class="upgradeLockedReason">🔒 ${formatCardText(upgrade.lockReason)}</span>`:""}</div>`;
+return `${upgrade.recommended?`<div class="recommendedTag">✨ RECOMENDADO</div><div class="recommendReason">${escapeHtml(upgrade.recommendReason||"Encaja con tu partida actual.")}</div>`:""}<div class="upgradeCardTop"><div class="upgradeIconBubble${isComboIcon?" comboIconBubble":""}">${iconHTML}</div><div class="upgradeBadges">${upgrade.levelTag?`<span class="upgradeLevelTag">${upgrade.levelTag}</span>`:""}</div></div><div class="upgradeTitle">${escapeHtml(upgrade.title)}</div><div class="upgradeDesc"><span class="upgradeDescMain">${formatCardText(desc)}</span>${bonus?`<span class="upgradeFusionBonus">${formatCardText(bonus)}</span>`:""}${upgrade.lockReason?`<span class="upgradeLockedReason">🔒 ${formatCardText(upgrade.lockReason)}</span>`:""}</div>`;
 }
 function showCards(title,phrase,subtitle,choices,onPick,onBack,context="generic"){
 choices=applyRecommendationsToChoices(choices,context);
@@ -3781,7 +3754,7 @@ updateHud();checkGameCompletion();
 
 function openRainbowChoice(best){
 const names=UPGRADE_META;
-const choices=best.map(([key])=>{const fusedPair=getFusedPairForKey(key);return{icon:fusedPair?getFusionIconFromPair(fusedPair):names[key].icon,key,title:getUpgradeDisplayName(key),levelTag:(isPercentLimitedKey(key)&&nextPercentValue(key)>=100)?"DEF":`${upgradeLevels[key]+1}/${upgradeMaxLevels[key]}`,desc:getUpgradeDisplayDesc(key,upgradeLevels[key]+1),special:true,fusion:!!fusedPair}});
+const choices=best.map(([key])=>{const fusedPair=getFusedPairForKey(key);return{icon:fusedPair?getFusionIconFromPair(fusedPair):names[key].icon,key,title:getUpgradeDisplayName(key),levelTag:(isPercentLimitedKey(key)&&nextLevel(key)>=upgradeMaxLevels[key])?"DEF":`${upgradeLevels[key]+1}/${upgradeMaxLevels[key]}`,desc:getUpgradeDisplayDesc(key,upgradeLevels[key]+1),special:true,fusion:!!fusedPair}});
 showCards("🌈 ¡Gatito arcoíris!","Elige qué mejora potenciar 💖","Sube gratis una de tus mejoras más fuertes",choices,upgrade=>{
 if(!isUpgradeFinal(upgrade.key))upgradeLevels[upgrade.key]++;applyUpgradeStatsFromLevels();choosingUpgrade=false;levelUpPanel.style.display="none";
 syncGamePointerLock();
@@ -4361,7 +4334,7 @@ return target.yarnTargetId;
 }
 
 function spawnYarnBounce(sourceX,sourceY,currentTargetId=null,visitedIds=[]){
-const chance=Math.min(1,effectLevel("yarnBounce")*.13);
+const chance=coreUpgradeStat("yarnBounce");
 if(chance<=0||Math.random()>chance)return false;
 
 // Cada rebote recuerda TODOS los enemigos tocados por esa cadena.
@@ -4766,8 +4739,8 @@ function getPauseActualLevel(key){
   return Math.max(0,Number(upgradeLevels[key]||0));
 }
 function getPauseActualPercent(key){
-  const lvl=getPauseActualLevel(key);
-  return Math.round(lvl*10);
+const value=coreUpgradeStat(key);
+return Math.round((value-(["moveSpeed","fireRate","fishSpeed","damage","fishSize","xpBoost"].includes(key)?1:0))*1000)/10;
 }
 function getScalableDetail(key){
   const lvl=Math.max(0,Number(upgradeLevels[key]||0));
@@ -4785,22 +4758,22 @@ function getScalableDetail(key){
     fireRate:`Disparas aproximadamente un ${p}% más rápido.`,
     fishSpeed:`Los peces vuelan un ${p}% más rápido.`,
     damage:`Tus peces hacen un ${p}% más de daño.`,
-    bigFish:`Tienes aproximadamente un ${p}% más de probabilidad de lanzar peces grandes.`,
-    doubleFish:`Tienes aproximadamente un ${p}% más de probabilidad de lanzar peces extra.`,
-    pierce:`Tienes aproximadamente un ${p}% más de probabilidad de atravesar enemigos.`,
+    bigFish:`Tienes un ${p}% de probabilidad de lanzar peces grandes.`,
+    doubleFish:`Tienes un ${p}% de probabilidad de lanzar peces extra.`,
+    pierce:`Tienes un ${p}% de probabilidad de atravesar enemigos.`,
     catSlow:`Los enemigos se ralentizan aproximadamente un ${p}%.`,
-    healOnWave:`Recuperas más vida al superar ronda.`,
+    healOnWave:`Recuperas ${upgrades.healOnWave} de vida al superar ronda.`,
     fishSize:`Los peces son un ${p}% más grandes.`,
-    maxLife:`Tienes más vida máxima.`,
-    lifeSteal:`Recuperas vida al hacer daño.`,
+    maxLife:`Vida máxima: ${upgrades.maxLife}.`,
+    lifeSteal:`Recuperas un ${getPauseActualPercent("lifeSteal")}% del daño como vida.`,
     xpBoost:`Ganas aproximadamente un ${p}% más de experiencia.`,
-    boomerang:`Tienes aproximadamente un ${p}% más de probabilidad de lanzar peces boomerang.`,
-    shield:`El escudo tiene ${shownLevel}/5 de potencia.`,
-    coinMagnet:`El imán de monedas tiene ${shownLevel}/5 de potencia.`,
-    omniBurst:`La ráfaga circular tiene ${shownLevel}/5 de potencia.`,
-    yarnBounce:`Los rebotes de ovillo tienen ${shownLevel}/5 de potencia.`,
-    autoFire:`El disparo automático tiene ${shownLevel}/5 de potencia.`,
-    critChance:`Tienes aproximadamente un ${p}% más de probabilidad de crítico.`
+    boomerang:`Tienes un ${p}% de probabilidad de lanzar peces boomerang.`,
+    shield:`Nivel efectivo del escudo: ${upgrades.shieldLevel}.`,
+    coinMagnet:`Radio base del imán: ${Math.round(upgrades.coinMagnetRange)} píxeles.`,
+    omniBurst:`${10+Math.min(14,effectLevel("omniBurst")*2)} peces por ráfaga, cada ${(Math.max(3200,9000/(1+effectLevel("omniBurst")*.13))/1000).toFixed(2)} s.`,
+    yarnBounce:`Probabilidad de rebote: ${getPauseActualPercent("yarnBounce")}%.`,
+    autoFire:`Nivel efectivo del disparo automático: ${upgrades.autoFireLevel}.`,
+    critChance:`Tienes un ${p}% de probabilidad de crítico.`
   };
   lines.push(detail[key]||`Potencia actual: ${shownLevel}/${shownMax}.`);
   if(shownLevel>=shownMax)lines.push(fusedPair?"Fusión al máximo.":"Mejora al máximo.");
@@ -4829,10 +4802,11 @@ function getFusionDetail(pair){
   const hasScalable=pair.split("+").some(k=>Object.prototype.hasOwnProperty.call(upgradeLevels,k));
   const lines=[base];
   if(hasScalable){
-    lines.push(`Nivel ${level}/5 · potencia aprox. ${Math.round(level*10)}%.`);
+    lines.push(`Nivel ${level}/5. Conserva las mejoras base y sus bonus.`);
   }else{
     lines.push("Fusión única completa.");
   }
+  for(const key of [a,b])if(Object.prototype.hasOwnProperty.call(upgradeLevels,key))lines.push(getScalableDetail(key));
   if(pair==="darkPact+moralSupport")lines.push("El perro puede salvarte una vez.");
   return lines.join(" ");
 }
@@ -5353,6 +5327,7 @@ if(d<cat.r+14*(fish.scale||1)){
 const hitTargetId=getYarnTargetId(cat);
 if(!fish.hitIds)fish.hitIds=new Set();
 if(fish.hitIds.has(hitTargetId))continue;
+if(fish.hitIds.size===0&&runStats)runStats.fishHitProjectiles++;
 fish.hitIds.add(hitTargetId);
 const hitX=cat.x, hitY=cat.y;
 const dealt=Number.isFinite(fish.damage)?fish.damage:1;
@@ -5405,6 +5380,7 @@ if(d<boss.r+16*(fish.scale||1)){
 const bossYarnId=getYarnTargetId(boss);
 if(!fish.hitIds)fish.hitIds=new Set();
 if(fish.hitIds.has(bossYarnId))continue;
+if(fish.hitIds.size===0&&runStats)runStats.fishHitProjectiles++;
 fish.hitIds.add(bossYarnId);
 const hitX=fish.x, hitY=fish.y;
 const dealt=Number.isFinite(fish.damage)?fish.damage:1;
@@ -6779,16 +6755,16 @@ function paintCosmeticPreviews(){
   const category=el.dataset.category,id=el.dataset.skin,key=category+":"+id;
   if(!cosmeticPreviewCache.has(key)){
    const thumbnail=document.createElement("canvas");thumbnail.width=256;thumbnail.height=176;
-   const saved={ctx,player:{...player},boss,selected:selectedCosmetics,starActive,starTime,sevenLivesTime,lowPerfMode,dogKidnapped};
+   const saved={runCosmeticSelections,ctx,player:{...player},boss,selected:selectedCosmetics,starActive,starTime,sevenLivesTime,lowPerfMode,dogKidnapped};
    try{
-    ctx=thumbnail.getContext("2d");ctx.scale(2,2);ctx.translate(category==="player"?51:64,49);
+    runCosmeticSelections=null;ctx=thumbnail.getContext("2d");ctx.scale(2,2);ctx.translate(category==="player"?51:64,49);
     selectedCosmetics={...selectedCosmetics,[category]:id};starActive=false;starTime=0;sevenLivesTime=0;lowPerfMode=true;dogKidnapped=false;
     if(category==="player"){Object.assign(player,{x:0,y:0,angle:0,r:24,hurtAnim:0,shootAnim:0});drawPlayer();}
     else if(category==="fish"){ctx.scale(1.65,1.65);drawFish({x:0,y:0,angle:0,scale:1});}
     else if(category==="enemy"){drawCat({x:0,y:0,r:24,color:"#f7b7c9",type:"normal",hp:1,maxHp:1,hitAnim:0});}
     else {const type={boss_giant:"giantCat",boss_duck:"duck",boss_seal:"seal",boss_demon:"demon"}[category];boss={type,x:0,y:0,r:27,hitAnim:0,wobble:0,state:"idle",shadowX:0,shadowY:0};drawBoss();}
     cosmeticPreviewCache.set(key,thumbnail.toDataURL());
-   }finally{ctx=saved.ctx;Object.assign(player,saved.player);boss=saved.boss;selectedCosmetics=saved.selected;starActive=saved.starActive;starTime=saved.starTime;sevenLivesTime=saved.sevenLivesTime;lowPerfMode=saved.lowPerfMode;dogKidnapped=saved.dogKidnapped;}
+   }finally{runCosmeticSelections=saved.runCosmeticSelections;ctx=saved.ctx;Object.assign(player,saved.player);boss=saved.boss;selectedCosmetics=saved.selected;starActive=saved.starActive;starTime=saved.starTime;sevenLivesTime=saved.sevenLivesTime;lowPerfMode=saved.lowPerfMode;dogKidnapped=saved.dogKidnapped;}
   }
   const img=document.createElement("img");img.src=cosmeticPreviewCache.get(key);img.alt=el.getAttribute("aria-label")||"Vista de skin";img.width=128;img.height=88;el.replaceChildren(img);
  }
@@ -6876,3 +6852,17 @@ if(typeof MutationObserver!=='undefined'){
 decorateCoinText(document.body);
 new MutationObserver(records=>{for(const record of records){if(record.type==='characterData'&&/[🪙💰]/u.test(record.target.data))decorateCoinText(record.target.parentNode);for(const n of record.addedNodes){if(n.nodeType===1)decorateCoinText(n);else if(n.nodeType===3&&/[🪙💰]/u.test(n.data))decorateCoinText(n.parentNode);}}}).observe(document.body,{subtree:true,childList:true,characterData:true});
 }
+
+function updateRandomSkinsButton(){
+const btn=document.getElementById("randomSkinsButton");if(!btn)return;
+btn.textContent=randomSkinsEnabled?"🎲 Random: activado":"🎲 Random: desactivado";btn.setAttribute("aria-pressed",String(randomSkinsEnabled));
+}
+function rollRandomSkins(){
+runCosmeticSelections=null;if(!randomSkinsEnabled)return;
+runCosmeticSelections={};for(const cat of Object.keys(COSMETIC_CATEGORIES)){
+const pool=COSMETICS.filter(c=>c.category===cat&&ownedCosmetics.has(c.id));
+runCosmeticSelections[cat]=pool.length?pool[Math.floor(Math.random()*pool.length)].id:"default";
+}
+}
+document.getElementById("randomSkinsButton")?.addEventListener("click",()=>{randomSkinsEnabled=!randomSkinsEnabled;gameStorage.setItem("gatitos_random_skins",String(randomSkinsEnabled));updateRandomSkinsButton();});
+updateRandomSkinsButton();
