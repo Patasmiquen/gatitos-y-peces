@@ -1034,7 +1034,7 @@ moveSpeed:{icon:"👟",name:"Zapatillas blanditas",desc:l=>"Te mueves más rápi
 fireRate:{icon:"🐾",name:"Patita nerviosa",desc:l=>"Lanzas peces más seguido."},
 fishSpeed:{icon:"🐟",name:"Pez cohete",desc:l=>"Tus peces van más rápido."},
 bigFish:{icon:"💙",name:"Pez grandote",desc:l=>"A veces lanzas peces enormes."},
-doubleFish:{icon:"🐠",name:"Banco de peces",desc:l=>"A veces lanzas peces extra."},
+doubleFish:{icon:"🐠",name:"Banco de peces",desc:l=>"A veces lanzas 2 peces extra al 60 % de daño."},
 pierce:{icon:"✨",name:"Pez brillante",desc:l=>"Algunos peces atraviesan enemigos."},
 damage:{icon:"💪",name:"Mimos potentes",desc:l=>"Tus peces hacen más daño."},
 catSlow:{icon:"🧊",name:"Arena fresquita",desc:l=>"Los gatitos se acercan más lento."},
@@ -3935,10 +3935,11 @@ coinsDrops.push({x,y,r:10,amount,life:18})
 function damageBoss(amount){
 if(!boss)return;
 const real=boss.type==="seal"&&boss.state!=="stunned"?amount*.35:amount;
-if(runStats)runStats.bossDamage+=real;
+const healthLost=Math.min(Math.max(0,boss.hp),Math.max(0,real));
+if(runStats)runStats.bossDamage+=healthLost;
 boss.hp-=real;boss.hitAnim=.15;
 makeImpact(boss.x,boss.y,boss.type==="demon"?"#ff4d8d":"#ffd166",1.35);addScreenShake(boss.type==="demon"?5:3);playImpactSound();
-if(upgrades.lifeSteal>0)life=Math.min(upgrades.maxLife,life+real*upgrades.lifeSteal);
+if(upgrades.lifeSteal>0)life=Math.min(upgrades.maxLife,life+healthLost*upgrades.lifeSteal);
 if(boss.hp<=0){
 const defeatedType=boss.type;
 makeSmoke(boss.x,boss.y);
@@ -4005,7 +4006,7 @@ return (now%period)<active;
 }
 function getZoomiesMoveMultiplier(){return isZoomiesActive()?(upgrades.zoomiesHyper?1.85:1.45):1}
 function getZoomiesFireMultiplier(){return isZoomiesActive()?(upgrades.zoomiesCannon?2.05:1.45):1}
-function getCurrentCritChance(){const comboCap=(upgrades.autoFire&&upgrades.aimAssist&&upgrades.pierceChance>.55)?0.72:0.92;return Math.min(comboCap,upgrades.critChance+((isZoomiesActive()&&upgrades.zoomiesCrit)?0.22:0))}
+function getCurrentCritChance(){return Math.min(.95,upgrades.critChance+((isZoomiesActive()&&upgrades.zoomiesCrit)?0.22:0))}
 function getHoldShootMultiplier(){
   if(!upgrades.holdShoot)return 1;
   const autoLvl=Math.max(1,effectLevel("autoFire"));
@@ -4029,12 +4030,12 @@ if(fromHold&&upgrades.holdShoot)delay/=getHoldShootMultiplier();
 if(now-lastShot<delay)return;
 lastShot=now;shots++;if(runStats)runStats.shotsFired++;addAchievementStat("shots",1,{run:true});player.shootAnim=.12;
 const angle=Math.atan2(mouse.y-player.y,mouse.x-player.x),giantFishEasterEgg=giantFishEasterEggsUsed<1&&hasFishSizeFusionForGiantFish()&&Math.random()<0.00001,isBigFish=giantFishEasterEgg||Math.random()<upgrades.bigFishChance,fishScale=upgrades.fishSize*(giantFishEasterEgg?7.5:(isBigFish?1.65:1)),lowLifeBonus=(life<upgrades.maxLife*.35?(upgrades.braveHeart?0.35:0)+(upgrades.cursedInstinct?0.45:0):0),fishDamage=upgrades.damage*(1+lowLifeBonus)*(giantFishEasterEgg?35:(isBigFish?2.1:1)),canPierce=giantFishEasterEgg||Math.random()<upgrades.pierceChance,boomerang=!giantFishEasterEgg&&Math.random()<upgrades.boomerangChance;
-function addFish(offsetAngle=0){
+function addFish(offsetAngle=0,damageMultiplier=1){
 const finalAngle=angle+offsetAngle;
 const boomerangLvl=effectLevel("boomerang");
 const boomerangRangeBonus=boomerang?1+boomerangLvl*.08:1;
 const critRoll=Math.random()<getCurrentCritChance();
-fishes.push({x:player.x+Math.cos(finalAngle)*62,y:player.y+Math.sin(finalAngle)*62,vx:Math.cos(finalAngle)*610*upgrades.fishSpeed*boomerangRangeBonus,vy:Math.sin(finalAngle)*610*upgrades.fishSpeed*boomerangRangeBonus,angle:finalAngle,damage:fishDamage*(critRoll?((upgrades.autoFire&&upgrades.aimAssist)?1.75:2):1),life:giantFishEasterEgg?2.2:(boomerang?3.35+boomerangLvl*.18:1.45),scale:fishScale,pierce:canPierce,boomerang,crit:critRoll&&!boomerang,giantEaster:giantFishEasterEgg,returning:false,age:0,turnTime:boomerang?0.95+boomerangLvl*.06:0,hitIds:new Set()})
+fishes.push({x:player.x+Math.cos(finalAngle)*62,y:player.y+Math.sin(finalAngle)*62,vx:Math.cos(finalAngle)*610*upgrades.fishSpeed*boomerangRangeBonus,vy:Math.sin(finalAngle)*610*upgrades.fishSpeed*boomerangRangeBonus,angle:finalAngle,damage:fishDamage*damageMultiplier*(critRoll?2:1),life:giantFishEasterEgg?2.2:(boomerang?3.35+boomerangLvl*.18:1.45),scale:fishScale,pierce:canPierce,boomerang,crit:critRoll&&!boomerang,giantEaster:giantFishEasterEgg,returning:false,age:0,turnTime:boomerang?0.95+boomerangLvl*.06:0,hitIds:new Set()})
 }
 function addCardumenGiganteFish(offsetAngle){
 const finalAngle=angle+offsetAngle;
@@ -4048,7 +4049,7 @@ if(giantFishEasterEgg){
   shockwaves.push({x:player.x,y:player.y,r:10,maxR:180,life:.65,maxLife:.65,color:"#4cc9f0",line:7});
   addScreenShake(10);
 }
-if(!giantFishEasterEgg&&Math.random()<upgrades.doubleFishChance){addFish(.14);addFish(-.14)}
+if(!giantFishEasterEgg&&Math.random()<upgrades.doubleFishChance){addFish(.14,.6);addFish(-.14,.6)}
 if(!giantFishEasterEgg&&hasCardumenGiganteFusion()&&Math.random()<Math.min(.34,.16+effectLevel("bigFish")*.018+effectLevel("doubleFish")*.018)){
   addCardumenGiganteFish(.32);
   addCardumenGiganteFish(-.32);
@@ -5373,6 +5374,7 @@ if(cat.type==="musician"&&(cat.musicImmuneTimer||0)>0){
   if(!fish.pierce)fishes.splice(j,1);else fish.damage*=.72;
   continue;
 }
+const healthLost=Math.min(Math.max(0,cat.hp),Math.max(0,dealt));
 cat.hp-=dealt;
 if(runStats)runStats.fishHits++;
 cat.hitAnim=.15;
@@ -5398,7 +5400,7 @@ cat.baseSpeed=cat.baseSpeed||cat.speed;
 shockwaves.push({x:cat.x,y:cat.y,r:6,maxR:85+Math.min(70,wave*2.2),life:.42,maxLife:.42,color:"#ff8fab",line:4});
 floatingTexts.push({x:cat.x,y:cat.y-48,text:"😤 ¡DESPERTÓ!",life:1.15,maxLife:1.15,big:false});
 }
-if(upgrades.lifeSteal>0)life=Math.min(upgrades.maxLife,life+dealt*upgrades.lifeSteal);
+if(upgrades.lifeSteal>0)life=Math.min(upgrades.maxLife,life+healthLost*upgrades.lifeSteal);
 floatingTexts.push({x:hitX,y:hitY-34,text:cat.rainbow?"🌈 miua!":Math.random()<.5?"miua!":"miau!",life:.65,maxLife:.65,big:false});
 if(cat.hp<=0)killCat(i,cat);
 break
