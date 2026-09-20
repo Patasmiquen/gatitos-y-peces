@@ -2380,6 +2380,7 @@ if(pair){
   const title=`${getFusionNameFromPair(a,b)} Nv.${getFusionVisualNextLevel(pair)}`;
   return {
     icon:getFusionIconFromPair(pair),
+    previewLevel:true,
     key,
     title,
     levelTag:(getFusionVisualNextLevel(pair)>=5?"DEF":`${getFusionVisualNextLevel(pair)}/5`),
@@ -2395,7 +2396,7 @@ if(pair){
   }
 }
 const meta=UPGRADE_META[key];
-return {icon:meta.icon,key,title:makeUpgradeTitle(key),levelTag:(isPercentLimitedKey(key)&&nextLevel(key)>=upgradeMaxLevels[key])?"DEF":`${upgradeLevels[key]+1}/${upgradeMaxLevels[key]}`,desc:upgradeDesc(key),apply:()=>{if(isUpgradeFinal(key))return;upgradeLevels[key]++;applyUpgradeStatsFromLevels();if(key==="maxLife")life=Math.min(upgrades.maxLife,life+25+(upgradeLevels[key]>=5?45:0))}}
+return {previewLevel:true,icon:meta.icon,key,title:makeUpgradeTitle(key),levelTag:(isPercentLimitedKey(key)&&nextLevel(key)>=upgradeMaxLevels[key])?"DEF":`${upgradeLevels[key]+1}/${upgradeMaxLevels[key]}`,desc:upgradeDesc(key),apply:()=>{if(isUpgradeFinal(key))return;upgradeLevels[key]++;applyUpgradeStatsFromLevels();if(key==="maxLife")life=Math.min(upgrades.maxLife,life+25+(upgradeLevels[key]>=5?45:0))}}
 }
 
 function getUpgradePool(){
@@ -2530,6 +2531,38 @@ if(upgrade.key){
 }
 return "Mejora";
 }
+// Read-only previews: use the same base-stat formula as the purchased upgrade.
+function formatPreviewStat(key,post=fusionPostLevel(key)){
+  const v=coreUpgradeStat(key,post);
+  const n=x=>Number(x.toFixed(2)).toLocaleString("es-ES");
+  if(["moveSpeed","fireRate","fishSpeed","damage","fishSize","xpBoost"].includes(key))return `×${n(v)}`;
+  if(["bigFish","doubleFish","pierce","boomerang","critChance","catSlow","lifeSteal","yarnBounce"].includes(key))return `${n(v*100)} %`;
+  if(key==="coinMagnet")return `${n(v)} px`;
+  if(key==="omniBurst")return v>0?`${10+Math.min(14,v*2)} peces / ${n(Math.max(3200,9000/(1+v*.13))/1000)} s`:"Inactiva";
+  if(key==="shield"||key==="autoFire")return v>0?`Nivel ${n(v)}`:"Inactivo";
+  return n(v);
+}
+function getUpgradePreviewRows(upgrade){
+  if(!upgrade.previewLevel||upgrade.randomShopUpgrade||upgrade.locked)return [];
+  const pair=getFusedPairForKey(upgrade.key);
+  const keys=(pair?pair.split("+"):[upgrade.key]).filter(k=>Object.prototype.hasOwnProperty.call(upgradeLevels,k));
+  const labels={moveSpeed:"Velocidad base",fireRate:"Cadencia base",fishSpeed:"Velocidad del pez",damage:"Daño base",fishSize:"Tamaño del pez",xpBoost:"Experiencia",bigFish:"Pez grande",doubleFish:"Pez extra",pierce:"Perforación",boomerang:"Boomerang",critChance:"Crítico",catSlow:"Ralentización",lifeSteal:"Robo de vida",yarnBounce:"Rebote",maxLife:"Vida máxima",healOnWave:"Curación por ronda",coinMagnet:"Radio del imán",omniBurst:"Ráfaga",shield:"Escudo",autoFire:"Disparo automático"};
+  const rows=keys.map(key=>({label:labels[key]||getOriginalUpgradeName(key),before:formatPreviewStat(key),after:formatPreviewStat(key,Math.min(5,fusionPostLevel(key)+1))}));
+  if(keys.includes("maxLife")){
+    const next=Math.min(5,fusionPostLevel("maxLife")+1);
+    const healed=Math.min(coreUpgradeStat("maxLife",next),life+25+(next>=5?45:0));
+    rows.push({label:"Tu vida al elegirla",before:String(Math.round(life)),after:String(Math.round(healed))});
+  }
+  return rows;
+}
+function buildChoicePreviewHTML(upgrade){
+  if(upgrade.first){
+    return `<div class="choicePreview fusionPreview"><span class="previewResult">${escapeHtml(getFusionNameFromPair(upgrade.first,upgrade.key))}</span><span aria-label="${Number(upgrade.fusionCost)} monedas">🪙 ${Number(upgrade.fusionCost)}</span></div>`;
+  }
+  const rows=getUpgradePreviewRows(upgrade);
+  if(!rows.length)return "";
+  return `<div class="choicePreview"><span class="previewHeading">Ahora → Al elegir</span>${rows.map(r=>`<span class="previewRow"><span>${escapeHtml(r.label)}</span><strong>${escapeHtml(r.before)} → ${escapeHtml(r.after)}</strong></span>`).join("")}</div>`;
+}
 function buildUpgradeCardHTML(upgrade){
 let desc=String(upgrade.desc||"");
 let bonus="";
@@ -2539,7 +2572,7 @@ const iconText=String(upgrade.icon||"✨").trim();
 const iconParts=iconText.split(/\s+/).filter(Boolean);
 const isComboIcon=iconParts.length>1;
 const iconHTML=isComboIcon?iconParts.slice(0,2).map(i=>`<span class="miniIcon">${escapeHtml(i)}</span>`).join(""):escapeHtml(iconText);
-return `${upgrade.recommended?`<div class="recommendedTag">✨ RECOMENDADO</div><div class="recommendReason">${escapeHtml(upgrade.recommendReason||"Encaja con tu partida actual.")}</div>`:""}<div class="upgradeCardTop"><div class="upgradeIconBubble${isComboIcon?" comboIconBubble":""}">${iconHTML}</div><div class="upgradeBadges">${upgrade.levelTag?`<span class="upgradeLevelTag">${upgrade.levelTag}</span>`:""}</div></div><div class="upgradeTitle">${escapeHtml(upgrade.title)}</div><div class="upgradeDesc"><span class="upgradeDescMain">${formatCardText(desc)}</span>${bonus?`<span class="upgradeFusionBonus">${formatCardText(bonus)}</span>`:""}${upgrade.lockReason?`<span class="upgradeLockedReason">🔒 ${formatCardText(upgrade.lockReason)}</span>`:""}</div>`;
+return `${upgrade.recommended?`<div class="recommendedTag">✨ RECOMENDADO</div><div class="recommendReason">${escapeHtml(upgrade.recommendReason||"Encaja con tu partida actual.")}</div>`:""}<div class="upgradeCardTop"><div class="upgradeIconBubble${isComboIcon?" comboIconBubble":""}">${iconHTML}</div><div class="upgradeBadges">${upgrade.levelTag?`<span class="upgradeLevelTag">${upgrade.levelTag}</span>`:""}</div></div><div class="upgradeTitle">${escapeHtml(upgrade.title)}</div><div class="upgradeDesc"><span class="upgradeDescMain">${formatCardText(desc)}</span>${bonus?`<span class="upgradeFusionBonus">${formatCardText(bonus)}</span>`:""}${upgrade.lockReason?`<span class="upgradeLockedReason">🔒 ${formatCardText(upgrade.lockReason)}</span>`:""}</div>${buildChoicePreviewHTML(upgrade)}`;
 }
 function showCards(title,phrase,subtitle,choices,onPick,onBack,context="generic"){
 choices=applyRecommendationsToChoices(choices,context);
@@ -2583,6 +2616,7 @@ const pageSize=9;
 let currentPage=0;
 const totalPages=Math.max(1,Math.ceil(choices.length/pageSize));
 function renderCardList(){
+  levelUpBox.scrollTop=0;
   upgradeCards.innerHTML="";
   const visible=shouldPaginate?choices.slice(currentPage*pageSize,currentPage*pageSize+pageSize):choices;
   visible.forEach(upgrade=>{
@@ -3610,7 +3644,7 @@ fusion:true
 };
 });
 const backToShop=()=>{choosingUpgrade=false;levelUpPanel.style.display="none";fusionBackBtn.style.display="none";if(shopAvailable)openCoinShop()};
-showCards("🔮 Fusión de mejoras","Elige la primera mejora",`Después elegirás una compatible. Cuesta ${cost} monedas.`,firstChoices,first=>{
+showCards("🔮 Fusión de mejoras","Elige la primera mejora","Después elegirás una compatible.",firstChoices,first=>{
 // Paso 2: catálogo completo — todas las fusiones posibles con first.key (desbloqueadas y bloqueadas)
 const allCompatibleKeys=new Set();
 (fusionPairs[first.key]||[]).forEach(k=>allCompatibleKeys.add(k));
@@ -3635,9 +3669,9 @@ levelTag:isUniqueKey(k)?"1/1":`${upgradeLevels[k]||0}/${upgradeMaxLevels[k]||5}`
 desc:locked?`🔒 ${lockDesc} — ${fusionDesc}`:fusionDesc,
 special:true,locked,
 fusion:!locked,
-easter:sortedPair(first.key,k)==="darkPact+moralSupport",first:first.key
+easter:sortedPair(first.key,k)==="darkPact+moralSupport",first:first.key,fusionCost:cost
 }}).sort((a,b)=>Number(a.locked)-Number(b.locked));
-showCards("🔮 Fusión compatible",`Fusiones posibles con ${getAnyName(first.key)}`,"Las bloqueadas aún no están disponibles.",allPartners,second=>{
+showCards("🔮 Fusión compatible",`Fusiones posibles con ${getAnyName(first.key)}`,"Elige una fusión. Las bloqueadas aún no están disponibles.",allPartners,second=>{
 if(second.locked)return;
 const wasShopOpen=shopAvailable;
 coins-=cost;

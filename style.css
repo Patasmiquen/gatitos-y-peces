@@ -1020,3 +1020,13 @@ html,body,button,input{font-family:"Gatitos UI","Segoe UI",Arial,sans-serif,"Seg
 .pawCoinIcon{display:inline-block;width:1.3em;height:1.3em;vertical-align:-.25em;background:url("coin-paw.svg") center/contain no-repeat;margin:0 .1em}.shopCoinBadge .pawCoinIcon{width:32px;height:32px;flex-shrink:0}
 
 .randomSkinsControls{margin:12px 0;padding:12px;border:1px solid #a88ac0;border-radius:12px}.randomSkinsControls button{padding:9px 14px;border:0;border-radius:10px;background:#ded0ed;color:#41264d;cursor:pointer}.randomSkinsControls button[aria-pressed="true"]{background:#9de0bd;color:#204c39}.randomSkinsControls p{font-size:12px;line-height:1.4;margin-top:8px}.recommendReason{font-size:12px;line-height:1.35;margin:0 0 10px;color:inherit;font-weight:normal}
+
+/* Compact purchase previews, shared by level-up and shop cards. */
+.choicePreview{margin-top:12px;padding-top:10px;border-top:1px solid currentColor;font-size:12px;line-height:1.45;text-align:left;display:grid;gap:6px}
+.previewHeading{font-size:11px;font-weight:800;opacity:.8}
+.previewRow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:3px 10px}
+.previewRow strong{font-variant-numeric:tabular-nums;white-space:normal}
+.fusionPreview{font-size:12px;gap:7px}
+.previewResult{font-weight:800}
+
+#levelUpBox{max-height:92vh;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
