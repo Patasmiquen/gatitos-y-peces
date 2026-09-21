@@ -1030,3 +1030,8 @@ html,body,button,input{font-family:"Gatitos UI","Segoe UI",Arial,sans-serif,"Seg
 .previewResult{font-weight:800}
 
 #levelUpBox{max-height:92vh;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin}
+
+.upgradePrice{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:12px;background:#ffe09a;color:#4b2636;font-weight:800;font-size:13px;white-space:nowrap}
+#finishRunButton{background:linear-gradient(135deg,#a5e2bf,#8dd9da);color:#253b35}
+
+.pauseLiveScore{flex:0 0 100%;padding:9px 12px;border-radius:12px;background:rgba(255,209,102,.12);color:#ffd166;text-align:center;font-size:18px}

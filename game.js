@@ -100,7 +100,7 @@ function playMusicTrack(track,force=false){
     pauseAllMusic();
     return;
   }
-  if(paused||choosingUpgrade){
+  if(paused){
     pauseAllMusic();
     return;
   }
@@ -133,7 +133,7 @@ function syncMusic(){
     pauseAllMusic();
     return;
   }
-  if(paused||choosingUpgrade){
+  if(paused){
     pauseAllMusic();
     return;
   }
@@ -497,7 +497,7 @@ const COSMETICS=[
   {id:"enemy_gray",name:"Gatos grises",category:"enemy",price:150,preview:"🐱",desc:"Gatos normales en tono gris."},
   {id:"enemy_elegant",name:"Gatos con pajarita",category:"enemy",price:250,preview:"🎀",desc:"Los gatos enemigos llevan pajarita.",pack:"elegant"},
   {id:"boss_duck_monocle",name:"Pato con monóculo",category:"boss_duck",price:250,preview:"🦆",desc:"El pato jefe va más distinguido.",pack:"elegant"},
-  {id:"boss_seal_tie",name:"Foca con falda",category:"boss_seal",price:250,preview:"🦭",desc:"La foca jefe lleva una falda coqueta.",pack:"elegant"},
+  {id:"boss_seal_tie",name:"Foca elegante",category:"boss_seal",price:250,preview:"🦭",desc:"Collar de perlas con un pequeño lazo.",pack:"elegant"},
   {id:"boss_demon_cape",name:"Demonio con capa",category:"boss_demon",price:300,preview:"😈",desc:"El demonio jefe lleva capa.",pack:"elegant"},
   {id:"player_low_poly",name:"Jugador low poly",category:"player",price:180,preview:"🟦",desc:"El jugador se convierte en un cubo low poly.",pack:"low_poly"},
   {id:"fish_low_poly",name:"Peces low poly",category:"fish",price:180,preview:"🟦",desc:"Los peces se convierten en cubitos.",pack:"low_poly"},
@@ -505,9 +505,18 @@ const COSMETICS=[
   {id:"boss_giant_low_poly",name:"Gato jefe low poly",category:"boss_giant",price:260,preview:"🟨",desc:"El gato jefe se convierte en un cubo enorme.",pack:"low_poly"},
   {id:"boss_duck_low_poly",name:"Pato low poly",category:"boss_duck",price:260,preview:"🟨",desc:"El pato jefe se convierte en un cubo.",pack:"low_poly"},
   {id:"boss_seal_low_poly",name:"Foca low poly",category:"boss_seal",price:260,preview:"⬜",desc:"La foca jefe se convierte en un cubo.",pack:"low_poly"},
-  {id:"boss_demon_low_poly",name:"Demonio low poly",category:"boss_demon",price:300,preview:"🟥",desc:"El demonio jefe se convierte en un cubo oscuro.",pack:"low_poly"}
+  {id:"boss_demon_low_poly",name:"Demonio low poly",category:"boss_demon",price:300,preview:"🟥",desc:"El demonio jefe se convierte en un cubo oscuro.",pack:"low_poly"},
+  {"id": "player_grayscale", "name": "Gatito en gris", "category": "player", "price": 180, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"},
+  {"id": "fish_grayscale", "name": "Peces en gris", "category": "fish", "price": 180, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"},
+  {"id": "enemy_grayscale", "name": "Enemigos en gris", "category": "enemy", "price": 220, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"},
+  {"id": "boss_giant_grayscale", "name": "Jefe gato en gris", "category": "boss_giant", "price": 260, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"},
+  {"id": "boss_duck_grayscale", "name": "Jefe pato en gris", "category": "boss_duck", "price": 260, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"},
+  {"id": "boss_seal_grayscale", "name": "Jefe foca en gris", "category": "boss_seal", "price": 260, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"},
+  {"id": "boss_demon_grayscale", "name": "Jefe demonio en gris", "category": "boss_demon", "price": 300, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"}
 ];
-const COSMETIC_PACKS=[{id:"elegant",name:"Pack Elegante",discount:.20,items:["player_elegant","fish_elegant","enemy_elegant","boss_duck_monocle","boss_seal_tie","boss_demon_cape"],desc:"Pajaritas, sombreros, monóculos, falda y capa."},{id:"low_poly",name:"Pack Low Poly",discount:.25,items:["player_low_poly","fish_low_poly","enemy_low_poly","boss_giant_low_poly","boss_duck_low_poly","boss_seal_low_poly","boss_demon_low_poly"],desc:"Todo el juego se vuelve una colección de cubos low poly."}];
+const COSMETIC_PACKS=[{id:"elegant",name:"Pack Elegante",discount:.20,items:["player_elegant","fish_elegant","enemy_elegant","boss_duck_monocle","boss_seal_tie","boss_demon_cape"],desc:"Pajaritas, sombreros, monóculos, perlas y capa."},{id:"low_poly",name:"Pack Low Poly",discount:.25,items:["player_low_poly","fish_low_poly","enemy_low_poly","boss_giant_low_poly","boss_duck_low_poly","boss_seal_low_poly","boss_demon_low_poly"],desc:"Todo el juego se vuelve una colección de cubos low poly."}];
+COSMETIC_PACKS.push({"id": "grayscale", "name": "Pack Escala de grises", "discount": 0.25, "items": ["player_grayscale", "fish_grayscale", "enemy_grayscale", "boss_giant_grayscale", "boss_duck_grayscale", "boss_seal_grayscale", "boss_demon_grayscale"], "desc": "Siete skins en blanco y negro. Las variantes se distinguen por sus formas y accesorios."});
+
 let cosmeticTab="skins";
 let randomSkinsEnabled=gameStorage.getItem("gatitos_random_skins")==="true";
 let runCosmeticSelections=null;
@@ -565,7 +574,7 @@ function renderPacksTab(){
     const discount=Math.round(pack.discount*100);
     const itemNames=info.items.map(i=>`${ownedCosmetics.has(i.id)?"✅":"⬜"} ${escapeHtml(i.name)} (${i.price})`).join("<br>");
     const action=info.complete?`<button class="cosmeticButton secondary" onclick="equipPack('${pack.id}')">Equipar pack</button>`:`<button class="cosmeticButton" ${cosmeticScales<info.price?"disabled":""} onclick="buyPack('${pack.id}')">Comprar pack por ${info.price} escamas</button>`;
-    return `<div class="cosmeticCard packCard"><div class="cosmeticPreview">🎩</div><div class="cosmeticName">${escapeHtml(pack.name)}</div><div class="cosmeticMeta">${escapeHtml(pack.desc)} · Descuento ${discount}%</div><div class="packItems">${itemNames}</div><div class="packPriceLine">Ya tienes ${info.owned.length}/${info.items.length} · Restante suelto: ${info.missingValue} · Pack: ${info.complete?"completo":info.price+" escamas"}</div>${action}</div>`;
+    return `<div class="cosmeticCard packCard"><div class="cosmeticPreview">${pack.id==="grayscale"?"◐":pack.id==="low_poly"?"◇":"🎩"}</div><div class="cosmeticName">${escapeHtml(pack.name)}</div><div class="cosmeticMeta">${escapeHtml(pack.desc)} · Descuento ${discount}%</div><div class="packItems">${itemNames}</div><div class="packPriceLine">Ya tienes ${info.owned.length}/${info.items.length} · Restante suelto: ${info.missingValue} · Pack: ${info.complete?"completo":info.price+" escamas"}</div>${action}</div>`;
   }).join("");
 }
 function renderCosmetics(){
@@ -578,7 +587,9 @@ updateRandomSkinsButton();
 }
 function earnScalesFromScore(finalScore){
   const total=safeCount(finalScore?.total);
-  const entitled=total>0?Math.max(5,Math.min(150,Math.floor(total/300))):0;
+  // Progresión lineal hasta 30.000 puntos; después crece con la raíz
+  // para premiar las partidas largas sin vaciar la tienda de una vez.
+  const entitled=Math.floor(total<=30000?total/300:100*Math.sqrt(total/30000));
   const gained=Math.max(0,entitled-cosmeticScalesAwardedThisRun);
   if(gained>0){cosmeticScales+=gained;cosmeticScalesAwardedThisRun+=gained;cosmeticAwardedThisRun=true;saveCosmetics();renderCosmetics();}
   return gained;
@@ -625,8 +636,8 @@ function drawLowPolyCat(cat){
   const base=cat.rainbow?"#ffd43b":cat.type==="thief"?"#343a40":cat.type==="yarn"?"#b197fc":cat.type==="sleepy"?"#c8b6e2":cat.type==="mini"?"#ffb347":cat.type==="glutton"?"#e8956d":cat.type==="musician"?"#d084c8":cat.type==="student"?"#74b9ff":"#c08457";
   drawLowPolyCube(cat.r*1.70,base,"#2b2118","#ffe8cc");
   drawLowPolyFace(cat.r*1.70,cat.type==="thief"?"#fff":"#1f2026");
-  if(cat.type==="yarn"){ctx.strokeStyle="#fff";ctx.lineWidth=2;ctx.strokeRect(-cat.r*.32,cat.r*.24,cat.r*.64,cat.r*.18);}
-  if(cat.maxHp>1){ctx.fillStyle="rgba(255,255,255,0.85)";ctx.fillRect(-18,-48,36,5);ctx.fillStyle=cat.rainbow?"#ffd166":cat.type==="thief"?"#ffd166":cat.type==="yarn"?"#b197fc":cat.type==="sleepy"?"#c8b6e2":cat.type==="glutton"?"#e8956d":cat.type==="musician"?"#d084c8":cat.type==="student"?"#74b9ff":"#ff8fab";ctx.fillRect(-18,-48,36*Math.max(0,cat.hp/cat.maxHp),5)}
+  drawEnemyIdentity(cat);
+  if(cat.maxHp>1){ctx.fillStyle="rgba(255,255,255,0.85)";ctx.fillRect(-18,-48,36,5);ctx.fillStyle=cat.rainbow?"#ffd166":cat.type==="thief"?"#ffd166":cat.type==="yarn"?"#b197fc":cat.type==="sleepy"?"#c8b6e2":cat.type==="glutton"?"#e8956d":cat.type==="musician"?"#d084c8":cat.type==="student"?"#74b9ff":"#ff8fab";ctx.fillRect(-18,-48,36*Math.max(0,Math.min(1,cat.hp/cat.maxHp)),5)}
   ctx.restore();
 }
 function drawLowPolyFish(f){
@@ -711,7 +722,11 @@ ctx.strokeStyle="#9f74bb";for(const side of [-1,1]){ctx.beginPath();ctx.moveTo(s
 }
 function drawBossSkinDetails(type,r){
   if(type==="duck"&&selectedCosmetic("boss_duck")==="boss_duck_monocle"){ctx.fillStyle="#171018";ctx.beginPath();ctx.roundRect(-r*.58,-r*1.05,r*.72,r*.12,r*.04);ctx.fill();ctx.fillRect(-r*.42,-r*1.30,r*.40,r*.27);ctx.fillStyle="#7b2cbf";ctx.fillRect(-r*.42,-r*1.06,r*.40,r*.06);ctx.strokeStyle="#171018";ctx.lineWidth=Math.max(3,r*.035);ctx.beginPath();ctx.arc(-r*.28,-r*.68,r*.14,0,Math.PI*2);ctx.stroke();ctx.strokeStyle="rgba(23,16,24,.65)";ctx.lineWidth=Math.max(2,r*.02);ctx.beginPath();ctx.moveTo(-r*.17,-r*.57);ctx.quadraticCurveTo(r*.02,-r*.34,r*.14,-r*.06);ctx.stroke();}
-  if(type==="seal"&&selectedCosmetic("boss_seal")==="boss_seal_tie"){ctx.save();ctx.fillStyle="#a61e4d";ctx.beginPath();ctx.roundRect(-r*.10,r*.14,r*.64,r*.13,r*.05);ctx.fill();ctx.fillStyle="#c2255c";ctx.beginPath();ctx.moveTo(-r*.06,r*.24);ctx.lineTo(r*.50,r*.24);ctx.lineTo(r*.60,r*.44);ctx.lineTo(r*.40,r*.60);ctx.lineTo(r*.06,r*.60);ctx.lineTo(-r*.10,r*.42);ctx.closePath();ctx.fill();ctx.strokeStyle="#7a1638";ctx.lineWidth=Math.max(2,r*.02);ctx.beginPath();ctx.moveTo(-r*.02,r*.26);ctx.lineTo(-r*.02,r*.56);ctx.moveTo(r*.12,r*.24);ctx.lineTo(r*.12,r*.60);ctx.moveTo(r*.26,r*.24);ctx.lineTo(r*.26,r*.60);ctx.moveTo(r*.40,r*.24);ctx.lineTo(r*.40,r*.56);ctx.stroke();ctx.strokeStyle="#ffd166";ctx.lineWidth=Math.max(2,r*.018);ctx.beginPath();ctx.moveTo(-r*.06,r*.34);ctx.lineTo(r*.56,r*.34);ctx.moveTo(-r*.02,r*.46);ctx.lineTo(r*.50,r*.46);ctx.stroke();ctx.restore();}
+  if(type==="seal"&&selectedCosmetic("boss_seal")==="boss_seal_tie"){
+ctx.save();ctx.shadowBlur=0;ctx.strokeStyle='#9d8b91';ctx.lineWidth=Math.max(1,r*.012);
+for(let i=0;i<11;i++){const t=i/10,x=(-.53+t*1.08)*r,y=(.37+Math.sin(t*Math.PI)*.19)*r;ctx.fillStyle='#fff8e8';ctx.beginPath();ctx.arc(x,y,r*.044,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x-r*.013,y-r*.013,r*.012,0,Math.PI*2);ctx.fill();}
+drawBowTieShape(r*.45,r*.40,r*.14,'#9a6cb5','#bb92d0','#ffe3a2');ctx.restore();
+}
 }
 loadCosmetics();
 cosmeticsSkinsTab?.addEventListener("click",()=>{cosmeticTab="skins";renderCosmetics()});
@@ -1190,10 +1205,40 @@ function recommendationContextFit(key,context,needs){
   if((needs?.consistency||0)>.55&&["aimAssist","fishSpeed","fishSize","autoFire","bigCursor"].includes(key))bonus+=.08;
   return clamp01(bonus);
 }
-function recommendationPairFit(a,b,needs){
-const pair=sortedPair(a,b),prof=FUSION_RECOMMENDATION_PROFILE[pair]||mergeProfiles(profileForKey(a),profileForKey(b),.55,.55);
-return recommendationProfileFit(prof,needs)*.85+.12;
+function recommendationPairEvaluation(a,b,needs){
+const pair=sortedPair(a,b),parts=[a,b],hp=life/Math.max(1,upgrades.maxLife);
+const prof=FUSION_RECOMMENDATION_PROFILE[pair]||mergeProfiles(profileForKey(a),profileForKey(b),.55,.55);
+let score=recommendationProfileFit(prof,needs)*.70;
+let reason=recommendationReasonForProfile(prof,needs);
+// Value the immediate stat bonus, rather than counting owned components again.
+const bonusKeys=getFusionBonusKeys(pair);
+const marginal=bonusKeys.map(k=>Math.max(0,coreUpgradeStat(k,fusionPostLevel(k)+1)-coreUpgradeStat(k))/Math.max(1,coreUpgradeStat(k)));
+score+=Math.min(.16,marginal.reduce((sum,n)=>sum+n,0)*.65)+.10;
+if(hp<.55&&parts.includes('maxLife')){score+=.35;reason='Aumenta tu vida máxima y te cura al fusionar.';}
+else if(hp<.55&&parts.includes('healOnWave')){score+=.18;reason='Te cura al fusionar y mejora la recuperación entre rondas.';}
+else if(hp<.55&&parts.includes('lifeSteal')){score+=.15;reason='Refuerza la curación al hacer daño.';}
+if(pair==='darkPact+moralSupport'){score+=hp<.55?.26:.12;reason='Añade al perrito, que ataca y puede salvarte una vez.';}
+if(boss&&parts.some(k=>['damage','critChance','fireRate'].includes(k))){score+=.16;if(hp>=.55)reason='Refuerza el ataque para el jefe que tienes delante.';}
+if(cats.length>=12&&parts.some(k=>['pierce','yarnBounce','omniBurst','catSlow'].includes(k))){score+=.17;if(hp>=.55)reason='Ayuda a controlar el grupo de enemigos de esta partida.';}
+if(pair==='aimAssist+autoFire'&&needs.consistency>.6){score+=.20;reason='El autoapuntado te ayuda a fallar menos disparos.';}
+if(hp<.4&&parts.includes('xpBoost'))score-=.14;
+if(parts.includes('coinMagnet')&&!(runStats?.coinsMissed>0))score-=.08;
+return {pair,score:Math.max(0,score),reason};
 }
+function recommendationPairFit(a,b,needs){return recommendationPairEvaluation(a,b,needs).score;}
+function availableRecommendationPairs(needs,key=null){
+const ready=getMaxedFusionKeys().filter(k=>!fusedUpgradeNames[k]),result=[];
+ready.forEach((a,i)=>ready.slice(i+1).forEach(b=>{if((!key||a===key||b===key)&&areFusionCompatible(a,b)&&!hasFusionBeenDone(a,b))result.push(recommendationPairEvaluation(a,b,needs));}));
+return result.sort((a,b)=>b.score-a.score);
+}
+function fusionRecommendationReason(choice,needs){
+const result=choice.first?recommendationPairEvaluation(choice.first,choice.key,needs):availableRecommendationPairs(needs,choice.key)[0];
+if(!result)return 'Combina mejoras compatibles disponibles.';
+if(choice.first)return result.reason;
+const [a,b]=result.pair.split('+'),partner=a===choice.key?b:a;
+return `${choice.key?'Con '+getOriginalUpgradeName(partner):getFusionNameFromPair(a,b)}: ${result.reason}`;
+}
+
 function scoreRecommendationChoice(choice,needs,context="generic"){
 if(!choice||choice.locked||choice.skipShop||choice.randomShopUpgrade)return -999;
 if(context==="shop"&&Number.isFinite(choice.price)&&choice.price>coins)return -999;
@@ -1235,6 +1280,16 @@ function applyRecommendationsToChoices(choices,context="generic"){
   if(context==="internal")return choices;
 
   const needs=getRecommendationNeeds();
+  if(context==='fusionFirst'){
+    const offered=new Set(list.filter(c=>!c.locked).map(c=>c.key));
+    const pairs=availableRecommendationPairs(needs).filter(r=>r.pair.split('+').every(k=>offered.has(k)));
+    const best=pairs[0];
+    if(best&&best.score>=.58&&(pairs.length===1||best.score-pairs[1].score>=.06)){
+      const parts=best.pair.split('+');
+      list.forEach(c=>{if(parts.includes(c.key)&&!c.locked){c.recommended=true;c.recommendScore=best.score;c.recommendReason=fusionRecommendationReason(c,needs);}});
+    }
+    return choices;
+  }
   const valid=list
     .filter(c=>!c.locked&&!c.skipShop&&!c.randomShopUpgrade&&(c.key||c.fusion||!c.special))
     .map(c=>({choice:c,score:scoreRecommendationChoice(c,needs,context)}))
@@ -1259,7 +1314,7 @@ function applyRecommendationsToChoices(choices,context="generic"){
 
   best.choice.recommended=true;
   best.choice.recommendScore=best.score;
-  best.choice.recommendReason=best.choice.openFusionShop||context.startsWith("fusion")?"Combina mejoras disponibles que encajan con tu situación.":(life<upgrades.maxLife*.4&&(best.choice.key==="maxLife"||getFusedPairForKey(best.choice.key)?.split("+").includes("maxLife"))?"Tienes poca vida: aumenta tu vida máxima y te cura al elegirla.":recommendationReasonForProfile(profileForChoice(best.choice),needs));
+  best.choice.recommendReason=best.choice.openFusionShop||context.startsWith("fusion")?fusionRecommendationReason(best.choice,needs):(life<upgrades.maxLife*.4&&(best.choice.key==="maxLife"||getFusedPairForKey(best.choice.key)?.split("+").includes("maxLife"))?"Tienes poca vida: aumenta tu vida máxima y te cura al elegirla.":recommendationReasonForProfile(profileForChoice(best.choice),needs));
   return choices;
 }
 
@@ -1382,6 +1437,22 @@ if(e.button===2&&!gameOver&&gameStarted&&!paused&&!choosingUpgrade){
 });
 window.addEventListener("mouseup",e=>{if(e.button===0)mouseIsDown=false});
 resumeButton.addEventListener("click",closePause);
+document.getElementById("finishRunButton").addEventListener("click",finishRunHere);
+function finishRunHere(){
+  if(!gameStarted||gameOver||!paused)return;
+  if(!window.confirm("¿Acabar aquí y guardar tu puntuación?"))return;
+  gameOver=true;
+  paused=false;
+  choosingUpgrade=false;
+  clearAllInputKeys();
+  stopPowerStarLoop();
+  stopAllMusic();
+  pendingUpgradeQueue.length=0;
+  pausePanel.style.display="none";
+  levelUpPanel.style.display="none";
+  showGameOverScreen(true);
+}
+
 victoryFinishBtn.addEventListener("click",()=>{
   finalChoiceLocked=true;
   victoryPanel.style.display="none";
@@ -1485,6 +1556,7 @@ menuButton.addEventListener("click",returnToMainMenuWithConfirm);
 if(gameOverMenuBtn)gameOverMenuBtn.addEventListener("click",returnToMainMenuWithConfirm);
 
 function resetUpgrades(){
+xpFraction=0;
 Object.assign(upgrades,{fireRate:1,fishSpeed:1,damage:1,moveSpeed:1,maxLife:100,bigFishChance:0,doubleFishChance:0,pierceChance:0,fishSize:1,catSlow:0,healOnWave:8,lifeSteal:0,xpBoost:1,boomerangChance:0,shield:false,shieldLevel:0,autoFire:false,autoFireLevel:0,critChance:0,zoomies:false,zoomiesHyper:false,zoomiesCannon:false,zoomiesCrit:false,aimAssist:false,moralSupport:false,darkPact:false,catInstinct:false,boyfriendDog:false,boyfriendDogSpirit:false,boyfriendDogReturned:false,bigCursor:false,coinMagnetRange:0,combatAI:false,assistedShot:false,perfectAim:false,moraleFire:false,braveHeart:false,reflexBurst:false,valorCasa:false,cursedInstinct:false,zoomiesEscape:false,fusionBonusPower:0,sevenLives:false,holdShoot:false});
 Object.keys(upgradeLevels).forEach(k=>upgradeLevels[k]=0);Object.keys(upgradeMaxLevels).forEach(k=>upgradeMaxLevels[k]=5);Object.keys(fusedBaseLevels).forEach(k=>delete fusedBaseLevels[k]);fusedUpgradeNames={};doneFusionPairs={};fusionProgressLevels={};
 }
@@ -2087,6 +2159,8 @@ function activateDogRescueRelax(){
 }
 function isDogRelaxActive(){return dogRelaxTime>0}
 
+function getSealJumpCount(round=wave,repeats=0){return Math.min(12,6+Math.floor(Math.max(0,round-10)/10)+Math.min(2,repeats));}
+function getDemonOrbResistanceChance(round=wave){return Math.min(.12,Math.max(0,round-10)*.003);}
 function spawnBoss(){
 syncMusic();
 let types=["giantCat","duck","seal"];
@@ -2163,9 +2237,9 @@ boss={type,x:canvas.width/2,y:canvas.height*.25,r:58+Math.min(20,wave*.9),hp,max
 const tx=Math.random()*(canvas.width-180)+90,ty=Math.random()*(canvas.height-180)+90;
 const hp=Math.round((95+wave*19)*hpScale);
 const jumpBase=Math.max(firstBossIntro?.92:.45,1.12-wave*.025-getEndlessPressure()*.012);
-boss={type,x:canvas.width/2,y:canvas.height*.35,r:55+Math.min(22,wave*.85),hp,maxHp:hp,hitAnim:0,wobble:0,state:"jumping",baseJumpDuration:jumpBase,jumpTimer:jumpBase,jumpDuration:jumpBase,startX:canvas.width/2,startY:canvas.height*.35,targetX:tx,targetY:ty,shadowX:tx,shadowY:ty,jumps:0,jumpsBeforeRest:firstBossIntro?Math.max(4,6-Math.floor(wave/18)):Math.max(2,5-Math.floor(wave/15)+bossRepeatLevel-Math.floor(getEndlessPressure()/7)),stunTimer:0,stunDuration:Math.max(firstBossIntro?1.55:.70,2.5-wave*.035-bossRepeatLevel*.16-getEndlessPressure()*.018),slamDamage:(13+wave*.65)*damageScale}
+boss={type,x:canvas.width/2,y:canvas.height*.35,r:55+Math.min(22,wave*.85),hp,maxHp:hp,hitAnim:0,wobble:0,state:"jumping",baseJumpDuration:jumpBase,jumpTimer:jumpBase,jumpDuration:jumpBase,startX:canvas.width/2,startY:canvas.height*.35,targetX:tx,targetY:ty,shadowX:tx,shadowY:ty,jumps:0,jumpsBeforeRest:getSealJumpCount(wave,bossRepeatLevel),stunTimer:0,stunDuration:Math.max(firstBossIntro?1.55:.70,2.5-wave*.035-bossRepeatLevel*.16-getEndlessPressure()*.018),slamDamage:(13+wave*.65)*damageScale}
 }
-if(boss)boss.repeatLevel=bossRepeatLevel;
+if(boss){boss.repeatLevel=bossRepeatLevel;if(boss.type==="giantCat")boss.summonCount=Math.min(12,boss.summonCount+1);}
 syncMusic();
 }
 
@@ -2272,7 +2346,7 @@ return `${displayName} Nv.${n}`
 function upgradeDesc(key){return getUpgradeDisplayDesc(key,nextLevel(key))}
 function pct(n){return Math.min(100,Math.round(n*13))}
 
-// post-fusión: pre-fusion levels aportan 13%/lv, post-fusion levels aportan 7%/lv → tope 100%
+// Each fusion distributes the remaining stat gain evenly across its five levels.
 function fusionStatScale(key,preRate,postRate,cap=5*(preRate+postRate),post=fusionPostLevel(key)){
 const base=fusedBaseLevels[key]||0;
 if(!hasFusionComponent(key))return Math.min(cap,(base+post)*preRate);
@@ -2286,9 +2360,9 @@ if(["bigFish","doubleFish","pierce","boomerang","critChance"].includes(key))retu
 if(key==="catSlow")return fusionStatScale(key,.13,.07,.85,post);
 if(key==="lifeSteal")return fusionStatScale(key,.013,.013,.13,post);
 if(key==="yarnBounce")return fusionStatScale(key,.13,.07,1,post);
-if(key==="maxLife")return 100+lv*20+(lv>=5?80:0);
-if(key==="healOnWave")return 8+lv*5+(lv>=5?20:0);
-if(key==="coinMagnet")return lv>0?90+lv*45+(lv>=5?100:0):0;
+if(key==="maxLife")return 100+lv*20+Math.min(5,lv)*16;
+if(key==="healOnWave")return 8+lv*5+Math.min(5,lv)*4;
+if(key==="coinMagnet")return lv>0?90+lv*45+Math.min(5,lv)*20:0;
 if(key==="fishSize"){const initial=Math.min(1.45,((fusedBaseLevels[key]||0)+getFishSizeFusionBonus())*.12);const bonus=hasFusionComponent(key)?initial+(1.45-initial)*Math.min(5,post)/5:Math.min(1.45,(lv+getFishSizeFusionBonus())*.12);return (1+bonus)*(hasDoneFusionPair("bigFish+fishSize")?1.18:1);}
 return lv;
 }
@@ -2305,11 +2379,14 @@ function canScaleMore(key){return !isUpgradeFinal(key)&&coreUpgradeStat(key,Math
 
 
 function applyUpgradeStatsFromLevels(){
+const oldSlow=Math.max(.15,1-upgrades.catSlow);
 for(const key of ["maxLife","healOnWave","moveSpeed","fireRate","fishSpeed","damage","fishSize","xpBoost","catSlow","lifeSteal"])upgrades[key]=coreUpgradeStat(key);
 for(const key of ["bigFish","doubleFish","pierce","boomerang","critChance"])upgrades[key==="critChance"?key:key+"Chance"]=coreUpgradeStat(key);
 upgrades.shieldLevel=effectLevel("shield");upgrades.shield=upgrades.shieldLevel>0;
 upgrades.autoFireLevel=effectLevel("autoFire");upgrades.autoFire=upgrades.autoFireLevel>0;
 upgrades.coinMagnetRange=coreUpgradeStat("coinMagnet");life=Math.min(life,upgrades.maxLife);
+const slowRatio=Math.max(.15,1-upgrades.catSlow)/oldSlow;
+if(slowRatio!==1)cats.forEach(cat=>{cat.speed*=slowRatio;if(Number.isFinite(cat.baseSpeed))cat.baseSpeed*=slowRatio;});
 }
 
 
@@ -2391,12 +2468,12 @@ if(pair){
       if(getFusionProgress(pair)>=5)return;
       const newLevel=addFusionProgress(pair,1);
       applyUpgradeStatsFromLevels();
-      if(pair.split("+").includes("maxLife"))life=Math.min(upgrades.maxLife,life+25+(newLevel>=5?45:0));
+      if(pair.split("+").includes("maxLife"))life=Math.min(upgrades.maxLife,life+34);
     }
   }
 }
 const meta=UPGRADE_META[key];
-return {previewLevel:true,icon:meta.icon,key,title:makeUpgradeTitle(key),levelTag:(isPercentLimitedKey(key)&&nextLevel(key)>=upgradeMaxLevels[key])?"DEF":`${upgradeLevels[key]+1}/${upgradeMaxLevels[key]}`,desc:upgradeDesc(key),apply:()=>{if(isUpgradeFinal(key))return;upgradeLevels[key]++;applyUpgradeStatsFromLevels();if(key==="maxLife")life=Math.min(upgrades.maxLife,life+25+(upgradeLevels[key]>=5?45:0))}}
+return {previewLevel:true,icon:meta.icon,key,title:makeUpgradeTitle(key),levelTag:(isPercentLimitedKey(key)&&nextLevel(key)>=upgradeMaxLevels[key])?"DEF":`${upgradeLevels[key]+1}/${upgradeMaxLevels[key]}`,desc:upgradeDesc(key),apply:()=>{if(isUpgradeFinal(key)||upgradeLevels[key]>=upgradeMaxLevels[key])return;upgradeLevels[key]++;applyUpgradeStatsFromLevels();if(key==="maxLife")life=Math.min(upgrades.maxLife,life+34)}}
 }
 
 function getUpgradePool(){
@@ -2550,7 +2627,7 @@ function getUpgradePreviewRows(upgrade){
   const rows=keys.map(key=>({label:labels[key]||getOriginalUpgradeName(key),before:formatPreviewStat(key),after:formatPreviewStat(key,Math.min(5,fusionPostLevel(key)+1))}));
   if(keys.includes("maxLife")){
     const next=Math.min(5,fusionPostLevel("maxLife")+1);
-    const healed=Math.min(coreUpgradeStat("maxLife",next),life+25+(next>=5?45:0));
+    const healed=Math.min(coreUpgradeStat("maxLife",next),life+34);
     rows.push({label:"Tu vida al elegirla",before:String(Math.round(life)),after:String(Math.round(healed))});
   }
   return rows;
@@ -2572,7 +2649,7 @@ const iconText=String(upgrade.icon||"✨").trim();
 const iconParts=iconText.split(/\s+/).filter(Boolean);
 const isComboIcon=iconParts.length>1;
 const iconHTML=isComboIcon?iconParts.slice(0,2).map(i=>`<span class="miniIcon">${escapeHtml(i)}</span>`).join(""):escapeHtml(iconText);
-return `${upgrade.recommended?`<div class="recommendedTag">✨ RECOMENDADO</div><div class="recommendReason">${escapeHtml(upgrade.recommendReason||"Encaja con tu partida actual.")}</div>`:""}<div class="upgradeCardTop"><div class="upgradeIconBubble${isComboIcon?" comboIconBubble":""}">${iconHTML}</div><div class="upgradeBadges">${upgrade.levelTag?`<span class="upgradeLevelTag">${upgrade.levelTag}</span>`:""}</div></div><div class="upgradeTitle">${escapeHtml(upgrade.title)}</div><div class="upgradeDesc"><span class="upgradeDescMain">${formatCardText(desc)}</span>${bonus?`<span class="upgradeFusionBonus">${formatCardText(bonus)}</span>`:""}${upgrade.lockReason?`<span class="upgradeLockedReason">🔒 ${formatCardText(upgrade.lockReason)}</span>`:""}</div>${buildChoicePreviewHTML(upgrade)}`;
+return `${upgrade.recommended?`<div class="recommendedTag">✨ RECOMENDADO</div><div class="recommendReason">${escapeHtml(upgrade.recommendReason||"Encaja con tu partida actual.")}</div>`:""}<div class="upgradeCardTop"><div class="upgradeIconBubble${isComboIcon?" comboIconBubble":""}">${iconHTML}</div><div class="upgradeBadges">${Number.isFinite(upgrade.price)?`<span class="upgradePrice" aria-label="${upgrade.price} monedas">🪙 ${upgrade.price}</span>`:""}${upgrade.levelTag?`<span class="upgradeLevelTag">${upgrade.levelTag}</span>`:""}</div></div><div class="upgradeTitle">${escapeHtml(upgrade.title)}</div><div class="upgradeDesc"><span class="upgradeDescMain">${formatCardText(desc)}</span>${bonus?`<span class="upgradeFusionBonus">${formatCardText(bonus)}</span>`:""}${upgrade.lockReason?`<span class="upgradeLockedReason">🔒 ${formatCardText(upgrade.lockReason)}</span>`:""}</div>${buildChoicePreviewHTML(upgrade)}`;
 }
 function showCards(title,phrase,subtitle,choices,onPick,onBack,context="generic"){
 choices=applyRecommendationsToChoices(choices,context);
@@ -2588,7 +2665,7 @@ onPick=upgrade=>{
 };
 choosingUpgrade=true;
 clearAllInputKeys();
-pauseAllMusic();
+syncMusic();
 releaseGamePointer();
 canvas.style.cursor="crosshair";
 document.body.style.cursor="auto";
@@ -2872,13 +2949,14 @@ originalDesc:u.desc,
 levelTag:u.levelTag||"",
  desc:u.desc
 }));
-const fusionChoice={icon:"🔮",title:"Fusión de mejoras",levelTag:"",desc:canFuse(fusionPrice)?`Disponible: fusiona 2 mejoras compatibles.`:getFusionLockReason(fusionPrice),special:true,fusion:true,openFusionShop:true,locked:!canFuse(fusionPrice)};
+const fusionChoice={price:fusionPrice,icon:"🔮",title:"Fusión de mejoras",levelTag:"",desc:canFuse(fusionPrice)?`Disponible: fusiona 2 mejoras compatibles.`:getFusionLockReason(fusionPrice),special:true,fusion:true,openFusionShop:true,locked:!canFuse(fusionPrice)};
 const randomUpgrade=getRandomShopUpgradeChoice(upgradeChoices);
 const randomPrice=Math.max(1,Math.ceil(upgradePrice/2));
 const randomChoice=randomUpgrade?{
   icon:"🎲",
   title:"Mejora aleatoria",
-  levelTag:`${randomPrice}🪙`,
+  price:randomPrice,
+  levelTag:"",
   desc:"Sorpresa",
   special:true,
   randomShopUpgrade:true,
@@ -3076,7 +3154,7 @@ const fusionEffectDescMap={
 "healOnWave+lifeSteal":"Te curas entre rondas y peleando.",
 "healOnWave+maxLife":"Más vida y mejor descanso.",
 "catSlow+shield":"Enemigos lentos y escudo útil.",
-"fishSize+shield":"Escudo con peces grandes.",
+"fishSize+shield":"Peces mayores y escudo reforzado.",
 "damage+shield":"El escudo también pega.",
 "coinMagnet+xpBoost":"Recoges y subes más rápido.",
 "catInstinct+coinMagnet":"El instinto atrae recursos.",
@@ -3145,7 +3223,7 @@ const fusionShortDescMap={
 "healOnWave+lifeSteal":"Te curas entre rondas y peleando.",
 "healOnWave+maxLife":"Más vida y mejor descanso.",
 "catSlow+shield":"Enemigos lentos y escudo útil.",
-"fishSize+shield":"Escudo con peces grandes.",
+"fishSize+shield":"Peces mayores y escudo reforzado.",
 "damage+shield":"El escudo también pega.",
 "coinMagnet+xpBoost":"Recoges y subes más rápido.",
 "catInstinct+coinMagnet":"El instinto atrae recursos.",
@@ -3187,10 +3265,10 @@ const fusionShortDescMap={
 "aimAssist+pierce":"Los peces guiados atraviesan mejor.",
 "aimAssist+fishSpeed":"Peces rápidos y guiados.",
 "aimAssist+boomerang":"Los boomerangs corrigen mejor su ruta.",
-"aimAssist+critChance":"La puntería busca puntos débiles.",
+"aimAssist+critChance":"Peces guiados con mayor probabilidad de crítico.",
 "bigCursor+damage":"Marcas mejor al objetivo y pegas más.",
 "bigCursor+pierce":"La marca ayuda a atravesar enemigos.",
-"bigCursor+critChance":"Apuntar bien facilita críticos.",
+"bigCursor+critChance":"Mirilla visible y mayor probabilidad de crítico.",
 "bigCursor+fishSize":"La mirilla potencia peces grandes.",
 "moralSupport+maxLife":"El apoyo te hace aguantar más.",
 "healOnWave+moralSupport":"Te recuperas mejor entre rondas.",
@@ -3275,9 +3353,6 @@ function rebuildFusionDataCatalogue(){
 rebuildFusionDataCatalogue();
 
 function getFusionExtraBonusDesc(pair){
-  const parts=pair.split("+");
-  const has=k=>parts.includes(k);
-
   if(pair==="darkPact+moralSupport")return "Bonus de fusión: invoca al perrito protector.";
   if(pair==="catInstinct+maxLife")return "Bonus de fusión: protección de emergencia.";
   if(pair==="catInstinct+coinMagnet")return "Bonus de fusión: el instinto atrae recursos.";
@@ -3286,64 +3361,55 @@ function getFusionExtraBonusDesc(pair){
   if(pair==="catInstinct+omniBurst")return "Bonus de fusión: ráfaga defensiva al activar instinto.";
   if(pair==="catInstinct+zoomies")return "Bonus de fusión: teletransporte (peligro).";
   if(pair==="coinMagnet+darkPact")return "Bonus de fusión: Voluntad Oscura da más monedas.";
-  if(has("lifeSteal")&&has("shield"))return "Bonus de fusión: el escudo roba vida.";
-  if(has("lifeSteal"))return "Bonus de fusión: más robo de vida.";
-  if(has("shield")&&has("damage"))return "Bonus de fusión: el escudo pega más.";
-  if(has("shield"))return "Bonus de fusión: defensa reforzada.";
-  if(has("omniBurst")&&has("damage"))return "Bonus de fusión: ráfagas más destructivas.";
-  if(has("omniBurst"))return "Bonus de fusión: ráfagas mejoradas.";
-  if(has("yarnBounce")&&has("pierce"))return "Bonus de fusión: atraviesa y rebota.";
-  if(has("yarnBounce"))return "Bonus de fusión: rebotes extra.";
-  if(has("autoFire")&&has("aimAssist"))return "Bonus de fusión: autoapuntado mejorado.";
-  if(has("autoFire"))return "Bonus de fusión: disparo automático reforzado.";
-  if(has("aimAssist"))return "Bonus de fusión: mejor guiado.";
-  if(has("critChance")&&has("damage"))return "Bonus de fusión: críticos más fuertes.";
-  if(has("critChance"))return "Bonus de fusión: más críticos.";
-  if(has("boomerang"))return "Bonus de fusión: retorno mejorado.";
-  if(has("doubleFish"))return "Bonus de fusión: más peces por disparo.";
-  if(has("fireRate"))return "Bonus de fusión: más cadencia.";
-  if(has("fishSpeed"))return "Bonus de fusión: peces más rápidos.";
-  if(has("pierce"))return "Bonus de fusión: más perforación.";
-  if(has("damage"))return "Bonus de fusión: más daño.";
-  if(has("bigFish")&&has("fishSize"))return "Bonus de fusión: tamaño extra.";
-  if(has("fishSize"))return "Bonus de fusión: tamaño extra.";
-  if(has("bigFish"))return "Bonus de fusión: peces más grandes.";
-  if(has("maxLife"))return "Bonus de fusión: más aguante.";
-  if(has("healOnWave"))return "Bonus de fusión: más curación.";
-  if(has("moveSpeed")||has("zoomies"))return "Bonus de fusión: más velocidad.";
-  if(has("xpBoost"))return "Bonus de fusión: progreso extra.";
-  if(has("coinMagnet"))return "Bonus de fusión: recolección mejorada.";
-  if(has("catSlow"))return "Bonus de fusión: más control de enemigos.";
-  if(has("moralSupport"))return "Bonus de fusión: apoyo mejorado.";
-  if(has("darkPact"))return "Bonus de fusión: poder oscuro extra.";
-  if(has("catInstinct"))return "Bonus de fusión: instinto reforzado.";
-  return "Bonus de fusión: efecto especial propio.";
+  const special={
+    "aimAssist+bigCursor":"guiado más preciso",
+    "aimAssist+autoFire":"autoapuntado mejorado",
+    "aimAssist+catInstinct":"respuesta defensiva guiada",
+    "bigCursor+moralSupport":"más daño con poca vida",
+    "catInstinct+darkPact":"instinto agresivo y más daño con poca vida",
+    "catInstinct+moralSupport":"dos usos de instinto por ronda",
+    "lifeSteal+shield":"el escudo roba vida",
+    "catSlow+coinMagnet":"más monedas de los enemigos",
+    "coinMagnet+healOnWave":"las monedas también curan",
+    "moveSpeed+xpBoost":"experiencia al moverte",
+    "omniBurst+xpBoost":"experiencia por ráfaga",
+    "bigFish+doubleFish":"dos peces gigantes adicionales ocasionales"
+  };
+  const labels={damage:"daño",fireRate:"cadencia",fishSpeed:"velocidad del pez",doubleFish:"probabilidad de peces extra",pierce:"perforación",fishSize:"tamaño del pez",shield:"nivel de escudo",lifeSteal:"robo de vida",maxLife:"vida máxima",healOnWave:"curación por ronda",moveSpeed:"velocidad",xpBoost:"experiencia",coinMagnet:"radio del imán",catSlow:"ralentización",omniBurst:"nivel de ráfaga",yarnBounce:"probabilidad de rebote",critChance:"probabilidad de crítico"};
+  return `Bonus de fusión: ${special[pair]||getFusionBonusKeys(pair).map(k=>labels[k]).join(" y ")||"conserva ambos efectos"}.`;
+
 }
 
 function addFusionLevelBonus(key,amount=1){
   if(!Object.prototype.hasOwnProperty.call(upgradeLevels,key))return;
   fusedBaseLevels[key]=(fusedBaseLevels[key]||0)+amount;
 }
+function getFusionBonusKeys(pair){
+  const keys=[];
+  if(pair.includes("damage"))keys.push("damage");
+  if(pair.includes("fireRate")||pair.includes("autoFire"))keys.push("fireRate");
+  if(pair.includes("fishSpeed")||pair.includes("boomerang"))keys.push("fishSpeed");
+  if(pair.includes("doubleFish"))keys.push("doubleFish");
+  if(pair.includes("pierce"))keys.push("pierce");
+  if(pair.includes("bigFish")||pair.includes("fishSize"))keys.push("fishSize");
+  if(pair.includes("shield"))keys.push("shield");
+  if(pair.includes("lifeSteal"))keys.push("lifeSteal");
+  if(pair.includes("maxLife"))keys.push("maxLife");
+  if(pair.includes("healOnWave"))keys.push("healOnWave");
+  if(pair.includes("moveSpeed")||pair.includes("zoomies"))keys.push("moveSpeed");
+  if(pair.includes("xpBoost"))keys.push("xpBoost");
+  if(pair.includes("coinMagnet"))keys.push("coinMagnet");
+  if(pair.includes("catSlow"))keys.push("catSlow");
+  if(pair.includes("omniBurst"))keys.push("omniBurst");
+  if(pair.includes("yarnBounce"))keys.push("yarnBounce");
+  if(pair.includes("critChance"))keys.push("critChance");
+  return keys;
+}
 function applyFusionBonus(pair,a,b){
-  // Todas las fusiones dan un pequeño empujón propio además de conservar ambas mejoras.
   upgrades.fusionBonusPower=(upgrades.fusionBonusPower||0)+1;
-  if(pair.includes("damage"))addFusionLevelBonus("damage",1);
-  if(pair.includes("fireRate")||pair.includes("autoFire"))addFusionLevelBonus("fireRate",1);
-  if(pair.includes("fishSpeed")||pair.includes("boomerang"))addFusionLevelBonus("fishSpeed",1);
-  if(pair.includes("doubleFish"))addFusionLevelBonus("doubleFish",1);
-  if(pair.includes("pierce"))addFusionLevelBonus("pierce",1);
-  if(pair.includes("bigFish")||pair.includes("fishSize"))addFusionLevelBonus("fishSize",1);
-  if(pair.includes("shield"))addFusionLevelBonus("shield",1);
-  if(pair.includes("lifeSteal"))addFusionLevelBonus("lifeSteal",1);
-  if(pair.includes("maxLife")){addFusionLevelBonus("maxLife",1);life=Math.min(upgrades.maxLife+40,life+35)}
-  if(pair.includes("healOnWave")){addFusionLevelBonus("healOnWave",1);life=Math.min(upgrades.maxLife,life+25)}
-  if(pair.includes("moveSpeed")||pair.includes("zoomies"))addFusionLevelBonus("moveSpeed",1);
-  if(pair.includes("xpBoost"))addFusionLevelBonus("xpBoost",1);
-  if(pair.includes("coinMagnet"))addFusionLevelBonus("coinMagnet",1);
-  if(pair.includes("catSlow"))addFusionLevelBonus("catSlow",1);
-  if(pair.includes("omniBurst"))addFusionLevelBonus("omniBurst",1);
-  if(pair.includes("yarnBounce"))addFusionLevelBonus("yarnBounce",1);
-  if(pair.includes("critChance"))addFusionLevelBonus("critChance",1);
+  getFusionBonusKeys(pair).forEach(k=>addFusionLevelBonus(k,1));
+  if(pair.includes("maxLife"))life=Math.min(upgrades.maxLife+40,life+35);
+  if(pair.includes("healOnWave"))life=Math.min(upgrades.maxLife,life+25);
 }
 
 function sortedPair(a,b){return [a,b].sort().join("+")}
@@ -3468,7 +3534,8 @@ ${r.efficiencyBonus>0?`<div class="sRow"><span>⚡ Eficiencia (ronda ${wave})</s
 <div class="sRow"><span>PUNTUACIÓN TOTAL</span><span>${r.total.toLocaleString()}</span></div>
 </div>`;
 }
-function showGameOverScreen(){
+function showGameOverScreen(voluntary=false){
+document.getElementById("gameOverTitle").textContent=voluntary?"🐾 Partida finalizada":"💔 Fin de la partida";
 const r=computeFinalScore();
 const scalesGained=earnScalesFromScore(r);
 registerFinalScoreAchievement(r);saveAchievements();
@@ -3807,8 +3874,11 @@ queueUpgradeMenus("level",1);
 updateHud();
 }
 
+let xpFraction=0;
 function gainXP(amount){
-const real=Math.max(1,Math.round(amount*upgrades.xpBoost));
+const earned=Math.max(1,amount*upgrades.xpBoost)+xpFraction;
+const real=Math.floor(earned+1e-9);
+xpFraction=Math.max(0,earned-real);
 xp+=real;
 let gainedLevels=0;
 while(xp>=xpNeed){xp-=xpNeed;level++;xpNeed=Math.ceil(xpNeed*1.35+2);gainedLevels++;}
@@ -3888,7 +3958,7 @@ if(!small&&!rainbow){
 catType=normalizeSpecialCatSpawnType(catType);
 let color=rainbow?"rainbow":small?"#ffd6a5":["#f7b7c9","#f4c28b","#d7c1ff","#bde0fe","#caffbf"][Math.floor(Math.random()*5)];
 let r=rainbow?28:(small?17:24);
-let speed=(rainbow?70:(small?85:48+wave*7+Math.random()*18))*Math.max(.45,1-upgrades.catSlow)*endlessSpeedMul;
+let speed=(rainbow?70:(small?85:48+wave*7+Math.random()*18))*Math.max(.15,1-upgrades.catSlow)*endlessSpeedMul;
 let hp=rainbow?Math.max(2,maxHp):maxHp;
 if(catType==="yarn"){
   color="#b197fc";
@@ -4180,9 +4250,13 @@ if(boss.knockVx||boss.knockVy){boss.x+=(boss.knockVx||0)*dt;boss.y+=(boss.knockV
 if(boss.type==="giantCat"){
 const dx=player.x-boss.x,dy=player.y-boss.y,dist=Math.hypot(dx,dy)||1;
 boss.x+=(dx/dist)*boss.speed*dt;boss.y+=(dy/dist)*boss.speed*dt;boss.summon-=dt;
-if(boss.summon<=0&&isCatOnScreen(boss)){boss.summon=boss.baseSummon||Math.max(.55,2.15-wave*.07);for(let i=0;i<(boss.summonCount||2);i++)spawnCat(boss.x+(Math.random()*110-55),boss.y+(Math.random()*110-55),true)}else if(boss.summon<=0){boss.summon=Math.max(.32,boss.baseSummon||Math.max(.55,2.15-wave*.07));}
+if(boss.summon<=0&&isCatOnScreen(boss)){boss.summon=boss.baseSummon||Math.max(.55,2.15-wave*.07);for(let i=0;i<(boss.summonCount||2);i++){
+if(i%2===1){const left=(boss.sideSummons||0)%2===0;boss.sideSummons=(boss.sideSummons||0)+1;spawnCat(left?-20:canvas.width+20,canvas.height*(.12+Math.random()*.76),true);}
+else spawnCat(boss.x+(Math.random()*110-55),boss.y+(Math.random()*110-55),true);
+}}else if(boss.summon<=0){boss.summon=Math.max(.32,boss.baseSummon||Math.max(.55,2.15-wave*.07));}
 if(dist<player.r+boss.r-8){takePlayerDamage((boss.contactDamage||18)*dt,"El jefe te ha llenado de mimos 🐱",.1)}
 }else if(boss.type==="duck"){
+if(wave>=15){const speed=Math.min(100,25+(wave-15)*1.5),margin=boss.r+18;boss.x=Math.max(margin,Math.min(canvas.width-margin,boss.x+Math.cos(boss.wobble*.6)*speed*dt));}
 boss.shoot-=dt;
 if(boss.shoot<=0){
 boss.shoot=boss.baseShoot||Math.max(.42,1.25-wave*.045);
@@ -4203,7 +4277,7 @@ boss.x=boss.targetX;boss.y=boss.targetY;makeSmoke(boss.x,boss.y);
 if(Math.hypot(player.x-boss.x,player.y-boss.y)<boss.r+player.r+38){takePlayerDamage((boss.slamDamage||18),"La foca ha caído encima de ti 🦭",.2)}
 boss.jumps++;
 if(boss.jumps>=boss.jumpsBeforeRest){
-boss.state="stunned";boss.stunTimer=boss.stunDuration||2.4;boss.jumps=0;boss.jumpsBeforeRest=Math.max(2,5-Math.floor(wave/15)+(boss.repeatLevel||0));boss.hp-=Math.max(4,boss.maxHp*.055);if(boss.hp<=0){damageBoss(0);return;}floatingTexts.push({x:boss.x,y:boss.y-boss.r-25,text:"La foca se ha mareado",life:1.4,maxLife:1.4,big:false})
+boss.state="stunned";boss.stunTimer=boss.stunDuration||2.4;boss.jumps=0;boss.jumpsBeforeRest=getSealJumpCount(wave,boss.repeatLevel||0);boss.hp-=Math.max(4,boss.maxHp*.055);if(boss.hp<=0){damageBoss(0);return;}floatingTexts.push({x:boss.x,y:boss.y-boss.r-25,text:"La foca se ha mareado",life:1.4,maxLife:1.4,big:false})
 }else startSealJump()
 }
 }else{
@@ -4239,6 +4313,7 @@ vx:Math.cos(a)*boss.orbSpeed,
 vy:Math.sin(a)*boss.orbSpeed,
 r:13,
 life:5,
+hitsLeft:Math.random()<getDemonOrbResistanceChance()?2:1,
 damage:16+wave*.45
 });
 }
@@ -4299,7 +4374,8 @@ const a=shieldAngle+i*Math.PI*2/orbs,ox=player.x+Math.cos(a)*shieldR,oy=player.y
 for(let c=cats.length-1;c>=0;c--){
 const cat=cats[c];if(!isFinitePos(cat))continue;const d=Math.hypot(cat.x-ox,cat.y-oy);
 if(d<cat.r+orbSize){
-cat.hp-=1+shieldLvl*.95;cat.hitAnim=.15;makeHearts(cat.x,cat.y);if(hasDoneFusionPair("lifeSteal+shield"))life=Math.min(upgrades.maxLife,life+Math.max(.35,shieldLvl*.45));lastShieldHit=now;
+const shieldDamage=1+shieldLvl*.95,healthLost=Math.min(Math.max(0,cat.hp),shieldDamage);
+cat.hp-=shieldDamage;cat.hitAnim=.15;makeHearts(cat.x,cat.y);if(hasDoneFusionPair("lifeSteal+shield"))life=Math.min(upgrades.maxLife,life+healthLost*upgrades.lifeSteal);lastShieldHit=now;
 if(cat.hp<=0)killCat(c,cat);
 return
 }
@@ -4564,38 +4640,29 @@ if(hit||b.life<=0||b.x<-80||b.x>canvas.width+80||b.y<-80||b.y>canvas.height+80)d
 
 function drawDog(){
 if(!upgrades.boyfriendDog||dogKidnapped)return;
-ctx.save();
-ctx.translate(dogCompanion.x,dogCompanion.y);
-const bob=Math.sin(dogCompanion.wag)*2;
-ctx.fillStyle="#f4c28b";
-ctx.beginPath();
-ctx.ellipse(0,bob,18,13,0,0,Math.PI*2);
-ctx.fill();
-ctx.fillStyle="#8d5524";
-ctx.beginPath();
-ctx.arc(-7,-9+bob,6,0,Math.PI*2);
-ctx.arc(8,-9+bob,6,0,Math.PI*2);
-ctx.fill();
-ctx.fillStyle="#f4c28b";
-ctx.beginPath();
-ctx.arc(0,-3+bob,15,0,Math.PI*2);
-ctx.fill();
-ctx.fillStyle="#2b133f";
-ctx.beginPath();
-ctx.arc(-5,-5+bob,2,0,Math.PI*2);
-ctx.arc(6,-5+bob,2,0,Math.PI*2);
-ctx.fill();
-ctx.strokeStyle="#8d5524";
-ctx.lineWidth=3;
-ctx.beginPath();
-ctx.moveTo(-17,2+bob);
-ctx.quadraticCurveTo(-30,-8+bob,-20,-16+bob);
-ctx.stroke();
-ctx.fillStyle="#ff7aa8";
-ctx.beginPath();
-ctx.arc(0,2+bob,3,0,Math.PI*2);
-ctx.fill();
-ctx.restore()
+ctx.save();ctx.translate(dogCompanion.x,dogCompanion.y);
+const bob=Math.sin(dogCompanion.wag)*1.5;
+ctx.lineJoin='round';ctx.lineCap='round';ctx.lineWidth=1.8;
+const oval=(x,y,rx,ry,color,angle=0)=>{ctx.fillStyle=color;ctx.strokeStyle='#785244';ctx.beginPath();ctx.ellipse(x,y,rx,ry,angle,0,Math.PI*2);ctx.fill();ctx.stroke();};
+ctx.fillStyle='rgba(15,8,24,.20)';ctx.beginPath();ctx.ellipse(0,18,22,6,0,0,Math.PI*2);ctx.fill();
+// Wagging tail behind a cream-and-caramel puppy silhouette.
+ctx.save();ctx.translate(-16,5+bob);ctx.rotate(Math.sin(dogCompanion.wag)*.35);
+ctx.strokeStyle='#785244';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(0,0);ctx.quadraticCurveTo(-17,-3,-13,-17);ctx.stroke();
+ctx.strokeStyle='#e5b17c';ctx.lineWidth=5;ctx.stroke();ctx.restore();
+oval(0,7+bob,18,13,'#e8b987');
+oval(-11,16+bob,6,5,'#fff0d5');oval(11,16+bob,6,5,'#fff0d5');
+oval(0,-5+bob,18,17,'#f4d1a1');
+oval(-17,-5+bob,7,14,'#ad7657',-.25);oval(17,-5+bob,7,14,'#ad7657',.25);
+ctx.fillStyle='#fff0d5';ctx.beginPath();ctx.ellipse(-3,-11+bob,7,9,-.25,0,Math.PI*2);ctx.fill();
+oval(0,2+bob,11,8,'#fff0d5');
+for(const x of [-7,7]){ctx.fillStyle='#352832';ctx.beginPath();ctx.ellipse(x,-6+bob,2.5,3.2,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff9ef';ctx.beginPath();ctx.arc(x-.7,-7+bob,.9,0,Math.PI*2);ctx.fill();}
+ctx.fillStyle='#51343b';ctx.beginPath();ctx.moveTo(-4,-1+bob);ctx.quadraticCurveTo(0,-4+bob,4,-1+bob);ctx.quadraticCurveTo(0,5+bob,-4,-1+bob);ctx.fill();
+ctx.strokeStyle='#785244';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(0,2+bob);ctx.quadraticCurveTo(-1,7+bob,-5,5+bob);ctx.moveTo(0,2+bob);ctx.quadraticCurveTo(1,7+bob,5,5+bob);ctx.stroke();
+ctx.fillStyle='#ee98ad';ctx.beginPath();ctx.ellipse(0,7+bob,2.4,3,0,0,Math.PI*2);ctx.fill();
+ctx.strokeStyle='#ed8eae';ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(-11,12+bob);ctx.quadraticCurveTo(0,17+bob,11,12+bob);ctx.stroke();
+ctx.fillStyle='#ffe09a';ctx.strokeStyle='#b77e54';ctx.lineWidth=1;
+ctx.beginPath();ctx.moveTo(0,21+bob);ctx.bezierCurveTo(-10,15+bob,-3,10+bob,0,15+bob);ctx.bezierCurveTo(3,10+bob,10,15+bob,0,21+bob);ctx.fill();ctx.stroke();
+ctx.restore();
 }
 
 function drawDogBone(b){
@@ -4915,6 +4982,7 @@ function renderPauseMenu(){
 const hs=getHighScore();
 const bossCount=defeatedBossTypes.size;
 pauseStats.innerHTML=`
+<div class="pauseLiveScore">🏆 Puntuación actual: <strong id="pauseCurrentScore">${computeFinalScore().total.toLocaleString()}</strong></div>
 <div class="pStat"><div class="pStatVal">⚡ ${wave}</div><div class="pStatLbl">Ronda</div></div>
 <div class="pStat"><div class="pStatVal">⭐ ${level}</div><div class="pStatLbl">Nivel</div></div>
 <div class="pStat"><div class="pStatVal">🪙 ${coins}</div><div class="pStatLbl">Monedas</div></div>
@@ -5006,10 +5074,12 @@ function clampNumber(value,min,max,fallback){
 }
 function cleanBrokenEntities(){
   for(const arr of [cats,fishes,hearts,smokes,floatingTexts,pawPrints,quacks,coinsDrops,dogBones,demonOrbs,yarnBalls,powerStars,shockwaves,sparkles,tunaDrops]){
-    for(let i=arr.length-1;i>=0;i--){
+    let kept=0;
+    for(let i=0;i<arr.length;i++){
       const e=arr[i];
-      if(!e||e.dead||!Number.isFinite(e.x)||!Number.isFinite(e.y))arr.splice(i,1);
+      if(e&&!e.dead&&Number.isFinite(e.x)&&Number.isFinite(e.y))arr[kept++]=e;
     }
+    arr.length=kept;
   }
   if(boss&&(!Number.isFinite(boss.x)||!Number.isFinite(boss.y)||!Number.isFinite(boss.hp)||boss.dead))boss=null;
   if(!isTargetAlive(selectedTarget))selectedTarget=null;
@@ -5150,12 +5220,18 @@ if(spawnCooldown<=0&&boss&&boss.type!=="giantCat"){spawnCat();spawnCooldown=Math
 let mx=0,my=0;
 if(keys.w)my--;if(keys.s)my++;if(keys.a)mx--;if(keys.d)mx++;
 const movementLen=Math.hypot(mx,my);
+const moveStartX=player.x,moveStartY=player.y;
 if(movementLen>0){mx/=movementLen;my/=movementLen;player.x+=mx*player.speed*upgrades.moveSpeed*getZoomiesMoveMultiplier()*getStarSpeedMultiplier()*dt;player.y+=my*player.speed*upgrades.moveSpeed*getZoomiesMoveMultiplier()*getStarSpeedMultiplier()*dt;
-if(hasDoneFusionPair("moveSpeed+xpBoost")){fusionMoveXpTimer+=dt;if(fusionMoveXpTimer>=2.8){fusionMoveXpTimer=0;gainXP(1);}}
 }
 
 player.x=Math.max(player.r,Math.min(canvas.width-player.r,player.x));
 player.y=Math.max(player.r,Math.min(canvas.height-player.r,player.y));
+// Solo desplazamiento real por movimiento: empujar el borde no concede EXP.
+if(movementLen>0&&(Math.abs(player.x-moveStartX)>1e-7||Math.abs(player.y-moveStartY)>1e-7)&&hasDoneFusionPair("moveSpeed+xpBoost")){
+  fusionMoveXpTimer+=dt;
+  const ticks=Math.floor((fusionMoveXpTimer+1e-9)/2.8);
+  if(ticks>0){fusionMoveXpTimer=Math.max(0,fusionMoveXpTimer-ticks*2.8);gainXP(ticks);}
+}
 player.angle=Math.atan2(mouse.y-player.y,mouse.x-player.x);
 player.shootAnim=Math.max(0,player.shootAnim-dt);
 player.hurtAnim=Math.max(0,player.hurtAnim-dt);
@@ -5204,7 +5280,16 @@ takePlayerDamage(orb.damage,"El demonio oscuro te ha destruido 😈",.25);makeSm
 }
 for(let j=fishes.length-1;j>=0;j--){
 const fish=fishes[j];if(!isFinitePos(fish))continue;
-if(Math.hypot(fish.x-orb.x,fish.y-orb.y)<orb.r+12*(fish.scale||1)){makeSmoke(orb.x,orb.y);demonOrbs.splice(i,1);if(!fish.pierce)fishes.splice(j,1);break}
+if(Math.hypot(fish.x-orb.x,fish.y-orb.y)<orb.r+12*(fish.scale||1)){
+if(!fish.orbsHit)fish.orbsHit=new WeakSet();
+if(fish.orbsHit.has(orb))continue;
+fish.orbsHit.add(orb);
+orb.hitsLeft=(orb.hitsLeft||1)-1;
+makeSmoke(orb.x,orb.y);
+if(orb.hitsLeft<=0)demonOrbs.splice(i,1);
+if(!fish.pierce)fishes.splice(j,1);
+break;
+}
 }
 if(demonOrbs[i]===orb&&(orb.life<=0||orb.x<-120||orb.x>canvas.width+120||orb.y<-120||orb.y>canvas.height+120))demonOrbs.splice(i,1)
 }
@@ -5357,8 +5442,10 @@ if(!isCatOnScreen(cat))continue;
 for(let j=fishes.length-1;j>=0;j--){
 const fish=fishes[j];
 if(!isFinitePos(fish))continue;
-const d=Math.hypot(cat.x-fish.x,cat.y-fish.y);
-if(d<cat.r+14*(fish.scale||1)){
+const dx=cat.x-fish.x,dy=cat.y-fish.y,hitRadius=cat.r+14*(fish.scale||1);
+if(Math.abs(dx)>=hitRadius||Math.abs(dy)>=hitRadius)continue;
+const d=Math.hypot(dx,dy);
+if(d<hitRadius){
 const hitTargetId=getYarnTargetId(cat);
 if(!fish.hitIds)fish.hitIds=new Set();
 if(fish.hitIds.has(hitTargetId))continue;
@@ -5473,12 +5560,19 @@ limitArray(powerStars,2);
 updateHud()
 }
 
+// Avoid DOM mutations when the visible value has not changed.
+function setHudText(element,value){
+if(element){const text=String(value);if(element.textContent!==text)element.textContent=text;}
+}
+function setHudWidth(element,value){
+if(element.style.width!==value)element.style.width=value;
+}
 function updateHud(){
-if(scoreEl)scoreEl.textContent=score;
-if(shotsEl)shotsEl.textContent=runStats?Math.floor(runStats.fishHits||0):0;
-lifeEl.textContent=Math.ceil(life);levelEl.textContent=level;xpEl.textContent=xp;xpNeedEl.textContent=xpNeed;waveEl.textContent=wave;coinsEl.textContent=coins;timeLeftEl.textContent=boss&&waveTime<=0?"Jefe":Math.ceil(waveTime);
-lifeBar.style.width=`${Math.max(0,(life/upgrades.maxLife)*100)}%`;xpBar.style.width=`${Math.min(100,(xp/xpNeed)*100)}%`;timeBar.style.width=`${Math.max(0,(waveTime/waveDuration)*100)}%`;
-if(helpEl)helpEl.classList.toggle("hiddenAfterIntro",gameStarted&&wave>=3);
+setHudText(scoreEl,score);
+setHudText(shotsEl,runStats?Math.floor(runStats.fishHits||0):0);
+setHudText(lifeEl,Math.ceil(life));setHudText(levelEl,level);setHudText(xpEl,xp);setHudText(xpNeedEl,xpNeed);setHudText(waveEl,wave);setHudText(coinsEl,coins);setHudText(timeLeftEl,boss&&waveTime<=0?"Jefe":Math.ceil(waveTime));
+setHudWidth(lifeBar,`${Math.max(0,(life/upgrades.maxLife)*100)}%`);setHudWidth(xpBar,`${Math.min(100,(xp/xpNeed)*100)}%`);setHudWidth(timeBar,`${Math.max(0,(waveTime/waveDuration)*100)}%`);
+if(helpEl){const hidden=gameStarted&&wave>=3;if(helpEl.classList.contains("hiddenAfterIntro")!==hidden)helpEl.classList.toggle("hiddenAfterIntro",hidden);}
 }
 
 function drawAmbientBackgroundHeart(x,y,scale,alpha,angle,color){
@@ -5498,9 +5592,14 @@ ctx.fill();
 ctx.restore();
 }
 
+// These random parameters stay constant for the current background seed.
+let ambientRandSeed=null,ambientRandCache=[];
 function ambientFishRand(i,offset=0){
+if(ambientRandSeed!==backgroundFishSeed){ambientRandSeed=backgroundFishSeed;ambientRandCache=[];}
+const row=ambientRandCache[i]||(ambientRandCache[i]=[]);
+if(row[offset]!==undefined)return row[offset];
 const x=Math.sin((backgroundFishSeed+1)*12.9898+(i+1)*78.233+offset*37.719)*43758.5453;
-return x-Math.floor(x);
+return row[offset]=x-Math.floor(x);
 }
 
 function drawAmbientBackgroundFish(now){
@@ -5555,47 +5654,20 @@ for(let h=0;h<heartCount;h++){
 }
 
 function drawOneAmbientFish(x,y,dir,scale,alpha,tint,wave,giant){
-ctx.save();
-ctx.translate(x,y);
-if(dir<0)ctx.scale(-1,1);
-ctx.rotate(Math.sin(wave||0)*(giant?.035:.055));
-ctx.scale(scale,scale);
-ctx.globalAlpha=alpha;
-ctx.fillStyle=tint;
-ctx.shadowBlur=0;
-ctx.shadowColor=tint.replace(',1)',`,${giant?.16:.13})`);
-
-ctx.beginPath();
-ctx.ellipse(0,0,24,12,0,0,Math.PI*2);
-ctx.fill();
-
-ctx.beginPath();
-ctx.moveTo(-24,0);
-ctx.lineTo(-42,-12);
-ctx.lineTo(-37,0);
-ctx.lineTo(-42,12);
-ctx.closePath();
-ctx.fill();
-
-ctx.beginPath();
-ctx.moveTo(2,-4);
-ctx.quadraticCurveTo(-2,-16,-11,-18);
-ctx.quadraticCurveTo(-3,-10,4,-8);
-ctx.closePath();
-ctx.fill();
-
-ctx.beginPath();
-ctx.moveTo(4,4);
-ctx.quadraticCurveTo(-3,14,-14,16);
-ctx.quadraticCurveTo(-5,8,3,7);
-ctx.closePath();
-ctx.fill();
-
-ctx.globalAlpha*=.45;
-ctx.fillStyle="#f7fbff";
-ctx.beginPath();
-ctx.ellipse(8,-3,6,2.5,-.25,0,Math.PI*2);
-ctx.fill();
+ctx.save();ctx.translate(x,y);if(dir<0)ctx.scale(-1,1);
+ctx.rotate(Math.sin(wave||0)*(giant?.035:.055));ctx.scale(scale,scale);
+ctx.globalAlpha=alpha;ctx.shadowBlur=0;ctx.lineJoin='round';ctx.lineWidth=1.6;
+const sway=Math.sin(wave||0)*3;
+ctx.fillStyle=tint;ctx.strokeStyle='#f9e8f7';
+ctx.beginPath();ctx.moveTo(-19,0);ctx.bezierCurveTo(-29,-4,-36,-14+sway,-43,-12+sway);ctx.quadraticCurveTo(-38,0+sway,-43,12+sway);ctx.bezierCurveTo(-33,14+sway,-27,3,-19,0);ctx.fill();ctx.stroke();
+ctx.beginPath();ctx.moveTo(-9,-9);ctx.quadraticCurveTo(-5,-24,9,-13);ctx.lineTo(13,-7);ctx.closePath();ctx.fill();ctx.stroke();
+ctx.beginPath();ctx.ellipse(0,0,25,13,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+ctx.fillStyle='#fff4e9';ctx.globalAlpha=alpha*.55;ctx.beginPath();ctx.ellipse(1,5,18,6,0,0,Math.PI*2);ctx.fill();
+ctx.globalAlpha=alpha;ctx.fillStyle=tint;ctx.beginPath();ctx.moveTo(-2,1);ctx.quadraticCurveTo(-16,18,-17,7);ctx.quadraticCurveTo(-10,2,-2,1);ctx.fill();ctx.stroke();
+ctx.strokeStyle='#fcf3ff';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(10,-7);ctx.quadraticCurveTo(5,0,10,7);ctx.moveTo(-26,0);ctx.lineTo(-37,-6+sway);ctx.moveTo(-26,0);ctx.lineTo(-37,6+sway);ctx.stroke();
+ctx.fillStyle='#30253f';ctx.beginPath();ctx.arc(17,-3,2.6,0,Math.PI*2);ctx.fill();
+ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(17.5,-3.8,.9,0,Math.PI*2);ctx.fill();
+ctx.globalAlpha=alpha*.7;ctx.beginPath();ctx.ellipse(-2,-7,9,2.5,-.15,0,Math.PI*2);ctx.fill();
 ctx.restore();
 }
 
@@ -5684,6 +5756,11 @@ ctx.fillStyle="#233448";ctx.beginPath();ctx.arc(8,-1,2.4,0,Math.PI*2);ctx.fill()
 }
 
 function drawPlayer(){
+const category="player";
+if(selectedCosmetic(category)!==category+"_grayscale")return drawPlayerArt();
+ctx.save();try{ctx.filter="grayscale(1)";return drawPlayerArt();}finally{ctx.restore();}
+}
+function drawPlayerArt(){
 if(selectedCosmetic("player")==="player_low_poly"){drawLowPolyPlayer();return;}
 drawEntityShadow(player.x,player.y,player.r*1.05,player.r*.34,.20);
 ctx.save();
@@ -5804,6 +5881,11 @@ ctx.closePath();
 }
 
 function drawShield(){
+const category="fish";
+if(selectedCosmetic(category)!==category+"_grayscale")return drawShieldArt();
+ctx.save();try{ctx.filter="grayscale(1)";return drawShieldArt();}finally{ctx.restore();}
+}
+function drawShieldArt(){
 if(!upgrades.shield)return;
 const shieldLvl=effectLevel("shield");
 const shieldR=52+shieldLvl*4,orbs=2+Math.min(4,shieldLvl),orbSize=12+Math.min(12,shieldLvl*1.7);
@@ -5822,6 +5904,11 @@ drawFishSkinDetails({shieldShot:true});ctx.restore()
 }
 
 function drawFish(f){
+const category="fish";
+if(selectedCosmetic(category)!==category+"_grayscale")return drawFishArt(f);
+ctx.save();try{ctx.filter="grayscale(1)";return drawFishArt(f);}finally{ctx.restore();}
+}
+function drawFishArt(f){
 if(selectedCosmetic("fish")==="fish_low_poly"){drawLowPolyFish(f);return;}
 
 drawEntityShadow(f.x,f.y,18*(f.scale||1),5*(f.scale||1),.10);
@@ -5834,52 +5921,79 @@ softFishBody(body,tail);drawFishSkinDetails(f);ctx.restore()
 }
 
 function drawCat(cat){
-if(selectedCosmetic("enemy")==="enemy_low_poly"){drawLowPolyCat(cat);return;}
+const category="enemy";
+if(selectedCosmetic(category)!==category+"_grayscale")return drawCatArt(cat);
+ctx.save();try{ctx.filter="grayscale(1)";return drawCatArt(cat);}finally{ctx.restore();}
+}
+function drawEnemyIdentity(cat){
+ctx.save();ctx.scale(cat.r/24,cat.r/24);ctx.lineJoin="round";ctx.lineCap="round";
+const oval=(x,y,rx,ry,color)=>{ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill();};
+const line=(x,y,xx,yy,color,width=2)=>{ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(xx,yy);ctx.stroke();};
+if(cat.rainbow){
+ctx.strokeStyle='#ffe8a3';ctx.lineWidth=1.5;
+for(let i=0;i<3;i++){const angle=performance.now()*.0005+i*Math.PI*2/3,x=Math.cos(angle)*32,y=Math.sin(angle)*29;ctx.beginPath();ctx.moveTo(x-3,y);ctx.lineTo(x+3,y);ctx.moveTo(x,y-3);ctx.lineTo(x,y+3);ctx.stroke();}
+ctx.fillStyle='#ffe09a';ctx.strokeStyle='#997645';ctx.beginPath();ctx.moveTo(-13,-23);ctx.lineTo(-15,-34);ctx.lineTo(-6,-29);ctx.lineTo(0,-37);ctx.lineTo(6,-29);ctx.lineTo(15,-34);ctx.lineTo(13,-23);ctx.closePath();ctx.fill();ctx.stroke();
+for(const x of [-8,0,8])oval(x,-26,1.8,1.8,x===0?'#f587b6':'#74d5df');
+}else if(cat.small){
+oval(-15,-22,9,9,'#b38b73');oval(15,-22,9,9,'#b38b73');oval(-15,-22,5,5,'#f8d8ce');oval(15,-22,5,5,'#f8d8ce');
+}else if(cat.type==='thief'){
+ctx.fillStyle='#36333e';ctx.beginPath();ctx.roundRect(-20,-11,40,13,6);ctx.fill();
+oval(-8,-5,4,2.5,'#fff4db');oval(8,-5,4,2.5,'#fff4db');
+line(-21,-5,-29,-12,'#36333e',4);line(-21,-5,-31,-3,'#36333e',4);
+oval(20,17,9,11,'#bd9973');line(14,9,25,9,'#785d49',3);drawPawCoin(20,17,5);
+}else if(cat.type==='yarn'){
+oval(16,16,12,12,'#dbc4ee');ctx.strokeStyle='#805caa';ctx.lineWidth=1.6;
+for(let i=-1;i<=1;i++){ctx.beginPath();ctx.ellipse(16,16,5+i,10,i*.7,0,Math.PI*2);ctx.stroke();}
+ctx.beginPath();ctx.moveTo(5,20);ctx.bezierCurveTo(-6,29,-14,13,-22,20);ctx.stroke();line(10,8,24,21,'#fff1df');
+}else if(cat.type==='sleepy'){
+ctx.fillStyle=cat.sleepState==='awake'?'#df91ad':'#8875b0';ctx.strokeStyle='#5c4e77';ctx.lineWidth=1.5;
+ctx.beginPath();ctx.moveTo(-20,-18);ctx.quadraticCurveTo(-6,-45,17,-29);ctx.lineTo(26,-14);ctx.quadraticCurveTo(7,-22,-20,-18);ctx.fill();ctx.stroke();oval(26,-14,5,5,'#fff1df');line(-18,-18,12,-23,'#fff1df',4);
+if(cat.sleepState==='awake'){line(-13,-11,-6,-8,'#784452');line(13,-11,6,-8,'#784452');}else{ctx.fillStyle='#e7d6fa';ctx.font="bold 12px 'Gatitos UI'";ctx.fillText('z',29,-25);}
+}else if(cat.type==='mini'){
+line(-7,-20,-11,-29,'#9e6749',3);line(0,-22,0,-32,'#9e6749',3);line(7,-20,11,-29,'#9e6749',3);oval(-13,19,7,4,'#fff0d5');oval(13,19,7,4,'#fff0d5');
+}else if(cat.type==='glutton'){
+ctx.fillStyle='#f8efe0';ctx.strokeStyle='#a77255';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-15,10);ctx.quadraticCurveTo(0,17,15,10);ctx.lineTo(11,29);ctx.quadraticCurveTo(0,34,-11,29);ctx.closePath();ctx.fill();ctx.stroke();oval(0,22,6,3,'#ddac78');ctx.fillStyle='#ddac78';ctx.beginPath();ctx.moveTo(-5,22);ctx.lineTo(-10,18);ctx.lineTo(-10,26);ctx.fill();
+}else if(cat.type==='musician'){
+ctx.strokeStyle='#59486d';ctx.lineWidth=4;ctx.beginPath();ctx.arc(0,-4,22,Math.PI,Math.PI*2);ctx.stroke();
+for(const x of [-22,22]){oval(x,0,6,10,'#a97ec3');oval(x,0,3,7,'#ead5f3');}
+line(23,7,12,13,'#59486d');oval(10,13,3,2,'#59486d');
+ctx.fillStyle='#f4d393';ctx.font="bold 17px 'Gatitos UI'";ctx.fillText('♪',28,-15);
+}else if(cat.type==='student'){
+ctx.strokeStyle='#38516b';ctx.lineWidth=2;
+for(const x of [-9,9]){ctx.beginPath();ctx.arc(x,-5,6,0,Math.PI*2);ctx.stroke();}line(-3,-5,3,-5,'#38516b');
+ctx.fillStyle='#486681';ctx.beginPath();ctx.moveTo(-22,-25);ctx.lineTo(0,-33);ctx.lineTo(22,-25);ctx.lineTo(0,-18);ctx.closePath();ctx.fill();line(18,-25,18,-13,'#eac778');oval(18,-12,2,3,'#eac778');
+ctx.fillStyle='#f9edd8';ctx.strokeStyle='#56758c';ctx.beginPath();ctx.moveTo(-16,14);ctx.lineTo(0,17);ctx.lineTo(16,14);ctx.lineTo(16,28);ctx.lineTo(0,31);ctx.lineTo(-16,28);ctx.closePath();ctx.fill();ctx.stroke();line(0,18,0,29,'#56758c',1);
+for(let i=0;i<Math.min(5,cat.studyLevel||0);i++)oval(-8+i*4,25,1.2,1.2,'#76563a');
+}else{
+for(const x of [-7,0,7])line(x,-19,x*.8,-13,'rgba(105,72,73,.5)',2.5);
+}
+ctx.restore();
+}
+function drawCatArt(cat){
+if(selectedCosmetic('enemy')==='enemy_low_poly'){drawLowPolyCat(cat);return;}
 drawEntityShadow(cat.x,cat.y,cat.r*.9,cat.r*.26,.17);
-ctx.save();ctx.translate(cat.x,cat.y);const spawnScale=cat.maxSpawnAnim?Math.max(.05,1-(cat.spawnAnim||0)/cat.maxSpawnAnim):1;ctx.scale(spawnScale,spawnScale);const knocked=Math.hypot(cat.knockVx||0,cat.knockVy||0)>60;if(knocked){ctx.save();ctx.globalAlpha=.28;ctx.strokeStyle="#ffd166";ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,cat.r+10+Math.sin(performance.now()*0.035)*3,0,Math.PI*2);ctx.stroke();ctx.restore();}const squeeze=cat.hitAnim>0?1.16:1;ctx.scale(squeeze,1/squeeze);
-if(cat.rainbow){const g=ctx.createLinearGradient(-cat.r,-cat.r,cat.r,cat.r);g.addColorStop(0,"#ff4d8d");g.addColorStop(.2,"#ffd166");g.addColorStop(.4,"#70e000");g.addColorStop(.6,"#4cc9f0");g.addColorStop(.8,"#9b5de5");g.addColorStop(1,"#ff4d8d");ctx.fillStyle=g}else ctx.fillStyle=getEnemySkinBaseColor(cat);
-const headColor=ctx.fillStyle;softCatHead(cat.r,headColor);
-if(cat.type==="thief"){
-  ctx.fillStyle="#111";ctx.fillRect(-17,-10,34,10);
-  ctx.fillStyle="#ffd166";ctx.font="bold 18px 'Gatitos UI', Arial, sans-serif, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Emoji'";ctx.textAlign="center";drawPawCoin(0,-31,8);
-}else if(cat.type==="yarn"){
-  ctx.strokeStyle="#f8f0ff";ctx.lineWidth=3;
-  ctx.beginPath();ctx.arc(0,2,cat.r*.58,0,Math.PI*2);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(-13,4);ctx.quadraticCurveTo(0,-12,13,4);ctx.stroke();
-  ctx.fillStyle="#fff";ctx.font="bold 17px 'Gatitos UI', Arial, sans-serif, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Emoji'";ctx.textAlign="center";ctx.fillText("🧶",0,-32);
+ctx.save();ctx.translate(cat.x,cat.y);
+const spawnScale=cat.maxSpawnAnim?Math.max(.05,1-(cat.spawnAnim||0)/cat.maxSpawnAnim):1;
+ctx.scale(spawnScale,spawnScale);const squeeze=cat.hitAnim>0?1.12:1;ctx.scale(squeeze,1/squeeze);
+if(cat.type==='musician'||cat.rainbow||Math.hypot(cat.knockVx||0,cat.knockVy||0)>60){
+ctx.save();ctx.globalAlpha=.45;ctx.strokeStyle=cat.rainbow?'#fff3c0':(cat.musicImmuneTimer||0)>0?'#ffd166':'#c398df';ctx.lineWidth=(cat.musicImmuneTimer||0)>0?4:1.5;ctx.beginPath();ctx.arc(0,0,cat.r+8,0,Math.PI*2);ctx.stroke();ctx.restore();
 }
-if(cat.type==="sleepy"){
-  // Orejas interiores (color de alerta si está despierto)
-  if(cat.sleepState==="awake"){ctx.fillStyle="#ff8fab";ctx.beginPath();ctx.moveTo(-18,-15);ctx.lineTo(-10,-36);ctx.lineTo(0,-16);ctx.closePath();ctx.moveTo(18,-15);ctx.lineTo(10,-36);ctx.lineTo(0,-16);ctx.closePath();ctx.fill();}
-  // Z flotantes
-  if(cat.sleepState==="sleeping"||!cat.sleepState){const ta=performance.now()/1000;const za=Math.abs(Math.sin(ta*1.4));ctx.save();ctx.globalAlpha=za;ctx.fillStyle="#7c5cbf";ctx.font="bold 11px 'Gatitos UI', Arial, sans-serif, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Emoji'";ctx.textAlign="center";ctx.fillText("z",cat.r-2,-20);ctx.globalAlpha=za*.55;ctx.font="bold 8px 'Gatitos UI', Arial, sans-serif, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Emoji'";ctx.fillText("z",cat.r+8,-32);ctx.restore();}
-  ctx.font=cat.sleepState==="awake"?"bold 20px 'Gatitos UI', Arial, sans-serif, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Emoji'":"bold 14px 'Gatitos UI', Arial, sans-serif, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Emoji'";ctx.textAlign="center";ctx.fillText(cat.sleepState==="awake"?"😡":"💤",0,-34);
-}else if(cat.type==="mini"){
-  ctx.font="9px 'Gatitos UI', Arial, sans-serif, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Emoji'";ctx.textAlign="center";ctx.fillText("🐾",0,-17);
-}else if(cat.type==="glutton"){
-  ctx.strokeStyle="#c86a3c";ctx.lineWidth=2.5;ctx.beginPath();ctx.ellipse(0,6,cat.r*.54,cat.r*.42,0,0,Math.PI*2);ctx.stroke();
-  ctx.fillStyle="rgba(255,255,255,0.35)";ctx.beginPath();ctx.ellipse(0,6,10,8,0,0,Math.PI*2);ctx.fill();
-  ctx.font="bold 15px 'Gatitos UI', Arial, sans-serif, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Emoji'";ctx.textAlign="center";ctx.fillText("🍽️",0,-36);
-}else if(cat.type==="musician"){
-  ctx.save();ctx.globalAlpha=.22+.08*Math.sin(performance.now()/180);ctx.strokeStyle=(cat.musicImmuneTimer||0)>0?"#ffd166":"#f06595";ctx.lineWidth=(cat.musicImmuneTimer||0)>0?6:4;ctx.beginPath();ctx.arc(0,0,cat.r+18+((cat.musicImmuneTimer||0)>0?5:0),0,Math.PI*2);ctx.stroke();ctx.restore();
-  ctx.strokeStyle="#9b4fba";ctx.lineWidth=3.5;ctx.beginPath();ctx.arc(0,-4,15,.75*Math.PI,.25*Math.PI,true);ctx.stroke();
-  ctx.fillStyle="#9b4fba";ctx.beginPath();ctx.ellipse(-15,1,5,7,-.2,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.ellipse(15,1,5,7,.2,0,Math.PI*2);ctx.fill();
-  const tNote=performance.now()/1000;const na=tNote*2.6;
-  ctx.font="bold 15px 'Gatitos UI', Arial, sans-serif, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Emoji'";ctx.textAlign="center";ctx.save();ctx.translate(Math.cos(na)*28,Math.sin(na)*12-10);ctx.fillText("♪",0,0);ctx.restore();
-  ctx.save();ctx.translate(Math.cos(na+Math.PI)*28,Math.sin(na+Math.PI)*12-10);ctx.fillText("♩",0,0);ctx.restore();
-}else if(cat.type==="student"){
-  ctx.strokeStyle="#2c5fa8";ctx.lineWidth=2;ctx.beginPath();ctx.arc(-8,-4,5,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.arc(8,-4,5,0,Math.PI*2);ctx.stroke();
-  ctx.beginPath();ctx.moveTo(-3,-4);ctx.lineTo(3,-4);ctx.stroke();ctx.beginPath();ctx.moveTo(-13,-4);ctx.lineTo(-16,-2);ctx.stroke();ctx.beginPath();ctx.moveTo(13,-4);ctx.lineTo(16,-2);ctx.stroke();
-  ctx.font="bold 13px 'Gatitos UI', Arial, sans-serif, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Emoji'";ctx.textAlign="center";ctx.fillText("📚",0,-34);
-  const sl=cat.studyLevel||0;if(sl>0){ctx.fillStyle="rgba(255,255,255,0.85)";ctx.fillRect(-17,-53,34,5);ctx.fillStyle=sl>=4?"#ff4d6d":"#ffd166";ctx.fillRect(-17,-53,34*(sl/5),5);ctx.fillStyle="#fff";ctx.font="bold 10px 'Gatitos UI', Arial, sans-serif, 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Emoji'";ctx.fillText(sl>=5?"EXAMEN":"ESTUDIA",0,-59);}
+let color=getEnemySkinBaseColor(cat);
+if(cat.rainbow){color=ctx.createLinearGradient(-cat.r,-cat.r,cat.r,cat.r);['#f899bc','#ffe39a','#bfe5aa','#9edfeb','#cbb7ed'].forEach((c,i)=>color.addColorStop(i/4,c));}
+softCatHead(cat.r,color);
+ctx.save();ctx.scale(cat.r/24,cat.r/24);
+ctx.fillStyle='rgba(255,246,231,.65)';ctx.beginPath();ctx.ellipse(0,6,13,9,0,0,Math.PI*2);ctx.fill();
+ctx.fillStyle='#47313e';ctx.strokeStyle='#47313e';ctx.lineWidth=1.7;
+if(cat.type==='sleepy'&&cat.sleepState!=='awake'){
+for(const x of [-9,9]){ctx.beginPath();ctx.moveTo(x-4,-4);ctx.quadraticCurveTo(x,-1,x+4,-4);ctx.stroke();}
+}else{
+for(const x of [-9,9]){ctx.fillStyle='#47313e';ctx.beginPath();ctx.ellipse(x,-5,2.7,3.5,0,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff8f0';ctx.beginPath();ctx.arc(x-.7,-6,.8,0,Math.PI*2);ctx.fill();}
 }
-if(cat.type==="sleepy"&&cat.sleepState!=="awake"){ctx.strokeStyle="#44222b";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-12,-4);ctx.lineTo(-6,-4);ctx.stroke();ctx.beginPath();ctx.moveTo(6,-4);ctx.lineTo(12,-4);ctx.stroke();}else{ctx.fillStyle="#44222b";ctx.beginPath();ctx.arc(-9,-4,3,0,Math.PI*2);ctx.arc(9,-4,3,0,Math.PI*2);ctx.fill();}
-ctx.strokeStyle="#44222b";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,3);ctx.lineTo(0,9);ctx.stroke();
-ctx.beginPath();ctx.arc(-5,9,5,0,Math.PI);ctx.arc(5,9,5,0,Math.PI);ctx.stroke();
-ctx.strokeStyle="#5a2a3a";ctx.beginPath();ctx.moveTo(-15,4);ctx.lineTo(-31,0);ctx.moveTo(-15,9);ctx.lineTo(-32,11);ctx.moveTo(15,4);ctx.lineTo(31,0);ctx.moveTo(15,9);ctx.lineTo(32,11);ctx.stroke();
-drawEnemySkinDetails(cat);
-if(cat.maxHp>1){ctx.fillStyle="rgba(255,255,255,0.85)";ctx.fillRect(-18,-48,36,5);ctx.fillStyle=cat.rainbow?"#ffd166":cat.type==="thief"?"#ffd166":cat.type==="yarn"?"#b197fc":cat.type==="sleepy"?"#c8b6e2":cat.type==="glutton"?"#e8956d":cat.type==="musician"?"#d084c8":cat.type==="student"?"#74b9ff":"#ff8fab";ctx.fillRect(-18,-48,36*Math.max(0,cat.hp/cat.maxHp),5)}
-ctx.restore()
+ctx.fillStyle='#b36c83';ctx.beginPath();ctx.moveTo(-3,3);ctx.lineTo(3,3);ctx.lineTo(0,6);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(0,6);ctx.quadraticCurveTo(-2,12,-6,8);ctx.moveTo(0,6);ctx.quadraticCurveTo(2,12,6,8);ctx.stroke();
+ctx.strokeStyle='#8c6670';ctx.lineWidth=1.3;for(const side of [-1,1]){ctx.beginPath();ctx.moveTo(side*16,3);ctx.lineTo(side*28,0);ctx.moveTo(side*16,8);ctx.lineTo(side*28,10);ctx.stroke();}
+ctx.restore();drawEnemyIdentity(cat);drawEnemySkinDetails(cat);
+if(cat.maxHp>1){ctx.fillStyle='rgba(255,255,255,.8)';ctx.fillRect(-18,-cat.r-26,36,4);ctx.fillStyle=cat.rainbow?'#ffd166':'#ef94b4';ctx.fillRect(-18,-cat.r-26,36*Math.max(0,Math.min(1,cat.hp/cat.maxHp)),4);}
+ctx.restore();
 }
 
 function drawBossHealthBar(){
@@ -5894,6 +6008,11 @@ ctx.restore();
 }
 
 function drawBoss(){
+const category=boss?({giantCat:"boss_giant",duck:"boss_duck",seal:"boss_seal",demon:"boss_demon"}[boss.type]):"";
+if(selectedCosmetic(category)!==category+"_grayscale")return drawBossArt();
+ctx.save();try{ctx.filter="grayscale(1)";return drawBossArt();}finally{ctx.restore();}
+}
+function drawBossArt(){
 if(!boss||!isFinitePos(boss))return;
 const now=performance.now()/1000;
 drawEntityShadow(boss.x,boss.y,boss.r*1.12,boss.r*.34,boss.type==="demon"?.34:.22);
@@ -5924,6 +6043,7 @@ ctx.fillStyle="#3a2f55";ctx.font="bold 14px 'Gatitos UI', Arial, sans-serif, 'Se
 
 function drawDemonOrb(o){
 ctx.save();ctx.translate(o.x,o.y);
+if(o.hitsLeft>1){ctx.strokeStyle="#ffd166";ctx.lineWidth=2;ctx.beginPath();ctx.arc(0,0,o.r+5,0,Math.PI*2);ctx.stroke();}
 ctx.fillStyle="#16051f";ctx.strokeStyle="#ff4d8d";ctx.lineWidth=3;ctx.shadowColor="#9b5de5";ctx.shadowBlur=16;
 ctx.beginPath();ctx.arc(0,0,o.r,0,Math.PI*2);ctx.fill();ctx.stroke();
 ctx.fillStyle="rgba(255,77,141,.75)";ctx.beginPath();ctx.arc(-4,-4,o.r*.35,0,Math.PI*2);ctx.fill();

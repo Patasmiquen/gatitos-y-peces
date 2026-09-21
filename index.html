@@ -55,7 +55,7 @@
   <div class="cosmeticsHeader"><span>🫧 Escamas: <b id="scaleBalance">0</b></span><button id="cosmeticsResetBtn" type="button">Aspecto normal</button></div>
   <div class="randomSkinsControls"><button id="randomSkinsButton" type="button" aria-pressed="false">🎲 Random: desactivado</button><p>Al empezar o reiniciar: una skin desbloqueada por categoría. Sin skins, aspecto normal. Tu selección manual se conserva.</p></div><div class="cosmeticsTabs"><button id="cosmeticsSkinsTab" type="button" class="active">Skins</button><button id="cosmeticsPacksTab" type="button">Packs</button></div>
   <div id="cosmeticsContent" class="cosmeticsContent"></div>
-  <div class="cosmeticsNote">Las skins son solo visuales y se guardan en este navegador.</div>
+  <div class="cosmeticsNote">Más puntos, más escamas; crecimiento más lento desde 30.000 puntos. Las skins son solo visuales y se guardan en este navegador.</div>
 </div>
 </details>
 <details id="howToPlay">
@@ -131,6 +131,7 @@
 <button class="pauseButton" id="resumeButton">Continuar</button>
 </div>
 <div class="pauseDangerActions" aria-label="Opciones de salida">
+<button class="pauseButton" id="finishRunButton" title="Termina la partida y guarda tu puntuación">Acabar aquí</button>
 <button class="pauseButton secondary" id="restartButton">Reiniciar</button>
 <button class="pauseButton menuButton" id="menuButton">Volver al menú</button>
 </div>
@@ -155,7 +156,7 @@
 <div id="gameOverPanel">
 <div id="gameOverBox">
 <div id="gameOverRankEmoji" class="scoreRank">💀</div>
-<h1>💀 Game Over</h1>
+<h1 id="gameOverTitle">💔 Fin de la partida</h1>
 <div id="gameOverRankLabel" class="rankLabel"></div>
 <div class="scoreTotal" id="gameOverTotal">0</div>
 <div style="font-size:13px;color:#ffb3c1;margin-bottom:4px">puntos finales</div>
