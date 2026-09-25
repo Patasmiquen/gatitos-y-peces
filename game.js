@@ -301,7 +301,7 @@ function renderRankingList(el,items){
     const isMe=me&&safeName.toLowerCase()===escapeHtml(me).toLowerCase();
     const isGold=!!s.goldenName||(isMe&&hasGoldenPlayerName());
     const total=Number(s.score||0).toLocaleString();
-    const meta=`Ronda ${Number(s.wave||0)} · Nivel ${Number(s.level||0)} · Jefes ${Number(s.bosses||0)}/4`;
+    const meta=`Ronda ${Number(s.wave||0)} · Nivel ${Number(s.level||0)} · Tiempo ${Number.isFinite(s.elapsedSeconds)?formatRunTime(s.elapsedSeconds):"sin registrar"}`;
     const medal=i===0?"🥇":i===1?"🥈":i===2?"🥉":`#${i+1}`;
     const realRank=s._fullRank&&s._fullRank!==i+1?` · puesto real #${s._fullRank}`:"";
     const duplicateCount=rankNameCounts.get(s._nameKey)||1;
@@ -324,7 +324,7 @@ rankingLists.forEach(id=>rankingListEls[id]?.addEventListener("keydown",e=>{
 function renderRankingNameDetails(nameKey){
   const rows=getRankingPositionsForName(nameKey);
   if(rows.length<=1)return `<div class="onlineRankDetails">Solo aparece una puntuación en los resultados cargados.</div>`;
-  const positions=rows.slice(0,12).map(r=>`#${r._fullRank}: ${Number(r.score||0).toLocaleString()} pts · R${Number(r.wave||0)} · Nv${Number(r.level||0)}`).join("<br>");
+  const positions=rows.slice(0,12).map(r=>`#${r._fullRank}: ${Number(r.score||0).toLocaleString()} pts · R${Number(r.wave||0)} · Nv${Number(r.level||0)} · ${Number.isFinite(r.elapsedSeconds)?formatRunTime(r.elapsedSeconds):"Tiempo sin registrar"}`).join("<br>");
   const more=rows.length>12?`<br>… y ${rows.length-12} más`:"";
   return `<div class="onlineRankDetails"><b>También aparece en:</b><br>${positions}${more}</div>`;
 }
@@ -413,6 +413,7 @@ async function submitOnlineScore(finalScore, statusEl, rankingEl){
     score:Math.max(0,Math.floor(Number(finalScore.total)||0)),
     wave:Math.max(1,Math.floor(Number(wave)||1)),
     level:Math.max(1,Math.floor(Number(level)||1)),
+    elapsedSeconds:Math.floor(runStats?.elapsed||0),
     bosses:Math.max(0,Math.min(4,Math.floor(defeatedBossTypes?.size||0))),
     impacts:Math.max(0,Math.floor(Number(finalScore.impactCount)||0)),
     result:defeatedBossTypes?.size>=4?"boss_victory":"game_over",
@@ -488,33 +489,33 @@ const COSMETIC_KEYS={scales:"gatitos_cosmetic_scales",owned:"gatitos_cosmetic_ow
 const cosmeticPanel=document.getElementById("cosmeticsPanel"),scaleBalanceEl=document.getElementById("scaleBalance"),cosmeticsContentEl=document.getElementById("cosmeticsContent"),cosmeticsSkinsTab=document.getElementById("cosmeticsSkinsTab"),cosmeticsPacksTab=document.getElementById("cosmeticsPacksTab"),cosmeticsResetBtn=document.getElementById("cosmeticsResetBtn");
 const COSMETIC_CATEGORIES={player:"Jugador",fish:"Peces",enemy:"Enemigos",boss_giant:"Jefe gato gigante",boss_duck:"Jefe pato",boss_seal:"Jefe foca",boss_demon:"Jefe demonio"};
 const COSMETICS=[
-  {id:"player_green",name:"Gatito verde",category:"player",price:100,preview:"🟢",desc:"Cambia el color del jugador."},
-  {id:"player_pink",name:"Gatito rosa",category:"player",price:100,preview:"🌸",desc:"Cambia el color del jugador."},
-  {id:"player_elegant",name:"Gatito elegante",category:"player",price:200,preview:"🎀",desc:"Jugador con detalle elegante.",pack:"elegant"},
-  {id:"fish_elegant",name:"Peces con sombrero",category:"fish",price:250,preview:"🎩",desc:"Peces con sombrerito elegante.",pack:"elegant"},
-  {id:"fish_pirate",name:"Peces pirata",category:"fish",price:180,preview:"🏴‍☠️",desc:"Peces con parche pirata."},
-  {id:"fish_heart",name:"Peces corazón",category:"fish",price:180,preview:"💖",desc:"Peces con detalle de corazón."},
-  {id:"enemy_gray",name:"Gatos grises",category:"enemy",price:150,preview:"🐱",desc:"Gatos normales en tono gris."},
-  {id:"enemy_elegant",name:"Gatos con pajarita",category:"enemy",price:250,preview:"🎀",desc:"Los gatos enemigos llevan pajarita.",pack:"elegant"},
-  {id:"boss_duck_monocle",name:"Pato con monóculo",category:"boss_duck",price:250,preview:"🦆",desc:"El pato jefe va más distinguido.",pack:"elegant"},
-  {id:"boss_seal_tie",name:"Foca elegante",category:"boss_seal",price:250,preview:"🦭",desc:"Collar de perlas con un pequeño lazo.",pack:"elegant"},
-  {id:"boss_demon_cape",name:"Demonio con capa",category:"boss_demon",price:300,preview:"😈",desc:"El demonio jefe lleva capa.",pack:"elegant"},
-  {id:"player_low_poly",name:"Jugador low poly",category:"player",price:180,preview:"🟦",desc:"El jugador se convierte en un cubo low poly.",pack:"low_poly"},
-  {id:"fish_low_poly",name:"Peces low poly",category:"fish",price:180,preview:"🟦",desc:"Los peces se convierten en cubitos.",pack:"low_poly"},
-  {id:"enemy_low_poly",name:"Gatos low poly",category:"enemy",price:220,preview:"🟫",desc:"Los gatos enemigos se convierten en cubos.",pack:"low_poly"},
-  {id:"boss_giant_low_poly",name:"Gato jefe low poly",category:"boss_giant",price:260,preview:"🟨",desc:"El gato jefe se convierte en un cubo enorme.",pack:"low_poly"},
-  {id:"boss_duck_low_poly",name:"Pato low poly",category:"boss_duck",price:260,preview:"🟨",desc:"El pato jefe se convierte en un cubo.",pack:"low_poly"},
-  {id:"boss_seal_low_poly",name:"Foca low poly",category:"boss_seal",price:260,preview:"⬜",desc:"La foca jefe se convierte en un cubo.",pack:"low_poly"},
-  {id:"boss_demon_low_poly",name:"Demonio low poly",category:"boss_demon",price:300,preview:"🟥",desc:"El demonio jefe se convierte en un cubo oscuro.",pack:"low_poly"},
-  {"id": "player_grayscale", "name": "Gatito en gris", "category": "player", "price": 180, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"},
-  {"id": "fish_grayscale", "name": "Peces en gris", "category": "fish", "price": 180, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"},
-  {"id": "enemy_grayscale", "name": "Enemigos en gris", "category": "enemy", "price": 220, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"},
-  {"id": "boss_giant_grayscale", "name": "Jefe gato en gris", "category": "boss_giant", "price": 260, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"},
-  {"id": "boss_duck_grayscale", "name": "Jefe pato en gris", "category": "boss_duck", "price": 260, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"},
-  {"id": "boss_seal_grayscale", "name": "Jefe foca en gris", "category": "boss_seal", "price": 260, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"},
-  {"id": "boss_demon_grayscale", "name": "Jefe demonio en gris", "category": "boss_demon", "price": 300, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"}
+  {id:"player_green",name:"Jugador · Guardián del bosque",category:"player",price:100,preview:"🟢",desc:"Pelaje verde, marcas oscuras y corona de hojas."},
+  {id:"player_pink",name:"Jugador · Flor de cerezo",category:"player",price:100,preview:"🌸",desc:"Pelaje rosa, flor clara y marca de corazón."},
+  {id:"player_elegant",name:"Jugador · Gala de marfil",category:"player",price:200,preview:"🎀",desc:"Pelaje marfil, sombrero de copa y gran pajarita azul.",pack:"elegant"},
+  {id:"fish_elegant",name:"Peces · Sombrero de copa",category:"fish",price:250,preview:"🎩",desc:"Peces marfil con cola dorada y sombrero negro.",pack:"elegant"},
+  {id:"fish_pirate",name:"Peces · Corsarios",category:"fish",price:180,preview:"🏴‍☠️",desc:"Peces ámbar con pañuelo rojo y parche pirata."},
+  {id:"fish_heart",name:"Peces · Corazones",category:"fish",price:180,preview:"💖",desc:"Peces rosas con grandes marcas de corazón."},
+  {id:"enemy_gray",name:"Enemigos · Tigres de plata",category:"enemy",price:150,preview:"🐱",desc:"Gatos normales plateados con rayas oscuras y medalla dorada; conserva las variantes especiales."},
+  {id:"enemy_elegant",name:"Enemigos · Pajarita de gala",category:"enemy",price:250,preview:"🎀",desc:"Los gatos enemigos llevan pajarita.",pack:"elegant"},
+  {id:"boss_duck_monocle",name:"Pato · Señor Monóculo",category:"boss_duck",price:250,preview:"🦆",desc:"Pato marfil con ala azul, pajarita, sombrero y monóculo.",pack:"elegant"},
+  {id:"boss_seal_tie",name:"Foca · Dama de las perlas",category:"boss_seal",price:250,preview:"🦭",desc:"Pelaje lavanda, corona dorada y collar de perlas.",pack:"elegant"},
+  {id:"boss_demon_cape",name:"Demonio · Conde Carmesí",category:"boss_demon",price:300,preview:"😈",desc:"Demonio carmesí, cuernos dorados y capa granate.",pack:"elegant"},
+  {id:"player_low_poly",name:"Jugador · Cubito",category:"player",price:180,preview:"🟦",desc:"El jugador se convierte en un cubo low poly.",pack:"low_poly"},
+  {id:"fish_low_poly",name:"Peces · Mini bloques",category:"fish",price:180,preview:"🟦",desc:"Los peces se convierten en cubitos.",pack:"low_poly"},
+  {id:"enemy_low_poly",name:"Enemigos · Cubogatos",category:"enemy",price:220,preview:"🟫",desc:"Los gatos enemigos se convierten en cubos.",pack:"low_poly"},
+  {id:"boss_giant_low_poly",name:"Gato jefe · Coloso cúbico",category:"boss_giant",price:260,preview:"🟨",desc:"El gato jefe se convierte en un cubo enorme.",pack:"low_poly"},
+  {id:"boss_duck_low_poly",name:"Pato · Pico poligonal",category:"boss_duck",price:260,preview:"🟨",desc:"El pato jefe se convierte en un cubo.",pack:"low_poly"},
+  {id:"boss_seal_low_poly",name:"Foca · Bloque polar",category:"boss_seal",price:260,preview:"⬜",desc:"La foca jefe se convierte en un cubo.",pack:"low_poly"},
+  {id:"boss_demon_low_poly",name:"Demonio · Prisma oscuro",category:"boss_demon",price:300,preview:"🟥",desc:"El demonio jefe se convierte en un cubo oscuro.",pack:"low_poly"},
+  {"id": "player_grayscale", "name": "Jugador · Retrato en blanco y negro", "category": "player", "price": 180, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"},
+  {"id": "fish_grayscale", "name": "Peces · Tinta y plata", "category": "fish", "price": 180, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"},
+  {"id": "enemy_grayscale", "name": "Enemigos · Cine mudo", "category": "enemy", "price": 220, "preview": "◐", "desc": "Convierte todas las variantes enemigas a blanco y negro; conserva sus formas y accesorios.", "pack": "grayscale"},
+  {"id": "boss_giant_grayscale", "name": "Gato jefe · Titán monocromo", "category": "boss_giant", "price": 260, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"},
+  {"id": "boss_duck_grayscale", "name": "Pato · Fotograma clásico", "category": "boss_duck", "price": 260, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"},
+  {"id": "boss_seal_grayscale", "name": "Foca · Nieve y carbón", "category": "boss_seal", "price": 260, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"},
+  {"id": "boss_demon_grayscale", "name": "Demonio · Sombra de celuloide", "category": "boss_demon", "price": 300, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"}
 ];
-const COSMETIC_PACKS=[{id:"elegant",name:"Pack Elegante",discount:.20,items:["player_elegant","fish_elegant","enemy_elegant","boss_duck_monocle","boss_seal_tie","boss_demon_cape"],desc:"Pajaritas, sombreros, monóculos, perlas y capa."},{id:"low_poly",name:"Pack Low Poly",discount:.25,items:["player_low_poly","fish_low_poly","enemy_low_poly","boss_giant_low_poly","boss_duck_low_poly","boss_seal_low_poly","boss_demon_low_poly"],desc:"Todo el juego se vuelve una colección de cubos low poly."}];
+const COSMETIC_PACKS=[{id:"elegant",name:"Pack Elegante",discount:.20,items:["player_elegant","fish_elegant","enemy_elegant","boss_duck_monocle","boss_seal_tie","boss_demon_cape"],desc:"Marfil, pajaritas, sombreros, monóculos, corona, perlas y capa."},{id:"low_poly",name:"Pack Low Poly",discount:.25,items:["player_low_poly","fish_low_poly","enemy_low_poly","boss_giant_low_poly","boss_duck_low_poly","boss_seal_low_poly","boss_demon_low_poly"],desc:"Todo el juego se vuelve una colección de cubos low poly."}];
 COSMETIC_PACKS.push({"id": "grayscale", "name": "Pack Escala de grises", "discount": 0.25, "items": ["player_grayscale", "fish_grayscale", "enemy_grayscale", "boss_giant_grayscale", "boss_duck_grayscale", "boss_seal_grayscale", "boss_demon_grayscale"], "desc": "Siete skins en blanco y negro. Las variantes se distinguen por sus formas y accesorios."});
 
 let cosmeticTab="skins";
@@ -596,7 +597,7 @@ function earnScalesFromScore(finalScore){
 }
 
 function cosmeticRewardRow(gained){return gained>0?`<div class="sRow" style="color:#4cc9f0"><span>🫧 Escamas ganadas</span><span>+${gained.toLocaleString()} · Total ${cosmeticScales.toLocaleString()}</span></div>`:""}
-function getPlayerSkinColor(defaultColor){const s=selectedCosmetic("player");if(s==="player_green")return "#55c271";if(s==="player_pink")return "#ff8fab";if(s==="player_elegant")return "#a38bce";if(s==="player_low_poly")return "#4dabf7";return defaultColor}
+function getPlayerSkinColor(defaultColor){const s=selectedCosmetic("player");if(s==="player_green")return "#55c271";if(s==="player_pink")return "#ff8fab";if(s==="player_elegant")return "#fff0ca";if(s==="player_low_poly")return "#4dabf7";return defaultColor}
 function isLowPolyCategory(category,id){return selectedCosmetic(category)===id}
 function drawLowPolyCube(size,fill="#74c0fc",stroke="#1c2b36",accent="#d0ebff"){
   const s=size;
@@ -642,7 +643,8 @@ function drawLowPolyCat(cat){
 }
 function drawLowPolyFish(f){
   const angle=Number.isFinite(f.angle)?f.angle:Math.atan2(f.vy||0,f.vx||1);
-  const body=f.giantEaster?"#ffd166":f.cardumenGigante?"#80d8ff":f.boomerang?"#ff9f1c":f.crit?"#ff6b6b":f.shieldShot?"#ffd166":"#4cc9f0";
+  const skinPalette={fish_elegant:["#fff0c7","#c99b45"],fish_pirate:["#ecac58","#a9503f"],fish_heart:["#ff9bbd","#cf4a86"]}[selectedCosmetic("fish")];
+const body=f.giantEaster?"#ffd166":f.cardumenGigante?"#80d8ff":f.boomerang?"#ff9f1c":f.crit?"#ff6b6b":f.shieldShot?"#ffd166":"#4cc9f0";
   const accent=f.giantEaster?"#fff0a6":f.cardumenGigante?"#caf0f8":f.boomerang?"#ffd6a5":f.crit?"#ffc2d1":f.shieldShot?"#fff3bf":"#caf0f8";
   const outline=f.shieldShot?"#ffb703":"#12394a";
   drawEntityShadow(f.x,f.y,10*(f.scale||1),4*(f.scale||1),.08);
@@ -655,8 +657,19 @@ function drawLowPolyFish(f){
 function drawLowPolyBoss(type,r){bossArt(type,r,true);}
 function drawHeartShape(x,y,size,color){ctx.save();ctx.translate(x,y);ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(0,size*.92);ctx.bezierCurveTo(size*.92,size*.30,size*.98,-size*.46,0,-size*.12);ctx.bezierCurveTo(-size*.98,-size*.46,-size*.92,size*.30,0,size*.92);ctx.closePath();ctx.fill();ctx.restore()}
 function drawBowTieShape(x,y,size,leftColor="#ff7aa8",rightColor=leftColor,knotColor="#ffd166"){ctx.save();ctx.translate(x,y);ctx.fillStyle=leftColor;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-size*1.16,-size*.64);ctx.quadraticCurveTo(-size*1.46,0,-size*1.16,size*.64);ctx.closePath();ctx.fill();ctx.fillStyle=rightColor;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(size*1.16,-size*.64);ctx.quadraticCurveTo(size*1.46,0,size*1.16,size*.64);ctx.closePath();ctx.fill();ctx.fillStyle=knotColor;ctx.beginPath();ctx.roundRect(-size*.30,-size*.34,size*.60,size*.68,size*.20);ctx.fill();ctx.restore()}
-function getEnemySkinBaseColor(cat){if(selectedCosmetic("enemy")==="enemy_gray"&&(!cat.type||cat.type==="normal")){if(!cat.grayTone){const tones=["#b7bcc2","#9ea4ab","#878d95","#c7ccd1"];const seed=Math.abs(Math.round((cat.x||0)*17+(cat.y||0)*11+(cat.r||0)*13+(cat.hp||0)));cat.grayTone=tones[seed%tones.length]}return cat.grayTone}return cat.color}
-function drawPlayerSkinDetails(){const s=selectedCosmetic("player");if(s!=="player_elegant")return;ctx.save();ctx.shadowBlur=0;drawBowTieShape(0,14,7.2,"#f48fb1","#ff9ec4","#fff1a8");ctx.restore()}
+function getEnemySkinBaseColor(cat){if(selectedCosmetic("enemy")==="enemy_gray"&&(!cat.type||cat.type==="normal")){if(!cat.grayTone){const tones=["#b7bcc2","#9ea4ab","#878d95","#c7ccd1"];const seed=Math.abs(Math.round((cat.x||0)*17+(cat.y||0)*11+(cat.r||0)*13+(cat.hp||0)));cat.grayTone=tones[seed%tones.length]}return cat.grayTone}if(selectedCosmetic("enemy")==="enemy_elegant"&&(!cat.type||cat.type==="normal"))return "#e8e2d2";return cat.color}
+function drawPlayerSkinDetails(){
+const s=selectedCosmetic('player');ctx.save();ctx.shadowBlur=0;
+if(s==='player_green'){
+ ctx.fillStyle='#22705a';for(const side of [-1,1]){ctx.beginPath();ctx.ellipse(side*17,5,5,11,side*.35,0,Math.PI*2);ctx.fill();}
+ ctx.fillStyle='#b4ed87';ctx.beginPath();ctx.ellipse(-3,-24,5,11,-.7,0,Math.PI*2);ctx.ellipse(6,-25,5,10,.65,0,Math.PI*2);ctx.fill();
+}else if(s==='player_pink'){
+ for(let i=0;i<5;i++){const a=i*Math.PI*2/5;ctx.fillStyle='#fff1d8';ctx.beginPath();ctx.arc(15+Math.cos(a)*6,-21+Math.sin(a)*6,4.3,0,Math.PI*2);ctx.fill();}ctx.fillStyle='#e8b350';ctx.beginPath();ctx.arc(15,-21,3,0,Math.PI*2);ctx.fill();drawHeartShape(-16,9,6,'#c43770');
+}else if(s==='player_elegant'){
+ ctx.fillStyle='#242b40';ctx.beginPath();ctx.roundRect(-19,-28,38,7,2);ctx.roundRect(-11,-44,23,19,3);ctx.fill();ctx.fillStyle='#d2a94f';ctx.fillRect(-11,-29,23,4);drawBowTieShape(0,18,11,'#273749','#344c65','#f4d477');
+}
+ctx.restore();
+}
 function drawFishSkinDetails(f){
 const s=selectedCosmetic("fish");
 if(s==="default")return;
@@ -684,6 +697,7 @@ if(s==="fish_elegant"){
 }
 
 if(s==="fish_pirate"){
+ ctx.fillStyle='#a62d43';ctx.beginPath();ctx.moveTo(-13,-8);ctx.quadraticCurveTo(0,-18,15,-8);ctx.lineTo(15,-5);ctx.lineTo(-13,-5);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(-12,-7);ctx.lineTo(-22,-15);ctx.lineTo(-20,-3);ctx.closePath();ctx.fill();
   ctx.strokeStyle="#3b2240";
   ctx.lineWidth=2.2;
   ctx.beginPath();
@@ -705,22 +719,34 @@ if(s==="fish_pirate"){
 }
 
 if(s==="fish_heart"){
-  ctx.fillStyle="#4cc9f0";
-  ctx.beginPath();
-  ctx.arc(8,-2,3.6,0,Math.PI*2);
-  ctx.fill();
-  drawHeartShape(8,-2,2.6,"#ff5d8f");
+ drawHeartShape(-5,0,9,'#bd3167');drawHeartShape(8,-2,3,'#bd3167');
+}
+
+ctx.restore();
+}
+function drawEnemySkinDetails(cat){
+const s=selectedCosmetic('enemy');ctx.save();ctx.shadowBlur=0;
+if(s==='enemy_gray'&&(!cat.type||cat.type==='normal')){
+ ctx.strokeStyle='#263c50';ctx.lineWidth=4;ctx.lineCap='round';
+ for(const side of [-1,1])for(let j=0;j<3;j++){ctx.beginPath();ctx.moveTo(side*(20-j),-13+j*10);ctx.lineTo(side*(12-j),-9+j*10);ctx.stroke();}
+ ctx.fillStyle='#f3ce64';ctx.beginPath();ctx.arc(0,19,5,0,Math.PI*2);ctx.fill();
+}else if(s==='enemy_elegant'){
+ ctx.fillStyle='#23354c';ctx.beginPath();ctx.moveTo(-18,12);ctx.lineTo(-14,25);ctx.lineTo(14,25);ctx.lineTo(18,12);ctx.lineTo(0,20);ctx.closePath();ctx.fill();drawBowTieShape(0,17,11,'#dbab49','#f0cc77','#fff0c3');
 }
 ctx.restore();
 }
-function drawEnemySkinDetails(cat){const s=selectedCosmetic("enemy");if(s!=="enemy_elegant")return;ctx.save();ctx.shadowBlur=0;drawBowTieShape(0,17,7.8,"#ff8fab","#ffa6c1","#fff1a8");ctx.restore()}
 function drawBossSkinUnderlay(type,r){
 if(type!=="demon"||selectedCosmetic("boss_demon")!=="boss_demon_cape")return;
-ctx.save();ctx.shadowBlur=0;ctx.fillStyle="#663f84";ctx.strokeStyle="#c195d8";ctx.lineWidth=Math.max(2,r*.025);
+ctx.save();ctx.shadowBlur=0;ctx.fillStyle="#7e244b";ctx.strokeStyle="#f2c769";ctx.lineWidth=Math.max(2,r*.025);
 ctx.beginPath();ctx.moveTo(-r*.7,-r*.62);ctx.quadraticCurveTo(-r*1.05,-r*.5,-r*1.27,r*.92);ctx.quadraticCurveTo(-r*.92,r*1.16,-r*.45,r*.92);ctx.lineTo(r*.45,r*.92);ctx.quadraticCurveTo(r*.92,r*1.16,r*1.27,r*.92);ctx.quadraticCurveTo(r*1.05,-r*.5,r*.7,-r*.62);ctx.closePath();ctx.fill();ctx.stroke();
-ctx.strokeStyle="#9f74bb";for(const side of [-1,1]){ctx.beginPath();ctx.moveTo(side*r*.78,-r*.30);ctx.quadraticCurveTo(side*r*.86,r*.5,side*r*1.07,r*.91);ctx.stroke();}ctx.restore();
+ctx.strokeStyle="#d39362";for(const side of [-1,1]){ctx.beginPath();ctx.moveTo(side*r*.78,-r*.30);ctx.quadraticCurveTo(side*r*.86,r*.5,side*r*1.07,r*.91);ctx.stroke();}ctx.restore();
 }
 function drawBossSkinDetails(type,r){
+ if(type==='seal'&&selectedCosmetic('boss_seal')==='boss_seal_tie'){
+ ctx.save();ctx.fillStyle='#d3a63e';ctx.strokeStyle='#74532b';ctx.lineWidth=r*.025;ctx.beginPath();ctx.moveTo(-r*.43,-r*.75);ctx.lineTo(-r*.5,-r*1.07);ctx.lineTo(-r*.18,-r*.91);ctx.lineTo(0,-r*1.2);ctx.lineTo(r*.18,-r*.91);ctx.lineTo(r*.48,-r*1.07);ctx.lineTo(r*.40,-r*.75);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle='#b34394';ctx.beginPath();ctx.arc(0,-r*.93,r*.08,0,Math.PI*2);ctx.fill();ctx.restore();
+ }
+ if(type==='duck'&&selectedCosmetic('boss_duck')==='boss_duck_monocle'){ctx.save();drawBowTieShape(-r*.2,-r*.11,r*.20,'#28425b','#385771','#dabb63');ctx.restore();}
+
   if(type==="duck"&&selectedCosmetic("boss_duck")==="boss_duck_monocle"){ctx.fillStyle="#171018";ctx.beginPath();ctx.roundRect(-r*.58,-r*1.05,r*.72,r*.12,r*.04);ctx.fill();ctx.fillRect(-r*.42,-r*1.30,r*.40,r*.27);ctx.fillStyle="#7b2cbf";ctx.fillRect(-r*.42,-r*1.06,r*.40,r*.06);ctx.strokeStyle="#171018";ctx.lineWidth=Math.max(3,r*.035);ctx.beginPath();ctx.arc(-r*.28,-r*.68,r*.14,0,Math.PI*2);ctx.stroke();ctx.strokeStyle="rgba(23,16,24,.65)";ctx.lineWidth=Math.max(2,r*.02);ctx.beginPath();ctx.moveTo(-r*.17,-r*.57);ctx.quadraticCurveTo(r*.02,-r*.34,r*.14,-r*.06);ctx.stroke();}
   if(type==="seal"&&selectedCosmetic("boss_seal")==="boss_seal_tie"){
 ctx.save();ctx.shadowBlur=0;ctx.strokeStyle='#9d8b91';ctx.lineWidth=Math.max(1,r*.012);
@@ -1004,6 +1030,9 @@ document.addEventListener("pointerlockchange",()=>{
 
 let score,shots,lastShot,lastAutoShot,lastFrame,gameOver,wave,spawnCooldown,life,level,xp,xpNeed,choosingUpgrade,gameStarted=false,paused=false,waveTime,waveDuration,waveUpgradePending=false,boss=null,shieldAngle=0,lastShieldHit=0,lastOmniBurst=0,rainbowChanceLevel=1,rainbowSelectedThisWave=false,rainbowSpawnedThisWave=false,rainbowPendingUntilKilled=false,coins=0,shopAvailable=false,firstShopReached=false,shopBossPending=false,fusionAvailable=false,lastBossType="",shopUpgradePurchases=0,shopFusionPurchases=0,dogKidnapped=false,avalancheActive=false,avalancheTime=0,avalancheDelay=999,avalancheThisWave=false,avalancheSpawnTimer=0,starChanceLevel=1,starActive=false,starTime=0,starWarningPlayed=false,forceDemonNextBoss=false,sevenLivesTime=0,sevenLivesCooldown=0,sevenLivesUsedThisWave=false,musicianSpawnedThisWave=false,musicianNoteTimer=0,musicianMelodyIdx=0;
 let perfFps=60,lowPerfMode=false,lowPerfTimer=0,perfNoticeTimer=0;
+let lastOrbitalGuard=-Infinity;
+let manualFireBoostUntil=0;
+let starSpawnTimer=12;
 let backgroundFishSeed=Math.floor(Math.random()*1000000);
 let pendingUpgradeQueue=[];
 let runStats;
@@ -1038,12 +1067,14 @@ let demonSpawnPressure=0;
 let thiefCoinsStolenThisWave=0;
 perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
 
-const upgrades={fireRate:1,fishSpeed:1,damage:1,moveSpeed:1,maxLife:100,bigFishChance:0,doubleFishChance:0,pierceChance:0,fishSize:1,catSlow:0,healOnWave:8,lifeSteal:0,xpBoost:1,boomerangChance:0,shield:false,shieldLevel:0,autoFire:false,autoFireLevel:0,critChance:0,zoomies:false,zoomiesHyper:false,zoomiesCannon:false,zoomiesCrit:false,aimAssist:false,moralSupport:false,darkPact:false,catInstinct:false,boyfriendDog:false,boyfriendDogSpirit:false,boyfriendDogReturned:false,bigCursor:false,coinMagnetRange:0,combatAI:false,assistedShot:false,perfectAim:false,moraleFire:false,braveHeart:false,reflexBurst:false,valorCasa:false,cursedInstinct:false,zoomiesEscape:false,fusionBonusPower:0,sevenLives:false,holdShoot:false};
-const upgradeLevels={moveSpeed:0,fireRate:0,fishSpeed:0,bigFish:0,doubleFish:0,pierce:0,damage:0,catSlow:0,healOnWave:0,fishSize:0,maxLife:0,lifeSteal:0,xpBoost:0,boomerang:0,shield:0,coinMagnet:0,omniBurst:0,yarnBounce:0,autoFire:0,critChance:0};
-const upgradeMaxLevels={moveSpeed:5,fireRate:5,fishSpeed:5,bigFish:5,doubleFish:5,pierce:5,damage:5,catSlow:5,healOnWave:5,fishSize:5,maxLife:5,lifeSteal:5,xpBoost:5,boomerang:5,shield:5,coinMagnet:5,omniBurst:5,yarnBounce:5,autoFire:5,critChance:5};
+const upgrades={damageReduction:0,luck:0,fireRate:1,fishSpeed:1,damage:1,moveSpeed:1,maxLife:100,bigFishChance:0,doubleFishChance:0,pierceChance:0,fishSize:1,catSlow:0,healOnWave:8,lifeSteal:0,xpBoost:1,boomerangChance:0,shield:false,shieldLevel:0,autoFire:false,autoFireLevel:0,critChance:0,zoomies:false,zoomiesHyper:false,zoomiesCannon:false,zoomiesCrit:false,aimAssist:false,moralSupport:false,darkPact:false,catInstinct:false,boyfriendDog:false,boyfriendDogSpirit:false,boyfriendDogReturned:false,bigCursor:false,coinMagnetRange:0,combatAI:false,assistedShot:false,perfectAim:false,moraleFire:false,braveHeart:false,reflexBurst:false,valorCasa:false,cursedInstinct:false,zoomiesEscape:false,fusionBonusPower:0,sevenLives:false,holdShoot:false};
+const upgradeLevels={damageReduction:0,luck:0,moveSpeed:0,fireRate:0,fishSpeed:0,bigFish:0,doubleFish:0,pierce:0,damage:0,catSlow:0,healOnWave:0,fishSize:0,maxLife:0,lifeSteal:0,xpBoost:0,boomerang:0,shield:0,coinMagnet:0,omniBurst:0,yarnBounce:0,autoFire:0,critChance:0};
+const upgradeMaxLevels={damageReduction:5,luck:5,moveSpeed:5,fireRate:5,fishSpeed:5,bigFish:5,doubleFish:5,pierce:5,damage:5,catSlow:5,healOnWave:5,fishSize:5,maxLife:5,lifeSteal:5,xpBoost:5,boomerang:5,shield:5,coinMagnet:5,omniBurst:5,yarnBounce:5,autoFire:5,critChance:5};
 const fusedBaseLevels={}; // niveles ya "conservados" por fusiones: mantienen stats aunque la mejora vuelva a 0/5
 
 const UPGRADE_META={
+damageReduction:{icon:"🔰",name:"Pelaje protector",desc:l=>"Reduce el daño recibido. Hasta 25 %; fusionado, hasta 40 %."},
+luck:{icon:"🍀",name:"Trébol gatuno",desc:l=>"Mejora la aparición de monedas, estrellas y arcoíris y puede duplicar una moneda. Hasta +25 %; fusionado, +40 %."},
 maxLife:{icon:"❤️",name:"Corazón de atún",desc:l=>"Aguantas más golpes."},
 moveSpeed:{icon:"👟",name:"Zapatillas blanditas",desc:l=>"Te mueves más rápido."},
 fireRate:{icon:"🐾",name:"Patita nerviosa",desc:l=>"Lanzas peces más seguido."},
@@ -1062,12 +1093,13 @@ coinMagnet:{icon:"🧲",name:"Imán de monedas",desc:l=>"Las monedas vienen haci
 shield:{icon:"🛡️",name:"Escudo de pececitos",desc:l=>"Peces guardianes giran a tu alrededor."},
 omniBurst:{icon:"💥",name:"Metralladora gatuna",desc:l=>"De vez en cuando disparas en círculo."},
 yarnBounce:{icon:"🧶",name:"Ovillo táctico",desc:l=>"Algunos peces rebotan a otro enemigo."},
-autoFire:{icon:"🤖",name:"Patita automática",desc:l=>"Dispara automáticamente."},
+autoFire:{icon:"🤖",name:"Patita automática",desc:l=>"Aumenta la cadencia automática un 8 % por nivel. No necesitas pulsar ni mantener el botón."},
 critChance:{icon:"💥",name:"Mimos críticos",desc:l=>"A veces haces daño doble."}
 };
 
 const RECOMMEND_DIMENSIONS=["damage","defense","healing","mobility","economy","control","consistency","automation","area","scaling"];
 const UPGRADE_RECOMMENDATION_PROFILE={
+ damageReduction:{defense:1,consistency:.4},luck:{economy:.8,scaling:.6},
   maxLife:{defense:.95,healing:.15,scaling:.35},
   moveSpeed:{mobility:1,defense:.25,control:.2,consistency:.15},
   fireRate:{damage:.7,consistency:.35,scaling:.45},
@@ -1093,7 +1125,7 @@ const UPGRADE_RECOMMENDATION_PROFILE={
   moralSupport:{healing:.3,defense:.25,consistency:.45},
   darkPact:{scaling:.95,damage:.25,automation:.2},
   catInstinct:{defense:1,healing:.35,consistency:.55},
-  zoomies:{mobility:.9,damage:.35,control:.25}
+  zoomies:{mobility:.9,damage:.65,control:.25}
 };
 const FUSION_RECOMMENDATION_PROFILE={
   "aimAssist+autoFire":{consistency:1,automation:1,control:.45,damage:.25},
@@ -1198,10 +1230,10 @@ function recommendationContextFit(key,context,needs){
   let bonus=0;
   const hpRatio=life/Math.max(1,upgrades.maxLife||100);
   const pressure=cats.length+(boss?8:0)+quacks.length+yarnBalls.length+demonOrbs.length;
-  if(hpRatio<.5&&["maxLife","healOnWave","lifeSteal","shield","catSlow","moveSpeed","catInstinct"].includes(key))bonus+=.14;
+  if(hpRatio<.5&&["damageReduction","maxLife","healOnWave","lifeSteal","shield","catSlow","moveSpeed","catInstinct"].includes(key))bonus+=.14;
   if(pressure>15&&["pierce","yarnBounce","omniBurst","doubleFish","catSlow","shield","damage","fireRate"].includes(key))bonus+=.12;
   if(boss&&["damage","fireRate","critChance","lifeSteal","shield","autoFire"].includes(key))bonus+=.10;
-  if(context==="shop"&&["coinMagnet","xpBoost"].includes(key)&&wave<14)bonus+=.06;
+  if(context==="shop"&&["luck","coinMagnet","xpBoost"].includes(key)&&wave<14)bonus+=.06;
   if((needs?.consistency||0)>.55&&["aimAssist","fishSpeed","fishSize","autoFire","bigCursor"].includes(key))bonus+=.08;
   return clamp01(bonus);
 }
@@ -1284,7 +1316,7 @@ function applyRecommendationsToChoices(choices,context="generic"){
     const offered=new Set(list.filter(c=>!c.locked).map(c=>c.key));
     const pairs=availableRecommendationPairs(needs).filter(r=>r.pair.split('+').every(k=>offered.has(k)));
     const best=pairs[0];
-    if(best&&best.score>=.58&&(pairs.length===1||best.score-pairs[1].score>=.06)){
+    if(best){
       const parts=best.pair.split('+');
       list.forEach(c=>{if(parts.includes(c.key)&&!c.locked){c.recommended=true;c.recommendScore=best.score;c.recommendReason=fusionRecommendationReason(c,needs);}});
     }
@@ -1295,7 +1327,13 @@ function applyRecommendationsToChoices(choices,context="generic"){
     .map(c=>({choice:c,score:scoreRecommendationChoice(c,needs,context)}))
     .filter(entry=>entry.score>-100);
 
-  if(valid.length===0)return choices;
+  if(valid.length===0){
+    if(context==='shop'){
+      const saving=list.filter(c=>c.key&&!c.skipShop&&!c.randomShopUpgrade).sort((a,b)=>scoreRecommendationChoice({...b,locked:false},needs,context)-scoreRecommendationChoice({...a,locked:false},needs,context))[0];
+      if(saving){saving.recommended=true;saving.recommendReason='Ahorra monedas para esta mejora: encaja con tu partida.';}
+    }
+    return choices;
+  }
 
   valid.sort((a,b)=>b.score-a.score);
   const best=valid[0];
@@ -1304,13 +1342,6 @@ function applyRecommendationsToChoices(choices,context="generic"){
   const minScore=(context==="fusionFirst"||context==="fusionPartner")?.58:(context==="shop"?.54:.50);
   const lead=best.score-secondScore;
   const clusterLead=best.score-Math.max(secondScore,thirdScore);
-
-  // Evita recomendaciones forzadas: si la mejor opción no destaca claramente,
-  // no se marca nada aunque haya una pequeña ventaja matemática.
-  if(best.score<minScore||valid.length<2||lead<.045)return choices;
-  if(best.score<.68&&lead<.085)return choices;
-  if(best.score<.58&&clusterLead<.12)return choices;
-  if(valid.length>=3&&best.score<.64&&clusterLead<.075)return choices;
 
   best.choice.recommended=true;
   best.choice.recommendScore=best.score;
@@ -1378,7 +1409,7 @@ g.connect(ac.destination);
 
 
 function clearMovementKeys(){
-  keys.w=false;keys.a=false;keys.s=false;keys.d=false;
+  keys.w=false;keys.a=false;keys.s=false;keys.d=false;keys.arrowup=keys.arrowdown=keys.arrowleft=keys.arrowright=false;
 }
 function clearAllInputKeys(){
   Object.keys(keys).forEach(k=>keys[k]=false);
@@ -1397,6 +1428,7 @@ if(isTypingTarget(e.target)){
   if(k===" "||k==="spacebar")return;
   if(k!=="r")return;
 }
+if(["arrowup","arrowdown","arrowleft","arrowright"].includes(k)&&gameStarted){e.preventDefault();}
 if(["w","a","s","d"].includes(k))keys[k]=true;
 else keys[k]=true;
 if(k===" "||k==="spacebar"){e.preventDefault();if(e.repeat)return;if(gameStarted&&!gameOver&&!choosingUpgrade)togglePause()}
@@ -1428,7 +1460,7 @@ canvas.addEventListener("mousemove",e=>{
 });
 canvas.addEventListener("mousedown",e=>{
 if(e.button===0){mouseIsDown=true;const p=pointerToGame(e);mouse.x=p.x;mouse.y=p.y;}
-if(e.button===0&&!gameOver&&gameStarted&&!paused&&!choosingUpgrade)shootFish();
+if(e.button===0&&!gameOver&&gameStarted&&!paused&&!choosingUpgrade){manualFireBoostUntil=gameNow()+800;shootFish();}
 if(e.button===2&&!gameOver&&gameStarted&&!paused&&!choosingUpgrade){
   e.preventDefault();
   const p=pointerToGame(e);
@@ -1557,7 +1589,7 @@ if(gameOverMenuBtn)gameOverMenuBtn.addEventListener("click",returnToMainMenuWith
 
 function resetUpgrades(){
 xpFraction=0;
-Object.assign(upgrades,{fireRate:1,fishSpeed:1,damage:1,moveSpeed:1,maxLife:100,bigFishChance:0,doubleFishChance:0,pierceChance:0,fishSize:1,catSlow:0,healOnWave:8,lifeSteal:0,xpBoost:1,boomerangChance:0,shield:false,shieldLevel:0,autoFire:false,autoFireLevel:0,critChance:0,zoomies:false,zoomiesHyper:false,zoomiesCannon:false,zoomiesCrit:false,aimAssist:false,moralSupport:false,darkPact:false,catInstinct:false,boyfriendDog:false,boyfriendDogSpirit:false,boyfriendDogReturned:false,bigCursor:false,coinMagnetRange:0,combatAI:false,assistedShot:false,perfectAim:false,moraleFire:false,braveHeart:false,reflexBurst:false,valorCasa:false,cursedInstinct:false,zoomiesEscape:false,fusionBonusPower:0,sevenLives:false,holdShoot:false});
+Object.assign(upgrades,{damageReduction:0,luck:0,fireRate:1,fishSpeed:1,damage:1,moveSpeed:1,maxLife:100,bigFishChance:0,doubleFishChance:0,pierceChance:0,fishSize:1,catSlow:0,healOnWave:8,lifeSteal:0,xpBoost:1,boomerangChance:0,shield:false,shieldLevel:0,autoFire:false,autoFireLevel:0,critChance:0,zoomies:false,zoomiesHyper:false,zoomiesCannon:false,zoomiesCrit:false,aimAssist:false,moralSupport:false,darkPact:false,catInstinct:false,boyfriendDog:false,boyfriendDogSpirit:false,boyfriendDogReturned:false,bigCursor:false,coinMagnetRange:0,combatAI:false,assistedShot:false,perfectAim:false,moraleFire:false,braveHeart:false,reflexBurst:false,valorCasa:false,cursedInstinct:false,zoomiesEscape:false,fusionBonusPower:0,sevenLives:false,holdShoot:false});
 Object.keys(upgradeLevels).forEach(k=>upgradeLevels[k]=0);Object.keys(upgradeMaxLevels).forEach(k=>upgradeMaxLevels[k]=5);Object.keys(fusedBaseLevels).forEach(k=>delete fusedBaseLevels[k]);fusedUpgradeNames={};doneFusionPairs={};fusionProgressLevels={};
 }
 
@@ -1572,13 +1604,13 @@ function restart(){
 if(gameStarted)rollRandomSkins();else runCosmeticSelections=null;
 saveAchievements();
 clearAllInputKeys();
-simulationMs=0;frameAccumulator=0;
+simulationMs=0;manualFireBoostUntil=0;frameAccumulator=0;
 selectedTarget=null;lastStarTrail=0;screenShake=0;screenShakeX=0;screenShakeY=0;
 if(autoChoiceTimer)clearTimeout(autoChoiceTimer);
 autoChoiceToken++;autoChoiceMenu=null;
 pausePanel.style.display="none";
 stopPowerStarLoop();
-zoomiesEscapeHits=0;forcedZoomiesUntil=0;safeTeleportInvulnUntil=0;
+lastOrbitalGuard=-Infinity;zoomiesEscapeHits=0;forcedZoomiesUntil=0;safeTeleportInvulnUntil=0;
 backgroundFishSeed=Math.floor(Math.random()*1000000);
 autoRunChoices=[];autoRunStartTime=performance.now();autoLastPlayerX=player.x;autoLastPlayerY=player.y;autoStuckTimer=0;autoEmergencyEscapeUntil=0;
 resetUpgrades();
@@ -1588,7 +1620,7 @@ rankingEligibleThisRun=!autoModeUsedThisRun;
 rankingDisabledReason=rankingEligibleThisRun?"":"Ranking desactivado: la partida empezó con IA activada.";
 cosmeticAwardedThisRun=false;cosmeticScalesAwardedThisRun=0;
 currentWaveHadDamage=false;currentNoDamageStreak=0;
-score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=-Infinity;lastAutoShot=-Infinity;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=1;thiefCoinsStolenThisWave=0;spawnCooldown=0;life=upgrades.maxLife;level=1;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;musicianSpawnedThisWave=false;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();bossEncounterCounts={giantCat:0,duck:0,seal:0,demon:0};giantFishEasterEggsUsed=0;bossVictoryAlreadyShown=false;bossVictoryScoreSaved=false;bossVictoryPending=false;dogRelaxTime=0;fusionMoveXpTimer=0;lastFusionShieldGuard=0;enemyIntroSeen={};finalChoiceLocked=false;finalCompletionContinue=false;finalCompletionStartWave=0;demonSpawnPressure=0;thiefCoinsStolenThisWave=0;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
+score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=-Infinity;lastAutoShot=-Infinity;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=1;thiefCoinsStolenThisWave=0;spawnCooldown=0;life=upgrades.maxLife;level=1;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;musicianSpawnedThisWave=false;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starSpawnTimer=12;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();bossEncounterCounts={giantCat:0,duck:0,seal:0,demon:0};giantFishEasterEggsUsed=0;bossVictoryAlreadyShown=false;bossVictoryScoreSaved=false;bossVictoryPending=false;dogRelaxTime=0;fusionMoveXpTimer=0;lastFusionShieldGuard=0;enemyIntroSeen={};finalChoiceLocked=false;finalCompletionContinue=false;finalCompletionStartWave=0;demonSpawnPressure=0;thiefCoinsStolenThisWave=0;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
 demonOrbs.length=0;yarnBalls.length=0;powerStars.length=0;shockwaves.length=0;sparkles.length=0;tunaDrops.length=0;
 player.x=canvas.width/2;player.y=canvas.height/2;player.angle=0;player.shootAnim=0;player.hurtAnim=0;dogCompanion.x=player.x-50;dogCompanion.y=player.y+45;dogCompanion.shootCooldown=0;
 fishes.length=0;cats.length=0;hearts.length=0;smokes.length=0;floatingTexts.length=0;pawPrints.length=0;quacks.length=0;coinsDrops.length=0;dogBones.length=0;demonOrbs.length=0;yarnBalls.length=0;shockwaves.length=0;sparkles.length=0;
@@ -1685,7 +1717,7 @@ rainbowSpawnedThisWave=false;
 catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;sevenLivesUsedThisWave=false;musicianSpawnedThisWave=false;
 if(rainbowPendingUntilKilled)rainbowSelectedThisWave=true;
 else{
-const rainbowChance=Math.min(.78,rainbowChanceLevel*.013);
+const rainbowChance=Math.min(.78,rainbowChanceLevel*.013*(1+upgrades.luck));
 rainbowSelectedThisWave=Math.random()<rainbowChance;
 if(rainbowSelectedThisWave)rainbowPendingUntilKilled=true;
 else rainbowChanceLevel++;
@@ -1702,7 +1734,7 @@ const forcedPostBossAvalanche=phaseForAvalanche!=="main"&&wave>=6&&wave%5===1;
 const randomAvalanche=wave>=14&&wave%5!==0&&Math.random()<avalancheCfg.chance;
 avalancheThisWave=forcedPostBossAvalanche||randomAvalanche;
 avalancheDelay=avalancheThisWave?Math.max(2.8,waveDuration*(.58-avalancheCfg.intensity*.14)):999;
-trySpawnPowerStar();
+starSpawnTimer=3+Math.random()*Math.min(10,waveDuration*.5);
 if(wave%5===0)spawnBoss();
 floatingTexts.push({x:canvas.width/2,y:115,text:wave%5===0?`Jefe ronda ${wave}`:`Ronda ${wave}`,life:1.8,maxLife:1.8,big:true})
 }
@@ -1759,7 +1791,7 @@ floatingTexts.push({x:canvas.width/2,y:145,text:"La avalancha terminó 🐾",lif
 
 function trySpawnPowerStar(){
 if(starActive||powerStars.length>0)return;
-const chance=Math.min(.22,.018+starChanceLevel*.012);
+const chance=Math.min(.28,(.018+starChanceLevel*.012)*(1+upgrades.luck));
 if(Math.random()<chance){
 const margin=90;
 powerStars.push({x:margin+Math.random()*(canvas.width-margin*2),y:margin+Math.random()*(canvas.height-margin*2),r:18,life:14,wobble:Math.random()*Math.PI*2});
@@ -1994,6 +2026,12 @@ amount*=0.35;
 shockwaves.push({x:player.x,y:player.y,r:8,maxR:150,life:.55,maxLife:.55,color:"#90e0ef",line:6});
 cats.forEach(cat=>{if(!isFinitePos(cat))return;const dx=cat.x-player.x,dy=cat.y-player.y,d=Math.hypot(dx,dy)||1;if(d<330){cat.knockVx=(cat.knockVx||0)+(dx/d)*420;cat.knockVy=(cat.knockVy||0)+(dy/d)*420;cat.hitAnim=.18;}});
 floatingTexts.push({x:player.x,y:player.y-86,text:"🛡️ Guardia felina",life:1.1,maxLife:1.1,big:false});
+}
+amount*=1-Math.min(.40,Math.max(0,upgrades.damageReduction||0));
+if(hasDoneFusionPair("damageReduction+shield")&&gameNow()-lastOrbitalGuard>=(8-3*fusionStrength("damageReduction+shield"))*1000){
+ lastOrbitalGuard=gameNow();const force=160+140*fusionStrength("damageReduction+shield");
+ cats.forEach(c=>{const dx=c.x-player.x,dy=c.y-player.y,d=Math.hypot(dx,dy);if(d>0&&d<190){c.knockVx=(c.knockVx||0)+dx/d*force;c.knockVy=(c.knockVy||0)+dy/d*force;}});
+ shockwaves.push({x:player.x,y:player.y,r:12,maxR:190,life:.45,maxLife:.45,color:'#94d9ff',line:4});
 }
 const predictedLife=life-amount;
 if(upgrades.sevenLives&&predictedLife<7&&activateSevenLives())return false;
@@ -2351,11 +2389,14 @@ function fusionStatScale(key,preRate,postRate,cap=5*(preRate+postRate),post=fusi
 const base=fusedBaseLevels[key]||0;
 if(!hasFusionComponent(key))return Math.min(cap,(base+post)*preRate);
 const initial=Math.min(cap,base*preRate);
-return initial+(cap-initial)*Math.min(5,Math.max(0,post))/5;
+return initial+(cap-initial)*[0,.12,.27,.46,.70,1][Math.min(5,Math.max(0,Math.floor(post)))];
 }
 function coreUpgradeStat(key,post=fusionPostLevel(key)){
-const lv=(fusedBaseLevels[key]||0)+post;
-if(["moveSpeed","fireRate","fishSpeed","damage","xpBoost"].includes(key))return 1+fusionStatScale(key,.13,.07,1,post);
+const effectivePost=hasFusionComponent(key)?5*[0,.12,.27,.46,.70,1][Math.min(5,Math.max(0,Math.floor(post)))]:post;
+const lv=(fusedBaseLevels[key]||0)+effectivePost;
+if(key==="damageReduction"||key==="luck")return fusionStatScale(key,.05,.03,.40,post);
+const scalarCurves={moveSpeed:[.08,.70],fireRate:[.12,1.05],fishSpeed:[.15,1.25],damage:[.16,1.50],xpBoost:[.10,.85]};
+if(scalarCurves[key]){const [rate,cap]=scalarCurves[key];return 1+fusionStatScale(key,rate,0,cap,post);}
 if(["bigFish","doubleFish","pierce","boomerang","critChance"].includes(key))return fusionStatScale(key,.13,.07,.95,post);
 if(key==="catSlow")return fusionStatScale(key,.13,.07,.85,post);
 if(key==="lifeSteal")return fusionStatScale(key,.013,.013,.13,post);
@@ -2363,8 +2404,8 @@ if(key==="yarnBounce")return fusionStatScale(key,.13,.07,1,post);
 if(key==="maxLife")return 100+lv*20+Math.min(5,lv)*16;
 if(key==="healOnWave")return 8+lv*5+Math.min(5,lv)*4;
 if(key==="coinMagnet")return lv>0?90+lv*45+Math.min(5,lv)*20:0;
-if(key==="fishSize"){const initial=Math.min(1.45,((fusedBaseLevels[key]||0)+getFishSizeFusionBonus())*.12);const bonus=hasFusionComponent(key)?initial+(1.45-initial)*Math.min(5,post)/5:Math.min(1.45,(lv+getFishSizeFusionBonus())*.12);return (1+bonus)*(hasDoneFusionPair("bigFish+fishSize")?1.18:1);}
-return lv;
+if(key==="fishSize"){const initial=Math.min(1.45,((fusedBaseLevels[key]||0)+getFishSizeFusionBonus())*.12);const bonus=hasFusionComponent(key)?initial+(1.45-initial)*[0,.12,.27,.46,.70,1][Math.min(5,Math.max(0,Math.floor(post)))]:Math.min(1.45,(lv+getFishSizeFusionBonus())*.12);return (1+bonus)*(hasDoneFusionPair("bigFish+fishSize")?1.18:1);}
+return (fusedBaseLevels[key]||0)+post;
 }
 // porcentaje del PRÓXIMO nivel (para etiqueta DEF)
 function nextPercentValue(key){
@@ -2380,7 +2421,7 @@ function canScaleMore(key){return !isUpgradeFinal(key)&&coreUpgradeStat(key,Math
 
 function applyUpgradeStatsFromLevels(){
 const oldSlow=Math.max(.15,1-upgrades.catSlow);
-for(const key of ["maxLife","healOnWave","moveSpeed","fireRate","fishSpeed","damage","fishSize","xpBoost","catSlow","lifeSteal"])upgrades[key]=coreUpgradeStat(key);
+for(const key of ["maxLife","healOnWave","moveSpeed","fireRate","fishSpeed","damage","fishSize","xpBoost","catSlow","lifeSteal","luck","damageReduction"])upgrades[key]=coreUpgradeStat(key);
 for(const key of ["bigFish","doubleFish","pierce","boomerang","critChance"])upgrades[key==="critChance"?key:key+"Chance"]=coreUpgradeStat(key);
 upgrades.shieldLevel=effectLevel("shield");upgrades.shield=upgrades.shieldLevel>0;
 upgrades.autoFireLevel=effectLevel("autoFire");upgrades.autoFire=upgrades.autoFireLevel>0;
@@ -2390,7 +2431,7 @@ if(slowRatio!==1)cats.forEach(cat=>{cat.speed*=slowRatio;if(Number.isFinite(cat.
 }
 
 
-function isPercentLimitedKey(key){return ["moveSpeed","fireRate","fishSpeed","bigFish","doubleFish","pierce","damage","catSlow","fishSize","xpBoost","boomerang","omniBurst","yarnBounce","autoFire","critChance"].includes(key)}
+function isPercentLimitedKey(key){return ["luck","damageReduction","moveSpeed","fireRate","fishSpeed","bigFish","doubleFish","pierce","damage","catSlow","fishSize","xpBoost","boomerang","omniBurst","yarnBounce","autoFire","critChance"].includes(key)}
 function isUpgradeFinal(key){return isPercentLimitedKey(key)&&(upgradeLevels[key]||0)>=(upgradeMaxLevels[key]||5)}
 
 
@@ -2483,7 +2524,7 @@ if(!upgrades.bigCursor)arr.push({key:"bigCursor",icon:"🌈",title:"Mirilla bril
 if(!upgrades.moralSupport)arr.push({key:"moralSupport",icon:"💛",title:"Apoyo Moral",levelTag:"1/1",desc:"Tu novio te anima durante la partida.",special:true,apply:()=>{upgrades.moralSupport=true}});
 if(!upgrades.darkPact)arr.push({key:"darkPact",icon:"🖤",title:"Voluntad Oscura",levelTag:"1/1",desc:"Menos opciones, pero más poder.",dark:true,apply:()=>{upgrades.darkPact=true}});
 if(!upgrades.catInstinct)arr.push({key:"catInstinct",icon:"🥷",title:"Instinto gatuno",levelTag:"1/1",desc:"Te ayuda cuando estás en peligro.",special:true,apply:()=>{upgrades.catInstinct=true}});
-if(!upgrades.zoomies)arr.push({key:"zoomies",icon:"💨",title:"Zoomies",levelTag:"1/1",desc:"A veces entras en modo hiperactivo.",special:true,apply:()=>{upgrades.zoomies=true}});
+if(!upgrades.zoomies)arr.push({key:"zoomies",icon:"💨",title:"Zoomies",levelTag:"1/1",desc:"Durante Zoomies ganas velocidad y un 35 % de daño.",special:true,apply:()=>{upgrades.zoomies=true}});
 return arr
 }
 function getRandomUpgradeChoices(amount){
@@ -2613,7 +2654,7 @@ function formatPreviewStat(key,post=fusionPostLevel(key)){
   const v=coreUpgradeStat(key,post);
   const n=x=>Number(x.toFixed(2)).toLocaleString("es-ES");
   if(["moveSpeed","fireRate","fishSpeed","damage","fishSize","xpBoost"].includes(key))return `×${n(v)}`;
-  if(["bigFish","doubleFish","pierce","boomerang","critChance","catSlow","lifeSteal","yarnBounce"].includes(key))return `${n(v*100)} %`;
+  if(["bigFish","doubleFish","pierce","boomerang","critChance","catSlow","lifeSteal","yarnBounce","luck","damageReduction"].includes(key))return `${n(v*100)} %`;
   if(key==="coinMagnet")return `${n(v)} px`;
   if(key==="omniBurst")return v>0?`${10+Math.min(14,v*2)} peces / ${n(Math.max(3200,9000/(1+v*.13))/1000)} s`:"Inactiva";
   if(key==="shield"||key==="autoFire")return v>0?`Nivel ${n(v)}`:"Inactivo";
@@ -2770,7 +2811,7 @@ giveLevelCoins("por tener mejoras al máximo");
 if(pendingUpgradeQueue.length)processPendingUpgradeQueue();
 return
 }
-showCards(reason==="wave"?"🌊 ¡Ronda superada!":"⭐ ¡Subiste de nivel!",darkWave?"🖤 La Voluntad Oscura elige por ti":lovePhrases[Math.floor(Math.random()*lovePhrases.length)],darkWave?"Solo aparecen mejoras escalables para que el +2 no se desperdicie":"Elige una mejora gatuna",choices,upgrade=>{
+showCards(reason==="wave"?"🌊 ¡Ronda superada!":"⭐ ¡Subiste de nivel!",darkWave?"🖤 La Voluntad Oscura elige por ti":lovePhrases[Math.floor(Math.random()*lovePhrases.length)],darkWave?"":"Elige una mejora gatuna",choices,upgrade=>{
 upgrade.apply();
 if(darkWave){let bonusCoins=1+Math.floor(Math.random()*5);if(hasDoneFusionPair("coinMagnet+darkPact")){const fp=getFusionProgress("coinMagnet+darkPact");bonusCoins+=2+Math.floor(Math.random()*(3+fp));}coins+=bonusCoins;floatingTexts.push({x:player.x,y:player.y-105,text:`🖤 +${bonusCoins} monedas`,life:1.3,maxLife:1.3,big:false})}
 if(darkWave&&upgrade.key){
@@ -2981,6 +3022,7 @@ if(upgrade.randomShopUpgrade){
   updateHud();checkGameCompletion();
   if(isGameCompleted())return;
   openCoinShop();
+  levelUpPhrase.textContent=`🎲 Has recibido: ${hidden.title}`;
   return;
 }
 if(coins<upgradePrice){openCoinShop();return}
@@ -2998,16 +3040,17 @@ function isUniqueOnlyUpgrade(key){return !Object.prototype.hasOwnProperty.call(u
 
 const uniqueFusionKeys=["aimAssist","bigCursor","moralSupport","darkPact","catInstinct","zoomies"];
 const uniqueFusionMeta={
-autoFire:{icon:"🤖",name:"Patita automática",desc:"Dispara sola hacia donde apuntes."},
+autoFire:{icon:"🤖",name:"Patita automática",desc:"Aumenta la cadencia del disparo automático desde el primer nivel."},
 aimAssist:{icon:"🎯",name:"Peces listillos",desc:"Los peces se curvan hacia enemigos cercanos."},
 bigCursor:{icon:"🌈",name:"Mirilla brillante",desc:"Hace la mirilla más visible."},
 moralSupport:{icon:"💛",name:"Apoyo Moral",desc:"Tu novio te anima de vez en cuando."},
 darkPact:{icon:"🖤",name:"Voluntad Oscura",desc:"La mejora maldita: menos elección, más potencia."},
 catInstinct:{icon:"🥷",name:"Instinto gatuno",desc:"Te salva cuando estás en peligro."},
-zoomies:{icon:"💨",name:"Zoomies",desc:"A veces vas rapidísima."}
+zoomies:{icon:"💨",name:"Zoomies",desc:"A veces ganas velocidad y un 35 % de daño."}
 };
 
 const fusionPairs={
+damageReduction:["maxLife","healOnWave","shield","lifeSteal","luck"],luck:["coinMagnet","xpBoost","damage","critChance","healOnWave"],
 aimAssist:["autoFire", "bigCursor", "catInstinct", "damage", "pierce", "fishSpeed", "boomerang", "critChance"],
 autoFire:["aimAssist", "bigCursor", "moralSupport"],
 bigCursor:["aimAssist", "autoFire", "moralSupport", "damage", "pierce", "critChance", "fishSize", "boomerang"],
@@ -3037,6 +3080,16 @@ yarnBounce:["bigFish", "boomerang", "damage", "doubleFish", "fishSize", "fishSpe
 };
 
 const fusionNameMap={
+"damageReduction+shield":"Coraza orbital",
+"damageReduction+lifeSteal":"Ronroneo de hierro",
+"damageReduction+luck":"Amuleto protector",
+"damage+luck":"Golpe de fortuna",
+"critChance+luck":"Siete de la suerte",
+"healOnWave+luck":"Sushi de la fortuna",
+"damageReduction+maxLife":"Fortaleza de peluche",
+"damageReduction+healOnWave":"Descanso blindado",
+"coinMagnet+luck":"Tesoro felino",
+"luck+xpBoost":"Aprendiz afortunado",
 "damage+pierce":"Mimos devastadores",
 "bigFish+damage":"Golpe crítico gatuno",
 "damage+doubleFish":"Doble destrucción",
@@ -3333,6 +3386,19 @@ function auditFusionDefinitions(){
   });
 }
 
+Object.assign(fusionEffectDescMap,{
+"damageReduction+shield":"Al recibir daño, repele enemigos cercanos. El empuje aumenta de 160 a 300 y el enfriamiento baja de 8 a 5 segundos al mejorar la fusión.",
+"damageReduction+lifeSteal":"Con menos de la mitad de vida, refuerza el robo de vida entre un 10 % y un 50 % adicional según el nivel de fusión.",
+"damageReduction+luck":"Al terminar la estrella, conserva invulnerabilidad de 0,8 a 2,5 segundos según el nivel de fusión.",
+"damage+luck":"Los disparos tienen entre un 8 % y un 20 % de probabilidad de causar un 25 % de daño extra, según el nivel de fusión.",
+"critChance+luck":"Aumenta el multiplicador de los críticos normales de ×2,1 a ×2,4 al mejorar la fusión.",
+"healOnWave+luck":"Cada moneda recogida cura entre 2 y 6 puntos de vida según el nivel de fusión.",
+"damageReduction+maxLife":"Conserva la vida y protección. Permite subir ambas durante cinco niveles de fusión.",
+"damageReduction+healOnWave":"Conserva protección y curación por ronda. Ambas progresan durante cinco niveles de fusión.",
+"coinMagnet+luck":"Conserva el imán y la suerte. Aumenta ambos durante cinco niveles de fusión.",
+"luck+xpBoost":"Conserva suerte y experiencia. Ambas progresan durante cinco niveles de fusión."
+});
+for(const pair of ["damageReduction+shield","damageReduction+lifeSteal","damageReduction+luck","damage+luck","critChance+luck","healOnWave+luck","damageReduction+maxLife","damageReduction+healOnWave","coinMagnet+luck","luck+xpBoost"])fusionShortDescMap[pair]=fusionEffectDescMap[pair];
 ensureFusionCatalogueComplete();
 auditFusionDefinitions();
 let FUSION_DATA=[];
@@ -3353,6 +3419,7 @@ function rebuildFusionDataCatalogue(){
 rebuildFusionDataCatalogue();
 
 function getFusionExtraBonusDesc(pair){
+  if(["damageReduction+shield","damageReduction+lifeSteal","damageReduction+luck","damage+luck","critChance+luck","healOnWave+luck"].includes(pair))return "Bonus de fusión: "+fusionEffectDescMap[pair];
   if(pair==="darkPact+moralSupport")return "Bonus de fusión: invoca al perrito protector.";
   if(pair==="catInstinct+maxLife")return "Bonus de fusión: protección de emergencia.";
   if(pair==="catInstinct+coinMagnet")return "Bonus de fusión: el instinto atrae recursos.";
@@ -3386,23 +3453,23 @@ function addFusionLevelBonus(key,amount=1){
 }
 function getFusionBonusKeys(pair){
   const keys=[];
-  if(pair.includes("damage"))keys.push("damage");
-  if(pair.includes("fireRate")||pair.includes("autoFire"))keys.push("fireRate");
-  if(pair.includes("fishSpeed")||pair.includes("boomerang"))keys.push("fishSpeed");
-  if(pair.includes("doubleFish"))keys.push("doubleFish");
-  if(pair.includes("pierce"))keys.push("pierce");
-  if(pair.includes("bigFish")||pair.includes("fishSize"))keys.push("fishSize");
-  if(pair.includes("shield"))keys.push("shield");
-  if(pair.includes("lifeSteal"))keys.push("lifeSteal");
-  if(pair.includes("maxLife"))keys.push("maxLife");
-  if(pair.includes("healOnWave"))keys.push("healOnWave");
-  if(pair.includes("moveSpeed")||pair.includes("zoomies"))keys.push("moveSpeed");
-  if(pair.includes("xpBoost"))keys.push("xpBoost");
-  if(pair.includes("coinMagnet"))keys.push("coinMagnet");
-  if(pair.includes("catSlow"))keys.push("catSlow");
-  if(pair.includes("omniBurst"))keys.push("omniBurst");
-  if(pair.includes("yarnBounce"))keys.push("yarnBounce");
-  if(pair.includes("critChance"))keys.push("critChance");
+  if(pair.split("+").includes("damage"))keys.push("damage");
+  if(pair.split("+").includes("fireRate")||pair.split("+").includes("autoFire"))keys.push("fireRate");
+  if(pair.split("+").includes("fishSpeed")||pair.split("+").includes("boomerang"))keys.push("fishSpeed");
+  if(pair.split("+").includes("doubleFish"))keys.push("doubleFish");
+  if(pair.split("+").includes("pierce"))keys.push("pierce");
+  if(pair.split("+").includes("bigFish")||pair.split("+").includes("fishSize"))keys.push("fishSize");
+  if(pair.split("+").includes("shield"))keys.push("shield");
+  if(pair.split("+").includes("lifeSteal"))keys.push("lifeSteal");
+  if(pair.split("+").includes("maxLife"))keys.push("maxLife");
+  if(pair.split("+").includes("healOnWave"))keys.push("healOnWave");
+  if(pair.split("+").includes("moveSpeed")||pair.split("+").includes("zoomies"))keys.push("moveSpeed");
+  if(pair.split("+").includes("xpBoost"))keys.push("xpBoost");
+  if(pair.split("+").includes("coinMagnet"))keys.push("coinMagnet");
+  if(pair.split("+").includes("catSlow"))keys.push("catSlow");
+  if(pair.split("+").includes("omniBurst"))keys.push("omniBurst");
+  if(pair.split("+").includes("yarnBounce"))keys.push("yarnBounce");
+  if(pair.split("+").includes("critChance"))keys.push("critChance");
   return keys;
 }
 function applyFusionBonus(pair,a,b){
@@ -3806,7 +3873,7 @@ if(!upgrades.bigCursor)pool.push({key:"bigCursor",level:0,upgrade:{icon:"🌈",t
 if(!upgrades.moralSupport)pool.push({key:"moralSupport",level:0,upgrade:{icon:"💛",title:"Apoyo Moral",levelTag:"1/1",desc:"Tu novio te anima durante la partida.",special:true,apply:()=>{upgrades.moralSupport=true}}});
 if(!upgrades.darkPact)pool.push({key:"darkPact",level:0,upgrade:{icon:"🖤",title:"Voluntad Oscura",levelTag:"1/1",desc:"Menos opciones, pero más poder.",dark:true,apply:()=>{upgrades.darkPact=true}}});
 if(!upgrades.catInstinct)pool.push({key:"catInstinct",level:0,upgrade:{icon:"🥷",title:"Instinto gatuno",levelTag:"1/1",desc:"Te ayuda cuando estás en peligro.",special:true,apply:()=>{upgrades.catInstinct=true}}});
-if(!upgrades.zoomies)pool.push({key:"zoomies",level:0,upgrade:{icon:"💨",title:"Zoomies",levelTag:"1/1",desc:"A veces vas rapidísima.",special:true,apply:()=>{upgrades.zoomies=true}}});
+if(!upgrades.zoomies)pool.push({key:"zoomies",level:0,upgrade:{icon:"💨",title:"Zoomies",levelTag:"1/1",desc:"A veces ganas velocidad y un 35 % de daño.",special:true,apply:()=>{upgrades.zoomies=true}}});
 
 if(pool.length===0)return [];
 
@@ -3995,9 +4062,10 @@ makeSpawnPuff(x,y,spawnColor)
 }
 
 function dropCoins(x,y,chance=.013){
+chance*=1+(upgrades.luck||0);
 if(hasDoneFusionPair("catSlow+coinMagnet"))chance*=1.75;
 if(Math.random()>chance)return;
-const amount=1;
+const amount=Math.random()<(upgrades.luck||0)*.5?2:1;
 if(runStats)runStats.coinsGenerated+=amount;
 coinsDrops.push({x,y,r:10,amount,life:18})
 }
@@ -4009,7 +4077,7 @@ const healthLost=Math.min(Math.max(0,boss.hp),Math.max(0,real));
 if(runStats)runStats.bossDamage+=healthLost;
 boss.hp-=real;boss.hitAnim=.15;
 makeImpact(boss.x,boss.y,boss.type==="demon"?"#ff4d8d":"#ffd166",1.35);addScreenShake(boss.type==="demon"?5:3);playImpactSound();
-if(upgrades.lifeSteal>0)life=Math.min(upgrades.maxLife,life+healthLost*upgrades.lifeSteal);
+if(upgrades.lifeSteal>0)life=Math.min(upgrades.maxLife,life+healthLost*getCurrentLifeSteal());
 if(boss.hp<=0){
 const defeatedType=boss.type;
 makeSmoke(boss.x,boss.y);
@@ -4074,6 +4142,7 @@ const period=upgrades.zoomiesHyper?5.2:7.2;
 const active=upgrades.zoomiesHyper?2.35:1.65;
 return (now%period)<active;
 }
+function getZoomiesDamageMultiplier(){return isZoomiesActive()?1.35:1}
 function getZoomiesMoveMultiplier(){return isZoomiesActive()?(upgrades.zoomiesHyper?1.85:1.45):1}
 function getZoomiesFireMultiplier(){return isZoomiesActive()?(upgrades.zoomiesCannon?2.05:1.45):1}
 function getCurrentCritChance(){return Math.min(.95,upgrades.critChance+((isZoomiesActive()&&upgrades.zoomiesCrit)?0.22:0))}
@@ -4095,22 +4164,22 @@ return !!doneFusionPairs[sortedPair("bigFish","doubleFish")];
 
 function shootFish(fromHold=false){
 const now=gameNow();
-let delay=210/(upgrades.fireRate*getZoomiesFireMultiplier());
-if(fromHold&&upgrades.holdShoot)delay/=getHoldShootMultiplier();
+if(!gameStarted||gameOver||paused||choosingUpgrade)return;
+const delay=getShotInterval();
 if(now-lastShot<delay)return;
 lastShot=now;shots++;if(runStats)runStats.shotsFired++;addAchievementStat("shots",1,{run:true});player.shootAnim=.12;
-const angle=Math.atan2(mouse.y-player.y,mouse.x-player.x),giantFishEasterEgg=giantFishEasterEggsUsed<1&&hasFishSizeFusionForGiantFish()&&Math.random()<0.00001,isBigFish=giantFishEasterEgg||Math.random()<upgrades.bigFishChance,fishScale=upgrades.fishSize*(giantFishEasterEgg?7.5:(isBigFish?1.65:1)),lowLifeBonus=(life<upgrades.maxLife*.35?(upgrades.braveHeart?0.35:0)+(upgrades.cursedInstinct?0.45:0):0),fishDamage=upgrades.damage*(1+lowLifeBonus)*(giantFishEasterEgg?35:(isBigFish?2.1:1)),canPierce=giantFishEasterEgg||Math.random()<upgrades.pierceChance,boomerang=!giantFishEasterEgg&&Math.random()<upgrades.boomerangChance;
+const angle=Math.atan2(mouse.y-player.y,mouse.x-player.x),giantFishEasterEgg=giantFishEasterEggsUsed<1&&hasFishSizeFusionForGiantFish()&&Math.random()<0.00001,isBigFish=giantFishEasterEgg||Math.random()<upgrades.bigFishChance,fishScale=upgrades.fishSize*(giantFishEasterEgg?7.5:(isBigFish?1.65:1)),lowLifeBonus=(life<upgrades.maxLife*.35?(upgrades.braveHeart?0.35:0)+(upgrades.cursedInstinct?0.45:0):0),fishDamage=upgrades.damage*getLuckyShotMultiplier()*getZoomiesDamageMultiplier()*(1+lowLifeBonus)*(giantFishEasterEgg?35:(isBigFish?2.1:1)),canPierce=giantFishEasterEgg||Math.random()<upgrades.pierceChance,boomerang=!giantFishEasterEgg&&Math.random()<upgrades.boomerangChance;
 function addFish(offsetAngle=0,damageMultiplier=1){
 const finalAngle=angle+offsetAngle;
 const boomerangLvl=effectLevel("boomerang");
 const boomerangRangeBonus=boomerang?1+boomerangLvl*.08:1;
 const critRoll=Math.random()<getCurrentCritChance();
-fishes.push({x:player.x+Math.cos(finalAngle)*62,y:player.y+Math.sin(finalAngle)*62,vx:Math.cos(finalAngle)*610*upgrades.fishSpeed*boomerangRangeBonus,vy:Math.sin(finalAngle)*610*upgrades.fishSpeed*boomerangRangeBonus,angle:finalAngle,damage:fishDamage*damageMultiplier*(critRoll?2:1),life:giantFishEasterEgg?2.2:(boomerang?3.35+boomerangLvl*.18:1.45),scale:fishScale,pierce:canPierce,boomerang,crit:critRoll&&!boomerang,giantEaster:giantFishEasterEgg,returning:false,age:0,turnTime:boomerang?0.95+boomerangLvl*.06:0,hitIds:new Set()})
+fishes.push({x:player.x+Math.cos(finalAngle)*62,y:player.y+Math.sin(finalAngle)*62,vx:Math.cos(finalAngle)*610*upgrades.fishSpeed*boomerangRangeBonus,vy:Math.sin(finalAngle)*610*upgrades.fishSpeed*boomerangRangeBonus,angle:finalAngle,damage:fishDamage*damageMultiplier*(critRoll?getCriticalDamageMultiplier():1),life:giantFishEasterEgg?2.2:(boomerang?3.35+boomerangLvl*.18:1.45),scale:fishScale,pierce:canPierce,boomerang,crit:critRoll&&!boomerang,giantEaster:giantFishEasterEgg,returning:false,age:0,turnTime:boomerang?0.95+boomerangLvl*.06:0,hitIds:new Set()})
 }
 function addCardumenGiganteFish(offsetAngle){
 const finalAngle=angle+offsetAngle;
 const critRoll=Math.random()<getCurrentCritChance();
-fishes.push({x:player.x+Math.cos(finalAngle)*66,y:player.y+Math.sin(finalAngle)*66,vx:Math.cos(finalAngle)*585*upgrades.fishSpeed,vy:Math.sin(finalAngle)*585*upgrades.fishSpeed,angle:finalAngle,damage:upgrades.damage*2.4*(critRoll?1.7:1),life:1.55,scale:Math.max(upgrades.fishSize*2.15,2.05),pierce:Math.random()<Math.max(.15,upgrades.pierceChance*.55),boomerang:false,crit:critRoll,cardumenGigante:true,returning:false,age:0,turnTime:0,hitIds:new Set()})
+fishes.push({x:player.x+Math.cos(finalAngle)*66,y:player.y+Math.sin(finalAngle)*66,vx:Math.cos(finalAngle)*585*upgrades.fishSpeed,vy:Math.sin(finalAngle)*585*upgrades.fishSpeed,angle:finalAngle,damage:upgrades.damage*getZoomiesDamageMultiplier()*2.4*(critRoll?1.7+(getCriticalDamageMultiplier()-2):1),life:1.55,scale:Math.max(upgrades.fishSize*2.15,2.05),pierce:Math.random()<Math.max(.15,upgrades.pierceChance*.55),boomerang:false,crit:critRoll,cardumenGigante:true,returning:false,age:0,turnTime:0,hitIds:new Set()})
 }
 addFish();
 if(giantFishEasterEgg){
@@ -4131,23 +4200,23 @@ if(Math.random()<(lowPerfMode?.08:.18)){const phrases=["glugluglu","fiuuu","ñom
 if(upgrades.moralSupport&&Math.random()<.16)floatingTexts.push({x:player.x+Math.cos(angle)*75,y:player.y+Math.sin(angle)*75-38,text:lovePhrases[Math.floor(Math.random()*lovePhrases.length)],life:1.45,maxLife:1.45,big:false})
 }
 
+function getAutomaticFireMultiplier(){
+let rate=1+Math.min(10,effectLevel("autoFire"))*.08;
+if(upgrades.assistedShot)rate*=1.10;
+if(upgrades.combatAI)rate*=1.15;
+if(upgrades.moraleFire)rate*=1.12;
+if(upgrades.braveHeart&&life<upgrades.maxLife*.35)rate*=1.10;
+return rate*getHoldShootMultiplier();
+}
+function getShotInterval(){return Math.max(45,210/(upgrades.fireRate*getAutomaticFireMultiplier()*getZoomiesFireMultiplier()*(gameNow()<manualFireBoostUntil?1.15:1)));}
 function shootAutoFish(){
-const now=gameNow();
-let delay=520-Math.min(360,effectLevel("autoFire")*70);
-if(upgrades.assistedShot)delay-=35;
-if(upgrades.combatAI)delay-=55;
-if(upgrades.moraleFire)delay-=45;
-if(upgrades.braveHeart&&life<upgrades.maxLife*.35)delay-=70;
-delay=Math.max(125,delay/((1+effectLevel("fireRate")*.04)*getZoomiesFireMultiplier()));
-if(now-lastAutoShot<delay)return;
-lastAutoShot=now;
-let oldMouseX=mouse.x,oldMouseY=mouse.y;
+const oldMouseX=mouse.x,oldMouseY=mouse.y;
 if(upgrades.combatAI||upgrades.assistedShot){
 const target=findNearestEnemy(player.x,player.y,upgrades.combatAI?99999:760);
 if(target){mouse.x=target.x;mouse.y=target.y}
 }
-const saved=lastShot;lastShot=-Infinity;shootFish();lastShot=saved;
-mouse.x=oldMouseX;mouse.y=oldMouseY
+shootFish();
+mouse.x=oldMouseX;mouse.y=oldMouseY;
 }
 
 function shieldAttack(){
@@ -4158,7 +4227,7 @@ cats.forEach(cat=>{if(!isFinitePos(cat))return;const d=Math.hypot(cat.x-player.x
 if(boss){const d=Math.hypot(boss.x-player.x,boss.y-player.y);if(d<dist){dist=d;target=boss}}
 if(!target)return;
 const a=Math.atan2(target.y-player.y,target.x-player.x);
-fishes.push({x:player.x+Math.cos(a)*56,y:player.y+Math.sin(a)*56,vx:Math.cos(a)*530,vy:Math.sin(a)*530,angle:a,damage:upgrades.damage*.75,life:1.2,scale:.85,pierce:false,boomerang:false,returning:false,age:0,hitIds:new Set(),shieldShot:true})
+fishes.push({x:player.x+Math.cos(a)*56,y:player.y+Math.sin(a)*56,vx:Math.cos(a)*530,vy:Math.sin(a)*530,angle:a,damage:upgrades.damage*getZoomiesDamageMultiplier()*.75,life:1.2,scale:.85,pierce:false,boomerang:false,returning:false,age:0,hitIds:new Set(),shieldShot:true})
 }
 
 function applyAimAssist(fish){
@@ -4375,7 +4444,7 @@ for(let c=cats.length-1;c>=0;c--){
 const cat=cats[c];if(!isFinitePos(cat))continue;const d=Math.hypot(cat.x-ox,cat.y-oy);
 if(d<cat.r+orbSize){
 const shieldDamage=1+shieldLvl*.95,healthLost=Math.min(Math.max(0,cat.hp),shieldDamage);
-cat.hp-=shieldDamage;cat.hitAnim=.15;makeHearts(cat.x,cat.y);if(hasDoneFusionPair("lifeSteal+shield"))life=Math.min(upgrades.maxLife,life+healthLost*upgrades.lifeSteal);lastShieldHit=now;
+cat.hp-=shieldDamage;cat.hitAnim=.15;makeHearts(cat.x,cat.y);if(hasDoneFusionPair("lifeSteal+shield"))life=Math.min(upgrades.maxLife,life+healthLost*getCurrentLifeSteal());lastShieldHit=now;
 if(cat.hp<=0)killCat(c,cat);
 return
 }
@@ -4481,7 +4550,7 @@ y:sourceY+Math.sin(a)*22,
 vx:Math.cos(a)*560*upgrades.fishSpeed,
 vy:Math.sin(a)*560*upgrades.fishSpeed,
 angle:a,
-damage:Math.max(.5,upgrades.damage*.65),
+damage:Math.max(.5,upgrades.damage*getZoomiesDamageMultiplier()*.65),
 life:1.05,
 scale:Math.max(.75,upgrades.fishSize*.78),
 pierce:false,
@@ -4497,7 +4566,7 @@ function shootOmniBurst(){
 const lvl=effectLevel("omniBurst");
 if(lvl<=0)return;
 const count=10+Math.min(14,lvl*2);
-const baseDamage=upgrades.damage*.72;
+const baseDamage=upgrades.damage*getZoomiesDamageMultiplier()*.72;
 const fishScale=upgrades.fishSize*.82;
 const burstSpeed=520*upgrades.fishSpeed*(hasDoneFusionPair("fishSpeed+omniBurst")?1.35:1);
 for(let i=0;i<count;i++){
@@ -4613,7 +4682,7 @@ dogCompanion.shootCooldown-=dt;
 const enemy=findNearestEnemy(dogCompanion.x,dogCompanion.y,560);
 if(enemy&&dogCompanion.shootCooldown<=0){
 const a=Math.atan2(enemy.y-dogCompanion.y,enemy.x-dogCompanion.x);
-dogBones.push({x:dogCompanion.x+Math.cos(a)*18,y:dogCompanion.y+Math.sin(a)*18,vx:Math.cos(a)*460,vy:Math.sin(a)*460,angle:a,life:1.4,damage:Math.max(.8,upgrades.damage*.55)});
+dogBones.push({x:dogCompanion.x+Math.cos(a)*18,y:dogCompanion.y+Math.sin(a)*18,vx:Math.cos(a)*460,vy:Math.sin(a)*460,angle:a,life:1.4,damage:Math.max(.8,upgrades.damage*getZoomiesDamageMultiplier()*.55)});
 dogCompanion.shootCooldown=.75;
 floatingTexts.push({x:dogCompanion.x,y:dogCompanion.y-28,text:"guau!",life:.55,maxLife:.55,big:false})
 }
@@ -4640,7 +4709,7 @@ if(hit||b.life<=0||b.x<-80||b.x>canvas.width+80||b.y<-80||b.y>canvas.height+80)d
 
 function drawDog(){
 if(!upgrades.boyfriendDog||dogKidnapped)return;
-ctx.save();ctx.translate(dogCompanion.x,dogCompanion.y);
+ctx.save();ctx.translate(dogCompanion.x,dogCompanion.y);ctx.scale(.68,.68);
 const bob=Math.sin(dogCompanion.wag)*1.5;
 ctx.lineJoin='round';ctx.lineCap='round';ctx.lineWidth=1.8;
 const oval=(x,y,rx,ry,color,angle=0)=>{ctx.fillStyle=color;ctx.strokeStyle='#785244';ctx.beginPath();ctx.ellipse(x,y,rx,ry,angle,0,Math.PI*2);ctx.fill();ctx.stroke();};
@@ -4744,7 +4813,7 @@ function shootCatInstinctBurst(){
   const speed=500*upgrades.fishSpeed*(1+lvl*.035);
   for(let i=0;i<count;i++){
     const a=(Math.PI*2/count)*i+Math.random()*.05;
-    fishes.push({x:player.x+Math.cos(a)*50,y:player.y+Math.sin(a)*50,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,angle:a,damage:Math.max(.75,upgrades.damage*(.62+lvl*.06)),life:1.05+lvl*.05,scale:Math.max(.72,upgrades.fishSize*.75),pierce:Math.random()<Math.min(.65,upgrades.pierceChance*.35+lvl*.04),boomerang:false,returning:false,age:0,hitIds:new Set(),shieldShot:true});
+    fishes.push({x:player.x+Math.cos(a)*50,y:player.y+Math.sin(a)*50,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,angle:a,damage:Math.max(.75,upgrades.damage*getZoomiesDamageMultiplier()*(.62+lvl*.06)),life:1.05+lvl*.05,scale:Math.max(.72,upgrades.fishSize*.75),pierce:Math.random()<Math.min(.65,upgrades.pierceChance*.35+lvl*.04),boomerang:false,returning:false,age:0,hitIds:new Set(),shieldShot:true});
   }
   floatingTexts.push({x:player.x,y:player.y-154,text:"💥 Ráfaga felina",life:1.15,maxLife:1.15,big:false});
 }
@@ -4820,7 +4889,7 @@ if(upgrades.reflexBurst){
   const targets=[...cats];if(boss)targets.push(boss);
   targets.slice(0,16).forEach(target=>{
     const a=Math.atan2(target.y-player.y,target.x-player.x);
-    fishes.push({x:player.x+Math.cos(a)*54,y:player.y+Math.sin(a)*54,vx:Math.cos(a)*620*upgrades.fishSpeed,vy:Math.sin(a)*620*upgrades.fishSpeed,angle:a,damage:Math.max(1,upgrades.damage*.9),life:1.25,scale:upgrades.fishSize*.85,pierce:true,boomerang:false,returning:false,age:0,hitIds:new Set(),shieldShot:true});
+    fishes.push({x:player.x+Math.cos(a)*54,y:player.y+Math.sin(a)*54,vx:Math.cos(a)*620*upgrades.fishSpeed,vy:Math.sin(a)*620*upgrades.fishSpeed,angle:a,damage:Math.max(1,upgrades.damage*getZoomiesDamageMultiplier()*.9),life:1.25,scale:upgrades.fishSize*.85,pierce:true,boomerang:false,returning:false,age:0,hitIds:new Set(),shieldShot:true});
   });
 }
 return true;
@@ -4856,6 +4925,8 @@ function getScalableDetail(key){
   lines.push(`${fusedPair?`Fusión ${shownLevel}/${shownMax}`:`Mejora ${shownLevel}/${shownMax}`}.`);
 
   const detail={
+    luck:`Probabilidades de eventos ×${(1+upgrades.luck).toFixed(2)}; ${(upgrades.luck*50).toFixed(1)} % de duplicar monedas.`,
+    damageReduction:`Recibes un ${p} % menos de daño.`,
     moveSpeed:`Te mueves un ${p}% más rápido.`,
     fireRate:`Disparas aproximadamente un ${p}% más rápido.`,
     fishSpeed:`Los peces vuelan un ${p}% más rápido.`,
@@ -4874,7 +4945,7 @@ function getScalableDetail(key){
     coinMagnet:`Radio base del imán: ${Math.round(upgrades.coinMagnetRange)} píxeles.`,
     omniBurst:`${10+Math.min(14,effectLevel("omniBurst")*2)} peces por ráfaga, cada ${(Math.max(3200,9000/(1+effectLevel("omniBurst")*.13))/1000).toFixed(2)} s.`,
     yarnBounce:`Probabilidad de rebote: ${getPauseActualPercent("yarnBounce")}%.`,
-    autoFire:`Nivel efectivo del disparo automático: ${upgrades.autoFireLevel}.`,
+    autoFire:`Cadencia adicional: +${Math.min(10,effectLevel("autoFire"))*8} %. Los bonus de fusión funcionan sin mantener el botón.`,
     critChance:`Tienes un ${p}% de probabilidad de crítico.`
   };
   lines.push(detail[key]||`Potencia actual: ${shownLevel}/${shownMax}.`);
@@ -4891,8 +4962,8 @@ function getUniqueDetail(key){
     moralSupport:"Activa apoyo ocasional y desbloquea fusiones defensivas o emocionales.",
     darkPact:"Reduce elección pero potencia el progreso oscuro.",
     catInstinct:"Activa una respuesta defensiva cuando la vida está baja.",
-    zoomies:"Activa momentos de velocidad alta de forma periódica.",
-    autoFire:"Permite disparo automático y sinergias de automatización."
+    zoomies:"Activa periódicamente velocidad alta y un 35 % más de daño.",
+    autoFire:"Refuerza la cadencia automática y sus fusiones, sin mantener el botón."
   }[key]||"";
   return `${owned?"Conseguida":"Bloqueada todavía"}. ${base} ${extra}`.trim();
 }
@@ -5147,6 +5218,8 @@ processPendingUpgradeQueue();
 checkGameCompletion();
 }
 function updateWorld(dt){
+starSpawnTimer-=dt;if(starSpawnTimer<=0){trySpawnPowerStar();starSpawnTimer=12+Math.random()*8;}
+updateRunIndicators();
 if(autoMode)updateAutoPlayer(dt);
 if(runStats){runStats.elapsed+=dt;if(life<upgrades.maxLife*.35)runStats.lowHpTime+=dt;}
 triggerCatInstinct();if(dogRelaxTime>0)dogRelaxTime=Math.max(0,dogRelaxTime-dt);updateAvalanche(dt);
@@ -5165,6 +5238,7 @@ if(starTime>0&&starTime<=3&&Math.random()<.18){
   floatingTexts.push({x:player.x,y:player.y-62,text:"pipipi ⭐",life:.45,maxLife:.45,big:false});
 }
 if(starTime<=0){
+  if(hasDoneFusionPair("damageReduction+luck")){safeTeleportInvulnUntil=Math.max(safeTeleportInvulnUntil,gameNow()+(800+1700*fusionStrength("damageReduction+luck")));floatingTexts.push({x:player.x,y:player.y-90,text:"🔰 Amuleto protector",life:1.2,maxLife:1.2,big:false});}
   stopPowerStarLoop();
   starActive=false;
   starTime=0;
@@ -5218,7 +5292,7 @@ if(spawnCooldown<=0&&!boss){spawnCat();spawnCooldown=Math.max(getGamePhase()==="
 if(spawnCooldown<=0&&boss&&boss.type!=="giantCat"){spawnCat();spawnCooldown=Math.max(getGamePhase()==="endless"?.16:.50,Math.max(.55,1.55-wave*.030)/getEndlessSpawnMultiplier())}
 
 let mx=0,my=0;
-if(keys.w)my--;if(keys.s)my++;if(keys.a)mx--;if(keys.d)mx++;
+if(keys.w||keys.arrowup)my--;if(keys.s||keys.arrowdown)my++;if(keys.a||keys.arrowleft)mx--;if(keys.d||keys.arrowright)mx++;
 const movementLen=Math.hypot(mx,my);
 const moveStartX=player.x,moveStartY=player.y;
 if(movementLen>0){mx/=movementLen;my/=movementLen;player.x+=mx*player.speed*upgrades.moveSpeed*getZoomiesMoveMultiplier()*getStarSpeedMultiplier()*dt;player.y+=my*player.speed*upgrades.moveSpeed*getZoomiesMoveMultiplier()*getStarSpeedMultiplier()*dt;
@@ -5238,14 +5312,13 @@ player.hurtAnim=Math.max(0,player.hurtAnim-dt);
 
 if(upgrades.braveHeart&&life<upgrades.maxLife*.35&&Math.random()<.025){floatingTexts.push({x:player.x,y:player.y-60,text:"💗 Corazón valiente",life:.75,maxLife:.75,big:false})}
 if(isZoomiesActive()&&Math.random()<.018){floatingTexts.push({x:player.x,y:player.y-72,text:"💨 ZOOMIES",life:.65,maxLife:.65,big:false})}
-if(upgrades.autoFire&&(cats.length>0||boss))shootAutoFish();
-if(mouseIsDown&&upgrades.holdShoot&&!gameOver&&gameStarted&&!paused&&!choosingUpgrade)shootFish(true);
+shootAutoFish();
 updateOmniBurst();
 updateDog(dt);
 updateShield(dt);
 updateBoss(dt);
 if(runStats){const nearbyCats=cats.some(c=>isFinitePos(c)&&Math.hypot(player.x-c.x,player.y-c.y)<190);const nearbyBoss=boss&&Math.hypot(player.x-boss.x,player.y-boss.y)<boss.r+210;if(nearbyCats||nearbyBoss)runStats.enemiesNearTime+=dt;}
-if(isPowerStarActive()&&boss&&Math.hypot(player.x-boss.x,player.y-boss.y)<player.r+boss.r+18){damageBoss(Math.max(1.5,upgrades.damage*18*dt));}
+if(isPowerStarActive()&&boss&&Math.hypot(player.x-boss.x,player.y-boss.y)<player.r+boss.r+18){damageBoss(Math.max(1.5,upgrades.damage*getZoomiesDamageMultiplier()*18*dt));}
 
 fishes.forEach(fish=>{
 fish.age+=dt;
@@ -5312,7 +5385,7 @@ coin.x+=(dx/d)*pull*dt;coin.y+=(dy/d)*pull*dt;
 dx=player.x-coin.x;dy=player.y-coin.y;d=Math.hypot(dx,dy)
 }
 if(d<player.r+22){
-coins+=coin.amount;if(runStats)runStats.coinsCollected+=coin.amount;if(hasDoneFusionPair("coinMagnet+healOnWave"))life=Math.min(upgrades.maxLife,life+Math.max(1,Math.round(upgrades.healOnWave*.10)));coinsDrops.splice(cd,1);
+coins+=coin.amount;if(hasDoneFusionPair("healOnWave+luck"))life=Math.min(upgrades.maxLife,life+coin.amount*(2+4*fusionStrength("healOnWave+luck")));if(runStats)runStats.coinsCollected+=coin.amount;if(hasDoneFusionPair("coinMagnet+healOnWave"))life=Math.min(upgrades.maxLife,life+Math.max(1,Math.round(upgrades.healOnWave*.10)));coinsDrops.splice(cd,1);
 floatingTexts.push({x:player.x,y:player.y-55,text:`+${coin.amount} moneda`,life:.9,maxLife:.9,big:false});
 updateHud();checkGameCompletion();maybeOpenShopOrFusion()
 }else if(coin.life<=0){if(runStats)runStats.coinsMissed+=coin.amount||1;coinsDrops.splice(cd,1)}
@@ -5408,12 +5481,14 @@ if(cat.type==="yarn"){
   if(cat.studyTimer>=2.35&&(cat.studyLevel||0)<5){
     cat.studyLevel=(cat.studyLevel||0)+1;
     cat.studyTimer=0;
-    cat.hp=Math.min(cat.maxHp+(cat.studyLevel||0)*2,(cat.hp||1)+1);
+    cat.maxHp+=2;cat.hp=Math.min(cat.maxHp,(cat.hp||1)+2);
+    cat.studyDash=.65;cat.studyAngle=Math.atan2(dy,dx);
     floatingTexts.push({x:cat.x,y:cat.y-48,text:`📚 Estudia ${cat.studyLevel}/5`,life:1.05,maxLife:1.05,big:false});
     makeImpact(cat.x,cat.y,"#74b9ff",.65);
   }
   const studBonus=1+(cat.studyLevel||0)*.34;
-  cat.x+=(dx/dist)*cat.speed*studBonus*dt+Math.cos(cat.wobble)*9*dt;cat.y+=(dy/dist)*cat.speed*studBonus*dt+Math.sin(cat.wobble)*9*dt;
+  if((cat.studyDash||0)>0){cat.studyDash-=dt;cat.x+=Math.cos(cat.studyAngle)*cat.speed*3.4*dt;cat.y+=Math.sin(cat.studyAngle)*cat.speed*3.4*dt;}
+  else if((cat.studyLevel||0)>=5||cat.studyTimer<1.65){cat.x+=(dx/dist)*cat.speed*studBonus*dt;cat.y+=(dy/dist)*cat.speed*studBonus*dt;}
 }else{
   cat.x+=(dx/dist)*cat.speed*dt+Math.cos(cat.wobble)*9*dt;cat.y+=(dy/dist)*cat.speed*dt+Math.sin(cat.wobble)*9*dt;
 }
@@ -5487,7 +5562,7 @@ cat.baseSpeed=cat.baseSpeed||cat.speed;
 shockwaves.push({x:cat.x,y:cat.y,r:6,maxR:85+Math.min(70,wave*2.2),life:.42,maxLife:.42,color:"#ff8fab",line:4});
 floatingTexts.push({x:cat.x,y:cat.y-48,text:"😤 ¡DESPERTÓ!",life:1.15,maxLife:1.15,big:false});
 }
-if(upgrades.lifeSteal>0)life=Math.min(upgrades.maxLife,life+healthLost*upgrades.lifeSteal);
+if(upgrades.lifeSteal>0)life=Math.min(upgrades.maxLife,life+healthLost*getCurrentLifeSteal());
 floatingTexts.push({x:hitX,y:hitY-34,text:cat.rainbow?"🌈 miua!":Math.random()<.5?"miua!":"miau!",life:.65,maxLife:.65,big:false});
 if(cat.hp<=0)killCat(i,cat);
 break
@@ -5593,9 +5668,9 @@ ctx.restore();
 }
 
 // These random parameters stay constant for the current background seed.
-let ambientRandSeed=null,ambientRandCache=[];
+let ambientRandSeed=null,ambientRandCache=[],ambientCycles=[],ambientEnabled=[];
 function ambientFishRand(i,offset=0){
-if(ambientRandSeed!==backgroundFishSeed){ambientRandSeed=backgroundFishSeed;ambientRandCache=[];}
+if(ambientRandSeed!==backgroundFishSeed){ambientRandSeed=backgroundFishSeed;ambientRandCache=[];ambientCycles=[];ambientEnabled=[];}
 const row=ambientRandCache[i]||(ambientRandCache[i]=[]);
 if(row[offset]!==undefined)return row[offset];
 const x=Math.sin((backgroundFishSeed+1)*12.9898+(i+1)*78.233+offset*37.719)*43758.5453;
@@ -5603,27 +5678,31 @@ return row[offset]=x-Math.floor(x);
 }
 
 function drawAmbientBackgroundFish(now){
-const count=lowPerfMode?5:10;
-const specialPalette=["rgba(120,205,255,1)","rgba(255,174,204,1)","rgba(205,190,255,1)","rgba(255,209,102,1)","rgba(128,237,153,1)","rgba(179,255,236,1)","rgba(255,156,192,1)"];
+const count=10;
+const specialPalette=["#89baca","#a5c9d5","#82adb9","#b4d3d9"];
 for(let i=0;i<count;i++){
   const dir=ambientFishRand(i,1)<.5?1:-1;
-  const speed=(lowPerfMode?10:15)+ambientFishRand(i,2)*24;
+  const speed=15+ambientFishRand(i,2)*24;
   const lane=(i+ambientFishRand(i,3))/(count+1);
   const bandY=canvas.height*(.10+lane*.76);
   const bob=8+ambientFishRand(i,4)*22;
   const y=bandY+Math.sin(now*(.00016+ambientFishRand(i,5)*.00018)+ambientFishRand(i,6)*Math.PI*2)*bob;
   const phaseOffset=ambientFishRand(i,7)*(canvas.width+300);
-  const travel=(now*.001*speed + phaseOffset)%(canvas.width+300);
+  const totalTravel=now*.001*speed+phaseOffset;
+  const cycle=Math.floor(totalTravel/(canvas.width+300));
+  if(ambientCycles[i]!==cycle){ambientCycles[i]=cycle;ambientEnabled[i]=!lowPerfMode||i<5;}
+  if(!ambientEnabled[i])continue;
+  const travel=totalTravel%(canvas.width+300);
   const x=dir>0?travel-150:canvas.width-travel+150;
   const isLarge=ambientFishRand(i,8)>.72;
-  const scale=(lowPerfMode?.38:.43)+ambientFishRand(i,9)*.34+(isLarge?.20:0);
-  const alpha=(lowPerfMode?.048:.06)+ambientFishRand(i,10)*.055;
+  const scale=.43+ambientFishRand(i,9)*.34+(isLarge?.20:0);
+  const alpha=.075+ambientFishRand(i,10)*.035;
   const tint=specialPalette[Math.floor(ambientFishRand(i,11)*specialPalette.length)%specialPalette.length];
   drawOneAmbientFish(x,y,dir,scale,alpha,tint,now*(.00032+ambientFishRand(i,12)*.00035)+ambientFishRand(i,13)*6,false);
 }
 
-// Pez enorme muy raro. Su momento, altura, color y dirección cambian en cada partida.
-if(!lowPerfMode){
+// Pez enorme muy raro: conserva su trayectoria también en modo de rendimiento.
+{
   const rareCycle=48000+ambientFishRand(90,1)*26000;
   const shiftedNow=now+ambientFishRand(90,2)*rareCycle;
   const phase=(shiftedNow%rareCycle)/rareCycle;
@@ -5642,7 +5721,7 @@ if(!lowPerfMode){
 }
 
 // Corazones de fondo, suaves y lentos, también con posición distinta por partida.
-const heartCount=lowPerfMode?1:3;
+const heartCount=0;
 for(let h=0;h<heartCount;h++){
   const cycle=23000+ambientFishRand(120+h,1)*16000;
   const phase=((now+ambientFishRand(120+h,2)*cycle)%cycle)/cycle;
@@ -5653,22 +5732,18 @@ for(let h=0;h<heartCount;h++){
 }
 }
 
+const ambientFishArtCache=new Map();
 function drawOneAmbientFish(x,y,dir,scale,alpha,tint,wave,giant){
-ctx.save();ctx.translate(x,y);if(dir<0)ctx.scale(-1,1);
-ctx.rotate(Math.sin(wave||0)*(giant?.035:.055));ctx.scale(scale,scale);
-ctx.globalAlpha=alpha;ctx.shadowBlur=0;ctx.lineJoin='round';ctx.lineWidth=1.6;
-const sway=Math.sin(wave||0)*3;
-ctx.fillStyle=tint;ctx.strokeStyle='#f9e8f7';
-ctx.beginPath();ctx.moveTo(-19,0);ctx.bezierCurveTo(-29,-4,-36,-14+sway,-43,-12+sway);ctx.quadraticCurveTo(-38,0+sway,-43,12+sway);ctx.bezierCurveTo(-33,14+sway,-27,3,-19,0);ctx.fill();ctx.stroke();
-ctx.beginPath();ctx.moveTo(-9,-9);ctx.quadraticCurveTo(-5,-24,9,-13);ctx.lineTo(13,-7);ctx.closePath();ctx.fill();ctx.stroke();
-ctx.beginPath();ctx.ellipse(0,0,25,13,0,0,Math.PI*2);ctx.fill();ctx.stroke();
-ctx.fillStyle='#fff4e9';ctx.globalAlpha=alpha*.55;ctx.beginPath();ctx.ellipse(1,5,18,6,0,0,Math.PI*2);ctx.fill();
-ctx.globalAlpha=alpha;ctx.fillStyle=tint;ctx.beginPath();ctx.moveTo(-2,1);ctx.quadraticCurveTo(-16,18,-17,7);ctx.quadraticCurveTo(-10,2,-2,1);ctx.fill();ctx.stroke();
-ctx.strokeStyle='#fcf3ff';ctx.lineWidth=1.2;ctx.beginPath();ctx.moveTo(10,-7);ctx.quadraticCurveTo(5,0,10,7);ctx.moveTo(-26,0);ctx.lineTo(-37,-6+sway);ctx.moveTo(-26,0);ctx.lineTo(-37,6+sway);ctx.stroke();
-ctx.fillStyle='#30253f';ctx.beginPath();ctx.arc(17,-3,2.6,0,Math.PI*2);ctx.fill();
-ctx.fillStyle='#ffffff';ctx.beginPath();ctx.arc(17.5,-3.8,.9,0,Math.PI*2);ctx.fill();
-ctx.globalAlpha=alpha*.7;ctx.beginPath();ctx.ellipse(-2,-7,9,2.5,-.15,0,Math.PI*2);ctx.fill();
-ctx.restore();
+let art=ambientFishArtCache.get(tint);
+if(!art){
+ art=document.createElement('canvas');art.width=160;art.height=96;const c=art.getContext('2d');c.scale(2,2);c.translate(48,24);
+ c.fillStyle=tint;c.beginPath();c.moveTo(26,0);c.bezierCurveTo(20,-10,9,-13,-1,-12);c.quadraticCurveTo(-7,-22,-14,-17);c.lineTo(-11,-9);c.quadraticCurveTo(-19,-7,-23,-3);c.quadraticCurveTo(-32,-10,-39,-11);c.quadraticCurveTo(-35,0,-39,11);c.quadraticCurveTo(-29,9,-23,3);c.quadraticCurveTo(-18,9,-7,11);c.quadraticCurveTo(-8,17,1,12);c.bezierCurveTo(14,13,23,7,26,0);c.closePath();c.fill();
+ c.fillStyle='#d2eaf1';c.beginPath();c.ellipse(0,5,14,3,0,0,Math.PI*2);c.fill();
+ c.strokeStyle='#648e9e';c.lineWidth=1;c.beginPath();c.moveTo(10,-6);c.quadraticCurveTo(6,0,10,6);c.moveTo(-5,0);c.quadraticCurveTo(-11,6,-12,3);c.stroke();
+ c.fillStyle='#264d60';c.beginPath();c.arc(18,-2,1.9,0,Math.PI*2);c.fill();c.fillStyle='#eafaff';c.beginPath();c.arc(18.4,-2.5,.6,0,Math.PI*2);c.fill();
+ ambientFishArtCache.set(tint,art);
+}
+ctx.save();ctx.translate(x,y);ctx.scale(dir<0?-scale:scale,scale);ctx.rotate(Math.sin(wave||0)*(giant?.035:.055));ctx.globalAlpha=alpha;ctx.shadowBlur=0;ctx.drawImage(art,-48,-24,80,48);ctx.restore();
 }
 
 
@@ -5678,12 +5753,12 @@ if(backdropCache&&backdropCache.width===canvas.width&&backdropCache.height===can
 const layer=document.createElement("canvas");layer.width=canvas.width;layer.height=canvas.height;
 const ctx=layer.getContext("2d");
 const gradient=ctx.createLinearGradient(0,0,0,canvas.height);
-gradient.addColorStop(0,"#171326");gradient.addColorStop(.55,"#2b2144");gradient.addColorStop(1,"#3d2b58");
+gradient.addColorStop(0,"#123a52");gradient.addColorStop(.55,"#102f47");gradient.addColorStop(1,"#0a2036");
 ctx.fillStyle=gradient;ctx.fillRect(0,0,canvas.width,canvas.height);
 
 // Luces suaves de fondo para que el escenario no se vea plano.
 const glow1=ctx.createRadialGradient(canvas.width*.22,canvas.height*.2,0,canvas.width*.22,canvas.height*.2,canvas.width*.55);
-glow1.addColorStop(0,"rgba(255,122,168,.20)");glow1.addColorStop(.48,"rgba(255,122,168,.06)");glow1.addColorStop(1,"rgba(255,122,168,0)");
+glow1.addColorStop(0,"rgba(124,212,235,.14)");glow1.addColorStop(.48,"rgba(124,212,235,.045)");glow1.addColorStop(1,"rgba(124,212,235,0)");
 ctx.fillStyle=glow1;ctx.fillRect(0,0,canvas.width,canvas.height);
 const glow2=ctx.createRadialGradient(canvas.width*.82,canvas.height*.82,0,canvas.width*.82,canvas.height*.82,canvas.width*.52);
 glow2.addColorStop(0,"rgba(76,201,240,.16)");glow2.addColorStop(.5,"rgba(76,201,240,.05)");glow2.addColorStop(1,"rgba(76,201,240,0)");
@@ -5701,14 +5776,14 @@ const now=performance.now();
 // Peces decorativos muy suaves por el fondo, para dar más vida sin molestar.
 drawAmbientBackgroundFish(now);
 
-// Patrón muy sutil de puntitos/estrellas en movimiento.
-if(!lowPerfMode){
+// Partículas marinas estables al alternar el modo de rendimiento.
+{
 for(let i=0;i<24;i++){
   const x=(i*173+now*.012*(1+i%3))%canvas.width;
   const y=(i*97+Math.sin(now*.0007+i)*10)%canvas.height;
   const r=1.2+(i%5)*.55;
   ctx.globalAlpha=.07+(i%4)*.014;
-  ctx.fillStyle=i%7===0?"#ffd166":(i%5===0?"#ffafcc":"#ffffff");
+  ctx.fillStyle="#b6dbe8";
   ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
 }
 ctx.globalAlpha=1;
@@ -5913,8 +5988,9 @@ if(selectedCosmetic("fish")==="fish_low_poly"){drawLowPolyFish(f);return;}
 
 drawEntityShadow(f.x,f.y,18*(f.scale||1),5*(f.scale||1),.10);
 ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.angle);ctx.scale(f.scale||1,f.scale||1);
-const body=f.giantEaster?"#ffd166":f.cardumenGigante?"#80d8ff":f.boomerang?"#80ed99":f.crit?"#ff6b6b":f.shieldShot?"#ffd166":"#6ed7ed";
-const tail=f.giantEaster?"#fb8500":f.cardumenGigante?"#00b4d8":f.boomerang?"#57cc99":f.crit?"#e03131":f.shieldShot?"#ffb703":"#45aecd";
+const skinPalette={fish_elegant:["#fff0c7","#c99b45"],fish_pirate:["#ecac58","#a9503f"],fish_heart:["#ff9bbd","#cf4a86"]}[selectedCosmetic("fish")];
+const body=f.giantEaster?"#ffd166":f.cardumenGigante?"#80d8ff":f.boomerang?"#80ed99":f.crit?"#ff6b6b":f.shieldShot?"#ffd166":(skinPalette?.[0]||"#6ed7ed");
+const tail=f.giantEaster?"#fb8500":f.cardumenGigante?"#00b4d8":f.boomerang?"#57cc99":f.crit?"#e03131":f.shieldShot?"#ffb703":(skinPalette?.[1]||"#45aecd");
 ctx.shadowColor=body;ctx.shadowBlur=lowPerfMode?0:(f.giantEaster?12:f.crit?7:0);
 softFishBody(body,tail);drawFishSkinDetails(f);ctx.restore()
 
@@ -5959,6 +6035,7 @@ for(const x of [-22,22]){oval(x,0,6,10,'#a97ec3');oval(x,0,3,7,'#ead5f3');}
 line(23,7,12,13,'#59486d');oval(10,13,3,2,'#59486d');
 ctx.fillStyle='#f4d393';ctx.font="bold 17px 'Gatitos UI'";ctx.fillText('♪',28,-15);
 }else if(cat.type==='student'){
+ctx.strokeStyle='#74b9ff';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,35,-Math.PI/2,-Math.PI/2+Math.PI*2*Math.min(1,(cat.studyTimer||0)/2.35));ctx.stroke();
 ctx.strokeStyle='#38516b';ctx.lineWidth=2;
 for(const x of [-9,9]){ctx.beginPath();ctx.arc(x,-5,6,0,Math.PI*2);ctx.stroke();}line(-3,-5,3,-5,'#38516b');
 ctx.fillStyle='#486681';ctx.beginPath();ctx.moveTo(-22,-25);ctx.lineTo(0,-33);ctx.lineTo(22,-25);ctx.lineTo(0,-18);ctx.closePath();ctx.fill();line(18,-25,18,-13,'#eac778');oval(18,-12,2,3,'#eac778');
@@ -6165,6 +6242,7 @@ ctx.restore()
 }
 
 function render(){
+updateRunIndicators();
 ctx.setTransform(1,0,0,1,0,0);
 ctx.globalAlpha=1;
 ctx.shadowBlur=0;
@@ -6268,13 +6346,8 @@ function autoSaveMemory(mem){
 let autoMemory=autoLoadMemory();
 
 function initAutoMode(){autoMode=false;autoModeUsedThisRun=false;}
-function markRankingInvalidByAI(){
-  autoMode=false;
-  autoModeUsedThisRun=false;
-  rankingEligibleThisRun=true;
-  rankingDisabledReason="";
-}
-function setAutoMode(value){autoMode=false;autoModeUsedThisRun=false;}
+function markRankingInvalidByAI(){autoModeUsedThisRun=true;rankingEligibleThisRun=false;rankingDisabledReason="Partida de pruebas: ranking desactivado.";}
+function setAutoMode(value){if(!adminUnlocked)return;autoMode=!!value;if(autoMode){markRankingInvalidByAI();if(autoChoiceMenu)autoScheduleChoice(autoChoiceMenu.choices,autoChoiceMenu.onPick,autoChoiceMenu.context);}else{keys.w=keys.a=keys.s=keys.d=false;mouse.down=false;}refreshAutoModeUI();}
 function refreshAutoModeUI(){
   if(autoBadge)autoBadge.classList.remove("visible");
 }
@@ -6378,6 +6451,7 @@ function autoFindBestTarget(){
     if(c.type==="sleepy"&&c.sleepState==="awake")s+=320+Math.min(180,wave*6);
     if(c.type==="glutton")s+=125;
     if(d<260)s+=170;
+    if(d<120)s+=2000*(1-d/120);
     if(s>bestScore){best=c;bestScore=s;}
   });
   return best;
@@ -6390,7 +6464,7 @@ function autoMoveKeysFromVector(v){
 }
 function autoUpdateAimAndShoot(target){
   if(target&&isFinitePos(target)){
-    const lead=.13;
+    const lead=Math.min(.6,Math.hypot(target.x-player.x,target.y-player.y)/(585*Math.max(1,upgrades.fishSpeed)));
     mouse.x=target.x+(target.vx||0)*lead;
     mouse.y=target.y+(target.vy||0)*lead;
   }else{
@@ -6605,6 +6679,8 @@ function autoPairValue(pair){
   if(desc.includes("rebote")||desc.includes("ráfaga")||desc.includes("perfora"))v+=170;
   if(desc.includes("cur")||desc.includes("vida")||desc.includes("escudo"))v+=160;
 
+  if(parts.includes("damageReduction"))v+=life<upgrades.maxLife*.6?420:190;
+  if(parts.includes("luck"))v+=wave<20?230:140;
   if(parts.includes("damage"))v+=260;
   if(parts.includes("fireRate"))v+=210;
   if(parts.includes("doubleFish"))v+=190;
@@ -6818,7 +6894,7 @@ function autoChoiceScore(choice,context){
   if(runStats){
     const hpRatioNow=life/Math.max(1,upgrades.maxLife||100);
     const pressureNow=(cats.length+(boss?8:0)+quacks.length+yarnBalls.length+demonOrbs.length);
-    const defensiveKeys=["maxLife","healOnWave","lifeSteal","shield","catSlow","moveSpeed","catInstinct"];
+    const defensiveKeys=["damageReduction","maxLife","healOnWave","lifeSteal","shield","catSlow","moveSpeed","catInstinct"];
     if((hpRatioNow<.55||pressureNow>15||(runStats.damageTaken||0)>upgrades.maxLife*.65)&&defensiveKeys.includes(key))score+=220;
     if((runStats.fishHits||0)<Math.max(4,(runStats.shotsFired||0)*.35)&&["aimAssist","fishSpeed","fishSize","autoFire","bigCursor"].includes(key))score+=150;
   }
@@ -6966,13 +7042,13 @@ if(poly){
  ctx.beginPath();ctx.moveTo(0,.24);ctx.bezierCurveTo(-.03,.4,-.19,.42,-.24,.31);ctx.moveTo(0,.24);ctx.bezierCurveTo(.03,.4,.19,.42,.24,.31);for(const side of [-1,1]){ctx.moveTo(side*.55,.1);ctx.lineTo(side*.95,.03);ctx.moveTo(side*.57,.27);ctx.lineTo(side*.94,.34);}ctx.stroke();
  oval(-.38,.74,.21,.14,'#fff4df',true);oval(.38,.74,.21,.14,'#fff4df',true);
 }else if(type==='duck'){
- path('M-.55-.13 C-.78-.26 -.91-.59 -.77-.87 C-.62-1.18 -.14-1.12 .05-.84 C.21-.65 .16-.41 .04-.22 Q.46-.36 .68-.02 Q.85-.04 1.01-.25 Q1.12.14 .86.48 C.58.91 -.41.94 -.83.52 Q-1.10.14 -.55-.13Z',shade('#fff0a2','#efbd55'));
- path('M-.46.08 C-.06-.12 .50-.05 .57.2 Q.42.51 -.07.52 Q-.4.45 -.46.08Z',shade('#ffeaba','#efc164'));
+ path('M-.55-.13 C-.78-.26 -.91-.59 -.77-.87 C-.62-1.18 -.14-1.12 .05-.84 C.21-.65 .16-.41 .04-.22 Q.46-.36 .68-.02 Q.85-.04 1.01-.25 Q1.12.14 .86.48 C.58.91 -.41.94 -.83.52 Q-1.10.14 -.55-.13Z',(selectedCosmetic('boss_duck')==='boss_duck_monocle'?shade('#fff9e4','#c6d2d8'):shade('#fff0a2','#efbd55')));
+ path('M-.46.08 C-.06-.12 .50-.05 .57.2 Q.42.51 -.07.52 Q-.4.45 -.46.08Z',(selectedCosmetic('boss_duck')==='boss_duck_monocle'?shade('#455e78','#23344f'):shade('#ffeaba','#efc164')));
  ctx.strokeStyle='#d49c4c';ctx.lineWidth=.023;ctx.beginPath();ctx.moveTo(-.26,.21);ctx.quadraticCurveTo(.03,.38,.32,.24);ctx.stroke();ctx.strokeStyle=ink;ctx.lineWidth=.035;
  path('M-.67-.59 Q-.98-.67 -1.1-.43 Q-.91-.28 -.60-.34Z',shade('#ffc28c','#ee9a55'));
  ctx.beginPath();ctx.moveTo(-1.02,-.43);ctx.lineTo(-.68,-.44);ctx.stroke();eye(-.28,-.68,.08);oval(-.46,-.40,.105,.065,'#edb48a');oval(-.23,-.92,.19,.055,'#fff3bc');
 }else if(type==='seal'){
- path('M-.71.35 Q-1.04-.08 -.64-.62 C-.37-1.06 .36-1.01 .69-.61 Q1.02-.19 .89.4 Q.80.86 .09.87 Q-.43.87 -.71.35Z',shade('#d7e8eb','#8db6c5'));
+ path('M-.71.35 Q-1.04-.08 -.64-.62 C-.37-1.06 .36-1.01 .69-.61 Q1.02-.19 .89.4 Q.80.86 .09.87 Q-.43.87 -.71.35Z',(selectedCosmetic('boss_seal')==='boss_seal_tie'?shade('#eddbf4','#ac86b9'):shade('#d7e8eb','#8db6c5')));
  path('M-.65.30 Q-1.19.15 -1.15.50 Q-1.02.72 -.54.58Z','#94bfcd');path('M.71.44 Q1.08.27 1.19.58 Q1.05.77 .65.66Z','#88b4c3');
  oval(.02,.37,.57,.41,'#e9f1ef');oval(-.37,.11,.15,.085,'#e4b4c7');oval(.45,.11,.15,.085,'#e4b4c7');
  if(boss?.state==='stunned'){ctx.beginPath();ctx.moveTo(-.36,-.18);ctx.lineTo(-.20,-.18);ctx.moveTo(.24,-.18);ctx.lineTo(.40,-.18);ctx.stroke();}else{eye(-.28,-.21);eye(.32,-.21);}
@@ -6980,8 +7056,8 @@ if(poly){
  for(const [x,y,w] of [[-.39,-.57,.065],[-.15,-.73,.09],[.14,-.68,.06]])oval(x,y,w,w*.55,'#aac8cf');
 }else{
  path('M-.62-.28 Q-1.10-.74 -1.20-.13 L-1.10.37 Q-.87.10 -.62.60Z','#784b8b');path('M.62-.28 Q1.10-.74 1.20-.13 L1.10.37 Q.87.10 .62.60Z','#784b8b');
- path('M-.42-.60 Q-.97-.67 -.87-1.19 Q-.67-.95 -.31-.89Z',shade('#e2c9ed','#ab82c3'));path('M.42-.60 Q.97-.67 .87-1.19 Q.67-.95 .31-.89Z',shade('#e2c9ed','#ab82c3'));
- path('M-.73-.48 C-.37-.96 .49-.92 .76-.4 C1.06.22 .68.89 0 .87 C-.76.88 -1.02.17 -.73-.48Z',shade('#d692be','#a15b9a'));
+ path('M-.42-.60 Q-.97-.67 -.87-1.19 Q-.67-.95 -.31-.89Z',(selectedCosmetic('boss_demon')==='boss_demon_cape'?shade('#ffe4a1','#ca9849'):shade('#e2c9ed','#ab82c3')));path('M.42-.60 Q.97-.67 .87-1.19 Q.67-.95 .31-.89Z',(selectedCosmetic('boss_demon')==='boss_demon_cape'?shade('#ffe4a1','#ca9849'):shade('#e2c9ed','#ab82c3')));
+ path('M-.73-.48 C-.37-.96 .49-.92 .76-.4 C1.06.22 .68.89 0 .87 C-.76.88 -1.02.17 -.73-.48Z',(selectedCosmetic('boss_demon')==='boss_demon_cape'?shade('#bd5c60','#74273e'):shade('#d692be','#a15b9a')));
  path('M-.49-.19 Q-.30-.37 -.13-.14 Q-.26.12 -.48.02Z','#ffe5aa');path('M.49-.19 Q.30-.37 .13-.14 Q.26.12 .48.02Z','#ffe5aa');oval(-.3,-.1,.042,.082,'#573654');oval(.3,-.1,.042,.082,'#573654');
  oval(-.57,.24,.14,.075,'#de9eb9');oval(.57,.24,.14,.075,'#de9eb9');
  path('M-.36.29 Q0 .46 .36.29 Q.34.72 0 .72 Q-.34.72 -.36.29Z','#56304f');path('M-.26.34 -.12.38 -.20.54Z','#fff3df',false);path('M.26.34 .12.38 .20.54Z','#fff3df',false);oval(0,.64,.13,.05,'#d28ca9');
@@ -7022,3 +7098,79 @@ runCosmeticSelections[cat]=pool.length?pool[Math.floor(Math.random()*pool.length
 }
 document.getElementById("randomSkinsButton")?.addEventListener("click",()=>{randomSkinsEnabled=!randomSkinsEnabled;gameStorage.setItem("gatitos_random_skins",String(randomSkinsEnabled));updateRandomSkinsButton();});
 updateRandomSkinsButton();
+
+// v157: elapsed time counts active simulation only (menus and pause excluded).
+function formatRunTime(seconds){const n=Math.max(0,Math.floor(Number(seconds)||0));return `${Math.floor(n/60).toString().padStart(2,'0')}:${(n%60).toString().padStart(2,'0')}`;}
+function updateRunIndicators(){
+ const clock=document.getElementById('runClock'),star=document.getElementById('starCountdown');
+ if(clock){clock.hidden=!gameStarted||gameOver;setHudText(document.getElementById('runTime'),formatRunTime(runStats?.elapsed));}
+ if(star){star.hidden=!gameStarted||gameOver||!isPowerStarActive();star.classList.toggle('ending',starTime<=3);setHudText(star,starTime<=3?`⭐ ¡Se acaba! ${Math.max(0,starTime).toFixed(1)} s`:`⭐ Invulnerable · ${Math.ceil(starTime)} s`);}
+}
+
+// Password gate protects the game's UI. This is a local HTML game, not a server login.
+let adminUnlocked=false,adminPreviousPause=false;
+function normalizeAdminPassword(value){return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
+function unlockAdmin(value){if(normalizeAdminPassword(value)!=='eperiopatataquesopure')return false;adminUnlocked=true;return true;}
+function openAdmin(){
+ const panel=document.getElementById('adminPanel');if(!panel)return;
+ adminPreviousPause=paused;paused=true;clearAllInputKeys();releaseGamePointer();panel.hidden=false;renderAdmin();
+}
+function closeAdmin(){const panel=document.getElementById('adminPanel');if(panel)panel.hidden=true;paused=adminPreviousPause;syncGamePointerLock();}
+function renderAdmin(){
+ const auth=document.getElementById('adminAuth'),controls=document.getElementById('adminControls');if(!auth||!controls)return;
+ auth.hidden=adminUnlocked;controls.hidden=!adminUnlocked;
+ if(!adminUnlocked)return;
+ const select=document.getElementById('adminUpgrade');const previous=select.value;
+ select.innerHTML=Object.keys(upgradeLevels).map(k=>`<option value="${k}">${escapeHtml(getUpgradeDisplayName(k))} (${getPauseActualLevel(k)}/5)</option>`).join('');
+ if(Object.hasOwn(upgradeLevels,previous))select.value=previous;
+ document.getElementById('adminAI').textContent=autoMode?'🤖 Desactivar IA':'🤖 Activar IA';
+ document.getElementById('adminStats').textContent=`Ronda ${wave||1} · ${formatRunTime(runStats?.elapsed)} · Protección ${Math.round((upgrades.damageReduction||0)*100)} % · Suerte +${Math.round((upgrades.luck||0)*100)} % · ${Object.keys(doneFusionPairs).length} fusiones`;
+}
+function adminAction(action){
+ if(!adminUnlocked)return false;
+ if(!gameStarted||gameOver){document.getElementById('adminStats').textContent='Inicia una partida para usar las herramientas.';return false;}
+ markRankingInvalidByAI();
+ if(action==='coins')coins+=100;
+ else if(action==='heal')life=upgrades.maxLife;
+ else if(action==='upgrade'){
+  const key=document.getElementById('adminUpgrade').value;
+  if(!Object.hasOwn(upgradeLevels,key))return false;
+  const pair=getFusedPairForKey(key);if(pair)setFusionProgress(pair,5);else upgradeLevels[key]=5;
+  applyUpgradeStatsFromLevels();
+ }else if(action==='all'){
+  Object.keys(upgradeLevels).forEach(k=>{if(!isHiddenFusedComponent(k))upgradeLevels[k]=5;});
+  Object.keys(doneFusionPairs).forEach(pair=>setFusionProgress(pair,5));uniqueFusionKeys.forEach(k=>upgrades[k]=true);applyUpgradeStatsFromLevels();life=upgrades.maxLife;
+ }else if(action==='star'){activatePowerStar();}
+ else if(action==='ai')setAutoMode(!autoMode);
+ else if(action==='shop'){closeAdmin();openCoinShop();return true;}
+ else if(action==='fusion'){coins=Math.max(coins,getEffectiveShopFusionPrice());closeAdmin();openFusionChoice(getEffectiveShopFusionPrice());return true;}
+ else if(action==='wave'){
+  const next=Number(document.getElementById('adminWave').value);if(!Number.isFinite(next))return false;
+  wave=Math.max(1,Math.min(200,Math.floor(next)));startWave();
+ }else return false;
+ updateHud();renderAdmin();return true;
+}
+function initAdminPanel(){
+ const panel=document.createElement('div');panel.id='adminPanel';panel.hidden=true;
+ panel.innerHTML=`<section class="adminBox" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
+ <div class="adminHeading"><h2 id="adminTitle">🔒 Laboratorio gatuno</h2><button id="adminClose" aria-label="Cerrar">✕</button></div>
+ <form id="adminAuth"><label for="adminPassword">Contraseña de administrador</label><input id="adminPassword" type="password" autocomplete="off" required><button>Desbloquear</button><p id="adminError" role="status"></p></form>
+ <div id="adminControls" hidden><p>Las herramientas y la IA desactivan el ranking de esta partida.</p><p id="adminStats"></p>
+ <div class="adminGrid"><button data-action="coins">+100 monedas</button><button data-action="heal">Curar</button><button data-action="star">Activar estrella</button><button data-action="ai" id="adminAI">Activar IA</button><button data-action="shop">Abrir tienda</button><button data-action="fusion">Abrir fusiones</button></div>
+ <label for="adminUpgrade">Mejora o fusión</label><select id="adminUpgrade"></select><button data-action="upgrade">Maximizar selección</button><button data-action="all">Maximizar todas las mejoras y fusiones adquiridas</button>
+ <label for="adminWave">Ronda (1–200)</label><input id="adminWave" type="number" min="1" max="200" value="5"><button data-action="wave">Ir a ronda</button><button id="adminLock">Bloquear admin</button></div></section>`;
+ document.body.appendChild(panel);
+ document.getElementById('adminButton')?.addEventListener('click',openAdmin);
+ document.getElementById('adminClose').addEventListener('click',closeAdmin);
+ document.getElementById('adminAuth').addEventListener('submit',e=>{e.preventDefault();const input=document.getElementById('adminPassword');const ok=unlockAdmin(input.value);input.value='';document.getElementById('adminError').textContent=ok?'':'Contraseña incorrecta.';renderAdmin();});
+ panel.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>adminAction(b.dataset.action)));
+ document.getElementById('adminLock').addEventListener('click',()=>{setAutoMode(false);adminUnlocked=false;renderAdmin();});
+ const pauseBtn=document.createElement('button');pauseBtn.className='pauseButton secondary';pauseBtn.textContent='🔒 Admin';pauseBtn.addEventListener('click',openAdmin);document.getElementById('pauseButtons')?.appendChild(pauseBtn);
+ document.addEventListener('keydown',e=>{if(e.key==='F2'){e.preventDefault();if(panel.hidden)openAdmin();}if(e.key==='Escape'&&!panel.hidden){e.preventDefault();e.stopImmediatePropagation();closeAdmin();}else if(!panel.hidden){e.stopImmediatePropagation();}},true);
+}
+initAdminPanel();
+
+function fusionStrength(pair){return hasDoneFusionPair(pair)?[0,.12,.27,.46,.70,1][getFusionProgress(pair)]:0;}
+function getLuckyShotMultiplier(){return hasDoneFusionPair("damage+luck")&&Math.random()<.08+.12*fusionStrength("damage+luck")?1.25:1;}
+function getCriticalDamageMultiplier(){return 2+(hasDoneFusionPair("critChance+luck")?.1+.3*fusionStrength("critChance+luck"):0);}
+function getCurrentLifeSteal(){return upgrades.lifeSteal*(hasDoneFusionPair("damageReduction+lifeSteal")&&life<upgrades.maxLife*.5?1.1+.4*fusionStrength("damageReduction+lifeSteal"):1);}

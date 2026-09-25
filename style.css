@@ -1035,3 +1035,16 @@ html,body,button,input{font-family:"Gatitos UI","Segoe UI",Arial,sans-serif,"Seg
 #finishRunButton{background:linear-gradient(135deg,#a5e2bf,#8dd9da);color:#253b35}
 
 .pauseLiveScore{flex:0 0 100%;padding:9px 12px;border-radius:12px;background:rgba(255,209,102,.12);color:#ffd166;text-align:center;font-size:18px}
+
+/* v157 status and administration */
+#runClock {position:fixed;right:16px;top:16px;padding:8px 14px;border-radius:16px;background:#281d3ce8;color:white;font:700 16px monospace;z-index:12;pointer-events:none}
+#starCountdown{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);padding:12px 24px;border:3px solid #ffe272;border-radius:20px;background:#2b203fee;color:#ffe272;font-size:20px;font-weight:900;z-index:15;pointer-events:none}
+#starCountdown.ending{color:#fff;background:#8b244c;border-color:#fff;box-shadow:0 0 24px #ffb3cc;animation:starPulse .7s ease-in-out infinite alternate}
+@keyframes starPulse{to{transform:translateX(-50%) scale(1.06)}}
+@media(prefers-reduced-motion:reduce){#starCountdown.ending{animation:none}}
+#adminPanel{position:fixed;inset:0;background:#130d22bb;z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box}
+#adminPanel[hidden],#runClock[hidden],#starCountdown[hidden],#adminPanel [hidden]{display:none!important}
+.adminBox{width:min(540px,100%);max-height:85vh;overflow:auto;background:#251c36;color:#fff;border:1px solid #9777ba;border-radius:22px;padding:24px;box-shadow:0 20px 80px #0008;text-align:left}
+.adminHeading{display:flex;align-items:center;justify-content:space-between;gap:12px}.adminHeading h2{font-size:22px;margin:0 0 16px}
+.adminBox button,.adminBox input,.adminBox select{padding:10px 12px;margin:5px 0;border-radius:10px;font:inherit;box-sizing:border-box}
+.adminBox button{background:#e5cff9;color:#281b3c;border:0;cursor:pointer}.adminBox input,.adminBox select{display:block;width:100%;background:#fff;color:#281b3c;border:1px solid #9370ba}.adminBox label{display:block;margin-top:14px}.adminBox p{font-size:14px;color:#e1d2ee}.adminGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}#adminError{color:#ffa5c0}

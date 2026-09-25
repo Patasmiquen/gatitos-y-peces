@@ -8,10 +8,12 @@
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="shortcut icon" href="favicon.ico">
 <link rel="apple-touch-icon" href="favicon.png">
-<link rel="stylesheet" href="style.css?v=147">
+<link rel="stylesheet" href="style.css?v=159">
 </head>
 <body>
 <canvas id="game"></canvas>
+<div id="runClock" hidden>Tiempo <span id="runTime">00:00</span></div>
+<div id="starCountdown" hidden role="status"></div>
 <div id="startPanel">
 <div id="startBox">
 <h1><svg class="titleCat" viewBox="0 0 64 64" aria-hidden="true"><path d="M10 27 9 8 24 18 Q32 14 40 18L55 8 54 27C66 55 43 61 32 59 11 61 0 46 10 27Z" fill="#b99ce5" stroke="#564069" stroke-width="2.5"/><path d="m14 15 9 7-9 6m36-13-9 7 9 6" fill="#f7b4ce"/><ellipse cx="22" cy="35" rx="3" ry="4" fill="#392747"/><ellipse cx="42" cy="35" rx="3" ry="4" fill="#392747"/><path d="m28 40 4 4 4-4" fill="#cf7da5"/><path d="M32 44q-6 8-11 1m11-1q6 8 11 1" fill="none" stroke="#49304f" stroke-width="2" stroke-linecap="round"/><ellipse cx="15" cy="43" rx="5" ry="3" fill="#f6a5c4"/><ellipse cx="49" cy="43" rx="5" ry="3" fill="#f6a5c4"/></svg><span>Gatitos &amp; Peces</span></h1>
@@ -22,6 +24,7 @@
 <input id="playerNameInput" maxlength="16" type="text" placeholder="Escribe tu nombre" autocomplete="nickname"/>
 <div id="nameWarning"></div>
 </div>
+<button id="adminButton" type="button">🔒 Admin</button>
 <button id="startButton">Empezar 💖</button>
 <div id="themeOptions" class="themeOptions iconThemeOptions" aria-label="Tema visual de menús">
   <button type="button" class="themeChoice active" data-theme="light" aria-label="Tema claro">☀️</button>
@@ -61,8 +64,8 @@
 <details id="howToPlay">
 <summary>📖 Cómo jugar</summary>
 <div class="controls compactControls cleanControls">
-<div><span class="controlIcon">🎮</span><span><b>WASD</b> para moverte</span></div>
-<div><span class="controlIcon">🐟</span><span><b>Click izquierdo</b> para lanzar peces</span></div>
+<div><span class="controlIcon">🎮</span><span><b>WASD o flechas</b> para moverte</span></div>
+<div><span class="controlIcon">🐟</span><span><b>Disparo automático</b> · apunta con el ratón; clic opcional: impulso breve</span></div>
 <div><span class="controlIcon">🎯</span><span><b>Click derecho</b> para fijar objetivo</span></div>
 <div><span class="controlIcon">⏸️</span><span><b>Espacio</b> para pausar</span></div>
 <div><span class="controlIcon">⭐</span><span>Elige <b>mejoras</b> al subir nivel</span></div>
@@ -101,7 +104,7 @@
 <div class="hudOptionalStat">🐟 Impactos: <span id="shots">0</span></div>
 </div>
 <div id="objectivePanel"><div id="objectiveMain">🎯 Objetivo: Sobrevive</div><div id="objectiveFusion">🔮 Fusiones próximas: buscando...</div></div>
-<div id="help">WASD: moverse · Click izquierdo: lanzar peces · Espacio: pausa</div>
+<div id="help">WASD / flechas: moverse · Disparo automático · Clic: +15 % cadencia durante 0,8 s · Espacio: pausa</div>
 <div id="message"></div>
 <div id="perfNotice" class="perfNotice">Modo ligero activo</div>
 <div id="levelUpPanel">
@@ -167,8 +170,8 @@
 <button class="victoryBtn continue" id="gameOverMenu" style="margin-top:12px;background:#4cc9f0;color:#fff">Volver al menú 🏠</button>
 </div>
 </div>
-<script src="game-version.js?v=147"></script>
-<script src="patch-notes.js?v=147"></script>
-<script src="game.js?v=147"></script>
+<script src="game-version.js?v=159"></script>
+<script src="patch-notes.js?v=159"></script>
+<script src="game.js?v=159"></script>
 </body>
 </html>
