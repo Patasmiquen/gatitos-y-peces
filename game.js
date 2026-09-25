@@ -747,7 +747,7 @@ function drawBossSkinDetails(type,r){
  }
  if(type==='duck'&&selectedCosmetic('boss_duck')==='boss_duck_monocle'){ctx.save();drawBowTieShape(-r*.2,-r*.11,r*.20,'#28425b','#385771','#dabb63');ctx.restore();}
 
-  if(type==="duck"&&selectedCosmetic("boss_duck")==="boss_duck_monocle"){ctx.fillStyle="#171018";ctx.beginPath();ctx.roundRect(-r*.58,-r*1.05,r*.72,r*.12,r*.04);ctx.fill();ctx.fillRect(-r*.42,-r*1.30,r*.40,r*.27);ctx.fillStyle="#7b2cbf";ctx.fillRect(-r*.42,-r*1.06,r*.40,r*.06);ctx.strokeStyle="#171018";ctx.lineWidth=Math.max(3,r*.035);ctx.beginPath();ctx.arc(-r*.28,-r*.68,r*.14,0,Math.PI*2);ctx.stroke();ctx.strokeStyle="rgba(23,16,24,.65)";ctx.lineWidth=Math.max(2,r*.02);ctx.beginPath();ctx.moveTo(-r*.17,-r*.57);ctx.quadraticCurveTo(r*.02,-r*.34,r*.14,-r*.06);ctx.stroke();}
+  if(type==="duck"&&selectedCosmetic("boss_duck")==="boss_duck_monocle"){ctx.fillStyle="#171018";ctx.beginPath();ctx.roundRect(-r*.50,-r*.92,r*.72,r*.12,r*.04);ctx.fill();ctx.fillRect(-r*.34,-r*1.17,r*.40,r*.27);ctx.fillStyle="#7b2cbf";ctx.fillRect(-r*.34,-r*.93,r*.40,r*.06);ctx.strokeStyle="#171018";ctx.lineWidth=Math.max(3,r*.035);ctx.beginPath();ctx.arc(-r*.28,-r*.68,r*.14,0,Math.PI*2);ctx.stroke();ctx.strokeStyle="rgba(23,16,24,.65)";ctx.lineWidth=Math.max(2,r*.02);ctx.beginPath();ctx.moveTo(-r*.17,-r*.57);ctx.quadraticCurveTo(r*.02,-r*.34,r*.14,-r*.06);ctx.stroke();}
   if(type==="seal"&&selectedCosmetic("boss_seal")==="boss_seal_tie"){
 ctx.save();ctx.shadowBlur=0;ctx.strokeStyle='#9d8b91';ctx.lineWidth=Math.max(1,r*.012);
 for(let i=0;i<11;i++){const t=i/10,x=(-.53+t*1.08)*r,y=(.37+Math.sin(t*Math.PI)*.19)*r;ctx.fillStyle='#fff8e8';ctx.beginPath();ctx.arc(x,y,r*.044,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x-r*.013,y-r*.013,r*.012,0,Math.PI*2);ctx.fill();}
@@ -765,7 +765,7 @@ renderCosmetics();
 const ACHIEVEMENT_KEYS={state:"gatitos_achievements_state_v1"};
 const achievementsPanel=document.getElementById("achievementsPanel"),achievementsContentEl=document.getElementById("achievementsContent"),achievementProgressText=document.getElementById("achievementProgressText"),achievementsRefreshBtn=document.getElementById("achievementsRefreshBtn");
 const ACHIEVEMENTS=[
-  {id:"complete_game",icon:"🌟",name:"Poder absoluto gatuno",stat:"completeGame",desc:"Completa todas las fusiones posibles y maxéalas.",phases:[{target:1,label:"Completa el juego al 100%",reward:0}]},
+  {id:"complete_game",icon:"🌟",name:"Poder absoluto gatuno",stat:"completeGame",desc:"Fusiona las 28 mejoras en 14 parejas y lleva todas las fusiones al máximo.",phases:[{target:1,label:"Completa el juego al 100%",reward:0}]},
   {id:"bosses_run",icon:"👑",name:"Los venciste a todos",stat:"bossesInRun",desc:"Derrota a los 4 jefes diferentes en una misma partida.",phases:[{target:4,label:"4 jefes en una partida",reward:0}]},
   {id:"shots",icon:"🐟",name:"Lluvia de peces",stat:"shots",desc:"Dispara peces a lo largo de tus partidas.",phases:[{target:500,label:"500 peces",reward:0},{target:2500,label:"2.500 peces",reward:0},{target:10000,label:"10.000 peces",reward:0},{target:50000,label:"50.000 peces",reward:0}]},
   {id:"cats",icon:"🐱",name:"Mimos gatunos",stat:"cats",desc:"Mima gatitos a lo largo de tus partidas.",phases:[{target:100,label:"100 gatos",reward:0},{target:1000,label:"1.000 gatos",reward:0},{target:5000,label:"5.000 gatos",reward:0},{target:25000,label:"25.000 gatos",reward:0}]},
@@ -1033,6 +1033,7 @@ let perfFps=60,lowPerfMode=false,lowPerfTimer=0,perfNoticeTimer=0;
 let lastOrbitalGuard=-Infinity;
 let manualFireBoostUntil=0;
 let starSpawnTimer=12;
+let starSpawnedThisWave=false;
 let backgroundFishSeed=Math.floor(Math.random()*1000000);
 let pendingUpgradeQueue=[];
 let runStats;
@@ -1073,8 +1074,8 @@ const upgradeMaxLevels={damageReduction:5,luck:5,moveSpeed:5,fireRate:5,fishSpee
 const fusedBaseLevels={}; // niveles ya "conservados" por fusiones: mantienen stats aunque la mejora vuelva a 0/5
 
 const UPGRADE_META={
-damageReduction:{icon:"🔰",name:"Pelaje protector",desc:l=>"Reduce el daño recibido. Hasta 25 %; fusionado, hasta 40 %."},
-luck:{icon:"🍀",name:"Trébol gatuno",desc:l=>"Mejora la aparición de monedas, estrellas y arcoíris y puede duplicar una moneda. Hasta +25 %; fusionado, +40 %."},
+damageReduction:{icon:"🔰",name:"Pelaje protector",desc:l=>"Recibes menos daño."},
+luck:{icon:"🍀",name:"Trébol gatuno",desc:l=>"Aumenta tu suerte."},
 maxLife:{icon:"❤️",name:"Corazón de atún",desc:l=>"Aguantas más golpes."},
 moveSpeed:{icon:"👟",name:"Zapatillas blanditas",desc:l=>"Te mueves más rápido."},
 fireRate:{icon:"🐾",name:"Patita nerviosa",desc:l=>"Lanzas peces más seguido."},
@@ -1093,7 +1094,7 @@ coinMagnet:{icon:"🧲",name:"Imán de monedas",desc:l=>"Las monedas vienen haci
 shield:{icon:"🛡️",name:"Escudo de pececitos",desc:l=>"Peces guardianes giran a tu alrededor."},
 omniBurst:{icon:"💥",name:"Metralladora gatuna",desc:l=>"De vez en cuando disparas en círculo."},
 yarnBounce:{icon:"🧶",name:"Ovillo táctico",desc:l=>"Algunos peces rebotan a otro enemigo."},
-autoFire:{icon:"🤖",name:"Patita automática",desc:l=>"Aumenta la cadencia automática un 8 % por nivel. No necesitas pulsar ni mantener el botón."},
+autoFire:{icon:"🤖",name:"Patita automática",desc:l=>"Corrige mejor la dirección de cada disparo automático."},
 critChance:{icon:"💥",name:"Mimos críticos",desc:l=>"A veces haces daño doble."}
 };
 
@@ -1118,7 +1119,7 @@ const UPGRADE_RECOMMENDATION_PROFILE={
   shield:{defense:.9,control:.45,area:.25},
   omniBurst:{area:.95,control:.65,damage:.45},
   yarnBounce:{control:.85,area:.65,consistency:.4,damage:.25},
-  autoFire:{automation:1,consistency:.8,damage:.25},
+  autoFire:{automation:.85,consistency:1,control:.35,damage:.10},
   critChance:{damage:.9,scaling:.35},
   aimAssist:{consistency:1,control:.35,automation:.25},
   bigCursor:{consistency:.75,control:.2},
@@ -1260,7 +1261,7 @@ return {pair,score:Math.max(0,score),reason};
 function recommendationPairFit(a,b,needs){return recommendationPairEvaluation(a,b,needs).score;}
 function availableRecommendationPairs(needs,key=null){
 const ready=getMaxedFusionKeys().filter(k=>!fusedUpgradeNames[k]),result=[];
-ready.forEach((a,i)=>ready.slice(i+1).forEach(b=>{if((!key||a===key||b===key)&&areFusionCompatible(a,b)&&!hasFusionBeenDone(a,b))result.push(recommendationPairEvaluation(a,b,needs));}));
+ready.forEach((a,i)=>ready.slice(i+1).forEach(b=>{if((!key||a===key||b===key)&&isFusionChoiceCompletionSafe(a,b))result.push(recommendationPairEvaluation(a,b,needs));}));
 return result.sort((a,b)=>b.score-a.score);
 }
 function fusionRecommendationReason(choice,needs){
@@ -1277,7 +1278,7 @@ if(context==="shop"&&Number.isFinite(choice.price)&&choice.price>coins)return -9
 const key=choice.key;
 if(choice.openFusionShop||context==="fusionFirst"){
  const keys=getMaxedFusionKeys().filter(k=>!fusedUpgradeNames[k]);let best=-999;
- for(const a of keys)for(const b of keys)if((!key||key===a)&&areFusionCompatible(a,b)&&!hasFusionBeenDone(a,b))best=Math.max(best,recommendationPairFit(a,b,needs));
+ for(const a of keys)for(const b of keys)if((!key||key===a)&&isFusionChoiceCompletionSafe(a,b))best=Math.max(best,recommendationPairFit(a,b,needs));
  return choice.openFusionShop&&!canFuse(getEffectiveShopFusionPrice())?-999:best;
 }
 if(choice.first&&key)return recommendationPairFit(choice.first,key,needs);
@@ -1739,6 +1740,7 @@ const randomAvalanche=wave>=14&&wave%5!==0&&Math.random()<avalancheCfg.chance;
 avalancheThisWave=forcedPostBossAvalanche||randomAvalanche;
 avalancheDelay=avalancheThisWave?Math.max(2.8,waveDuration*(.58-avalancheCfg.intensity*.14)):999;
 starSpawnTimer=3+Math.random()*Math.min(10,waveDuration*.5);
+starSpawnedThisWave=false;
 if(wave%5===0)spawnBoss();
 floatingTexts.push({x:canvas.width/2,y:115,text:wave%5===0?`Jefe ronda ${wave}`:`Ronda ${wave}`,life:1.8,maxLife:1.8,big:true})
 }
@@ -1794,11 +1796,13 @@ floatingTexts.push({x:canvas.width/2,y:145,text:"La avalancha terminó 🐾",lif
 }
 
 function trySpawnPowerStar(){
-if(starActive||powerStars.length>0)return;
+// Nunca se genera más de una estrella natural por ronda, incluso con mucha suerte.
+if(starSpawnedThisWave||starActive||powerStars.length>0)return;
 const chance=Math.min(.28,(.018+starChanceLevel*.012)*(1+upgrades.luck));
 if(Math.random()<chance){
 const margin=90;
 powerStars.push({x:margin+Math.random()*(canvas.width-margin*2),y:margin+Math.random()*(canvas.height-margin*2),r:18,life:14,wobble:Math.random()*Math.PI*2});
+starSpawnedThisWave=true;
 starChanceLevel=1;
 floatingTexts.push({x:canvas.width/2,y:175,text:"⭐ ¡Ha aparecido una estrella!",life:2,maxLife:2,big:true});
 }else starChanceLevel++;
@@ -2393,12 +2397,13 @@ function fusionStatScale(key,preRate,postRate,cap=5*(preRate+postRate),post=fusi
 const base=fusedBaseLevels[key]||0;
 if(!hasFusionComponent(key))return Math.min(cap,(base+post)*preRate);
 const initial=Math.min(cap,base*preRate);
-return initial+(cap-initial)*[0,.12,.27,.46,.70,1][Math.min(5,Math.max(0,Math.floor(post)))];
+return initial+(cap-initial)*[0,.14,.31,.51,.74,1][Math.min(5,Math.max(0,Math.floor(post)))];
 }
 function coreUpgradeStat(key,post=fusionPostLevel(key)){
-const effectivePost=hasFusionComponent(key)?5*[0,.12,.27,.46,.70,1][Math.min(5,Math.max(0,Math.floor(post)))]:post;
+const effectivePost=hasFusionComponent(key)?5*[0,.14,.31,.51,.74,1][Math.min(5,Math.max(0,Math.floor(post)))]:post;
 const lv=(fusedBaseLevels[key]||0)+effectivePost;
-if(key==="damageReduction"||key==="luck")return fusionStatScale(key,.05,.03,.40,post);
+if(key==="damageReduction")return fusionStatScale(key,.05,.04,.45,post);
+if(key==="luck")return fusionStatScale(key,.05,.05,.50,post);
 const scalarCurves={moveSpeed:[.08,.70],fireRate:[.12,1.05],fishSpeed:[.15,1.25],damage:[.16,1.50],xpBoost:[.10,.85]};
 if(scalarCurves[key]){const [rate,cap]=scalarCurves[key];return 1+fusionStatScale(key,rate,0,cap,post);}
 if(["bigFish","doubleFish","pierce","boomerang","critChance"].includes(key))return fusionStatScale(key,.13,.07,.95,post);
@@ -2941,7 +2946,7 @@ function getShopUpgradePrice(){return 1+shopUpgradePurchases}
 function getShopFusionPrice(){return 5+shopFusionPurchases*3}
 function hasPendingShopFusionPair(){
   const keys=getMaxedFusionKeys();
-  return keys.some((a,i)=>keys.slice(i+1).some(b=>areFusionCompatible(a,b)&&!hasFusionBeenDone(a,b)));
+  return keys.some((a,i)=>keys.slice(i+1).some(b=>isFusionChoiceCompletionSafe(a,b)));
 }
 function isFusionOnlyShopDiscountActive(){
   return getShopEligibleUpgradeKeys().length===0&&hasPendingShopFusionPair();
@@ -2955,7 +2960,7 @@ function closeShopSession(){shopAvailable=false;choosingUpgrade=false;levelUpPan
 
 function getFusionLockReason(cost=getEffectiveShopFusionPrice()){
 const keys=getMaxedFusionKeys();
-const hasPair=keys.some((a,i)=>keys.slice(i+1).some(b=>areFusionCompatible(a,b)&&!hasFusionBeenDone(a,b)));
+const hasPair=keys.some((a,i)=>keys.slice(i+1).some(b=>isFusionChoiceCompletionSafe(a,b)));
 if(coins<cost&&!hasPair)return `Bloqueado: necesitas ${cost} monedas y 2 mejoras compatibles listas para fusionar.`;
 if(coins<cost)return `Bloqueado: necesitas ${cost} monedas.`;
 if(!hasPair)return "Bloqueado: no tienes 2 mejoras compatibles listas para fusionar.";
@@ -3044,7 +3049,7 @@ function isUniqueOnlyUpgrade(key){return !Object.prototype.hasOwnProperty.call(u
 
 const uniqueFusionKeys=["aimAssist","bigCursor","moralSupport","darkPact","catInstinct","zoomies"];
 const uniqueFusionMeta={
-autoFire:{icon:"🤖",name:"Patita automática",desc:"Aumenta la cadencia del disparo automático desde el primer nivel."},
+autoFire:{icon:"🤖",name:"Patita automática",desc:"Corrige la salida de los disparos automáticos hacia amenazas cercanas."},
 aimAssist:{icon:"🎯",name:"Peces listillos",desc:"Los peces se curvan hacia enemigos cercanos."},
 bigCursor:{icon:"🌈",name:"Mirilla brillante",desc:"Hace la mirilla más visible."},
 moralSupport:{icon:"💛",name:"Apoyo Moral",desc:"Tu novio te anima de vez en cuando."},
@@ -3435,6 +3440,10 @@ function getFusionExtraBonusDesc(pair){
   const special={
     "aimAssist+bigCursor":"guiado más preciso",
     "aimAssist+autoFire":"autoapuntado mejorado",
+    "autoFire+bigCursor":"corrección inicial y selección automática del objetivo",
+    "autoFire+critChance":"entre +5 % y +15 % de crítico adicional",
+    "autoFire+zoomies":"cadencia reforzada durante Zoomies",
+    "autoFire+moralSupport":"cadencia automática estable gracias al apoyo",
     "aimAssist+catInstinct":"respuesta defensiva guiada",
     "bigCursor+moralSupport":"más daño con poca vida",
     "catInstinct+darkPact":"instinto agresivo y más daño con poca vida",
@@ -3458,7 +3467,7 @@ function addFusionLevelBonus(key,amount=1){
 function getFusionBonusKeys(pair){
   const keys=[];
   if(pair.split("+").includes("damage"))keys.push("damage");
-  if(pair.split("+").includes("fireRate")||pair.split("+").includes("autoFire"))keys.push("fireRate");
+  if(pair.split("+").includes("fireRate"))keys.push("fireRate");
   if(pair.split("+").includes("fishSpeed")||pair.split("+").includes("boomerang"))keys.push("fishSpeed");
   if(pair.split("+").includes("doubleFish"))keys.push("doubleFish");
   if(pair.split("+").includes("pierce"))keys.push("pierce");
@@ -3550,9 +3559,43 @@ function getMaxedFusionKeys(){
 return [...getFusableScalableKeys(),...getFusableUniqueKeys()]
 }
 
+function getAllFusionKeys(){
+  return [...Object.keys(upgradeLevels),...uniqueFusionKeys];
+}
+function getUnfusedFusionKeys(){
+  return getAllFusionKeys().filter(k=>!getFusedPairForKey(k));
+}
+function canPerfectMatchFusionKeys(keys){
+  const start=[...new Set(keys)].filter(Boolean).sort();
+  if(start.length%2!==0)return false;
+  const memo=new Map();
+  function solve(remaining){
+    if(remaining.length===0)return true;
+    const sig=remaining.join("|");
+    if(memo.has(sig))return memo.get(sig);
+    let first=null,partners=null;
+    for(const k of remaining){
+      const ps=remaining.filter(other=>other!==k&&areFusionCompatible(k,other));
+      if(partners===null||ps.length<partners.length){first=k;partners=ps;}
+    }
+    if(partners.length===0){memo.set(sig,false);return false;}
+    for(const partner of partners){
+      const next=remaining.filter(k=>k!==first&&k!==partner);
+      if(solve(next)){memo.set(sig,true);return true;}
+    }
+    memo.set(sig,false);return false;
+  }
+  return solve(start);
+}
+function isFusionChoiceCompletionSafe(a,b){
+  if(!a||!b||a===b||!areFusionCompatible(a,b)||hasFusionBeenDone(a,b))return false;
+  if(getFusedPairForKey(a)||getFusedPairForKey(b))return false;
+  const remaining=getUnfusedFusionKeys().filter(k=>k!==a&&k!==b);
+  return canPerfectMatchFusionKeys(remaining);
+}
 function hasPendingFusionPairs(){
-const keys=[...getFusableScalableKeys(),...getFusableUniqueKeys()];
-return keys.some((a,i)=>keys.slice(i+1).some(b=>areFusionCompatible(a,b)&&!hasFusionBeenDone(a,b)))
+  const keys=[...getFusableScalableKeys(),...getFusableUniqueKeys()];
+  return keys.some((a,i)=>keys.slice(i+1).some(b=>isFusionChoiceCompletionSafe(a,b)))
 }
 
 
@@ -3673,15 +3716,16 @@ loadOnlineRanking([startRankingList,victoryRankingList].filter(Boolean));
 }
 /* ─────────────────────────────────────────────────────────── */
 function isGameCompleted(){
-// El juego termina cuando ya no queda progreso real posible:
-// 1) no hay mejoras ni fusiones existentes que puedan seguir subiendo,
-// 2) todas las mejoras únicas están conseguidas,
-// 3) no queda ninguna pareja compatible pendiente para fusionar.
-// Esto evita bloqueos cuando al final quedan dos mejoras maxeadas que no son compatibles entre sí.
-const noUpgradeableLevels=getLevelUpgradeKeys().length===0;
+// Final real: las 28 mejoras deben estar emparejadas en 14 fusiones y cada fusión debe estar a nivel 5.
+// El selector de fusiones impide elegir una pareja que deje el tablero sin emparejamiento completo.
+const allKeys=getAllFusionKeys();
+const expectedFusionCount=allKeys.length/2;
+const allPaired=allKeys.length%2===0&&allKeys.every(k=>!!getFusedPairForKey(k));
+const pairs=Object.keys(doneFusionPairs||{});
+const allFusionMaxed=pairs.length===expectedFusionCount&&pairs.every(pair=>getFusionProgress(pair)>=5);
 const allUniqueOwned=uniqueFusionKeys.every(k=>hasUniqueUpgrade(k));
-const noFusionPairsLeft=!hasPendingFusionPairs();
-return noUpgradeableLevels&&allUniqueOwned&&noFusionPairsLeft;
+const noUpgradeableLevels=getLevelUpgradeKeys().length===0;
+return allPaired&&allFusionMaxed&&allUniqueOwned&&noUpgradeableLevels;
 }
 
 function getGamePhase(){
@@ -3754,21 +3798,21 @@ injectVictoryScore();
 victoryPanel.style.display="flex";
 playVictoryJingle();
 document.querySelector("#victoryBox h1").textContent="🌟 ¡Juego completado!";
-document.querySelector("#victoryBox .victoryMsg").innerHTML=`<span class="vLine vMain">Has maxeado todas las mejoras y agotado todas las fusiones posibles.</span><span class="vLine vSub">Has alcanzado el poder absoluto gatuno. ✨🏆</span>`;
+document.querySelector("#victoryBox .victoryMsg").innerHTML=`<span class="vLine vMain">Has fusionado las 28 mejoras y llevado las 14 fusiones al máximo.</span><span class="vLine vSub">Has alcanzado el poder absoluto gatuno. ✨🏆</span>`;
 floatingTexts.push({x:canvas.width/2,y:canvas.height/2-110,text:"¡FINAL COMPLETADO!",life:4,maxLife:4,big:true})
 }
 function checkGameCompletion(){if(!updatingWorld&&!pendingUpgradeQueue.length&&(!choosingUpgrade||shopAvailable)&&!gameOver&&!finalCompletionContinue&&isGameCompleted())finishGame()}
 
 function canFuse(cost=5){
 const maxed=getMaxedFusionKeys();
-return coins>=cost&&maxed.some((a,i)=>maxed.slice(i+1).some(b=>areFusionCompatible(a,b)&&!hasFusionBeenDone(a,b)))
+return coins>=cost&&maxed.some((a,i)=>maxed.slice(i+1).some(b=>isFusionChoiceCompletionSafe(a,b)))
 }
 function openFusionChoice(cost=5){
 releaseGamePointer();
 if(!canFuse(cost)){openCoinShop();return}
 const maxed=getMaxedFusionKeys();
 // Paso 1: solo claves que tienen AL MENOS 1 pareja válida en maxed
-const firstChoices=maxed.filter(k=>maxed.some(other=>other!==k&&areFusionCompatible(k,other)&&!hasFusionBeenDone(k,other))).map(k=>{
+const firstChoices=maxed.filter(k=>maxed.some(other=>other!==k&&isFusionChoiceCompletionSafe(k,other))).map(k=>{
 const lvl=Object.prototype.hasOwnProperty.call(upgradeLevels,k)?(upgradeLevels[k]||0):1;
 const normalDesc=isUniqueKey(k)?(uniqueFusionMeta[k]?.desc||"Mejora única."):getUpgradeDisplayDesc(k,Math.max(1,lvl));
 return{
@@ -3794,6 +3838,7 @@ const fusionName=getFusionNameFromPair(first.key,k);
 const fusionDesc=getFusionDesc(first.key,k);
 let locked=false,lockDesc="";
 if(hasFusionBeenDone(first.key,k)){locked=true;lockDesc="Fusión ya realizada ✓";}
+else if(!isFusionChoiceCompletionSafe(first.key,k)){locked=true;lockDesc="Esta pareja impediría fusionar todas las mejoras";}
 else if(isUniqueKey(k)){
   if(!hasUniqueUpgrade(k)){locked=true;lockDesc="Aún no tienes esta mejora";}
   else if(Object.keys(doneFusionPairs).some(p=>p.split("+").includes(k))){locked=true;lockDesc="Ya fusionada con otra mejora";}
@@ -4149,7 +4194,7 @@ return (now%period)<active;
 function getZoomiesDamageMultiplier(){return isZoomiesActive()?1.35:1}
 function getZoomiesMoveMultiplier(){return isZoomiesActive()?(upgrades.zoomiesHyper?1.85:1.45):1}
 function getZoomiesFireMultiplier(){return isZoomiesActive()?(upgrades.zoomiesCannon?2.05:1.45):1}
-function getCurrentCritChance(){return Math.min(.95,upgrades.critChance+((isZoomiesActive()&&upgrades.zoomiesCrit)?0.22:0))}
+function getCurrentCritChance(){const autoCrit=hasDoneFusionPair("autoFire+critChance")?.05+.10*fusionStrength("autoFire+critChance"):0;return Math.min(.95,upgrades.critChance+autoCrit+((isZoomiesActive()&&upgrades.zoomiesCrit)?0.22:0))}
 function getHoldShootMultiplier(){
   if(!upgrades.holdShoot)return 1;
   const autoLvl=Math.max(1,effectLevel("autoFire"));
@@ -4172,7 +4217,7 @@ if(!gameStarted||gameOver||paused||choosingUpgrade)return;
 const delay=getShotInterval();
 if(now-lastShot<delay)return;
 lastShot=now;shots++;if(runStats)runStats.shotsFired++;addAchievementStat("shots",1,{run:true});player.shootAnim=.12;
-const angle=Math.atan2(mouse.y-player.y,mouse.x-player.x),giantFishEasterEgg=giantFishEasterEggsUsed<1&&hasFishSizeFusionForGiantFish()&&Math.random()<0.00001,isBigFish=giantFishEasterEgg||Math.random()<upgrades.bigFishChance,fishScale=upgrades.fishSize*(giantFishEasterEgg?7.5:(isBigFish?1.65:1)),lowLifeBonus=(life<upgrades.maxLife*.35?(upgrades.braveHeart?0.35:0)+(upgrades.cursedInstinct?0.45:0):0),fishDamage=upgrades.damage*getLuckyShotMultiplier()*getZoomiesDamageMultiplier()*(1+lowLifeBonus)*(giantFishEasterEgg?35:(isBigFish?2.1:1)),canPierce=giantFishEasterEgg||Math.random()<upgrades.pierceChance,boomerang=!giantFishEasterEgg&&Math.random()<upgrades.boomerangChance;
+const rawAngle=Math.atan2(mouse.y-player.y,mouse.x-player.x),angle=getAutoFireCorrectedAngle(rawAngle),giantFishEasterEgg=giantFishEasterEggsUsed<1&&hasFishSizeFusionForGiantFish()&&Math.random()<0.00001,isBigFish=giantFishEasterEgg||Math.random()<upgrades.bigFishChance,fishScale=upgrades.fishSize*(giantFishEasterEgg?7.5:(isBigFish?1.65:1)),lowLifeBonus=(life<upgrades.maxLife*.35?(upgrades.braveHeart?0.35:0)+(upgrades.cursedInstinct?0.45:0):0),fishDamage=upgrades.damage*getLuckyShotMultiplier()*getZoomiesDamageMultiplier()*(1+lowLifeBonus)*(giantFishEasterEgg?35:(isBigFish?2.1:1)),canPierce=giantFishEasterEgg||Math.random()<upgrades.pierceChance,boomerang=!giantFishEasterEgg&&Math.random()<upgrades.boomerangChance;
 function addFish(offsetAngle=0,damageMultiplier=1){
 const finalAngle=angle+offsetAngle;
 const boomerangLvl=effectLevel("boomerang");
@@ -4205,17 +4250,39 @@ if(upgrades.moralSupport&&Math.random()<.16)floatingTexts.push({x:player.x+Math.
 }
 
 function getAutomaticFireMultiplier(){
-let rate=1+Math.min(10,effectLevel("autoFire"))*.08;
-if(upgrades.assistedShot)rate*=1.10;
-if(upgrades.combatAI)rate*=1.15;
-if(upgrades.moraleFire)rate*=1.12;
-if(upgrades.braveHeart&&life<upgrades.maxLife*.35)rate*=1.10;
+// Patita automática ya no duplica a Patita nerviosa: la cadencia base pertenece a fireRate.
+// Aquí solo permanecen los bonus de fusiones que explícitamente aceleran el arma.
+let rate=1;
+if(upgrades.assistedShot)rate*=1.06;
+if(upgrades.combatAI)rate*=1.10;
+if(upgrades.moraleFire)rate*=1.08;
+if(upgrades.braveHeart&&life<upgrades.maxLife*.35)rate*=1.08;
 return rate*getHoldShootMultiplier();
+}
+function getAutoFireCorrectionStrength(){
+  const pair=getFusedPairForKey("autoFire");
+  const baseLvl=pair?Math.min(5,Math.max(0,fusedBaseLevels.autoFire||5)):Math.min(5,Math.max(0,upgradeLevels.autoFire||0));
+  if(baseLvl<=0)return 0;
+  // 5 niveles base: 6–30 %. La fusión añade hasta +20 % con una curva donde cada nivel pesa más que el anterior.
+  const fusionBonus=pair?.20*fusionStrength(pair):0;
+  return Math.min(.50,baseLvl*.06+fusionBonus);
+}
+function getAutoFireCorrectedAngle(baseAngle){
+  const strength=getAutoFireCorrectionStrength();
+  if(strength<=0)return baseAngle;
+  const target=findNearestEnemy(player.x,player.y,520+Math.min(260,effectLevel("autoFire")*26));
+  if(!target||!isFinitePos(target))return baseAngle;
+  const desired=Math.atan2(target.y-player.y,target.x-player.x);
+  let diff=desired-baseAngle;
+  while(diff>Math.PI)diff-=Math.PI*2;
+  while(diff<-Math.PI)diff+=Math.PI*2;
+  return baseAngle+diff*strength;
 }
 function getShotInterval(){
   // Disparo automático base más pausado: antes estaba equilibrado para mantener clic.
   // Ahora el jugador siempre dispara, por lo que la progresión viene de mejoras.
-  const manualBoost=gameNow()<manualFireBoostUntil?1.15:1;
+  // El automático funciona siempre; mantener clic es un bonus opcional de cadencia.
+  const manualBoost=mouseIsDown?1.28:(gameNow()<manualFireBoostUntil?1.18:1);
   const baseInterval=650;
   const rate=Math.max(1,upgrades.fireRate)*getAutomaticFireMultiplier()*getZoomiesFireMultiplier()*manualBoost;
   return Math.max(120,baseInterval/rate);
@@ -4956,7 +5023,7 @@ function getScalableDetail(key){
     coinMagnet:`Radio base del imán: ${Math.round(upgrades.coinMagnetRange)} píxeles.`,
     omniBurst:`${10+Math.min(14,effectLevel("omniBurst")*2)} peces por ráfaga, cada ${(Math.max(3200,9000/(1+effectLevel("omniBurst")*.13))/1000).toFixed(2)} s.`,
     yarnBounce:`Probabilidad de rebote: ${getPauseActualPercent("yarnBounce")}%.`,
-    autoFire:`Cadencia adicional: +${Math.min(10,effectLevel("autoFire"))*8} %. Los bonus de fusión funcionan sin mantener el botón.`,
+    autoFire:`Corrección inicial automática: ${Math.round(getAutoFireCorrectionStrength()*100)} %. Patita nerviosa sigue controlando la cadencia.`,
     critChance:`Tienes un ${p}% de probabilidad de crítico.`
   };
   lines.push(detail[key]||`Potencia actual: ${shownLevel}/${shownMax}.`);
@@ -4974,7 +5041,7 @@ function getUniqueDetail(key){
     darkPact:"Reduce elección pero potencia el progreso oscuro.",
     catInstinct:"Activa una respuesta defensiva cuando la vida está baja.",
     zoomies:"Activa periódicamente velocidad alta y un 35 % más de daño.",
-    autoFire:"Refuerza la cadencia automática y sus fusiones, sin mantener el botón."
+    autoFire:"Corrige la salida de los peces hacia amenazas cercanas; Peces listillos sigue controlando el guiado durante el vuelo."
   }[key]||"";
   return `${owned?"Conseguida":"Bloqueada todavía"}. ${base} ${extra}`.trim();
 }
@@ -6337,6 +6404,9 @@ let autoLastPlayerY=0;
 let autoStuckTimer=0;
 let autoEmergencyEscapeUntil=0;
 let autoEmergencyEscapeAngle=0;
+let autoDecisionCooldown=0;
+let autoStableTarget=null;
+let autoStableTargetUntil=0;
 const AUTO_MEMORY_KEY="gatitos_auto_ai_memory_v2";
 
 function autoLoadMemory(){
@@ -6358,7 +6428,7 @@ let autoMemory=autoLoadMemory();
 
 function initAutoMode(){autoMode=false;autoModeUsedThisRun=false;}
 function markRankingInvalidByAI(){autoModeUsedThisRun=true;rankingEligibleThisRun=false;rankingDisabledReason="Partida de pruebas: ranking desactivado.";}
-function setAutoMode(value){if(!adminUnlocked)return;autoMode=!!value;if(autoMode){markRankingInvalidByAI();if(autoChoiceMenu)autoScheduleChoice(autoChoiceMenu.choices,autoChoiceMenu.onPick,autoChoiceMenu.context);}else{keys.w=keys.a=keys.s=keys.d=false;mouse.down=false;}refreshAutoModeUI();}
+function setAutoMode(value){if(!adminUnlocked)return;autoMode=!!value;if(autoMode){markRankingInvalidByAI();autoDecisionCooldown=0;autoStableTarget=null;autoStableTargetUntil=0;if(autoChoiceMenu)autoScheduleChoice(autoChoiceMenu.choices,autoChoiceMenu.onPick,autoChoiceMenu.context);}else{keys.w=keys.a=keys.s=keys.d=false;mouse.down=false;autoStableTarget=null;}refreshAutoModeUI();}
 function refreshAutoModeUI(){
   if(autoBadge)autoBadge.classList.remove("visible");
 }
@@ -6431,18 +6501,46 @@ function autoProjectileThreat(obj,radius,weight=1){
   }
   return Math.max(0,threat*weight);
 }
+function autoTargetStillValid(t){
+  if(!t||!isFinitePos(t))return false;
+  if(t===boss)return !!boss;
+  return !t.dead&&cats.includes(t)&&isCatOnScreen(t);
+}
 function autoFindBestTarget(){
+  const now=performance.now();
+  // Mantener el objetivo unos instantes evita el zigzag cuando hay muchos enemigos.
+  if(autoTargetStillValid(autoStableTarget)&&now<autoStableTargetUntil)return autoStableTarget;
+
   let best=null,bestScore=-999;
-
-  // Gato arcoíris: prioridad altísima porque da mejora gratis.
+  const candidates=[];
   cats.forEach(c=>{
-    if(!isFinitePos(c)||c.dead||!isCatOnScreen(c)||!c.rainbow)return;
+    if(!isFinitePos(c)||c.dead||!isCatOnScreen(c))return;
     const d=Math.hypot(c.x-player.x,c.y-player.y);
-    const s=1800-d*.10;
-    if(s>bestScore){best=c;bestScore=s;}
+    // Arcoíris siempre entra; del resto solo se valoran los más cercanos.
+    if(c.rainbow)candidates.push({c,d,priority:1});
+    else candidates.push({c,d,priority:0});
   });
+  candidates.sort((a,b)=>b.priority-a.priority||a.d-b.d);
 
-  // Jefe: sigue siendo objetivo muy importante, pero no por encima del arcoíris.
+  // Limitar la percepción evita que la IA intente reaccionar a toda la pantalla a la vez.
+  for(const {c,d} of candidates.slice(0,24)){
+    let s;
+    if(c.rainbow)s=1800-d*.10;
+    else{
+      s=360-d*.18;
+      if(c.type==="yarn")s+=230;
+      if(c.type==="thief")s+=190;
+      if(c.type==="musician")s+=260;
+      if(c.type==="student")s+=240+(c.studyLevel||0)*125;
+      if(c.type==="sleepy"&&c.sleepState==="awake")s+=320+Math.min(180,wave*6);
+      if(c.type==="glutton")s+=125;
+      if(d<260)s+=170;
+      if(d<120)s+=2000*(1-d/120);
+    }
+    if(s>bestScore){best=c;bestScore=s;}
+  }
+
+  // El jefe importa, pero los enemigos normales peligrosos siguen compitiendo como amenaza.
   if(boss&&isFinitePos(boss)){
     const d=Math.hypot(boss.x-player.x,boss.y-player.y);
     let s=1120-d*.07;
@@ -6451,20 +6549,8 @@ function autoFindBestTarget(){
     if(s>bestScore){best=boss;bestScore=s;}
   }
 
-  cats.forEach(c=>{
-    if(!isFinitePos(c)||c.dead||!isCatOnScreen(c)||c.rainbow)return;
-    const d=Math.hypot(c.x-player.x,c.y-player.y);
-    let s=360-d*.18;
-    if(c.type==="yarn")s+=230;
-    if(c.type==="thief")s+=190;
-    if(c.type==="musician")s+=260;
-    if(c.type==="student")s+=240+(c.studyLevel||0)*125;
-    if(c.type==="sleepy"&&c.sleepState==="awake")s+=320+Math.min(180,wave*6);
-    if(c.type==="glutton")s+=125;
-    if(d<260)s+=170;
-    if(d<120)s+=2000*(1-d/120);
-    if(s>bestScore){best=c;bestScore=s;}
-  });
+  autoStableTarget=best;
+  autoStableTargetUntil=now+(best&&best.rainbow?900:650);
   return best;
 }
 function autoMoveKeysFromVector(v){
@@ -6540,35 +6626,40 @@ function autoApplyEmergencyEscape(v,danger){
 function updateAutoPlayer(dt){
   if(gameStarted&&!gameOver)markRankingInvalidByAI();
   refreshAutoModeUI();
-  
   if(!autoRunStartTime)autoRunStartTime=performance.now();
+
+  // Apuntar y disparar sigue siendo fluido, pero la decisión de movimiento se recalcula
+  // solo varias veces por segundo para evitar oscilaciones con hordas grandes.
+  autoDecisionCooldown-=dt;
+  if(autoDecisionCooldown>0){
+    if(!autoTargetStillValid(autoStableTarget)){autoStableTarget=null;autoStableTargetUntil=0;}
+    autoUpdateAimAndShoot(autoStableTarget);
+    return;
+  }
+  autoDecisionCooldown=lowPerfMode?.18:.12;
   const target=autoFindBestTarget();
   autoUpdateAimAndShoot(target);
 
   const v={x:0,y:0};
   let danger=0;
-
-  cats.forEach(c=>{
-    if(!isFinitePos(c)||c.dead)return;
+  const nearbyCats=cats.filter(c=>isFinitePos(c)&&!c.dead)
+    .map(c=>({c,d:Math.hypot(c.x-player.x,c.y-player.y)}))
+    .sort((a,b)=>a.d-b.d).slice(0,18);
+  for(const {c} of nearbyCats){
     const radius=c.type==="mini"?190:c.type==="glutton"?380:c.type==="yarn"?350:285;
     const weight=c.type==="glutton"?4.6:c.type==="mini"?2.9:c.type==="yarn"?4.1:c.type==="thief"?3.5:3.25;
     danger+=autoRepelFrom(v,c,radius,weight);
-  });
-  if(boss&&isFinitePos(boss)){
-    danger+=autoRepelFrom(v,boss,(boss.r||60)+280,boss.type==="demon"?5.9:4.5);
   }
-  quacks.forEach(q=>{
-    const t=autoProjectileThreat(q,365,5.2);
-    if(t>0){const dx=player.x-q.x,dy=player.y-q.y,d=Math.hypot(dx,dy)||1;autoSafeAdd(v,dx/d,dy/d,t);danger+=t;}
-  });
-  yarnBalls.forEach(y=>{
-    const t=autoProjectileThreat(y,350,5.8);
-    if(t>0){const dx=player.x-y.x,dy=player.y-y.y,d=Math.hypot(dx,dy)||1;autoSafeAdd(v,dx/d,dy/d,t);danger+=t;}
-  });
-  demonOrbs.forEach(o=>{
-    const t=autoProjectileThreat(o,395,6.5);
-    if(t>0){const dx=player.x-o.x,dy=player.y-o.y,d=Math.hypot(dx,dy)||1;autoSafeAdd(v,dx/d,dy/d,t);danger+=t;}
-  });
+  if(boss&&isFinitePos(boss))danger+=autoRepelFrom(v,boss,(boss.r||60)+280,boss.type==="demon"?5.9:4.5);
+
+  const projectileSets=[[quacks,365,5.2],[yarnBalls,350,5.8],[demonOrbs,395,6.5]];
+  for(const [arr,radius,weight] of projectileSets){
+    const nearby=arr.filter(isFinitePos).map(o=>({o,d:Math.hypot(o.x-player.x,o.y-player.y)})).sort((a,b)=>a.d-b.d).slice(0,12);
+    for(const {o} of nearby){
+      const t=autoProjectileThreat(o,radius,weight);
+      if(t>0){const dx=player.x-o.x,dy=player.y-o.y,d=Math.hypot(dx,dy)||1;autoSafeAdd(v,dx/d,dy/d,t);danger+=t;}
+    }
+  }
 
   autoUpdateStuckState(dt,danger);
   const emergencyEscaping=autoApplyEmergencyEscape(v,danger);
@@ -6594,14 +6685,18 @@ function updateAutoPlayer(dt){
     autoAttractTo(v,nearestStar,1200,danger>1.35?3.8:9.5);
   }
 
-  // Latas: si hace falta vida, las busca incluso con algo de riesgo.
-  if(hpRatio<.78)tunaDrops.forEach(t=>autoAttractTo(v,t,720,hpRatio<.45?6.2:4.4));
+  // Latas: prioridad real cuando falta vida; solo considera las más cercanas para no oscilar.
+  if(hpRatio<.82){
+    const cans=tunaDrops.filter(isFinitePos).map(t=>({t,d:Math.hypot(t.x-player.x,t.y-player.y)})).sort((a,b)=>a.d-b.d).slice(0,3);
+    for(const {t} of cans)autoAttractTo(v,t,hpRatio<.42?1050:760,hpRatio<.42?9.0:5.0);
+  }
 
-  // Monedas: solo si no es peligroso; si hay mucha vida puede arriesgar un poco.
+  // Monedas: se recogen cuando la ruta es razonablemente segura y sin perseguir toda la pantalla.
   if(safeToLoot){
     const coinRange=verySafeToLoot?760:520;
     const collectWeight=verySafeToLoot?3.3:1.55;
-    coinsDrops.forEach(c=>autoAttractTo(v,c,coinRange,collectWeight));
+    const nearbyCoins=coinsDrops.filter(isFinitePos).map(c=>({c,d:Math.hypot(c.x-player.x,c.y-player.y)})).sort((a,b)=>a.d-b.d).slice(0,5);
+    for(const {c} of nearbyCoins)autoAttractTo(v,c,coinRange,collectWeight);
   }
 
   if(target&&isFinitePos(target)){
@@ -6721,7 +6816,7 @@ function autoFusionFutureValue(key){
   Object.keys(fusionPairs).forEach(k=>{if((fusionPairs[k]||[]).includes(key))possible.add(k)});
   possible.forEach(other=>{
     if(other===key||hasFusionBeenDone(key,other))return;
-    if(fusedUpgradeNames[key]||fusedUpgradeNames[other])return;
+    if(fusedUpgradeNames[key]||fusedUpgradeNames[other]||!isFusionChoiceCompletionSafe(key,other))return;
     const pair=sortedPair(key,other);
     const raw=autoPairValue(pair);
     const steps=autoStepsToFusionReady(other);
@@ -6749,7 +6844,7 @@ function autoFusionRouteValue(key){
   Object.keys(fusionPairs).forEach(k=>{if((fusionPairs[k]||[]).includes(key))possible.add(k)});
   let best=0,total=0,count=0;
   possible.forEach(other=>{
-    if(other===key||hasFusionBeenDone(key,other)||fusedUpgradeNames[other])return;
+    if(other===key||hasFusionBeenDone(key,other)||fusedUpgradeNames[other]||!isFusionChoiceCompletionSafe(key,other))return;
     const pair=sortedPair(key,other);
     const raw=autoPairValue(pair);
     if(raw<=0)return;
@@ -7189,7 +7284,7 @@ function initAdminPanel(){
 }
 initAdminPanel();
 
-function fusionStrength(pair){return hasDoneFusionPair(pair)?[0,.12,.27,.46,.70,1][getFusionProgress(pair)]:0;}
+function fusionStrength(pair){return hasDoneFusionPair(pair)?[0,.14,.31,.51,.74,1][getFusionProgress(pair)]:0;}
 function getLuckyShotMultiplier(){return hasDoneFusionPair("damage+luck")&&Math.random()<.08+.12*fusionStrength("damage+luck")?1.25:1;}
 function getCriticalDamageMultiplier(){return 2+(hasDoneFusionPair("critChance+luck")?.1+.3*fusionStrength("critChance+luck"):0);}
 function getCurrentLifeSteal(){return upgrades.lifeSteal*(hasDoneFusionPair("damageReduction+lifeSteal")&&life<upgrades.maxLife*.5?1.1+.4*fusionStrength("damageReduction+lifeSteal"):1);}
