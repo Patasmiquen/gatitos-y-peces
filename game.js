@@ -236,7 +236,7 @@ function initRanking(){
   }catch(e){firebaseReady=false;console.warn("Firebase ranking no disponible",e)}
 }
 function cleanPlayerName(value){
-  return String(value||"").replace(/[<>]/g,"").replace(/\s+/g," ").trim().slice(0,16);
+  return String(value||"").replace(/[<>]/g,"").replace(/\s+/g," ").trim().slice(0,32);
 }
 function getPlayerName(){
   const typed=cleanPlayerName(playerNameInput?.value||"");
@@ -1355,9 +1355,12 @@ function getAudioCtx(){if(!audioCtx)audioCtx=new(window.AudioContext||window.web
 function playCuteMeow(){const ac=getAudioCtx(),g=ac.createGain();g.gain.setValueAtTime(.045,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.34);g.connect(ac.destination);const o1=ac.createOscillator();o1.type="sine";o1.frequency.setValueAtTime(760+Math.random()*60,ac.currentTime);o1.frequency.exponentialRampToValueAtTime(520+Math.random()*40,ac.currentTime+.14);o1.connect(g);o1.start();o1.stop(ac.currentTime+.16);const o2=ac.createOscillator();o2.type="triangle";o2.frequency.setValueAtTime(470+Math.random()*40,ac.currentTime+.13);o2.frequency.exponentialRampToValueAtTime(330+Math.random()*30,ac.currentTime+.34);o2.connect(g);o2.start(ac.currentTime+.12);o2.stop(ac.currentTime+.36)}
 function playFishSound(type="bloop"){const ac=getAudioCtx(),o=ac.createOscillator(),g=ac.createGain();if(type==="fiu"){o.type="sine";o.frequency.setValueAtTime(900,ac.currentTime);o.frequency.exponentialRampToValueAtTime(360,ac.currentTime+.18);g.gain.setValueAtTime(.023,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.2)}else{o.type="sine";o.frequency.setValueAtTime(260+Math.random()*80,ac.currentTime);o.frequency.exponentialRampToValueAtTime(190+Math.random()*60,ac.currentTime+.11);g.gain.setValueAtTime(.021,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.13)}o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+.22)}
 function startGame(){
+  autoMode=false;
   gameStarted=true;
   startPanel.style.display="none";
   restart();
+  adminUnlocked=normalizeAdminName(currentPlayerName)==='eperiopatataquesopure';
+  updateAdminVisibility();
   requestGamePointerLock();
   syncMusic();
 }
@@ -1561,6 +1564,7 @@ startButton.addEventListener("click",()=>{
 });
 
 function returnToMainMenu(){
+  closeAdmin();autoMode=false;adminUnlocked=false;updateAdminVisibility();
   clearAllInputKeys();
   stopAllMusic();
   releaseGamePointer();
@@ -7102,23 +7106,34 @@ updateRandomSkinsButton();
 // v157: elapsed time counts active simulation only (menus and pause excluded).
 function formatRunTime(seconds){const n=Math.max(0,Math.floor(Number(seconds)||0));return `${Math.floor(n/60).toString().padStart(2,'0')}:${(n%60).toString().padStart(2,'0')}`;}
 function updateRunIndicators(){
+ updateAdminVisibility();
  const clock=document.getElementById('runClock'),star=document.getElementById('starCountdown');
  if(clock){clock.hidden=!gameStarted||gameOver;setHudText(document.getElementById('runTime'),formatRunTime(runStats?.elapsed));}
  if(star){star.hidden=!gameStarted||gameOver||!isPowerStarActive();star.classList.toggle('ending',starTime<=3);setHudText(star,starTime<=3?`⭐ ¡Se acaba! ${Math.max(0,starTime).toFixed(1)} s`:`⭐ Invulnerable · ${Math.ceil(starTime)} s`);}
 }
 
-// Password gate protects the game's UI. This is a local HTML game, not a server login.
-let adminUnlocked=false,adminPreviousPause=false;
-function normalizeAdminPassword(value){return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
-function unlockAdmin(value){if(normalizeAdminPassword(value)!=='eperiopatataquesopure')return false;adminUnlocked=true;return true;}
-function openAdmin(){
+// Local admin tools are available only for the reserved player name.
+let adminUnlocked=false,adminPreviousPause=false,adminExpanded=false;
+function normalizeAdminName(value){return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
+function updateAdminVisibility(){
  const panel=document.getElementById('adminPanel');if(!panel)return;
- adminPreviousPause=paused;paused=true;clearAllInputKeys();releaseGamePointer();panel.hidden=false;renderAdmin();
+ const allowed=adminUnlocked&&gameStarted&&!gameOver;
+ if(!allowed&&panel.open)closeAdmin();
+ panel.hidden=!allowed;
 }
-function closeAdmin(){const panel=document.getElementById('adminPanel');if(panel)panel.hidden=true;paused=adminPreviousPause;syncGamePointerLock();}
+function openAdmin(){
+ const panel=document.getElementById('adminPanel');
+ if(!adminUnlocked||!gameStarted||gameOver||choosingUpgrade||!panel)return;
+ if(!adminExpanded){adminPreviousPause=paused;adminExpanded=true;}
+ paused=true;clearAllInputKeys();releaseGamePointer();panel.open=true;renderAdmin();
+}
+function closeAdmin(){
+ const panel=document.getElementById('adminPanel');if(panel)panel.open=false;
+ if(adminExpanded){adminExpanded=false;paused=adminPreviousPause;syncGamePointerLock();}
+}
 function renderAdmin(){
- const auth=document.getElementById('adminAuth'),controls=document.getElementById('adminControls');if(!auth||!controls)return;
- auth.hidden=adminUnlocked;controls.hidden=!adminUnlocked;
+ const controls=document.getElementById('adminControls');if(!controls)return;
+ controls.hidden=!adminUnlocked;
  if(!adminUnlocked)return;
  const select=document.getElementById('adminUpgrade');const previous=select.value;
  select.innerHTML=Object.keys(upgradeLevels).map(k=>`<option value="${k}">${escapeHtml(getUpgradeDisplayName(k))} (${getPauseActualLevel(k)}/5)</option>`).join('');
@@ -7151,22 +7166,19 @@ function adminAction(action){
  updateHud();renderAdmin();return true;
 }
 function initAdminPanel(){
- const panel=document.createElement('div');panel.id='adminPanel';panel.hidden=true;
- panel.innerHTML=`<section class="adminBox" role="dialog" aria-modal="true" aria-labelledby="adminTitle">
+ const panel=document.createElement('details');panel.id='adminPanel';panel.hidden=true;
+ panel.innerHTML=`<summary>⚙ Admin</summary><section class="adminBox" aria-labelledby="adminTitle">
  <div class="adminHeading"><h2 id="adminTitle">🔒 Laboratorio gatuno</h2><button id="adminClose" aria-label="Cerrar">✕</button></div>
- <form id="adminAuth"><label for="adminPassword">Contraseña de administrador</label><input id="adminPassword" type="password" autocomplete="off" required><button>Desbloquear</button><p id="adminError" role="status"></p></form>
  <div id="adminControls" hidden><p>Las herramientas y la IA desactivan el ranking de esta partida.</p><p id="adminStats"></p>
  <div class="adminGrid"><button data-action="coins">+100 monedas</button><button data-action="heal">Curar</button><button data-action="star">Activar estrella</button><button data-action="ai" id="adminAI">Activar IA</button><button data-action="shop">Abrir tienda</button><button data-action="fusion">Abrir fusiones</button></div>
  <label for="adminUpgrade">Mejora o fusión</label><select id="adminUpgrade"></select><button data-action="upgrade">Maximizar selección</button><button data-action="all">Maximizar todas las mejoras y fusiones adquiridas</button>
- <label for="adminWave">Ronda (1–200)</label><input id="adminWave" type="number" min="1" max="200" value="5"><button data-action="wave">Ir a ronda</button><button id="adminLock">Bloquear admin</button></div></section>`;
+ <label for="adminWave">Ronda (1–200)</label><input id="adminWave" type="number" min="1" max="200" value="5"><button data-action="wave">Ir a ronda</button></div></section>`;
  document.body.appendChild(panel);
- document.getElementById('adminButton')?.addEventListener('click',openAdmin);
+ panel.querySelector('summary').addEventListener('click',e=>{e.preventDefault();if(panel.open)closeAdmin();else openAdmin();});
  document.getElementById('adminClose').addEventListener('click',closeAdmin);
- document.getElementById('adminAuth').addEventListener('submit',e=>{e.preventDefault();const input=document.getElementById('adminPassword');const ok=unlockAdmin(input.value);input.value='';document.getElementById('adminError').textContent=ok?'':'Contraseña incorrecta.';renderAdmin();});
  panel.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>adminAction(b.dataset.action)));
- document.getElementById('adminLock').addEventListener('click',()=>{setAutoMode(false);adminUnlocked=false;renderAdmin();});
- const pauseBtn=document.createElement('button');pauseBtn.className='pauseButton secondary';pauseBtn.textContent='🔒 Admin';pauseBtn.addEventListener('click',openAdmin);document.getElementById('pauseButtons')?.appendChild(pauseBtn);
- document.addEventListener('keydown',e=>{if(e.key==='F2'){e.preventDefault();if(panel.hidden)openAdmin();}if(e.key==='Escape'&&!panel.hidden){e.preventDefault();e.stopImmediatePropagation();closeAdmin();}else if(!panel.hidden){e.stopImmediatePropagation();}},true);
+ document.addEventListener('keydown',e=>{if(!panel.open)return;if(e.key==='Escape'){e.preventDefault();closeAdmin();}e.stopImmediatePropagation();},true);
+
 }
 initAdminPanel();
 

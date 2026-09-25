@@ -1048,3 +1048,10 @@ html,body,button,input{font-family:"Gatitos UI","Segoe UI",Arial,sans-serif,"Seg
 .adminHeading{display:flex;align-items:center;justify-content:space-between;gap:12px}.adminHeading h2{font-size:22px;margin:0 0 16px}
 .adminBox button,.adminBox input,.adminBox select{padding:10px 12px;margin:5px 0;border-radius:10px;font:inherit;box-sizing:border-box}
 .adminBox button{background:#e5cff9;color:#281b3c;border:0;cursor:pointer}.adminBox input,.adminBox select{display:block;width:100%;background:#fff;color:#281b3c;border:1px solid #9370ba}.adminBox label{display:block;margin-top:14px}.adminBox p{font-size:14px;color:#e1d2ee}.adminGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}#adminError{color:#ffa5c0}
+
+/* In-game admin dropdown */
+#adminPanel{inset:auto;top:70px;right:16px;width:min(390px,calc(100vw - 32px));display:block;padding:0;background:transparent;pointer-events:none}
+#adminPanel>summary{pointer-events:auto;list-style:none;cursor:pointer;margin-left:auto;width:max-content;padding:8px 14px;border:1px solid #8c79aa;border-radius:12px;background:#30263e;color:#eee3fa;font:700 13px "Gatitos UI",sans-serif}
+#adminPanel>summary::-webkit-details-marker{display:none}
+#adminPanel>summary::after{content:" ▾"}#adminPanel[open]>summary::after{content:" ▴"}
+#adminPanel .adminBox{pointer-events:auto;box-sizing:border-box;width:100%;margin-top:8px;max-height:calc(100dvh - 135px);padding:18px;border-radius:16px}
