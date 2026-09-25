@@ -500,13 +500,13 @@ const COSMETICS=[
   {id:"boss_duck_monocle",name:"Pato · Señor Monóculo",category:"boss_duck",price:250,preview:"🦆",desc:"Pato marfil con ala azul, pajarita, sombrero y monóculo.",pack:"elegant"},
   {id:"boss_seal_tie",name:"Foca · Dama de las perlas",category:"boss_seal",price:250,preview:"🦭",desc:"Pelaje lavanda, corona dorada y collar de perlas.",pack:"elegant"},
   {id:"boss_demon_cape",name:"Demonio · Conde Carmesí",category:"boss_demon",price:300,preview:"😈",desc:"Demonio carmesí, cuernos dorados y capa granate.",pack:"elegant"},
-  {id:"player_low_poly",name:"Jugador · Cubito",category:"player",price:180,preview:"🟦",desc:"El jugador se convierte en un cubo low poly.",pack:"low_poly"},
-  {id:"fish_low_poly",name:"Peces · Mini bloques",category:"fish",price:180,preview:"🟦",desc:"Los peces se convierten en cubitos.",pack:"low_poly"},
-  {id:"enemy_low_poly",name:"Enemigos · Cubogatos",category:"enemy",price:220,preview:"🟫",desc:"Los gatos enemigos se convierten en cubos.",pack:"low_poly"},
-  {id:"boss_giant_low_poly",name:"Gato jefe · Coloso cúbico",category:"boss_giant",price:260,preview:"🟨",desc:"El gato jefe se convierte en un cubo enorme.",pack:"low_poly"},
-  {id:"boss_duck_low_poly",name:"Pato · Pico poligonal",category:"boss_duck",price:260,preview:"🟨",desc:"El pato jefe se convierte en un cubo.",pack:"low_poly"},
-  {id:"boss_seal_low_poly",name:"Foca · Bloque polar",category:"boss_seal",price:260,preview:"⬜",desc:"La foca jefe se convierte en un cubo.",pack:"low_poly"},
-  {id:"boss_demon_low_poly",name:"Demonio · Prisma oscuro",category:"boss_demon",price:300,preview:"🟥",desc:"El demonio jefe se convierte en un cubo oscuro.",pack:"low_poly"},
+  {id:"player_low_poly",name:"Jugador · Gato poligonal",category:"player",price:180,preview:"🐱",desc:"Gato facetado con orejas, hocico, bigotes y cola.",pack:"low_poly"},
+  {id:"fish_low_poly",name:"Peces · Pez poligonal",category:"fish",price:180,preview:"🐟",desc:"Peces facetados con cola, aletas y ojo bien visibles.",pack:"low_poly"},
+  {id:"enemy_low_poly",name:"Enemigos · Gatos poligonales",category:"enemy",price:220,preview:"🐈",desc:"Gatos facetados reconocibles, conservando los accesorios de cada variante.",pack:"low_poly"},
+  {id:"boss_giant_low_poly",name:"Gato jefe · Coloso poligonal",category:"boss_giant",price:260,preview:"😼",desc:"Gato jefe facetado con orejas, cara y bigotes marcados.",pack:"low_poly"},
+  {id:"boss_duck_low_poly",name:"Pato · Pico poligonal",category:"boss_duck",price:260,preview:"🦆",desc:"Pato facetado amarillo con pico, ojo, ala y cola reconocibles.",pack:"low_poly"},
+  {id:"boss_seal_low_poly",name:"Foca · Bloque polar",category:"boss_seal",price:260,preview:"🦭",desc:"Foca facetada con hocico, bigotes y aletas claramente visibles.",pack:"low_poly"},
+  {id:"boss_demon_low_poly",name:"Demonio · Prisma oscuro",category:"boss_demon",price:300,preview:"😈",desc:"Demonio facetado con cuernos, alas y mirada luminosa.",pack:"low_poly"},
   {"id": "player_grayscale", "name": "Jugador · Retrato en blanco y negro", "category": "player", "price": 180, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"},
   {"id": "fish_grayscale", "name": "Peces · Tinta y plata", "category": "fish", "price": 180, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"},
   {"id": "enemy_grayscale", "name": "Enemigos · Cine mudo", "category": "enemy", "price": 220, "preview": "◐", "desc": "Convierte todas las variantes enemigas a blanco y negro; conserva sus formas y accesorios.", "pack": "grayscale"},
@@ -515,7 +515,7 @@ const COSMETICS=[
   {"id": "boss_seal_grayscale", "name": "Foca · Nieve y carbón", "category": "boss_seal", "price": 260, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"},
   {"id": "boss_demon_grayscale", "name": "Demonio · Sombra de celuloide", "category": "boss_demon", "price": 300, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"}
 ];
-const COSMETIC_PACKS=[{id:"elegant",name:"Pack Elegante",discount:.20,items:["player_elegant","fish_elegant","enemy_elegant","boss_duck_monocle","boss_seal_tie","boss_demon_cape"],desc:"Marfil, pajaritas, sombreros, monóculos, corona, perlas y capa."},{id:"low_poly",name:"Pack Low Poly",discount:.25,items:["player_low_poly","fish_low_poly","enemy_low_poly","boss_giant_low_poly","boss_duck_low_poly","boss_seal_low_poly","boss_demon_low_poly"],desc:"Todo el juego se vuelve una colección de cubos low poly."}];
+const COSMETIC_PACKS=[{id:"elegant",name:"Pack Elegante",discount:.20,items:["player_elegant","fish_elegant","enemy_elegant","boss_duck_monocle","boss_seal_tie","boss_demon_cape"],desc:"Marfil, pajaritas, sombreros, monóculos, corona, perlas y capa."},{id:"low_poly",name:"Pack Low Poly",discount:.25,items:["player_low_poly","fish_low_poly","enemy_low_poly","boss_giant_low_poly","boss_duck_low_poly","boss_seal_low_poly","boss_demon_low_poly"],desc:"Personajes y proyectiles facetados, con siluetas propias y reconocibles."}];
 COSMETIC_PACKS.push({"id": "grayscale", "name": "Pack Escala de grises", "discount": 0.25, "items": ["player_grayscale", "fish_grayscale", "enemy_grayscale", "boss_giant_grayscale", "boss_duck_grayscale", "boss_seal_grayscale", "boss_demon_grayscale"], "desc": "Siete skins en blanco y negro. Las variantes se distinguen por sus formas y accesorios."});
 
 let cosmeticTab="skins";
@@ -619,38 +619,60 @@ function drawLowPolyFace(size,eyeColor="#101820"){
   ctx.restore();
 }
 function drawLowPolyPlayer(){
-  drawEntityShadow(player.x,player.y,player.r*1.02,player.r*.30,.18);
+  drawEntityShadow(player.x,player.y,player.r*1.08,player.r*.31,.18);
   ctx.save();ctx.translate(player.x,player.y);ctx.rotate(player.angle);
   const starOn=isPowerStarActive(),sevenOn=isSevenLivesActive(),hurtBlink=player.hurtAnim>0;
   if(hurtBlink&&!starOn&&!sevenOn)ctx.globalAlpha=Math.sin(performance.now()*0.07)>0?.42:.96;
   const color=starOn?`hsl(${(performance.now()/6)%360},100%,70%)`:(sevenOn?"#80ed99":(player.hurtAnim>0?"#ff6b9a":"#4dabf7"));
-  drawLowPolyCube(player.r*1.72,color,"#1c2b36","#d0ebff");
-  drawLowPolyFace(player.r*1.72);
-  ctx.fillStyle="#ff8fab";ctx.fillRect(player.r*.48,-player.r*.12,player.r*.50,player.r*.24);
+  const s=player.r*1.58;
+  // Cabeza cúbica, pero con una silueta inequívocamente gatuna.
+  drawLowPolyCube(s,color,"#1c2b36","#d0ebff");
+  ctx.fillStyle=color;ctx.strokeStyle="#1c2b36";ctx.lineWidth=Math.max(2,s*.075);
+  ctx.beginPath();ctx.moveTo(-s*.43,-s*.42);ctx.lineTo(-s*.29,-s*.82);ctx.lineTo(-s*.05,-s*.48);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.moveTo(s*.43,-s*.42);ctx.lineTo(s*.29,-s*.82);ctx.lineTo(s*.05,-s*.48);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle="#ffb3c7";ctx.beginPath();ctx.moveTo(-s*.34,-s*.49);ctx.lineTo(-s*.28,-s*.70);ctx.lineTo(-s*.15,-s*.50);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(s*.34,-s*.49);ctx.lineTo(s*.28,-s*.70);ctx.lineTo(s*.15,-s*.50);ctx.closePath();ctx.fill();
+  drawLowPolyFace(s);
+  // Hocico, bigotes y cola para que no parezca un bloque genérico.
+  ctx.fillStyle="#ff9fba";ctx.beginPath();ctx.moveTo(-s*.07,s*.03);ctx.lineTo(s*.07,s*.03);ctx.lineTo(0,s*.12);ctx.closePath();ctx.fill();
+  ctx.strokeStyle="#263746";ctx.lineWidth=Math.max(1.5,s*.035);for(const side of [-1,1]){ctx.beginPath();ctx.moveTo(side*s*.10,s*.13);ctx.lineTo(side*s*.52,s*.08);ctx.moveTo(side*s*.10,s*.19);ctx.lineTo(side*s*.50,s*.25);ctx.stroke();}
+  ctx.strokeStyle=color;ctx.lineWidth=Math.max(4,s*.12);ctx.beginPath();ctx.moveTo(-s*.46,s*.30);ctx.bezierCurveTo(-s*.82,s*.34,-s*.82,-s*.10,-s*.58,-s*.08);ctx.stroke();
+  ctx.fillStyle="#ff8fab";ctx.fillRect(s*.45,-s*.10,s*.48,s*.20);
   ctx.restore();
 }
 function drawLowPolyCat(cat){
-  drawEntityShadow(cat.x,cat.y,cat.r*.9,cat.r*.25,.16);
+  drawEntityShadow(cat.x,cat.y,cat.r*.94,cat.r*.27,.16);
   ctx.save();ctx.translate(cat.x,cat.y);
   const spawnScale=cat.maxSpawnAnim?Math.max(.05,1-(cat.spawnAnim||0)/cat.maxSpawnAnim):1;ctx.scale(spawnScale,spawnScale);
   const squeeze=cat.hitAnim>0?1.10:1;ctx.scale(squeeze,1/squeeze);
   const base=cat.rainbow?"#ffd43b":cat.type==="thief"?"#343a40":cat.type==="yarn"?"#b197fc":cat.type==="sleepy"?"#c8b6e2":cat.type==="mini"?"#ffb347":cat.type==="glutton"?"#e8956d":cat.type==="musician"?"#d084c8":cat.type==="student"?"#74b9ff":"#c08457";
-  drawLowPolyCube(cat.r*1.70,base,"#2b2118","#ffe8cc");
-  drawLowPolyFace(cat.r*1.70,cat.type==="thief"?"#fff":"#1f2026");
+  const s=cat.r*1.58;
+  drawLowPolyCube(s,base,"#2b2118","#ffe8cc");
+  // Orejas, hocico y cola conservan la estética facetada pero dejan claro que es un gato.
+  ctx.fillStyle=base;ctx.strokeStyle="#2b2118";ctx.lineWidth=Math.max(2,s*.07);
+  for(const side of [-1,1]){ctx.beginPath();ctx.moveTo(side*s*.42,-s*.39);ctx.lineTo(side*s*.29,-s*.79);ctx.lineTo(side*s*.05,-s*.47);ctx.closePath();ctx.fill();ctx.stroke();}
+  ctx.fillStyle="#f4b6ad";for(const side of [-1,1]){ctx.beginPath();ctx.moveTo(side*s*.33,-s*.47);ctx.lineTo(side*s*.28,-s*.66);ctx.lineTo(side*s*.16,-s*.49);ctx.closePath();ctx.fill();}
+  drawLowPolyFace(s,cat.type==="thief"?"#fff":"#1f2026");
+  ctx.fillStyle="#8b5e55";ctx.beginPath();ctx.moveTo(-s*.06,s*.03);ctx.lineTo(s*.06,s*.03);ctx.lineTo(0,s*.11);ctx.closePath();ctx.fill();
+  ctx.strokeStyle="#3b2b26";ctx.lineWidth=Math.max(1.3,s*.03);for(const side of [-1,1]){ctx.beginPath();ctx.moveTo(side*s*.09,s*.13);ctx.lineTo(side*s*.51,s*.07);ctx.moveTo(side*s*.09,s*.19);ctx.lineTo(side*s*.48,s*.27);ctx.stroke();}
+  ctx.strokeStyle=base;ctx.lineWidth=Math.max(4,s*.11);ctx.beginPath();ctx.moveTo(-s*.44,s*.30);ctx.bezierCurveTo(-s*.78,s*.38,-s*.82,s*.02,-s*.60,-s*.08);ctx.stroke();
   drawEnemyIdentity(cat);
   if(cat.maxHp>1){ctx.fillStyle="rgba(255,255,255,0.85)";ctx.fillRect(-18,-48,36,5);ctx.fillStyle=cat.rainbow?"#ffd166":cat.type==="thief"?"#ffd166":cat.type==="yarn"?"#b197fc":cat.type==="sleepy"?"#c8b6e2":cat.type==="glutton"?"#e8956d":cat.type==="musician"?"#d084c8":cat.type==="student"?"#74b9ff":"#ff8fab";ctx.fillRect(-18,-48,36*Math.max(0,Math.min(1,cat.hp/cat.maxHp)),5)}
   ctx.restore();
 }
 function drawLowPolyFish(f){
   const angle=Number.isFinite(f.angle)?f.angle:Math.atan2(f.vy||0,f.vx||1);
-  const skinPalette={fish_elegant:["#fff0c7","#c99b45"],fish_pirate:["#ecac58","#a9503f"],fish_heart:["#ff9bbd","#cf4a86"]}[selectedCosmetic("fish")];
-const body=f.giantEaster?"#ffd166":f.cardumenGigante?"#80d8ff":f.boomerang?"#ff9f1c":f.crit?"#ff6b6b":f.shieldShot?"#ffd166":"#4cc9f0";
+  const body=f.giantEaster?"#ffd166":f.cardumenGigante?"#80d8ff":f.boomerang?"#ff9f1c":f.crit?"#ff6b6b":f.shieldShot?"#ffd166":"#4cc9f0";
   const accent=f.giantEaster?"#fff0a6":f.cardumenGigante?"#caf0f8":f.boomerang?"#ffd6a5":f.crit?"#ffc2d1":f.shieldShot?"#fff3bf":"#caf0f8";
   const outline=f.shieldShot?"#ffb703":"#12394a";
-  drawEntityShadow(f.x,f.y,10*(f.scale||1),4*(f.scale||1),.08);
+  drawEntityShadow(f.x,f.y,12*(f.scale||1),4*(f.scale||1),.08);
   ctx.save();ctx.translate(f.x,f.y);ctx.rotate(angle);ctx.scale(f.scale||1,f.scale||1);
-  drawLowPolyCube(20,body,outline,accent);
-  ctx.fillStyle="#023047";ctx.fillRect(3,-3,4,4);
+  ctx.lineJoin="round";ctx.strokeStyle=outline;ctx.lineWidth=2;
+  // Cuerpo romboidal + cola + aletas: low poly, pero sigue leyendo como pez incluso pequeño.
+  ctx.fillStyle=body;ctx.beginPath();ctx.moveTo(-10,0);ctx.lineTo(-4,-8);ctx.lineTo(8,-7);ctx.lineTo(13,0);ctx.lineTo(8,7);ctx.lineTo(-4,8);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.fillStyle=accent;ctx.beginPath();ctx.moveTo(-9,0);ctx.lineTo(-18,-9);ctx.lineTo(-16,0);ctx.lineTo(-18,9);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.beginPath();ctx.moveTo(-2,-7);ctx.lineTo(3,-13);ctx.lineTo(6,-6);ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.globalAlpha=.35;ctx.fillStyle="#fff";ctx.beginPath();ctx.moveTo(-3,-7);ctx.lineTo(8,-7);ctx.lineTo(4,-1);ctx.lineTo(-7,-1);ctx.closePath();ctx.fill();ctx.globalAlpha=1;
+  ctx.fillStyle="#f8fbff";ctx.beginPath();ctx.arc(7,-2,2.3,0,Math.PI*2);ctx.fill();ctx.fillStyle="#023047";ctx.beginPath();ctx.arc(7.5,-2,1.1,0,Math.PI*2);ctx.fill();
   ctx.restore();
 }
 
@@ -6588,22 +6610,77 @@ function autoAttractTo(v,obj,radius,weight=1){
   autoSafeAdd(v,dx/d,dy/d,f);
   return f;
 }
+function autoProjectileRisk(obj,horizon=1.25,padding=34){
+  if(!isFinitePos(obj)||!Number.isFinite(obj.vx)||!Number.isFinite(obj.vy))return null;
+  const vx=obj.vx,vy=obj.vy,speed2=vx*vx+vy*vy;
+  if(speed2<25)return null;
+  const rx=player.x-obj.x,ry=player.y-obj.y;
+  const t=Math.max(0,Math.min(horizon,(rx*vx+ry*vy)/speed2));
+  const hitX=obj.x+vx*t,hitY=obj.y+vy*t;
+  const missX=player.x-hitX,missY=player.y-hitY;
+  const miss=Math.hypot(missX,missY);
+  const hitRadius=(player.r||18)+(obj.r||14)+padding;
+  const nowDist=Math.hypot(rx,ry);
+  // Solo interesa si viene hacia nosotros o ya está peligrosamente cerca.
+  const approaching=(rx*vx+ry*vy)>0;
+  if(!approaching&&nowDist>hitRadius*1.45)return null;
+  const pathRisk=Math.max(0,1-miss/hitRadius);
+  const timeRisk=t<=horizon?Math.max(0,1-t/horizon):0;
+  const nearRisk=Math.max(0,1-nowDist/Math.max(120,hitRadius*2.2));
+  const risk=Math.max(nearRisk,pathRisk*(.65+timeRisk*1.35));
+  return {risk,t,miss,hitRadius,hitX,hitY,nowDist,vx,vy};
+}
 function autoProjectileThreat(obj,radius,weight=1){
   if(!isFinitePos(obj))return 0;
-  let dx=player.x-obj.x,dy=player.y-obj.y,d=Math.hypot(dx,dy)||1;
-  let threat=0;
-  if(d<radius)threat+=(radius-d)/radius;
-  if(Number.isFinite(obj.vx)&&Number.isFinite(obj.vy)){
-    const sp=Math.hypot(obj.vx,obj.vy)||1;
-    const ux=obj.vx/sp,uy=obj.vy/sp;
-    const relx=player.x-obj.x,rely=player.y-obj.y;
-    const ahead=relx*ux+rely*uy;
-    const side=Math.abs(relx*uy-rely*ux);
-    if(ahead>0&&ahead<radius*1.25&&side<52+player.r){
-      threat+=1.25*(1-side/(52+player.r))*(1-ahead/(radius*1.25));
+  const d=Math.hypot(player.x-obj.x,player.y-obj.y)||1;
+  const proximity=d<radius?(radius-d)/radius:0;
+  const predicted=autoProjectileRisk(obj,Math.max(.75,Math.min(1.65,radius/260)),38);
+  return Math.max(0,(proximity*.42+(predicted?.risk||0)*1.65)*weight);
+}
+function autoDodgeProjectile(v,obj,radius,weight=1){
+  if(!isFinitePos(obj))return 0;
+  const info=autoProjectileRisk(obj,Math.max(.85,Math.min(1.75,radius/245)),42);
+  const dx=player.x-obj.x,dy=player.y-obj.y,d=Math.hypot(dx,dy)||1;
+  let threat=autoProjectileThreat(obj,radius,weight);
+  if(!info||info.risk<=.02){
+    if(d<radius*.48)autoSafeAdd(v,dx/d,dy/d,threat*.7);
+    return threat;
+  }
+  const sp=Math.hypot(info.vx,info.vy)||1;
+  const ux=info.vx/sp,uy=info.vy/sp;
+  // Esquivar perpendicularmente a la trayectoria es mucho más eficaz que huir
+  // en la misma dirección del proyectil. Elegimos el lado con más espacio.
+  const px=-uy,py=ux;
+  const look=150;
+  const ax=player.x+px*look,ay=player.y+py*look;
+  const bx=player.x-px*look,by=player.y-py*look;
+  const room=(x,y)=>Math.min(x,y,canvas.width-x,canvas.height-y);
+  const centerX=canvas.width/2,centerY=canvas.height/2;
+  const centerBiasA=((centerX-player.x)*px+(centerY-player.y)*py)*.06;
+  const centerBiasB=-centerBiasA;
+  const chooseA=room(ax,ay)+centerBiasA>=room(bx,by)+centerBiasB;
+  const side=chooseA?1:-1;
+  const urgency=Math.min(2.4,.65+info.risk*1.45+(info.t<.42?.75:0));
+  autoSafeAdd(v,px*side,py*side,weight*urgency);
+  // Si ya está encima, añadimos también separación radial para no cruzar su hitbox.
+  if(d<Math.max(115,radius*.42))autoSafeAdd(v,dx/d,dy/d,weight*(1-d/Math.max(116,radius*.42))*1.5);
+  return threat+info.risk*weight;
+}
+function autoHasImminentProjectileThreat(){
+  const sets=[quacks,yarnBalls,demonOrbs];
+  for(const arr of sets){
+    const nearby=arr.filter(isFinitePos).map(o=>({o,d:Math.hypot(o.x-player.x,o.y-player.y)})).sort((a,b)=>a.d-b.d).slice(0,8);
+    for(const {o} of nearby){
+      const r=autoProjectileRisk(o,.72,46);
+      if(r&&r.risk>.34&&r.t<.72)return true;
     }
   }
-  return Math.max(0,threat*weight);
+  // La sombra de la foca anuncia exactamente dónde va a caer.
+  if(boss&&boss.type==="seal"&&boss.state==="jumping"&&Number.isFinite(boss.targetX)&&Number.isFinite(boss.targetY)){
+    const d=Math.hypot(player.x-boss.targetX,player.y-boss.targetY);
+    if(d<(boss.r||60)+(player.r||18)+105&&boss.jumpTimer<.9)return true;
+  }
+  return false;
 }
 function autoTargetStillValid(t){
   if(!t||!isFinitePos(t))return false;
@@ -6735,12 +6812,14 @@ function updateAutoPlayer(dt){
   // Apuntar y disparar sigue siendo fluido, pero la decisión de movimiento se recalcula
   // solo varias veces por segundo para evitar oscilaciones con hordas grandes.
   autoDecisionCooldown-=dt;
-  if(autoDecisionCooldown>0){
+  const imminentProjectile=autoHasImminentProjectileThreat();
+  if(autoDecisionCooldown>0&&!imminentProjectile){
     if(!autoTargetStillValid(autoStableTarget)){autoStableTarget=null;autoStableTargetUntil=0;}
     autoUpdateAimAndShoot(autoStableTarget);
     return;
   }
-  autoDecisionCooldown=lowPerfMode?.18:.12;
+  // Ante una bala con trayectoria de colisión la IA reacciona casi al instante.
+  autoDecisionCooldown=imminentProjectile?.045:(lowPerfMode?.16:.10);
   const target=autoFindBestTarget();
   autoUpdateAimAndShoot(target);
 
@@ -6756,13 +6835,32 @@ function updateAutoPlayer(dt){
   }
   if(boss&&isFinitePos(boss))danger+=autoRepelFrom(v,boss,(boss.r||60)+280,boss.type==="demon"?5.9:4.5);
 
-  const projectileSets=[[quacks,365,5.2],[yarnBalls,350,5.8],[demonOrbs,395,6.5]];
+  let projectileDanger=0;
+  const projectileSets=[[quacks,430,5.8],[yarnBalls,420,6.4],[demonOrbs,470,7.4]];
   for(const [arr,radius,weight] of projectileSets){
-    const nearby=arr.filter(isFinitePos).map(o=>({o,d:Math.hypot(o.x-player.x,o.y-player.y)})).sort((a,b)=>a.d-b.d).slice(0,12);
+    const nearby=arr.filter(isFinitePos).map(o=>({o,d:Math.hypot(o.x-player.x,o.y-player.y)})).sort((a,b)=>a.d-b.d).slice(0,14);
     for(const {o} of nearby){
-      const t=autoProjectileThreat(o,radius,weight);
-      if(t>0){const dx=player.x-o.x,dy=player.y-o.y,d=Math.hypot(dx,dy)||1;autoSafeAdd(v,dx/d,dy/d,t);danger+=t;}
+      const t=autoDodgeProjectile(v,o,radius,weight);
+      projectileDanger+=t;
+      danger+=t;
     }
+  }
+  // Foca: no esperar a que caiga encima; abandonar la zona marcada durante el salto.
+  if(boss&&boss.type==="seal"&&boss.state==="jumping"&&Number.isFinite(boss.targetX)&&Number.isFinite(boss.targetY)){
+    const dx=player.x-boss.targetX,dy=player.y-boss.targetY,d=Math.hypot(dx,dy)||1;
+    const safeRadius=(boss.r||60)+(player.r||18)+145;
+    if(d<safeRadius){
+      const urgency=Math.max(.25,1-(boss.jumpTimer||0)/Math.max(.01,boss.jumpDuration||1));
+      const force=(1-d/safeRadius)*(5.5+urgency*8.5);
+      autoSafeAdd(v,dx/d,dy/d,force);
+      danger+=force*.38;projectileDanger+=force*.45;
+    }
+  }
+  // Pato: durante una ráfaga, mantener un pequeño movimiento lateral respecto al tiro.
+  if(boss&&boss.type==="duck"&&boss.pendingQuacks&&boss.pendingQuacks.length&&isFinitePos(boss)){
+    const dx=player.x-boss.x,dy=player.y-boss.y,d=Math.hypot(dx,dy)||1;
+    const side=Math.sin(performance.now()/310)>0?1:-1;
+    autoSafeAdd(v,-dy/d*side,dx/d*side,1.35);
   }
 
   autoUpdateStuckState(dt,danger);
@@ -6775,8 +6873,8 @@ function updateAutoPlayer(dt){
   if(player.y>canvas.height-margin)v.y-=(player.y-(canvas.height-margin))/margin*(boss&&boss.type==="demon"?6.6:4.4);
 
   const hpRatio=life/Math.max(1,upgrades.maxLife||100);
-  const safeToLoot=!emergencyEscaping&&danger<.72&&hpRatio>.58;
-  const verySafeToLoot=!emergencyEscaping&&danger<.42&&hpRatio>.72;
+  const safeToLoot=!emergencyEscaping&&projectileDanger<.72&&danger<.82&&hpRatio>.58;
+  const verySafeToLoot=!emergencyEscaping&&projectileDanger<.28&&danger<.46&&hpRatio>.72;
 
   // Estrella: prioridad de recogida muy alta, salvo peligro extremo.
   let nearestStar=null,nearestStarD=Infinity;
@@ -6786,7 +6884,9 @@ function updateAutoPlayer(dt){
     if(d<nearestStarD){nearestStar=s;nearestStarD=d;}
   });
   if(nearestStar){
-    autoAttractTo(v,nearestStar,1200,danger>1.35?3.8:9.5);
+    // La estrella es valiosa, pero no merece atravesar una trayectoria de proyectil mortal.
+    const starWeight=projectileDanger>1.25?.35:(danger>1.35?2.2:9.5);
+    autoAttractTo(v,nearestStar,1200,starWeight);
   }
 
   // Latas: prioridad real cuando falta vida; solo considera las más cercanas para no oscilar.
@@ -6824,7 +6924,7 @@ function updateAutoPlayer(dt){
 
   if(autoMode&&performance.now()-autoLastDebugText>9000&&gameStarted&&!choosingUpgrade&&!paused&&!gameOver){
     autoLastDebugText=performance.now();
-    const msg=emergencyEscaping?"🤖 saliendo de peligro":(powerStars.length?"🤖 buscando estrella":(target&&target.rainbow?"🤖 cazando arcoíris":(danger>1.2?"🤖 esquivando":(target?"🤖 atacando":"🤖 buscando recursos"))));
+    const msg=emergencyEscaping?"🤖 saliendo de peligro":(projectileDanger>.85?"🤖 esquivando proyectiles":(powerStars.length?"🤖 buscando estrella":(target&&target.rainbow?"🤖 cazando arcoíris":(danger>1.2?"🤖 esquivando":(target?"🤖 atacando":"🤖 buscando recursos")))));
     floatingTexts.push({x:player.x,y:player.y-72,text:msg,life:.75,maxLife:.75,big:false});
   }
 }
@@ -7232,16 +7332,16 @@ if(poly){
   path('M-.62-.36 -.68-.88 -.4-1.05 .07-.98 .26-.64 .24-.18 .62-.08 1.02-.35 .92.40 .61.78 -.46.83 -.93.49 -.98.02Z','#f6d46f');
   path('M-.98.02 -.46.55 .61.55 .92.4 .61.78 -.46.83 -.93.49Z','#eeb647',false);
   path('M-.62-.36 -1.08-.42 -1.22-.19 -.63-.07Z','#eb9250');
-  path('M-.12.10 .48.02 .64.27 .22.47 -.2.30Z','#ffe7a0');ctx.fillStyle='#453646';ctx.fillRect(-.38,-.68,.12,.15);
+  path('M-.12.10 .48.02 .64.27 .22.47 -.2.30Z','#ffe7a0');ctx.fillStyle='#453646';ctx.fillRect(-.38,-.68,.12,.15);oval(-.32,-.64,.035,.035,'#fff');path('M.30-.05 .58.05 .38.30 .12.20Z','#f8df86');path('M.72.02 1.12-.18 .98.18 1.12.42 .68.34Z','#e8b044');
  }else if(type==='seal'){
   path('M-.92.22 -.65-.58 -.28-.87 .42-.78 .83-.38 1 .36 .57.72 -.5.75Z','#d0e6e8');
   path('M-.92.22 -1.23.49 -.65.65 -.5.75 .57.72 .94.57 1.2.73 1.19.35 1 .36Z','#87b6c3');
-  path('M-.4-.2 .4-.2 .65.53 -.49.55Z','#eff6f2',false);ctx.fillStyle='#355367';ctx.fillRect(-.35,-.21,.12,.14);ctx.fillRect(.3,-.21,.12,.14);path('M-.1.02 .1.02 0 .14Z','#486170');
+  path('M-.4-.2 .4-.2 .65.53 -.49.55Z','#eff6f2',false);ctx.fillStyle='#355367';ctx.fillRect(-.35,-.21,.12,.14);ctx.fillRect(.3,-.21,.12,.14);path('M-.1.02 .1.02 0 .14Z','#486170');ctx.beginPath();for(const side of [-1,1]){ctx.moveTo(side*.08,.16);ctx.lineTo(side*.58,.08);ctx.moveTo(side*.08,.22);ctx.lineTo(side*.62,.30);}ctx.stroke();path('M-.72.42 -1.18.62 -.70.68Z','#87b6c3');path('M.72.42 1.18.62 .70.68Z','#87b6c3');
  }else{
   path('M-.63-.49 -.94-.73 -.93-1.16 -.47-.91Z','#b396d4');path('M.63-.49 .94-.73 .93-1.16 .47-.91Z','#b396d4');
   path('M-.8-.14 -1.27-.43 -1.16.44 -.61.54Z','#6b477b');path('M.8-.14 1.27-.43 1.16.44 .61.54Z','#6b477b');
   path('M-.67-.69 .58-.69 .83-.42 .8.6 .46.85 -.48.85 -.8.5 -.83-.4Z','#a85c98');path('M-.83-.4 -.48.55 .46.85 -.48.85 -.8.5Z','#7e3e78',false);
-  path('M-.5-.19 -.15-.08 -.2.08 -.48.02Z','#ffe2a2',false);path('M.5-.19 .15-.08 .2.08 .48.02Z','#ffe2a2',false);path('M-.3.32 .3.32 .2.59 -.2.59Z','#462743');path('M-.24.32 -.10.32 -.17.5Z','#fff5e6',false);path('M.24.32 .10.32 .17.5Z','#fff5e6',false);
+  path('M-.5-.19 -.15-.08 -.2.08 -.48.02Z','#ffe2a2',false);path('M.5-.19 .15-.08 .2.08 .48.02Z','#ffe2a2',false);path('M-.3.32 .3.32 .2.59 -.2.59Z','#462743');path('M-.24.32 -.10.32 -.17.5Z','#fff5e6',false);path('M.24.32 .10.32 .17.5Z','#fff5e6',false);path('M-.56-.72 -.82-1.18 -.35-.88Z','#d5b7ed');path('M.56-.72 .82-1.18 .35-.88Z','#d5b7ed');
  }
 }else if(type==='giantCat'){
  path('M-.79-.33 Q-.96-.81 -.81-1.08 Q-.62-1.08 -.31-.76 Q0-.90 .31-.76 Q.62-1.08 .81-1.08 Q.96-.81 .79-.33 C1.09.36 .70.85 0 .87 C-.70.85 -1.09.36 -.79-.33Z',shade('#fff5e1','#e9cfae'));
