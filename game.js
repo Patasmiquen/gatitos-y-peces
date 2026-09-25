@@ -4212,7 +4212,14 @@ if(upgrades.moraleFire)rate*=1.12;
 if(upgrades.braveHeart&&life<upgrades.maxLife*.35)rate*=1.10;
 return rate*getHoldShootMultiplier();
 }
-function getShotInterval(){return Math.max(45,210/(upgrades.fireRate*getAutomaticFireMultiplier()*getZoomiesFireMultiplier()*(gameNow()<manualFireBoostUntil?1.15:1)));}
+function getShotInterval(){
+  // Disparo automático base más pausado: antes estaba equilibrado para mantener clic.
+  // Ahora el jugador siempre dispara, por lo que la progresión viene de mejoras.
+  const manualBoost=gameNow()<manualFireBoostUntil?1.15:1;
+  const baseInterval=650;
+  const rate=Math.max(1,upgrades.fireRate)*getAutomaticFireMultiplier()*getZoomiesFireMultiplier()*manualBoost;
+  return Math.max(120,baseInterval/rate);
+}
 function shootAutoFish(){
 const oldMouseX=mouse.x,oldMouseY=mouse.y;
 if(upgrades.combatAI||upgrades.assistedShot){
