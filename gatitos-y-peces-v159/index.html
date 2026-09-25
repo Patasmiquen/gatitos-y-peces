@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gatitos &amp; Peces</title>
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="shortcut icon" href="favicon.ico">
+<link rel="apple-touch-icon" href="favicon.png">
+<link rel="stylesheet" href="style.css?v=159">
+</head>
+<body>
+<canvas id="game"></canvas>
+<div id="runClock" hidden>Tiempo <span id="runTime">00:00</span></div>
+<div id="starCountdown" hidden role="status"></div>
+<div id="startPanel">
+<div id="startBox">
+<h1><svg class="titleCat" viewBox="0 0 64 64" aria-hidden="true"><path d="M10 27 9 8 24 18 Q32 14 40 18L55 8 54 27C66 55 43 61 32 59 11 61 0 46 10 27Z" fill="#b99ce5" stroke="#564069" stroke-width="2.5"/><path d="m14 15 9 7-9 6m36-13-9 7 9 6" fill="#f7b4ce"/><ellipse cx="22" cy="35" rx="3" ry="4" fill="#392747"/><ellipse cx="42" cy="35" rx="3" ry="4" fill="#392747"/><path d="m28 40 4 4 4-4" fill="#cf7da5"/><path d="M32 44q-6 8-11 1m11-1q6 8 11 1" fill="none" stroke="#49304f" stroke-width="2" stroke-linecap="round"/><ellipse cx="15" cy="43" rx="5" ry="3" fill="#f6a5c4"/><ellipse cx="49" cy="43" rx="5" ry="3" fill="#f6a5c4"/></svg><span>Gatitos &amp; Peces</span></h1>
+<p class="dedicationText">Juego hecho especialmente para mi novia, con mucho amor y pensando en ella 💖.</p>
+<p class="shortIntro">Alimenta a los gatitos con peces y sobrevive todo lo que puedas.</p>
+<div id="playerSetup">
+<label for="playerNameInput">Tu nombre para el ranking:</label>
+<input id="playerNameInput" maxlength="16" type="text" placeholder="Escribe tu nombre" autocomplete="nickname"/>
+<div id="nameWarning"></div>
+</div>
+<button id="adminButton" type="button">🔒 Admin</button>
+<button id="startButton">Empezar 💖</button>
+<div id="themeOptions" class="themeOptions iconThemeOptions" aria-label="Tema visual de menús">
+  <button type="button" class="themeChoice active" data-theme="light" aria-label="Tema claro">☀️</button>
+  <button type="button" class="themeChoice" data-theme="dark" aria-label="Tema oscuro">🌙</button>
+</div>
+
+<div id="musicMenuControls" class="musicMenuControls" aria-label="Controles de música">
+  <button id="musicMenuToggle" type="button">🎵 Música activada</button>
+  <label for="musicVolumeRange">Volumen</label>
+  <input id="musicVolumeRange" type="range" min="0" max="100" value="28"/>
+  <span id="musicVolumeValue">28%</span>
+</div>
+
+
+<div class="startDropdownRow">
+<details id="achievementsPanel" class="achievementsPanel">
+<summary>🏆 Logros</summary>
+<div class="achievementsBox">
+  <div class="achievementsHeader">
+    <span>🏆 Progreso: <b id="achievementProgressText">0/0</b></span>
+    <button id="achievementsRefreshBtn" type="button">Actualizar</button>
+  </div>
+  <div class="achievementsNote">Los logros se guardan en este navegador. Al completarlos todos, tu nombre se vuelve dorado.</div>
+  <div id="achievementsContent" class="achievementsContent"></div>
+</div>
+</details>
+
+<details id="cosmeticsPanel" class="cosmeticsPanel">
+<summary>✨ Cosméticos</summary>
+<div class="cosmeticsBox">
+  <div class="cosmeticsHeader"><span>🫧 Escamas: <b id="scaleBalance">0</b></span><button id="cosmeticsResetBtn" type="button">Aspecto normal</button></div>
+  <div class="randomSkinsControls"><button id="randomSkinsButton" type="button" aria-pressed="false">🎲 Random: desactivado</button><p>Al empezar o reiniciar: una skin desbloqueada por categoría. Sin skins, aspecto normal. Tu selección manual se conserva.</p></div><div class="cosmeticsTabs"><button id="cosmeticsSkinsTab" type="button" class="active">Skins</button><button id="cosmeticsPacksTab" type="button">Packs</button></div>
+  <div id="cosmeticsContent" class="cosmeticsContent"></div>
+  <div class="cosmeticsNote">Más puntos, más escamas; crecimiento más lento desde 30.000 puntos. Las skins son solo visuales y se guardan en este navegador.</div>
+</div>
+</details>
+<details id="howToPlay">
+<summary>📖 Cómo jugar</summary>
+<div class="controls compactControls cleanControls">
+<div><span class="controlIcon">🎮</span><span><b>WASD o flechas</b> para moverte</span></div>
+<div><span class="controlIcon">🐟</span><span><b>Disparo automático</b> · apunta con el ratón; clic opcional: impulso breve</span></div>
+<div><span class="controlIcon">🎯</span><span><b>Click derecho</b> para fijar objetivo</span></div>
+<div><span class="controlIcon">⏸️</span><span><b>Espacio</b> para pausar</span></div>
+<div><span class="controlIcon">⭐</span><span>Elige <b>mejoras</b> al subir nivel</span></div>
+<div><span class="controlIcon">🔮</span><span>Combina <b>fusiones</b> al máximo</span></div>
+</div>
+</details>
+<details id="patchNotesPanel" class="patchNotesPanel">
+<summary>📝 Notas de parche</summary>
+<div class="patchNotesBox">
+  <div class="patchNotesHeader">
+    <span>📝 Historial de versiones</span>
+    <span id="patchNotesCount">0 versiones</span>
+  </div>
+  <div class="patchNotesNote">Versiones ordenadas de más reciente a más antigua. Los nombres están normalizados para que todo siga el mismo estilo.</div>
+  <div id="patchNotesContent" class="patchNotesContent"></div>
+</div>
+</details>
+</div>
+<div id="startDropdownContentSlot" class="startDropdownContentSlot"></div>
+<div class="onlineRankBox" id="startRankingBox">
+  <div class="onlineRankTitle"><span>🏆 Ranking online</span><div class="onlineRankActions"><button class="onlineRankRefresh" id="refreshRankingBtn" type="button">Actualizar</button><button class="onlineRankRefresh" id="startRankingToggleAll" type="button">Ver más</button></div></div>
+  <label class="onlineRankDuplicateToggle"><input id="startRankingShowDuplicates" type="checkbox"/> Mostrar duplicados</label>
+  <div class="onlineRankList" id="startRankingList"><div class="onlineRankStatus">Cargando ranking...</div></div>
+</div>
+</div>
+</div>
+<div id="hud">
+<div>❤️ Vida: <span id="life">100</span></div>
+<div class="barBox"><div class="barFill" id="lifeBar"></div></div>
+<div>⭐ Nivel: <span id="level">1</span> · EXP: <span id="xp">0</span>/<span id="xpNeed">5</span></div>
+<div class="barBox"><div class="barFill" id="xpBar"></div></div>
+<div>🌊 Ronda: <span id="wave">1</span> · Tiempo: <span id="timeLeft">10</span>s</div>
+<div class="barBox"><div class="barFill" id="timeBar"></div></div>
+<div>🪙 Monedas: <span id="coins">0</span></div>
+<div class="hudOptionalStat">🐱 Gatitos mimados: <span id="score">0</span></div>
+<div class="hudOptionalStat">🐟 Impactos: <span id="shots">0</span></div>
+</div>
+<div id="objectivePanel"><div id="objectiveMain">🎯 Objetivo: Sobrevive</div><div id="objectiveFusion">🔮 Fusiones próximas: buscando...</div></div>
+<div id="help">WASD / flechas: moverse · Disparo automático · Clic: +15 % cadencia durante 0,8 s · Espacio: pausa</div>
+<div id="message"></div>
+<div id="perfNotice" class="perfNotice">Modo ligero activo</div>
+<div id="levelUpPanel">
+<div id="levelUpBox">
+<h2 id="upgradeTitle">⭐ ¡Subiste de nivel!</h2>
+<div id="levelUpPhrase">Muy bien, mi amor 💖</div>
+<p id="upgradeSubtitle">Elige una mejora gatuna</p>
+<div id="upgradeCards"></div>
+<button id="fusionBackBtn">← Volver</button>
+</div>
+</div>
+<div id="pausePanel">
+<div id="pauseBox">
+<h2>⏸️ Pausa</h2>
+<div id="pauseMusicControls" class="musicMenuControls pauseMusicControls" aria-label="Controles de música en pausa">
+  <button id="pauseMusicToggle" type="button">🎵 Música activada</button>
+  <label for="pauseMusicVolumeRange">Volumen</label>
+  <input id="pauseMusicVolumeRange" type="range" min="0" max="100" value="28"/>
+  <span id="pauseMusicVolumeValue">28%</span>
+</div>
+<div id="pauseRecordBadge">🏆 ¡Récord personal!</div>
+<div id="pauseStats"></div>
+<p style="margin-bottom:10px;color:#ffd6e7;font-weight:bold">Tus mejoras actuales</p>
+<div id="pauseUpgradesList"></div>
+<div id="pauseButtons">
+<div class="pauseMainActions">
+<button class="pauseButton" id="resumeButton">Continuar</button>
+</div>
+<div class="pauseDangerActions" aria-label="Opciones de salida">
+<button class="pauseButton" id="finishRunButton" title="Termina la partida y guarda tu puntuación">Acabar aquí</button>
+<button class="pauseButton secondary" id="restartButton">Reiniciar</button>
+<button class="pauseButton menuButton" id="menuButton">Volver al menú</button>
+</div>
+</div>
+</div>
+</div>
+
+<div id="victoryPanel">
+<div id="victoryBox">
+<div id="victoryStars">🌟⭐🌟⭐🌟</div>
+<h1>🏆 ¡Victoria!</h1>
+<div class="victoryMsg"><span class="vLine vMain">Lo has hecho muy bien, mi amor 💖</span><span class="vLine vSub">¡Eres la mejor! ✨</span></div>
+<div id="victoryScoreArea"></div>
+<div id="victoryOnlineStatus" class="onlineSubmitStatus">Ranking online pendiente...</div>
+<div class="onlineRankBox"><div class="onlineRankTitle"><span>🏆 Top online</span><div class="onlineRankActions"><button class="onlineRankRefresh" id="victoryRankingToggleAll" type="button">Ver más</button></div></div><label class="onlineRankDuplicateToggle"><input id="victoryRankingShowDuplicates" type="checkbox"/> Mostrar duplicados</label><div class="onlineRankList" id="victoryRankingList"><div class="onlineRankStatus">Cargando ranking...</div></div></div>
+<div class="victoryButtons">
+<button class="victoryBtn finish" id="victoryFinish">Terminar aquí 🌸</button>
+<button class="victoryBtn continue" id="victoryContinue">Seguir jugando 🐾</button>
+</div>
+</div>
+</div>
+<div id="gameOverPanel">
+<div id="gameOverBox">
+<div id="gameOverRankEmoji" class="scoreRank">💀</div>
+<h1 id="gameOverTitle">💔 Fin de la partida</h1>
+<div id="gameOverRankLabel" class="rankLabel"></div>
+<div class="scoreTotal" id="gameOverTotal">0</div>
+<div style="font-size:13px;color:#ffb3c1;margin-bottom:4px">puntos finales</div>
+<div class="scoreBreakdown" id="gameOverBreakdown"></div>
+<div id="gameOverOnlineStatus" class="onlineSubmitStatus">Ranking online pendiente...</div>
+<div class="onlineRankBox"><div class="onlineRankTitle"><span>🏆 Top online</span><div class="onlineRankActions"><button class="onlineRankRefresh" id="gameOverRankingToggleAll" type="button">Ver más</button></div></div><label class="onlineRankDuplicateToggle"><input id="gameOverRankingShowDuplicates" type="checkbox"/> Mostrar duplicados</label><div class="onlineRankList" id="gameOverRankingList"><div class="onlineRankStatus">Cargando ranking...</div></div></div>
+<button class="victoryBtn finish" id="gameOverRestart" style="margin-top:12px;background:#c92a2a;color:#fff">Jugar otra vez 🐱</button>
+<button class="victoryBtn continue" id="gameOverMenu" style="margin-top:12px;background:#4cc9f0;color:#fff">Volver al menú 🏠</button>
+</div>
+</div>
+<script src="game-version.js?v=159"></script>
+<script src="patch-notes.js?v=159"></script>
+<script src="game.js?v=159"></script>
+</body>
+</html>
