@@ -2673,10 +2673,20 @@ function getUpgradePreviewRows(upgrade){
   const pair=getFusedPairForKey(upgrade.key);
   const keys=(pair?pair.split("+"):[upgrade.key]).filter(k=>Object.prototype.hasOwnProperty.call(upgradeLevels,k));
   const labels={moveSpeed:"Velocidad base",fireRate:"Cadencia base",fishSpeed:"Velocidad del pez",damage:"Daño base",fishSize:"Tamaño del pez",xpBoost:"Experiencia",bigFish:"Pez grande",doubleFish:"Pez extra",pierce:"Perforación",boomerang:"Boomerang",critChance:"Crítico",catSlow:"Ralentización",lifeSteal:"Robo de vida",yarnBounce:"Rebote",maxLife:"Vida máxima",healOnWave:"Curación por ronda",coinMagnet:"Radio del imán",omniBurst:"Ráfaga",shield:"Escudo",autoFire:"Disparo automático"};
-  const rows=keys.map(key=>({label:labels[key]||getOriginalUpgradeName(key),before:formatPreviewStat(key),after:formatPreviewStat(key,Math.min(5,fusionPostLevel(key)+1))}));
+  // Voluntad Oscura aplica la elección dos veces. La tarjeta debe enseñar el
+  // resultado real de esa elección, no el incremento normal de un solo nivel.
+  const requestedSteps=Math.max(1,Math.floor(Number(upgrade.previewSteps)||1));
+  const rows=keys.map(key=>{
+    const current=fusionPostLevel(key);
+    const maxStep=Math.max(0,5-current);
+    const steps=Math.min(requestedSteps,maxStep);
+    return {label:labels[key]||getOriginalUpgradeName(key),before:formatPreviewStat(key),after:formatPreviewStat(key,Math.min(5,current+steps))};
+  });
   if(keys.includes("maxLife")){
-    const next=Math.min(5,fusionPostLevel("maxLife")+1);
-    const healed=Math.min(coreUpgradeStat("maxLife",next),life+34);
+    const current=fusionPostLevel("maxLife");
+    const steps=Math.min(requestedSteps,Math.max(0,5-current));
+    const next=Math.min(5,current+steps);
+    const healed=Math.min(coreUpgradeStat("maxLife",next),life+34*steps);
     rows.push({label:"Tu vida al elegirla",before:String(Math.round(life)),after:String(Math.round(healed))});
   }
   return rows;
@@ -2689,7 +2699,40 @@ function buildChoicePreviewHTML(upgrade){
   if(!rows.length)return "";
   return `<div class="choicePreview"><span class="previewHeading">Ahora → Al elegir</span>${rows.map(r=>`<span class="previewRow"><span>${escapeHtml(r.label)}</span><strong>${escapeHtml(r.before)} → ${escapeHtml(r.after)}</strong></span>`).join("")}</div>`;
 }
-function buildUpgradeCardHTML(upgrade){
+function getUpgradeVisualGroup(upgrade){
+  if(upgrade?.fusion)return "fusion";
+  if(upgrade?.skipShop||upgrade?.randomShopUpgrade||upgrade?.openFusionShop)return "utility";
+  const key=String(upgrade?.key||"");
+  const groups={
+    attack:new Set(["damage","critChance","fireRate","autoFire","omniBurst","doubleFish"]),
+    arsenal:new Set(["fishSpeed","bigFish","pierce","fishSize","boomerang","yarnBounce","aimAssist"]),
+    survival:new Set(["damageReduction","maxLife","catSlow","healOnWave","lifeSteal","shield","catInstinct"]),
+    utility:new Set(["moveSpeed","luck","coinMagnet","xpBoost","bigCursor","moralSupport","darkPact","zoomies"])
+  };
+  for(const [name,set] of Object.entries(groups))if(set.has(key))return name;
+  return "utility";
+}
+function getUpgradeVisualGroupLabel(group){
+  return group==="attack"?"⚔️ ATAQUE":group==="arsenal"?"🐟 ARSENAL":group==="survival"?"🛡️ SUPERVIVENCIA":group==="fusion"?"🔮 FUSIÓN":"✨ UTILIDAD";
+}
+function buildVisualLevelDots(upgrade){
+  const raw=String(upgrade?.levelTag||"").trim();
+  const m=raw.match(/(\d+)\s*\/\s*(\d+)/);
+  if(!m)return "";
+  const current=Math.max(0,Number(m[1])||0),max=Math.max(1,Math.min(10,Number(m[2])||5));
+  if(max>5)return "";
+  return `<div class="visualLevelDots" aria-label="Nivel ${current} de ${max}">${Array.from({length:max},(_,i)=>`<span class="${i<current?"filled":""}"></span>`).join("")}</div>`;
+}
+function getVisualActionLabel(upgrade,context){
+  if(upgrade?.locked)return "BLOQUEADO";
+  if(upgrade?.skipShop)return "SALIR";
+  if(upgrade?.openFusionShop)return "ABRIR FUSIONES";
+  if(context==="shop")return "COMPRAR";
+  if(context==="fusionFirst"||context==="fusionPartner"||upgrade?.fusion)return "ELEGIR";
+  return "ELEGIR";
+}
+function buildUpgradeCardHTML(upgrade,context="generic"){
+const visualGroup=getUpgradeVisualGroup(upgrade);
 let desc=String(upgrade.desc||"");
 let bonus="";
 const m=desc.match(/^(.*?)(?:\s*Bonus de fusión:\s*)(.*)$/i);
@@ -2698,7 +2741,9 @@ const iconText=String(upgrade.icon||"✨").trim();
 const iconParts=iconText.split(/\s+/).filter(Boolean);
 const isComboIcon=iconParts.length>1;
 const iconHTML=isComboIcon?iconParts.slice(0,2).map(i=>`<span class="miniIcon">${escapeHtml(i)}</span>`).join(""):escapeHtml(iconText);
-return `${upgrade.recommended?`<div class="recommendedTag">✨ RECOMENDADO</div><div class="recommendReason">${escapeHtml(upgrade.recommendReason||"Encaja con tu partida actual.")}</div>`:""}<div class="upgradeCardTop"><div class="upgradeIconBubble${isComboIcon?" comboIconBubble":""}">${iconHTML}</div><div class="upgradeBadges">${Number.isFinite(upgrade.price)?`<span class="upgradePrice" aria-label="${upgrade.price} monedas">🪙 ${upgrade.price}</span>`:""}${upgrade.levelTag?`<span class="upgradeLevelTag">${upgrade.levelTag}</span>`:""}</div></div><div class="upgradeTitle">${escapeHtml(upgrade.title)}</div><div class="upgradeDesc"><span class="upgradeDescMain">${formatCardText(desc)}</span>${bonus?`<span class="upgradeFusionBonus">${formatCardText(bonus)}</span>`:""}${upgrade.lockReason?`<span class="upgradeLockedReason">🔒 ${formatCardText(upgrade.lockReason)}</span>`:""}</div>${buildChoicePreviewHTML(upgrade)}`;
+const showTypeTag=!(upgrade?.randomShopUpgrade||upgrade?.skipShop);
+const priceExtra=upgrade?.priceMeta?`<small class="upgradePriceMeta">${escapeHtml(upgrade.priceMeta)}</small>`:"";
+return `${upgrade.recommended?`<div class="recommendedTag">✨ RECOMENDADO</div><div class="recommendReason">${escapeHtml(upgrade.recommendReason||"Encaja con tu partida actual.")}</div>`:""}${showTypeTag?`<div class="visualTypeTag visualType-${visualGroup}">${getUpgradeVisualGroupLabel(visualGroup)}</div>`:""}<div class="upgradeCardTop"><div class="upgradeIconBubble${isComboIcon?" comboIconBubble":""}">${iconHTML}</div><div class="upgradeBadges">${Number.isFinite(upgrade.price)?`<span class="upgradePrice" aria-label="${upgrade.price} monedas">🪙 ${upgrade.price}${priceExtra}</span>`:""}</div></div><div class="upgradeTitle">${escapeHtml(upgrade.title)}</div>${buildVisualLevelDots(upgrade)}<div class="upgradeDesc"><span class="upgradeDescMain">${formatCardText(desc)}</span>${bonus?`<span class="upgradeFusionBonus">${formatCardText(bonus)}</span>`:""}${upgrade.lockReason?`<span class="upgradeLockedReason">🔒 ${formatCardText(upgrade.lockReason)}</span>`:""}</div>${buildChoicePreviewHTML(upgrade)}<span class="visualChooseButton">${getVisualActionLabel(upgrade,context)}</span>`;
 }
 function showCards(title,phrase,subtitle,choices,onPick,onBack,context="generic"){
 choices=applyRecommendationsToChoices(choices,context);
@@ -2751,7 +2796,8 @@ function renderCardList(){
     const _uniqueClassMap={aimAssist:" aimAssistUpgrade",bigCursor:" bigCursorUpgrade",catInstinct:" catInstinctUpgrade",zoomies:" zoomiesUpgrade",moralSupport:" apoyoMoralUpgrade",darkPact:" voluntadOscuraUpgrade"};
     const _uniqueClass=upgrade.key&&!upgrade.fusion?(_uniqueClassMap[upgrade.key]||""):"";
     card.className="upgradeCard "+visualClass+(upgrade.fusion?" fusionCard":"")+(_uniqueClass||((upgrade.special&&!upgrade.fusion?" specialUpgrade":"")+(upgrade.dark?" darkUpgrade":"")))+(upgrade.easter?" easterUpgrade":"")+(upgrade.locked?" locked":"")+(upgrade.recommended?" recommended":"");
-    card.innerHTML=buildUpgradeCardHTML(upgrade);
+    card.dataset.visualGroup=getUpgradeVisualGroup(upgrade);
+    card.innerHTML=buildUpgradeCardHTML(upgrade,context);
     if(upgrade.locked)card.disabled=true;
     else card.addEventListener("click",()=>{
       if(performance.now()<unlockAt)return;
@@ -2812,6 +2858,29 @@ function openUpgradeMenu(reason="level",opts={}){
 releaseGamePointer();
 const darkWave=reason==="wave"&&upgrades.darkPact;
 const choices=darkWave?getRandomScalableUpgradeChoices(1):getRandomUpgradeChoices(3);
+if(darkWave){
+  // La Voluntad Oscura concede hasta dos niveles de una vez. Reflejarlo ya en
+  // título, puntos de nivel y previsualización para que los números coincidan
+  // exactamente con lo que recibirá el jugador al aceptar.
+  choices.forEach(upgrade=>{
+    upgrade.previewSteps=2;
+    if(!upgrade.key)return;
+    const pair=getFusedPairForKey(upgrade.key);
+    if(pair){
+      const target=Math.min(5,getFusionProgress(pair)+2);
+      const [a,b]=pair.split("+");
+      upgrade.title=`${getFusionNameFromPair(a,b)} Nv.${target}`;
+      upgrade.levelTag=`${target}/5`;
+      return;
+    }
+    if(Object.prototype.hasOwnProperty.call(upgradeLevels,upgrade.key)){
+      const max=upgradeMaxLevels[upgrade.key]||5;
+      const target=Math.min(max,(upgradeLevels[upgrade.key]||0)+2);
+      upgrade.title=`${getUpgradeDisplayName(upgrade.key)} ${target>=max?"EVOLUCIÓN":`Nv.${target}`}`;
+      upgrade.levelTag=`${target}/${max}`;
+    }
+  });
+}
 if(choices.length===0||allDirectUpgradesMaxed()){
 if(reason==="wave"&&waveUpgradePending){waveUpgradePending=false;recordNoDamageRoundIfClean();wave++;
 thiefCoinsStolenThisWave=0;life=Math.min(upgrades.maxLife,life+upgrades.healOnWave);startWave()}
@@ -2993,12 +3062,13 @@ const upgradeChoices=getShopUpgradeChoices(6).filter(u=>{
 }).slice(0,3).map(u=>({
 ...u,
 price:upgradePrice,
+priceMeta:"+1/compra",
 locked:coins<upgradePrice,
 originalDesc:u.desc,
 levelTag:u.levelTag||"",
  desc:u.desc
 }));
-const fusionChoice={price:fusionPrice,icon:"🔮",title:"Fusión de mejoras",levelTag:"",desc:canFuse(fusionPrice)?`Disponible: fusiona 2 mejoras compatibles.`:getFusionLockReason(fusionPrice),special:true,fusion:true,openFusionShop:true,locked:!canFuse(fusionPrice)};
+const fusionChoice={price:fusionPrice,priceMeta:"+3/fusión",icon:"🔮",title:"Fusión de mejoras",levelTag:"",desc:canFuse(fusionPrice)?`Disponible: fusiona 2 mejoras compatibles.`:getFusionLockReason(fusionPrice),special:true,fusion:true,openFusionShop:true,locked:!canFuse(fusionPrice)};
 const randomUpgrade=getRandomShopUpgradeChoice(upgradeChoices);
 const randomPrice=Math.max(1,Math.ceil(upgradePrice/2));
 const randomChoice=randomUpgrade?{
@@ -3015,9 +3085,7 @@ const randomChoice=randomUpgrade?{
 const choices=canFuse(fusionPrice)?[fusionChoice,...upgradeChoices]:[...upgradeChoices,fusionChoice];
 if(randomChoice)choices.push(randomChoice);
 choices.push({icon:"🚪",title:"Salir de la tienda",levelTag:"",desc:"Cierra la tienda y conserva las monedas que te queden.",special:true,skipShop:true});
-const randomLabel=randomChoice?`${randomPrice}🪙`:"—";
-const fusionLabel=fusionDiscountActive?`${fusionPrice}🪙 (rebajada)`:`${fusionPrice}🪙`;
-showCards("🪙 Tienda de gatitos","Compra todo lo que quieras hasta que decidas salir 💖",`Mejora: ${upgradePrice}🪙 (+1 por compra) · Aleatoria: ${randomLabel} · Fusión: ${fusionLabel} (+3 por fusión)`,choices,upgrade=>{
+showCards("🪙 Tienda de gatitos","Compra todo lo que quieras hasta que decidas salir 💖","",choices,upgrade=>{
 if(upgrade.skipShop){closeShopSession();return}
 if(upgrade.openFusionShop){openFusionChoice(fusionPrice);return}
 if(upgrade.randomShopUpgrade){
@@ -7251,7 +7319,7 @@ function updateRunIndicators(){
 }
 
 // Local admin tools are available only for the reserved player name.
-let adminUnlocked=false,adminPreviousPause=false,adminExpanded=false;
+let adminUnlocked=false,adminPreviousPause=false,adminExpanded=false,adminActiveTab="game";
 function normalizeAdminName(value){return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
 function updateAdminVisibility(){
  const panel=document.getElementById('adminPanel');if(!panel)return;
@@ -7269,54 +7337,88 @@ function closeAdmin(){
  const panel=document.getElementById('adminPanel');if(panel)panel.open=false;
  if(adminExpanded){adminExpanded=false;paused=adminPreviousPause;syncGamePointerLock();}
 }
+function adminSetTab(tab){
+ adminActiveTab=['game','upgrades','wave'].includes(tab)?tab:'game';
+ document.querySelectorAll('#adminPanel [data-admin-tab]').forEach(btn=>btn.classList.toggle('active',btn.dataset.adminTab===adminActiveTab));
+ document.querySelectorAll('#adminPanel .adminTabPage').forEach(page=>page.hidden=page.dataset.adminPage!==adminActiveTab);
+}
+function renderAdminSelection(){
+ const select=document.getElementById('adminUpgrade'),name=document.getElementById('adminSelectionName'),info=document.getElementById('adminSelectionInfo');
+ if(!select||!name||!info)return;
+ const key=select.value;if(!Object.hasOwn(upgradeLevels,key))return;
+ const pair=getFusedPairForKey(key),level=getPauseActualLevel(key),max=upgradeMaxLevels[key]||5;
+ name.textContent=getUpgradeDisplayName(key);
+ if(pair){
+  const parts=pair.split('+');
+  info.textContent=`Fusionada · ${getFusionNameFromPair(parts[0],parts[1])} · Nivel de fusión ${getFusionProgress(pair)}/5`;
+ }else info.textContent=`Nivel ${level}/${max}`;
+}
 function renderAdmin(){
  const controls=document.getElementById('adminControls');if(!controls)return;
- controls.hidden=!adminUnlocked;
- if(!adminUnlocked)return;
- const select=document.getElementById('adminUpgrade');const previous=select.value;
- select.innerHTML=Object.keys(upgradeLevels).map(k=>`<option value="${k}">${escapeHtml(getUpgradeDisplayName(k))} (${getPauseActualLevel(k)}/5)</option>`).join('');
+ controls.hidden=!adminUnlocked;if(!adminUnlocked)return;
+ const select=document.getElementById('adminUpgrade'),previous=select.value;
+ select.innerHTML=Object.keys(upgradeLevels).map(k=>`<option value="${k}">${escapeHtml(getUpgradeDisplayName(k))} (${getPauseActualLevel(k)}/${upgradeMaxLevels[k]||5})</option>`).join('');
  if(Object.hasOwn(upgradeLevels,previous))select.value=previous;
- document.getElementById('adminAI').textContent=autoMode?'🤖 Desactivar IA':'🤖 Activar IA';
- document.getElementById('adminStats').textContent=`Ronda ${wave||1} · ${formatRunTime(runStats?.elapsed)} · Protección ${Math.round((upgrades.damageReduction||0)*100)} % · Suerte +${Math.round((upgrades.luck||0)*100)} % · ${Object.keys(doneFusionPairs).length} fusiones`;
+ document.getElementById('adminAI').innerHTML=autoMode?'<span>🤖</span><b>Desactivar IA</b>':'<span>🤖</span><b>Activar IA</b>';
+ document.getElementById('adminStats').innerHTML=`<span>🌊 Ronda <b>${wave||1}</b></span><span>⏱ <b>${formatRunTime(runStats?.elapsed)}</b></span><span>🔮 <b>${Object.keys(doneFusionPairs).length}/14</b> fusiones</span>`;
+ const waveInput=document.getElementById('adminWave');if(waveInput&&document.activeElement!==waveInput)waveInput.value=wave||1;
+ adminSetTab(adminActiveTab);renderAdminSelection();
 }
 function adminAction(action){
  if(!adminUnlocked)return false;
- if(!gameStarted||gameOver){document.getElementById('adminStats').textContent='Inicia una partida para usar las herramientas.';return false;}
+ if(!gameStarted||gameOver){const stats=document.getElementById('adminStats');if(stats)stats.textContent='Inicia una partida para usar las herramientas.';return false;}
  markRankingInvalidByAI();
  if(action==='coins')coins+=100;
  else if(action==='heal')life=upgrades.maxLife;
  else if(action==='upgrade'){
-  const key=document.getElementById('adminUpgrade').value;
-  if(!Object.hasOwn(upgradeLevels,key))return false;
-  const pair=getFusedPairForKey(key);if(pair)setFusionProgress(pair,5);else upgradeLevels[key]=5;
-  applyUpgradeStatsFromLevels();
+  const key=document.getElementById('adminUpgrade').value;if(!Object.hasOwn(upgradeLevels,key))return false;
+  const pair=getFusedPairForKey(key);if(pair)setFusionProgress(pair,5);else upgradeLevels[key]=upgradeMaxLevels[key]||5;applyUpgradeStatsFromLevels();
  }else if(action==='all'){
-  Object.keys(upgradeLevels).forEach(k=>{if(!isHiddenFusedComponent(k))upgradeLevels[k]=5;});
+  Object.keys(upgradeLevels).forEach(k=>{if(!isHiddenFusedComponent(k))upgradeLevels[k]=upgradeMaxLevels[k]||5;});
   Object.keys(doneFusionPairs).forEach(pair=>setFusionProgress(pair,5));uniqueFusionKeys.forEach(k=>upgrades[k]=true);applyUpgradeStatsFromLevels();life=upgrades.maxLife;
- }else if(action==='star'){activatePowerStar();}
+ }else if(action==='star')activatePowerStar();
  else if(action==='ai')setAutoMode(!autoMode);
  else if(action==='shop'){closeAdmin();openCoinShop();return true;}
  else if(action==='fusion'){coins=Math.max(coins,getEffectiveShopFusionPrice());closeAdmin();openFusionChoice(getEffectiveShopFusionPrice());return true;}
  else if(action==='wave'){
-  const next=Number(document.getElementById('adminWave').value);if(!Number.isFinite(next))return false;
-  wave=Math.max(1,Math.min(200,Math.floor(next)));startWave();
- }else return false;
+  const next=Number(document.getElementById('adminWave').value);if(!Number.isFinite(next))return false;wave=Math.max(1,Math.min(200,Math.floor(next)));startWave();
+ }else if(action==='wavePrev'){wave=Math.max(1,(wave||1)-1);startWave();}
+ else if(action==='waveNext'){wave=Math.min(200,(wave||1)+1);startWave();}
+ else return false;
  updateHud();renderAdmin();return true;
 }
 function initAdminPanel(){
  const panel=document.createElement('details');panel.id='adminPanel';panel.hidden=true;
- panel.innerHTML=`<summary>⚙ Admin</summary><section class="adminBox" aria-labelledby="adminTitle">
- <div class="adminHeading"><h2 id="adminTitle">🔒 Laboratorio gatuno</h2><button id="adminClose" aria-label="Cerrar">✕</button></div>
- <div id="adminControls" hidden><p>Las herramientas y la IA desactivan el ranking de esta partida.</p><p id="adminStats"></p>
- <div class="adminGrid"><button data-action="coins">+100 monedas</button><button data-action="heal">Curar</button><button data-action="star">Activar estrella</button><button data-action="ai" id="adminAI">Activar IA</button><button data-action="shop">Abrir tienda</button><button data-action="fusion">Abrir fusiones</button></div>
- <label for="adminUpgrade">Mejora o fusión</label><select id="adminUpgrade"></select><button data-action="upgrade">Maximizar selección</button><button data-action="all">Maximizar todas las mejoras y fusiones adquiridas</button>
- <label for="adminWave">Ronda (1–200)</label><input id="adminWave" type="number" min="1" max="200" value="5"><button data-action="wave">Ir a ronda</button></div></section>`;
+ panel.innerHTML=`<summary>🧪 Admin</summary><section class="adminBox" aria-labelledby="adminTitle">
+ <div class="adminHeading"><div><span class="adminEyebrow">MODO DESARROLLO</span><h2 id="adminTitle">🧪 Laboratorio gatuno</h2></div><button id="adminClose" class="adminClose" aria-label="Cerrar">✕</button></div>
+ <div id="adminControls" hidden>
+  <div class="adminNotice">⚠️ Usar herramientas o IA desactiva el ranking de esta partida.</div>
+  <div id="adminStats" class="adminStats"></div>
+  <nav class="adminTabs" aria-label="Secciones del laboratorio"><button type="button" data-admin-tab="game" class="active">⚡ Partida</button><button type="button" data-admin-tab="upgrades">✨ Mejoras</button><button type="button" data-admin-tab="wave">🌊 Rondas</button></nav>
+  <div class="adminTabPage" data-admin-page="game">
+   <div class="adminSectionTitle"><span>⚡</span><div><b>Herramientas rápidas</b><small>Prepara situaciones de prueba sin salir de la partida.</small></div></div>
+   <div class="adminQuickGrid"><button data-action="coins"><span>🪙</span><b>+100 monedas</b></button><button data-action="heal"><span>❤️</span><b>Curar</b></button><button data-action="star"><span>⭐</span><b>Activar estrella</b></button><button data-action="ai" id="adminAI"><span>🤖</span><b>Activar IA</b></button></div>
+   <div class="adminLaunchGrid"><button data-action="shop">🛒 Abrir tienda</button><button data-action="fusion">🔮 Abrir fusiones</button></div>
+  </div>
+  <div class="adminTabPage" data-admin-page="upgrades" hidden>
+   <div class="adminSectionTitle"><span>✨</span><div><b>Control de evolución</b><small>Modifica rápidamente una mejora o una fusión ya creada.</small></div></div>
+   <label class="adminFieldLabel" for="adminUpgrade">Mejora</label><select id="adminUpgrade"></select>
+   <div class="adminSelection"><div><b id="adminSelectionName">Mejora seleccionada</b><small id="adminSelectionInfo"></small></div><button data-action="upgrade">Maximizar</button></div>
+   <button class="adminWideDanger" data-action="all">✨ Maximizar todo lo adquirido</button>
+  </div>
+  <div class="adminTabPage" data-admin-page="wave" hidden>
+   <div class="adminSectionTitle"><span>🌊</span><div><b>Control de rondas</b><small>Salta directamente a la situación que quieras probar.</small></div></div>
+   <div class="adminWaveStepper"><button data-action="wavePrev" aria-label="Ronda anterior">−</button><input id="adminWave" type="number" min="1" max="200" value="1" aria-label="Ronda"><button data-action="waveNext" aria-label="Ronda siguiente">+</button></div>
+   <button class="adminPrimary" data-action="wave">Ir a la ronda indicada</button>
+  </div>
+ </div></section>`;
  document.body.appendChild(panel);
  panel.querySelector('summary').addEventListener('click',e=>{e.preventDefault();if(panel.open)closeAdmin();else openAdmin();});
  document.getElementById('adminClose').addEventListener('click',closeAdmin);
  panel.querySelectorAll('[data-action]').forEach(b=>b.addEventListener('click',()=>adminAction(b.dataset.action)));
+ panel.querySelectorAll('[data-admin-tab]').forEach(b=>b.addEventListener('click',()=>adminSetTab(b.dataset.adminTab)));
+ document.getElementById('adminUpgrade').addEventListener('change',renderAdminSelection);
  document.addEventListener('keydown',e=>{if(!panel.open)return;if(e.key==='Escape'){e.preventDefault();closeAdmin();}e.stopImmediatePropagation();},true);
-
 }
 initAdminPanel();
 

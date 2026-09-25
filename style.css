@@ -1045,3 +1045,479 @@ html,body,button,input{font-family:"Gatitos UI","Segoe UI",Arial,sans-serif,"Seg
 #adminPanel>summary::-webkit-details-marker{display:none}
 #adminPanel>summary::after{content:" ▾"}#adminPanel[open]>summary::after{content:" ▴"}
 #adminPanel .adminBox{pointer-events:auto;box-sizing:border-box;width:100%;margin-top:8px;max-height:calc(100dvh - 135px);padding:18px;border-radius:16px}
+
+/* ===== v165 · Pulido visual (sin cambios de gameplay) ===== */
+#levelUpPanel{
+  background:
+    radial-gradient(circle at 50% 12%,rgba(58,161,216,.13),transparent 30%),
+    radial-gradient(circle at 15% 82%,rgba(120,63,160,.16),transparent 34%),
+    radial-gradient(circle at 88% 76%,rgba(0,143,176,.12),transparent 32%),
+    rgba(5,10,27,.86);
+  backdrop-filter:blur(7px) saturate(1.1);
+  padding:clamp(14px,2.2vw,34px);
+}
+#levelUpBox,
+body.panel-theme-dark #levelUpBox{
+  width:min(1180px,96vw);
+  max-height:94vh;
+  overflow:auto;
+  padding:clamp(24px,3vw,42px);
+  border-radius:32px;
+  background:
+    linear-gradient(180deg,rgba(25,28,58,.97),rgba(13,16,38,.97));
+  color:#f8efff;
+  border:1px solid rgba(146,167,255,.24);
+  box-shadow:0 30px 90px rgba(0,0,0,.58),0 0 55px rgba(90,82,210,.10),inset 0 1px 0 rgba(255,255,255,.08);
+  scrollbar-width:thin;
+  scrollbar-color:#775de2 rgba(255,255,255,.05);
+}
+#levelUpBox::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  border-radius:inherit;
+  background:
+    radial-gradient(circle at 8% 16%,rgba(84,204,255,.08) 0 2px,transparent 3px),
+    radial-gradient(circle at 91% 25%,rgba(255,255,255,.06) 0 3px,transparent 4px),
+    radial-gradient(circle at 78% 84%,rgba(109,222,255,.05) 0 2px,transparent 3px);
+}
+#levelUpBox h2,
+body.panel-theme-dark #levelUpBox h2{
+  position:relative;
+  margin:0 0 7px;
+  font-size:clamp(30px,3.2vw,46px);
+  line-height:1.05;
+  color:#fff5fb;
+  text-shadow:0 0 24px rgba(183,113,255,.32),0 2px 0 rgba(0,0,0,.25);
+}
+#levelUpPhrase{
+  position:relative;
+  margin:8px 0 7px;
+  color:#ff7fb6;
+  font-size:clamp(16px,1.45vw,20px);
+  letter-spacing:.1px;
+}
+#levelUpBox p,#upgradeSubtitle,
+body.panel-theme-dark #levelUpBox p,body.panel-theme-dark #upgradeSubtitle{
+  position:relative;
+  margin-bottom:26px;
+  color:#c9c8e5;
+  font-size:15px;
+  opacity:1;
+}
+#upgradeCards{
+  position:relative;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:clamp(14px,1.7vw,22px);
+  align-items:stretch;
+}
+.upgradeCard,
+body.panel-theme-dark .upgradeCard{
+  --accent:#ff6f9f;
+  --accent-rgb:255,111,159;
+  position:relative;
+  isolation:isolate;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  min-height:430px;
+  padding:22px 20px 18px;
+  overflow:hidden;
+  border:1px solid rgba(var(--accent-rgb),.72)!important;
+  border-radius:25px;
+  background:
+    radial-gradient(circle at 50% 24%,rgba(var(--accent-rgb),.16),transparent 33%),
+    linear-gradient(180deg,rgba(31,31,61,.98),rgba(16,18,40,.98))!important;
+  color:#f9f5ff;
+  box-shadow:0 18px 44px rgba(0,0,0,.30),0 0 0 1px rgba(255,255,255,.035) inset,0 0 24px rgba(var(--accent-rgb),.10)!important;
+  text-align:left;
+  transform:translateZ(0);
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease,filter .18s ease;
+}
+.upgradeCard[data-visual-group="attack"]{--accent:#ff668f;--accent-rgb:255,102,143}
+.upgradeCard[data-visual-group="arsenal"]{--accent:#4bd4ff;--accent-rgb:75,212,255}
+.upgradeCard[data-visual-group="survival"]{--accent:#58e1b8;--accent-rgb:88,225,184}
+.upgradeCard[data-visual-group="utility"]{--accent:#ffd15c;--accent-rgb:255,209,92}
+.upgradeCard[data-visual-group="fusion"]{--accent:#c986ff;--accent-rgb:201,134,255}
+.upgradeCard::before{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  inset:-35% -10% auto;
+  height:62%;
+  background:radial-gradient(circle,rgba(var(--accent-rgb),.15),transparent 68%);
+  opacity:.75;
+  pointer-events:none;
+}
+.upgradeCard::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  pointer-events:none;
+  background:linear-gradient(115deg,rgba(255,255,255,.06),transparent 23%,transparent 75%,rgba(var(--accent-rgb),.045));
+}
+.upgradeCard:hover:not(.locked),body.panel-theme-dark .upgradeCard:hover:not(.locked){
+  transform:translateY(-7px) scale(1.012);
+  border-color:var(--accent)!important;
+  box-shadow:0 25px 56px rgba(0,0,0,.38),0 0 30px rgba(var(--accent-rgb),.24),0 0 0 1px rgba(var(--accent-rgb),.12) inset!important;
+  filter:brightness(1.055);
+}
+.visualTypeTag{
+  align-self:flex-start;
+  display:inline-flex;
+  align-items:center;
+  min-height:28px;
+  margin-bottom:12px;
+  padding:5px 11px;
+  border-radius:999px;
+  border:1px solid rgba(var(--accent-rgb),.32);
+  background:rgba(var(--accent-rgb),.10);
+  color:var(--accent);
+  font-size:11px;
+  font-weight:1000;
+  letter-spacing:.7px;
+}
+.upgradeCardTop{
+  justify-content:center;
+  min-height:116px;
+  margin:0 0 4px;
+}
+.upgradeIconBubble,
+body.panel-theme-dark .upgradeIconBubble,
+.upgradeCard.specialUpgrade .upgradeIconBubble,
+.upgradeCard.darkUpgrade .upgradeIconBubble{
+  width:102px;
+  height:102px;
+  margin:0 auto;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:54px;
+  background:radial-gradient(circle at 38% 32%,rgba(255,255,255,.17),rgba(var(--accent-rgb),.12) 48%,rgba(5,9,26,.20) 72%);
+  border:1px solid rgba(var(--accent-rgb),.42);
+  box-shadow:0 0 32px rgba(var(--accent-rgb),.17),inset 0 0 20px rgba(255,255,255,.04);
+}
+.upgradeIconBubble.comboIconBubble{width:108px;height:102px}
+.upgradeIconBubble.comboIconBubble .miniIcon{font-size:38px}
+.upgradeBadges{
+  position:absolute;
+  top:18px;
+  right:18px;
+  z-index:3;
+}
+.upgradePrice{
+  padding:7px 10px!important;
+  border-radius:999px!important;
+  background:rgba(7,10,25,.72)!important;
+  color:#ffd66b!important;
+  border:1px solid rgba(255,214,107,.28)!important;
+  box-shadow:0 5px 15px rgba(0,0,0,.18);
+}
+.upgradeTitle,body.panel-theme-dark .upgradeTitle{
+  margin:10px 0 7px;
+  color:#fff!important;
+  font-size:clamp(20px,1.7vw,25px);
+  line-height:1.12;
+  font-weight:1000;
+  text-align:center;
+  text-shadow:0 2px 12px rgba(var(--accent-rgb),.16);
+}
+.visualLevelDots{
+  display:flex;
+  justify-content:center;
+  gap:7px;
+  height:16px;
+  margin:2px 0 12px;
+}
+.visualLevelDots span{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:rgba(255,255,255,.10);
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:inset 0 1px 2px rgba(0,0,0,.22);
+}
+.visualLevelDots span.filled{
+  background:var(--accent);
+  border-color:rgba(var(--accent-rgb),.85);
+  box-shadow:0 0 11px rgba(var(--accent-rgb),.65);
+}
+.upgradeDesc{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  gap:9px;
+  margin:0;
+  text-align:left;
+}
+.upgradeDescMain,body.panel-theme-dark .upgradeDescMain{
+  display:block;
+  min-height:54px;
+  padding:12px 13px;
+  border:1px solid rgba(255,255,255,.06);
+  border-radius:13px;
+  background:rgba(255,255,255,.035);
+  color:#d9d8ea!important;
+  font-size:13.5px;
+  line-height:1.42;
+}
+.choicePreview{
+  margin-top:10px!important;
+  padding:11px 12px!important;
+  border:1px solid rgba(var(--accent-rgb),.18)!important;
+  border-radius:13px!important;
+  background:rgba(var(--accent-rgb),.055)!important;
+  color:#e9e8f6!important;
+}
+.previewHeading{color:rgba(255,255,255,.58)!important;font-size:10px!important;letter-spacing:.65px;text-transform:uppercase}
+.previewRow{gap:10px!important;color:#d8d6e8!important}
+.previewRow strong{color:var(--accent)!important}
+.upgradeFusionBonus{
+  border-color:rgba(201,134,255,.20)!important;
+  background:rgba(201,134,255,.07)!important;
+  color:#e9d4ff!important;
+}
+.visualChooseButton{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:46px;
+  margin-top:15px;
+  border-radius:14px;
+  background:linear-gradient(180deg,rgba(var(--accent-rgb),.94),rgba(var(--accent-rgb),.72));
+  color:#0b1022;
+  font-size:14px;
+  font-weight:1000;
+  letter-spacing:.5px;
+  box-shadow:0 9px 24px rgba(var(--accent-rgb),.20),inset 0 1px 0 rgba(255,255,255,.28);
+  transition:filter .15s ease,transform .15s ease;
+}
+.upgradeCard:hover:not(.locked) .visualChooseButton{filter:brightness(1.1);transform:translateY(-1px)}
+.upgradeCard.locked .visualChooseButton{background:rgba(255,255,255,.07);color:rgba(255,255,255,.38);box-shadow:none}
+.upgradeCard.locked{opacity:.52!important;filter:saturate(.35)!important}
+.recommendedTag{
+  top:14px!important;
+  left:50%!important;
+  right:auto!important;
+  transform:translateX(-50%);
+  border-radius:999px!important;
+  padding:6px 12px!important;
+  background:linear-gradient(135deg,#ff6f9f,#b96cff)!important;
+  color:#fff!important;
+  box-shadow:0 7px 20px rgba(190,93,211,.28)!important;
+  z-index:5;
+}
+.recommendReason{margin-top:0!important;margin-bottom:8px!important;color:#ffc7dc!important;font-size:12px!important;text-align:center!important}
+.shopCoinBadge{
+  border:1px solid rgba(255,214,107,.22)!important;
+  background:rgba(9,13,31,.82)!important;
+  color:#ffd66b!important;
+  box-shadow:0 10px 30px rgba(0,0,0,.20)!important;
+}
+#fusionBackBtn{
+  margin:22px auto 0!important;
+  padding:11px 20px!important;
+  border-radius:13px!important;
+  border:1px solid rgba(255,255,255,.12)!important;
+  background:rgba(255,255,255,.06)!important;
+  color:#e7e4f5!important;
+}
+@media(max-width:900px){
+  #upgradeCards{grid-template-columns:1fr;max-width:620px;margin:0 auto}
+  .upgradeCard,body.panel-theme-dark .upgradeCard{min-height:0}
+  .upgradeDescMain,body.panel-theme-dark .upgradeDescMain{min-height:0}
+}
+@media(max-height:760px) and (min-width:901px){
+  #levelUpBox{padding:22px 26px}
+  #levelUpBox h2,body.panel-theme-dark #levelUpBox h2{font-size:31px}
+  #levelUpPhrase{margin:5px 0;font-size:15px}
+  #levelUpBox p,#upgradeSubtitle{margin-bottom:14px}
+  .upgradeCard,body.panel-theme-dark .upgradeCard{min-height:355px;padding:15px}
+  .upgradeCardTop{min-height:82px}
+  .upgradeIconBubble,body.panel-theme-dark .upgradeIconBubble,.upgradeCard.specialUpgrade .upgradeIconBubble,.upgradeCard.darkUpgrade .upgradeIconBubble{width:74px;height:74px;font-size:40px}
+  .upgradeTitle,body.panel-theme-dark .upgradeTitle{font-size:20px;margin:5px 0}
+  .upgradeDescMain,body.panel-theme-dark .upgradeDescMain{min-height:0;padding:9px 10px;font-size:12px}
+  .choicePreview{padding:8px 9px!important;margin-top:7px!important}
+  .visualChooseButton{min-height:38px;margin-top:9px}
+}
+
+/* HUD y paneles secundarios: mismo lenguaje visual, sin alterar estructura */
+#hud{
+  color:#f4efff;
+  background:linear-gradient(180deg,rgba(16,21,48,.90),rgba(11,14,32,.88));
+  border:1px solid rgba(126,148,235,.20);
+  box-shadow:0 14px 38px rgba(0,0,0,.30),inset 0 1px 0 rgba(255,255,255,.05);
+  backdrop-filter:blur(8px);
+}
+#hud .barBox{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.05)}
+#objectivePanel{background:linear-gradient(180deg,rgba(16,21,48,.88),rgba(11,14,32,.86))!important;border:1px solid rgba(126,148,235,.18)!important;box-shadow:0 12px 34px rgba(0,0,0,.24)!important;backdrop-filter:blur(7px)}
+#pausePanel,#victoryPanel,#gameOverPanel{background:rgba(5,10,27,.84);backdrop-filter:blur(7px)}
+#pauseBox,#victoryBox,#gameOverBox,
+body.panel-theme-dark #pauseBox,body.panel-theme-dark #victoryBox,body.panel-theme-dark #gameOverBox{
+  background:linear-gradient(180deg,rgba(25,28,58,.97),rgba(13,16,38,.97));
+  border:1px solid rgba(146,167,255,.22);
+  box-shadow:0 28px 80px rgba(0,0,0,.52),inset 0 1px 0 rgba(255,255,255,.06);
+}
+.pauseButton,#resumeButton,#pauseBox button:not(.dangerButton){border-radius:13px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.10)}
+#adminPanel .adminBox{
+  background:linear-gradient(180deg,rgba(25,28,58,.98),rgba(13,16,38,.98));
+  border:1px solid rgba(146,167,255,.24);
+  box-shadow:0 24px 70px rgba(0,0,0,.48),inset 0 1px 0 rgba(255,255,255,.06);
+}
+#adminPanel>summary{background:linear-gradient(180deg,rgba(42,45,80,.96),rgba(24,27,55,.96));border-color:rgba(146,167,255,.26);box-shadow:0 8px 24px rgba(0,0,0,.22)}
+
+/* v166 - Pausa: 4 mejoras por fila en escritorio */
+#pauseBox{
+  width:min(1220px,96vw);
+}
+#pauseUpgradesList{
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:12px;
+}
+@media(max-width:1050px){
+  #pauseUpgradesList{grid-template-columns:repeat(3,minmax(0,1fr));}
+}
+@media(max-width:780px){
+  #pauseUpgradesList{grid-template-columns:repeat(2,minmax(0,1fr));}
+}
+@media(max-width:540px){
+  #pauseUpgradesList{grid-template-columns:1fr;}
+}
+
+
+/* === v167: etiqueta RECOMENDADO legible en las nuevas tarjetas === */
+.upgradeCard .recommendedTag{
+  position:relative!important;
+  top:auto!important;
+  left:auto!important;
+  right:auto!important;
+  transform:none!important;
+  align-self:center!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  width:auto!important;
+  max-width:calc(100% - 24px)!important;
+  min-height:30px!important;
+  margin:0 auto 2px!important;
+  padding:7px 16px!important;
+  overflow:visible!important;
+  white-space:nowrap!important;
+  border:1px solid rgba(255,255,255,.24)!important;
+  border-radius:999px!important;
+  background:linear-gradient(135deg,#ff6f9f,#b96cff)!important;
+  color:#fff!important;
+  font-size:11px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  letter-spacing:.55px!important;
+  text-shadow:0 1px 3px rgba(0,0,0,.28)!important;
+  box-shadow:0 7px 20px rgba(190,93,211,.32),inset 0 1px 0 rgba(255,255,255,.22)!important;
+  z-index:5!important;
+}
+.upgradeCard .recommendReason{
+  margin:0 0 5px!important;
+  padding:0 10px!important;
+  color:#ffc7dc!important;
+  font-size:12px!important;
+  line-height:1.35!important;
+  font-weight:700!important;
+  text-align:center!important;
+}
+
+/* === v168: Laboratorio gatuno actualizado al nuevo lenguaje visual === */
+#adminPanel{inset:auto!important;top:70px!important;right:16px!important;width:min(620px,calc(100vw - 32px))!important;display:block!important;padding:0!important;background:transparent!important;pointer-events:none!important;z-index:10000!important}
+#adminPanel[hidden]{display:none!important}
+#adminPanel>summary{pointer-events:auto!important;list-style:none!important;cursor:pointer!important;margin-left:auto!important;width:max-content!important;padding:9px 15px!important;border:1px solid rgba(122,190,255,.24)!important;border-radius:13px!important;background:linear-gradient(145deg,rgba(29,38,72,.97),rgba(20,22,48,.97))!important;color:#f5f4ff!important;font:800 13px "Gatitos UI",sans-serif!important;box-shadow:0 10px 28px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.06)!important}
+#adminPanel>summary::-webkit-details-marker{display:none}#adminPanel>summary::after{content:" ▾"}#adminPanel[open]>summary::after{content:" ▴"}
+#adminPanel .adminBox{pointer-events:auto!important;box-sizing:border-box!important;width:100%!important;margin-top:8px!important;max-height:calc(100dvh - 120px)!important;overflow:auto!important;padding:20px!important;border:1px solid rgba(135,157,255,.25)!important;border-radius:22px!important;background:radial-gradient(circle at 20% 0%,rgba(77,66,130,.24),transparent 42%),linear-gradient(155deg,rgba(24,29,61,.99),rgba(13,17,39,.995))!important;color:#f8f5ff!important;box-shadow:0 26px 80px rgba(0,0,0,.52),inset 0 1px 0 rgba(255,255,255,.06)!important;text-align:left!important}
+.adminHeading{display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:14px!important;margin-bottom:12px!important}.adminHeading h2{margin:2px 0 0!important;font-size:23px!important;letter-spacing:-.3px!important}.adminEyebrow{font-size:9px;font-weight:1000;letter-spacing:1.4px;color:#8edcff}.adminClose{width:42px!important;height:42px!important;margin:0!important;padding:0!important;border:1px solid rgba(255,255,255,.09)!important;border-radius:12px!important;background:rgba(255,255,255,.07)!important;color:#f6ecff!important;font-size:19px!important;cursor:pointer!important}.adminClose:hover{background:rgba(255,255,255,.13)!important}
+.adminNotice{margin:0 0 10px;padding:9px 11px;border:1px solid rgba(255,197,96,.16);border-radius:11px;background:rgba(255,183,70,.07);color:#dacde8;font-size:11px;line-height:1.35}.adminStats{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:13px}.adminStats span{padding:7px 10px;border:1px solid rgba(255,255,255,.07);border-radius:999px;background:rgba(0,0,0,.16);color:#c7bbd8;font-size:10px}.adminStats b{color:#fff}
+.adminTabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:5px;margin-bottom:15px;border:1px solid rgba(255,255,255,.07);border-radius:14px;background:rgba(0,0,0,.16)}#adminPanel .adminTabs button{margin:0!important;padding:10px!important;border:0!important;border-radius:10px!important;background:transparent!important;color:#9fa7c8!important;font:900 11px "Gatitos UI",sans-serif!important;cursor:pointer!important}#adminPanel .adminTabs button.active{background:linear-gradient(135deg,#7ed7ff,#9b7cff)!important;color:#111936!important;box-shadow:0 5px 18px rgba(85,126,255,.22)!important}
+.adminTabPage{animation:adminFade .15s ease}.adminTabPage[hidden]{display:none!important}@keyframes adminFade{from{opacity:.3;transform:translateY(4px)}to{opacity:1;transform:none}}
+.adminSectionTitle{display:flex;align-items:center;gap:10px;margin:3px 1px 12px}.adminSectionTitle>span{display:grid;place-items:center;width:38px;height:38px;border:1px solid rgba(116,204,255,.12);border-radius:12px;background:rgba(76,129,211,.11);font-size:20px}.adminSectionTitle>div{display:grid;gap:2px}.adminSectionTitle b{font-size:13px;color:#fff}.adminSectionTitle small{font-size:10px;color:#8f99b8}
+#adminPanel button,#adminPanel input,#adminPanel select{box-sizing:border-box;font-family:"Gatitos UI",sans-serif}.adminQuickGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.adminQuickGrid button{min-height:78px!important;margin:0!important;padding:10px 7px!important;display:grid!important;place-items:center!important;align-content:center!important;gap:5px!important;border:1px solid rgba(123,167,255,.11)!important;border-radius:15px!important;background:linear-gradient(145deg,rgba(52,66,111,.66),rgba(36,39,77,.72))!important;color:#f6f5ff!important;cursor:pointer!important;transition:.15s ease!important}.adminQuickGrid button:hover{border-color:rgba(121,210,255,.38)!important;transform:translateY(-2px)!important;box-shadow:0 9px 24px rgba(0,0,0,.18)!important}.adminQuickGrid button span{font-size:23px}.adminQuickGrid button b{font-size:10px;font-weight:900}
+.adminLaunchGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.adminLaunchGrid button,.adminPrimary,.adminSelection button,.adminWideDanger{margin:0!important;padding:11px 13px!important;border:1px solid rgba(139,181,255,.16)!important;border-radius:12px!important;background:linear-gradient(135deg,#4a568d,#654c8c)!important;color:#fff!important;font-weight:900!important;cursor:pointer!important}.adminLaunchGrid button:hover,.adminPrimary:hover,.adminSelection button:hover{filter:brightness(1.12)}
+.adminFieldLabel{display:block;margin:0 0 6px!important;color:#aab3d1!important;font-size:10px!important;font-weight:900!important;text-transform:uppercase;letter-spacing:.7px}#adminPanel select,#adminPanel input{width:100%!important;margin:0!important;padding:12px 13px!important;border:1px solid rgba(142,164,231,.22)!important;border-radius:12px!important;background:#0e132b!important;color:#f5f3ff!important;outline:none!important}#adminPanel select:focus,#adminPanel input:focus{border-color:#79cfff!important;box-shadow:0 0 0 3px rgba(87,181,255,.1)!important}
+.adminSelection{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:9px;padding:12px;border:1px solid rgba(255,255,255,.07);border-radius:14px;background:rgba(255,255,255,.035)}.adminSelection>div{display:grid;gap:3px;min-width:0}.adminSelection b{font-size:12px;color:#fff}.adminSelection small{font-size:10px;color:#929dbc}.adminSelection button{flex:0 0 auto!important}.adminWideDanger{width:100%!important;margin-top:8px!important;background:linear-gradient(135deg,rgba(115,72,139,.9),rgba(77,58,116,.95))!important}
+.adminWaveStepper{display:grid;grid-template-columns:48px 1fr 48px;gap:8px;margin-bottom:9px}.adminWaveStepper button{margin:0!important;border:1px solid rgba(139,181,255,.16)!important;border-radius:12px!important;background:#303a68!important;color:#fff!important;font-size:22px!important;font-weight:900!important;cursor:pointer!important}.adminWaveStepper input{text-align:center!important;font-size:17px!important;font-weight:900!important}.adminPrimary{width:100%!important}
+@media(max-width:680px){#adminPanel{right:8px!important;width:calc(100vw - 16px)!important}#adminPanel .adminBox{max-height:calc(100dvh - 108px)!important;padding:14px!important}.adminQuickGrid{grid-template-columns:1fr 1fr}.adminSelection{align-items:stretch;flex-direction:column}.adminSelection button{width:100%!important}}
+
+/* ===== v169 · Tienda compacta =====
+   Conserva el rediseño visual, pero permite ver las seis opciones de la tienda
+   de un vistazo en pantallas de escritorio habituales. */
+#levelUpBox.shopMode,
+body.panel-theme-dark #levelUpBox.shopMode{
+  width:min(1180px,96vw);
+  padding:20px 24px 22px!important;
+}
+#levelUpBox.shopMode h2,
+body.panel-theme-dark #levelUpBox.shopMode h2{
+  font-size:clamp(27px,2.7vw,38px);
+  margin-bottom:4px;
+}
+#levelUpBox.shopMode #levelUpPhrase{font-size:15px;margin:4px 0}
+#levelUpBox.shopMode #upgradeSubtitle{font-size:13px;margin-bottom:13px}
+#levelUpBox.shopMode #upgradeCards{gap:12px}
+#levelUpBox.shopMode .upgradeCard,
+body.panel-theme-dark #levelUpBox.shopMode .upgradeCard{
+  min-height:300px;
+  padding:13px 14px 12px;
+  border-radius:20px;
+}
+#levelUpBox.shopMode .visualTypeTag{min-height:23px;margin-bottom:6px;padding:3px 8px;font-size:9px}
+#levelUpBox.shopMode .upgradeCardTop{min-height:67px;margin:0}
+#levelUpBox.shopMode .upgradeIconBubble,
+body.panel-theme-dark #levelUpBox.shopMode .upgradeIconBubble,
+#levelUpBox.shopMode .upgradeCard.specialUpgrade .upgradeIconBubble,
+#levelUpBox.shopMode .upgradeCard.darkUpgrade .upgradeIconBubble{
+  width:64px;height:64px;font-size:34px;
+}
+#levelUpBox.shopMode .upgradeIconBubble.comboIconBubble{width:72px;height:64px}
+#levelUpBox.shopMode .upgradeIconBubble.comboIconBubble .miniIcon{font-size:27px}
+#levelUpBox.shopMode .upgradeBadges{top:11px;right:11px}
+#levelUpBox.shopMode .upgradePrice{padding:5px 8px!important;font-size:11px}
+#levelUpBox.shopMode .upgradeTitle,
+body.panel-theme-dark #levelUpBox.shopMode .upgradeTitle{font-size:18px;margin:5px 0 3px}
+#levelUpBox.shopMode .visualLevelDots{gap:5px;height:11px;margin:1px 0 7px}
+#levelUpBox.shopMode .visualLevelDots span{width:7px;height:7px}
+#levelUpBox.shopMode .upgradeDesc{gap:5px}
+#levelUpBox.shopMode .upgradeDescMain,
+body.panel-theme-dark #levelUpBox.shopMode .upgradeDescMain{
+  min-height:38px;padding:8px 9px;font-size:11.5px;line-height:1.3;
+}
+#levelUpBox.shopMode .choicePreview{margin-top:5px!important;padding:7px 8px!important;font-size:10.5px;gap:3px}
+#levelUpBox.shopMode .previewHeading{font-size:8.5px!important}
+#levelUpBox.shopMode .visualChooseButton{min-height:36px;margin-top:7px;border-radius:11px;font-size:12px}
+#levelUpBox.shopMode .recommendedTag{top:8px!important;padding:4px 9px!important;font-size:9px!important}
+#levelUpBox.shopMode .recommendReason{margin-bottom:4px!important;font-size:10px!important;line-height:1.2}
+@media(max-height:820px) and (min-width:901px){
+  #levelUpBox.shopMode .upgradeCard,body.panel-theme-dark #levelUpBox.shopMode .upgradeCard{min-height:276px;padding:11px 12px 10px}
+  #levelUpBox.shopMode .upgradeCardTop{min-height:58px}
+  #levelUpBox.shopMode .upgradeIconBubble,body.panel-theme-dark #levelUpBox.shopMode .upgradeIconBubble,#levelUpBox.shopMode .upgradeCard.specialUpgrade .upgradeIconBubble,#levelUpBox.shopMode .upgradeCard.darkUpgrade .upgradeIconBubble{width:56px;height:56px;font-size:30px}
+  #levelUpBox.shopMode .upgradeDescMain,body.panel-theme-dark #levelUpBox.shopMode .upgradeDescMain{min-height:32px;padding:6px 8px}
+}
+
+/* ===== v170 · Cabecera y acciones de tienda limpias ===== */
+#levelUpBox.shopMode h2,
+body.panel-theme-dark #levelUpBox.shopMode h2{
+  padding-left:0!important;
+  padding-right:0!important;
+  text-align:center!important;
+}
+#levelUpBox.shopMode #upgradeSubtitle:empty{display:none!important}
+#levelUpBox.shopMode .upgradePrice{gap:6px!important}
+#levelUpBox.shopMode .upgradePriceMeta{
+  display:inline-block;
+  padding-left:6px;
+  border-left:1px solid rgba(75,38,54,.22);
+  font-size:8px;
+  font-weight:1000;
+  letter-spacing:.15px;
+  opacity:.76;
+}
+/* Las acciones de tienda no son ramas de mejora. Sin etiqueta de categoría. */
+#levelUpBox.shopMode .upgradeCard:has(.upgradeTitle){ }
