@@ -1048,8 +1048,16 @@ let score,shots,lastShot,lastAutoShot,lastFrame,gameOver,wave,spawnCooldown,life
 let perfFps=60,lowPerfMode=false,lowPerfTimer=0,perfNoticeTimer=0;
 let lastOrbitalGuard=-Infinity;
 let manualFireBoostUntil=0;
-const RAM_FISH_COOLDOWN=30000;
-let lastRamFishAt=-RAM_FISH_COOLDOWN;
+const RAM_FISH_BASE_COOLDOWN=30000;
+// Cada nivel reduce 0,35 s la espera; nunca baja de 20 segundos.
+function getRamFishCooldownMs(playerLevel=level){
+  return Math.max(20000,RAM_FISH_BASE_COOLDOWN-Math.max(0,(Number(playerLevel)||1)-1)*350);
+}
+// Impulso mucho más acusado al progresar, con límite para las partidas largas.
+function getRamFishKnockback(playerLevel=level){
+  return Math.min(950,260+Math.max(0,(Number(playerLevel)||1)-1)*26);
+}
+let lastRamFishAt=-RAM_FISH_BASE_COOLDOWN;
 let starSpawnTimer=12;
 let starSpawnedThisWave=false;
 let backgroundFishSeed=Math.floor(Math.random()*1000000);
@@ -1625,7 +1633,7 @@ function restart(){
 if(gameStarted)rollRandomSkins();else runCosmeticSelections=null;
 saveAchievements();
 clearAllInputKeys();
-simulationMs=0;manualFireBoostUntil=0;lastRamFishAt=-RAM_FISH_COOLDOWN;frameAccumulator=0;
+simulationMs=0;manualFireBoostUntil=0;lastRamFishAt=-RAM_FISH_BASE_COOLDOWN;frameAccumulator=0;
 selectedTarget=null;lastStarTrail=0;screenShake=0;screenShakeX=0;screenShakeY=0;
 if(autoChoiceTimer)clearTimeout(autoChoiceTimer);
 autoChoiceToken++;autoChoiceMenu=null;
@@ -4332,22 +4340,34 @@ function hasFishSizeFusionForGiantFish(){
 return !!doneFusionPairs[sortedPair("bigFish","fishSize")];
 }
 
-// Habilidad básica independiente de las mejoras: crece con el nivel y hereda
-// el tamaño real de Peces esponjosos (también cuando está fusionada).
+// El ariete comparte los multiplicadores generales de daño del disparo normal:
+// daño comprado/fusionado, suerte ofensiva, Zoomies y bonos de vida crítica.
+function getRamFishDamage(playerLevel=level){
+  const growth=Math.max(0,playerLevel-1);
+  const lowLifeBonus=life<upgrades.maxLife*.35
+    ?(upgrades.braveHeart ? .35 : 0)+(upgrades.cursedInstinct ? .45 : 0)
+    :0;
+  const critical=Math.random()<getCurrentCritChance()?getCriticalDamageMultiplier():1;
+  return upgrades.damage*getLuckyShotMultiplier()*getZoomiesDamageMultiplier()
+    *(1+lowLifeBonus)*(2.8+growth*.085)*critical;
+}
+
+// Habilidad básica: hereda daño y tamaño comprados (incluidos niveles fusionados)
+// y mejora su propio daño, tamaño, empuje y recarga con el nivel del jugador.
 function launchRamFish(target=null){
   if(!gameStarted||gameOver||paused||choosingUpgrade)return false;
   const now=gameNow();
-  if(now-lastRamFishAt<RAM_FISH_COOLDOWN)return false;
+  if(now-lastRamFishAt<getRamFishCooldownMs())return false;
   const aim=target||mouse;
   const angle=Math.atan2(aim.y-player.y,aim.x-player.x);
   const growth=Math.max(0,level-1);
   const scale=2.25*(1+growth*.025)*Math.max(1,upgrades.fishSize);
-  const damage=upgrades.damage*getZoomiesDamageMultiplier()*(2.8+growth*.085);
+  const damage=getRamFishDamage();
   const speed=710*upgrades.fishSpeed;
   fishes.push({x:player.x+Math.cos(angle)*58,y:player.y+Math.sin(angle)*58,
     vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,angle,damage,
     life:Math.max(2.6,Math.hypot(canvas.width,canvas.height)/speed+0.4),
-    scale,pierce:true,boomerang:false,ramFish:true,ramKnockback:220+growth*12,
+    scale,pierce:true,boomerang:false,ramFish:true,ramKnockback:getRamFishKnockback(),
     returning:false,age:0,hitIds:new Set()});
   lastRamFishAt=now;
   makeImpact(player.x+Math.cos(angle)*55,player.y+Math.sin(angle)*55,"#80eaff",1.6);
@@ -5852,7 +5872,7 @@ floatingTexts.push({x:hitX,y:hitY-34,text:cat.rainbow?"🌈 miua!":Math.random()
 if(fish.ramFish&&cat.hp>0){
   const direction=Math.atan2(fish.vy,fish.vx);
   // Único empuje: hacia delante, en la dirección de avance del ariete.
-  const force=fish.ramKnockback||220;
+  const force=fish.ramKnockback||getRamFishKnockback();
   cat.knockVx=(cat.knockVx||0)+Math.cos(direction)*force;
   cat.knockVy=(cat.knockVy||0)+Math.sin(direction)*force;
 }
@@ -5936,7 +5956,7 @@ if(element.style.width!==value)element.style.width=value;
 }
 function updateHud(){
 const ramHud=document.getElementById("ramFishCooldown");
-if(ramHud){const remaining=Math.max(0,(RAM_FISH_COOLDOWN-(gameNow()-lastRamFishAt))/1000);ramHud.textContent=remaining>0?`${remaining.toFixed(1)} s`:"¡LISTO!";ramHud.classList.toggle("ready",remaining<=0);}
+if(ramHud){const remaining=Math.max(0,(getRamFishCooldownMs()-(gameNow()-lastRamFishAt))/1000);ramHud.textContent=remaining>0?`${remaining.toFixed(1)} s`:"¡LISTO!";ramHud.classList.toggle("ready",remaining<=0);}
 setHudText(scoreEl,score);
 setHudText(shotsEl,runStats?Math.floor(runStats.fishHits||0):0);
 setHudText(lifeEl,Math.ceil(life));setHudText(levelEl,level);setHudText(xpEl,xp);setHudText(xpNeedEl,xpNeed);setHudText(waveEl,wave);setHudText(coinsEl,coins);setHudText(timeLeftEl,boss&&waveTime<=0?"Jefe":Math.ceil(waveTime));
@@ -6896,7 +6916,7 @@ function autoApplyEmergencyEscape(v,danger){
 
 function updateAutoPlayer(dt){
   if(gameStarted&&!gameOver)markRankingInvalidByAI();
-  if(gameNow()-lastRamFishAt>=RAM_FISH_COOLDOWN){
+  if(gameNow()-lastRamFishAt>=getRamFishCooldownMs()){
     const danger=cats.filter(c=>!c.dead&&Math.hypot(c.x-player.x,c.y-player.y)<310);
     if(danger.length>=4||boss&&Math.hypot(boss.x-player.x,boss.y-player.y)<490&&danger.length>=2){
       const target=boss&&Math.hypot(boss.x-player.x,boss.y-player.y)<490?boss:danger[0];
