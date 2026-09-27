@@ -1521,3 +1521,15 @@ body.panel-theme-dark #levelUpBox.shopMode h2{
 }
 /* Las acciones de tienda no son ramas de mejora. Sin etiqueta de categoría. */
 #levelUpBox.shopMode .upgradeCard:has(.upgradeTitle){ }
+
+/* v174: recarga de la habilidad activa */
+#hud .ramHud{color:#a5eaff;font-weight:900}#ramFishCooldown{color:#ffc98c}#ramFishCooldown.ready{color:#8dffcd;text-shadow:0 0 9px #3ce0b766}
+
+/* v176: fusion navigation stays accessible above the cards while scrolling. */
+.fusionTopControls[hidden]{display:none!important}
+.fusionTopControls{position:sticky;top:-1px;z-index:40;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;margin:0 0 14px;padding:10px 8px;border:1px solid rgba(145,173,255,.2);border-radius:14px;background:linear-gradient(130deg,rgba(20,28,60,.98),rgba(34,25,65,.98));box-shadow:0 8px 20px rgba(0,0,0,.22)}
+.fusionTopPages:empty{display:none}
+.fusionTopPages .fusionPageControls{margin:0;display:flex;flex-wrap:wrap;gap:8px}
+.fusionTopControls #fusionBackBtn{display:block;margin:0!important;padding:10px 18px!important}
+.fusionTopControls .fusionPageBtn{padding:10px 14px}
+@media(max-width:520px){.fusionTopControls{gap:7px;padding:8px 5px}.fusionTopControls .fusionPageBtn{padding:9px 10px;font-size:12px}.fusionTopControls .fusionPageInfo{padding:8px 10px;font-size:11px}}
