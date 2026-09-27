@@ -2290,6 +2290,7 @@ wobble:0,
 contactDamage:(20+wave*.45)*damageScale
 };
 boss.repeatLevel=bossRepeatLevel;
+constrainBossToArena(boss);
 const demonMsg=hasDog?"😈 El demonio ha robado a tu perro":"😈 ¡El demonio ha llegado!";
 floatingTexts.push({x:canvas.width/2,y:170,text:demonMsg,life:2.6,maxLife:2.6,big:true});
 return;
@@ -2309,7 +2310,7 @@ const hp=Math.round((95+wave*19)*hpScale);
 const jumpBase=Math.max(firstBossIntro?.92:.45,1.12-wave*.025-getEndlessPressure()*.012);
 boss={type,x:canvas.width/2,y:canvas.height*.35,r:55+Math.min(22,wave*.85),hp,maxHp:hp,hitAnim:0,wobble:0,state:"jumping",baseJumpDuration:jumpBase,jumpTimer:jumpBase,jumpDuration:jumpBase,startX:canvas.width/2,startY:canvas.height*.35,targetX:tx,targetY:ty,shadowX:tx,shadowY:ty,jumps:0,jumpsBeforeRest:getSealJumpCount(wave,bossRepeatLevel),stunTimer:0,stunDuration:Math.max(firstBossIntro?1.55:.70,2.5-wave*.035-bossRepeatLevel*.16-getEndlessPressure()*.018),slamDamage:(13+wave*.65)*damageScale}
 }
-if(boss){boss.repeatLevel=bossRepeatLevel;if(boss.type==="giantCat")boss.summonCount=Math.min(12,boss.summonCount+1);}
+if(boss){boss.repeatLevel=bossRepeatLevel;if(boss.type==="giantCat")boss.summonCount=Math.min(12,boss.summonCount+1);constrainBossToArena(boss);}
 syncMusic();
 }
 
@@ -4636,21 +4637,50 @@ quacks.push({x:boss.x+Math.cos(angle)*65,y:boss.y+Math.sin(angle)*65,vx:Math.cos
 
 function startSealJump(){
 if(!boss||boss.type!=="seal")return;
-const margin=70;
-const tx=Math.max(margin,Math.min(canvas.width-margin,player.x));
-const ty=Math.max(margin,Math.min(canvas.height-margin,player.y));
+const bounds=getBossArenaBounds(boss);
+const tx=Math.max(bounds.minX,Math.min(bounds.maxX,player.x));
+const ty=Math.max(bounds.minY,Math.min(bounds.maxY,player.y));
 boss.state="jumping";
 boss.jumpDuration=Math.max(1.05,(boss.baseJumpDuration||1.05)+.55+Math.random()*.22);
 boss.jumpTimer=boss.jumpDuration;boss.startX=boss.x;boss.startY=boss.y;boss.targetX=tx;boss.targetY=ty;boss.shadowX=tx;boss.shadowY=ty
 }
 
+// Los jefes no pueden cruzar el borde, ni por instinto, ariete o efecto del perro.
+// El margen protege tanto su cuerpo como la barra de vida (situada sobre ellos).
+function getBossArenaBounds(entity){
+  const r=Math.max(0,Number(entity?.r)||60);
+  const marginX=Math.max(82,r+18), marginTop=r+44, marginBottom=r+20;
+  const canFitX=canvas.width>=2*marginX;
+  const canFitY=canvas.height>=marginTop+marginBottom;
+  return {
+    minX:canFitX?marginX:canvas.width/2,
+    maxX:canFitX?canvas.width-marginX:canvas.width/2,
+    minY:canFitY?marginTop:canvas.height/2,
+    maxY:canFitY?canvas.height-marginBottom:canvas.height/2
+  };
+}
+function constrainBossToArena(entity){
+  if(!entity||!Number.isFinite(entity.x)||!Number.isFinite(entity.y))return;
+  const limits=getBossArenaBounds(entity);
+  entity.x=Math.max(limits.minX,Math.min(limits.maxX,entity.x));
+  entity.y=Math.max(limits.minY,Math.min(limits.maxY,entity.y));
+  // Anular solamente la inercia que apunta fuera del mapa; conservar el
+  // movimiento hacia dentro para que el jefe pueda despegarse del borde.
+  if((entity.x<=limits.minX&&(entity.knockVx||0)<0)||(entity.x>=limits.maxX&&(entity.knockVx||0)>0))entity.knockVx=0;
+  if((entity.y<=limits.minY&&(entity.knockVy||0)<0)||(entity.y>=limits.maxY&&(entity.knockVy||0)>0))entity.knockVy=0;
+}
+// También limita a los jefes si cambia el tamaño de la ventana a mitad de combate.
+window.addEventListener("resize",()=>{if(boss)constrainBossToArena(boss);});
+
 function updateBoss(dt){
 if(!boss)return;
+constrainBossToArena(boss);
 boss.hitAnim=Math.max(0,boss.hitAnim-dt);
 boss.relaxTimer=Math.max(0,(boss.relaxTimer||0)-dt);
 if(boss.relaxTimer>0){boss.hitAnim=Math.max(boss.hitAnim,.12);return;}
 boss.wobble+=dt*4;
 if(boss.knockVx||boss.knockVy){boss.x+=(boss.knockVx||0)*dt;boss.y+=(boss.knockVy||0)*dt;boss.knockVx=(boss.knockVx||0)*Math.pow(.12,dt);boss.knockVy=(boss.knockVy||0)*Math.pow(.12,dt);if(Math.abs(boss.knockVx)<8)boss.knockVx=0;if(Math.abs(boss.knockVy)<8)boss.knockVy=0;}
+constrainBossToArena(boss);
 if(boss.type==="giantCat"){
 const dx=player.x-boss.x,dy=player.y-boss.y,dist=Math.hypot(dx,dy)||1;
 boss.x+=(dx/dist)*boss.speed*dt;boss.y+=(dy/dist)*boss.speed*dt;boss.summon-=dt;
@@ -4732,6 +4762,8 @@ if(Math.hypot(player.x-boss.x,player.y-boss.y)<player.r+boss.r-8){
 takePlayerDamage(boss.contactDamage*dt,"El demonio oscuro te ha atrapado 😈",.15);
 }
 }
+// Moverse, teletransportarse o saltar nunca permite terminar fuera del mapa.
+if(boss)constrainBossToArena(boss);
 }
 
 function triggerDogSacrifice(){
