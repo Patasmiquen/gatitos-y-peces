@@ -4374,6 +4374,37 @@ function launchRamFish(target=null){
   floatingTexts.push({x:player.x,y:player.y-75,text:"🐟 ¡PEZ ARIETE!",life:1,maxLife:1,big:true});
   return true;
 }
+// El Pez Ariete destruye proyectiles enemigos a lo largo de TODA su trayectoria.
+// Intersección barrida: comprueba la posición anterior y actual tanto del pez
+// como del proyectil para no atravesar balas rápidas entre dos frames.
+function ramFishInterceptsProjectile(projectile, projectilePrevX, projectilePrevY, ramShots){
+  if(!isFinitePos(projectile)||!ramShots.length)return false;
+  const p0x=Number.isFinite(projectilePrevX)?projectilePrevX:projectile.x;
+  const p0y=Number.isFinite(projectilePrevY)?projectilePrevY:projectile.y;
+  for(const fish of ramShots){
+    if(!isFinitePos(fish))continue;
+    const f0x=Number.isFinite(fish.prevX)?fish.prevX:fish.x;
+    const f0y=Number.isFinite(fish.prevY)?fish.prevY:fish.y;
+    // Las mismas dimensiones de impacto que las colisiones existentes del pez.
+    const radius=(projectile.r||12)+14*(fish.scale||1);
+    const rx=f0x-p0x, ry=f0y-p0y;
+    const dx=(fish.x-f0x)-(projectile.x-p0x);
+    const dy=(fish.y-f0y)-(projectile.y-p0y);
+    const len2=dx*dx+dy*dy;
+    const t=len2>1e-8?Math.max(0,Math.min(1,-(rx*dx+ry*dy)/len2)):0;
+    const closestX=rx+dx*t,closestY=ry+dy*t;
+    if(closestX*closestX+closestY*closestY<=radius*radius)return true;
+  }
+  return false;
+}
+function breakProjectileWithRamFish(projectile,previousX,previousY,ramShots,color){
+  if(!ramFishInterceptsProjectile(projectile,previousX,previousY,ramShots))return false;
+  makeSmoke(projectile.x,projectile.y);
+  // Efecto contenido incluso cuando el ariete atraviesa varias balas a la vez.
+  if(!lowPerfMode||Math.random()<.25)makeImpact(projectile.x,projectile.y,color,.5);
+  return true;
+}
+
 function guaranteedLeviathanLoot(x,y){
   // Cada baja del evento da ORO Y LATA, sin tiradas aleatorias.
   const amount=Math.random()<(upgrades.luck||0)*.5?2:1;
@@ -5626,6 +5657,8 @@ if(runStats){const nearbyCats=cats.some(c=>isFinitePos(c)&&Math.hypot(player.x-c
 if(isPowerStarActive()&&boss&&Math.hypot(player.x-boss.x,player.y-boss.y)<player.r+boss.r+18){damageBoss(Math.max(1.5,upgrades.damage*getZoomiesDamageMultiplier()*18*dt));}
 
 fishes.forEach(fish=>{
+// Guardamos la posición previa del ariete para detectar impactos barridos.
+if(fish.ramFish){fish.prevX=fish.x;fish.prevY=fish.y;}
 fish.age+=dt;
 if(fish.boomerang&&!fish.returning&&fish.age>(fish.turnTime||.95)){fish.returning=true;fish.pierce=true}
 if(fish.returning){
@@ -5645,14 +5678,25 @@ fish.x+=fish.vx*dt;fish.y+=fish.vy*dt;fish.life-=dt
 });
 for(let i=fishes.length-1;i>=0;i--){const fish=fishes[i];if(fish.life<=0||fish.x<-120||fish.x>canvas.width+120||fish.y<-120||fish.y>canvas.height+120){if(runStats&&(!fish.hitIds||fish.hitIds.size===0))runStats.fishMisses++;fishes.splice(i,1)}}
 
+// Una lista por frame: evita escanear todos los peces por cada proyectil.
+const activeRamFishShots=fishes.filter(f=>f.ramFish&&isFinitePos(f));
 for(let q=quacks.length-1;q>=0;q--){
-const quack=quacks[q];quack.x+=quack.vx*dt;quack.y+=quack.vy*dt;quack.life-=dt;
+const quack=quacks[q],prevX=quack.x,prevY=quack.y;
+quack.x+=quack.vx*dt;quack.y+=quack.vy*dt;quack.life-=dt;
+if(breakProjectileWithRamFish(quack,prevX,prevY,activeRamFishShots,"#ffd166")){
+  dropCoins(quack.x,quack.y,.3);quacks.splice(q,1);continue;
+}
 if(Math.hypot(player.x-quack.x,player.y-quack.y)<player.r+quack.r){takePlayerDamage(14,"Te ha dado un QUACK 🦆",.2);makeSmoke(quack.x,quack.y);quacks.splice(q,1);continue}
 if(quack.life<=0||quack.x<-100||quack.x>canvas.width+100||quack.y<-100||quack.y>canvas.height+100)quacks.splice(q,1)
 }
 
 for(let i=demonOrbs.length-1;i>=0;i--){
-const orb=demonOrbs[i];orb.x+=orb.vx*dt;orb.y+=orb.vy*dt;orb.life-=dt;
+const orb=demonOrbs[i],prevX=orb.x,prevY=orb.y;
+orb.x+=orb.vx*dt;orb.y+=orb.vy*dt;orb.life-=dt;
+// El ariete rompe incluso los orbes resistentes (hitsLeft > 1) de un golpe.
+if(breakProjectileWithRamFish(orb,prevX,prevY,activeRamFishShots,"#b197fc")){
+  demonOrbs.splice(i,1);continue;
+}
 if(Math.hypot(player.x-orb.x,player.y-orb.y)<player.r+orb.r){
 takePlayerDamage(orb.damage,"El demonio oscuro te ha destruido 😈",.25);makeSmoke(orb.x,orb.y);demonOrbs.splice(i,1);continue
 }
@@ -5673,7 +5717,11 @@ if(demonOrbs[i]===orb&&(orb.life<=0||orb.x<-120||orb.x>canvas.width+120||orb.y<-
 }
 
 for(let i=yarnBalls.length-1;i>=0;i--){
-const y=yarnBalls[i];y.x+=y.vx*dt;y.y+=y.vy*dt;y.life-=dt;y.spin=(y.spin||0)+dt*8;
+const y=yarnBalls[i],prevX=y.x,prevY=y.y;
+y.x+=y.vx*dt;y.y+=y.vy*dt;y.life-=dt;y.spin=(y.spin||0)+dt*8;
+if(breakProjectileWithRamFish(y,prevX,prevY,activeRamFishShots,"#b197fc")){
+  yarnBalls.splice(i,1);continue;
+}
 if(Math.hypot(player.x-y.x,player.y-y.y)<player.r+y.r){
 takePlayerDamage(y.damage,"Los ovillos te han atrapado 🧶",.2);makeSmoke(y.x,y.y);yarnBalls.splice(i,1);
 floatingTexts.push({x:player.x,y:player.y-42,text:"¡ovillo!",life:.8,maxLife:.8,big:false});continue
@@ -6918,8 +6966,27 @@ function updateAutoPlayer(dt){
   if(gameStarted&&!gameOver)markRankingInvalidByAI();
   if(gameNow()-lastRamFishAt>=getRamFishCooldownMs()){
     const danger=cats.filter(c=>!c.dead&&Math.hypot(c.x-player.x,c.y-player.y)<310);
-    if(danger.length>=4||boss&&Math.hypot(boss.x-player.x,boss.y-player.y)<490&&danger.length>=2){
-      const target=boss&&Math.hypot(boss.x-player.x,boss.y-player.y)<490?boss:danger[0];
+    const nearbyEnemyShots=[...quacks,...yarnBalls,...demonOrbs].filter(p=>
+      isFinitePos(p)&&Math.hypot(p.x-player.x,p.y-player.y)<310&&
+      (autoProjectileRisk(p,.95,48)?.risk||0)>.45);
+    const groupedThreat=nearbyEnemyShots.length>=2;
+    const criticalThreat=nearbyEnemyShots.some(p=>
+      {const risk=autoProjectileRisk(p,.65,40);return risk&&risk.risk>1.1&&risk.t<.50;});
+    if(danger.length>=4||(boss&&Math.hypot(boss.x-player.x,boss.y-player.y)<490&&danger.length>=2)
+       ||groupedThreat||criticalThreat&&life<upgrades.maxLife*.4){
+      // Ante balas peligrosas apunta al proyectil que antes alcanzaría al jugador.
+      // En otro caso mantiene el uso ofensivo original del ariete.
+      const defensive=groupedThreat||criticalThreat&&life<upgrades.maxLife*.4;
+      const incoming=defensive?nearbyEnemyShots
+        .map(p=>({p,info:autoProjectileRisk(p,.95,48)}))
+        .sort((a,b)=>(b.info?.risk||0)-(a.info?.risk||0))[0]?.p:null;
+      // Apuntado con anticipación: el proyectil seguirá avanzando mientras
+      // llega el Pez Ariete. El disparo manual no cambia de comportamiento.
+      const leadTime=incoming?Math.min(.55,Math.hypot(incoming.x-player.x,incoming.y-player.y)/
+        Math.max(300,710*upgrades.fishSpeed+Math.hypot(incoming.vx||0,incoming.vy||0)*.5)):0;
+      const target=incoming?{x:incoming.x+(incoming.vx||0)*leadTime,
+                              y:incoming.y+(incoming.vy||0)*leadTime}:
+        boss&&Math.hypot(boss.x-player.x,boss.y-player.y)<490?boss:danger[0];
       if(target)launchRamFish(target);
     }
   }
