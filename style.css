@@ -1520,7 +1520,7 @@ body.panel-theme-dark #levelUpBox.shopMode h2{
   opacity:.76;
 }
 /* Las acciones de tienda no son ramas de mejora. Sin etiqueta de categoría. */
-#levelUpBox.shopMode .upgradeCard:has(.upgradeTitle){ }
+
 
 /* v174: recarga de la habilidad activa */
 #hud .ramHud{color:#a5eaff;font-weight:900}#ramFishCooldown{color:#ffc98c}#ramFishCooldown.ready{color:#8dffcd;text-shadow:0 0 9px #3ce0b766}
@@ -1533,3 +1533,34 @@ body.panel-theme-dark #levelUpBox.shopMode h2{
 .fusionTopControls #fusionBackBtn{display:block;margin:0!important;padding:10px 18px!important}
 .fusionTopControls .fusionPageBtn{padding:10px 14px}
 @media(max-width:520px){.fusionTopControls{gap:7px;padding:8px 5px}.fusionTopControls .fusionPageBtn{padding:9px 10px;font-size:12px}.fusionTopControls .fusionPageInfo{padding:8px 10px;font-size:11px}}
+
+/* v177.4: acciones fijas de la tienda, sin saltos cuando una fusion se desbloquea. */
+#levelUpBox.shopMode #upgradeCards.shopSplitRows{
+  display:flex;
+  flex-direction:column;
+  width:100%;
+  max-width:none;
+  gap:12px;
+}
+#levelUpBox.shopMode .shopUpgradeRow,
+#levelUpBox.shopMode .shopActionRow{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  width:100%;
+  gap:12px;
+  align-items:stretch;
+}
+#levelUpBox.shopMode .shopActionRow .upgradeCard{min-width:0;}
+@media(max-width:900px){
+  #levelUpBox.shopMode .shopUpgradeRow{grid-template-columns:1fr;}
+  #levelUpBox.shopMode .shopActionRow{grid-template-columns:repeat(2,minmax(0,1fr));}
+  #levelUpBox.shopMode .shopActionRow .upgradeCard[data-shop-role="exit"]{grid-column:1/-1;}
+}
+@media(max-width:520px){
+  #levelUpBox.shopMode .shopActionRow{gap:8px;}
+  #levelUpBox.shopMode .shopActionRow .upgradeCard{padding:10px 9px;}
+  #levelUpBox.shopMode .shopActionRow .upgradeTitle{font-size:15px;overflow-wrap:anywhere;}
+  #levelUpBox.shopMode .shopActionRow .upgradeDescMain{font-size:10.5px;}
+  #levelUpBox.shopMode .shopActionRow .upgradeIconBubble{width:48px;height:48px;font-size:27px;}
+  #levelUpBox.shopMode .shopActionRow .upgradePrice{font-size:10px;padding:4px 5px!important;}
+}

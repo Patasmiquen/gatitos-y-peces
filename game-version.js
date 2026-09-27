@@ -1,1 +1,1 @@
-window.GAME_BUILD="v.177.3";
+window.GAME_BUILD="v.177.5";
