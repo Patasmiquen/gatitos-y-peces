@@ -348,7 +348,9 @@ function getRankQueryLimit(){
   return 100;
 }
 function getScoreIdentityKey(data){
-  return `${cleanPlayerName(data?.name)||"Jugador"}|${Number(data?.score||0)}|${Number(data?.wave||0)}|${Number(data?.level||0)}|${Number(data?.bosses||0)}|${Number(data?.impacts||0)}`;
+  if(data?._docId)return `doc:${data._docId}`;
+  const stamp=data?.createdAt?.seconds??data?.createdAt?.toMillis?.()??"";
+  return `${cleanPlayerName(data?.name)||"Jugador"}|${Number(data?.score||0)}|${Number(data?.wave||0)}|${Number(data?.level||0)}|${Number(data?.bosses||0)}|${Number(data?.impacts||0)}|${Number(data?.elapsedSeconds??-1)}|${stamp}`;
 }
 function dedupeScoreRows(rows){
   const seen=new Set();
@@ -372,7 +374,7 @@ async function loadOnlineRanking(targetEls=[startRankingList],append=false){
     const snap=await query.get();
     if(requestId!==rankingRequestId)return;
     const docs=[];snap.forEach(doc=>docs.push(doc));
-    const rows=docs.map(doc=>doc.data()).filter(row=>row&&Number.isFinite(Number(row.score)));
+    const rows=docs.map(doc=>({...doc.data(),_docId:doc.id})).filter(row=>row&&Number.isFinite(Number(row.score)));
     rankingCursor=docs[docs.length-1]||null;
     rankingHasMore=docs.length===getRankQueryLimit();
     lastRankingRawRows=(append?lastRankingRawRows.concat(rows):rows).sort((a,b)=>Number(b.score||0)-Number(a.score||0));
@@ -1721,7 +1723,7 @@ if(gameStarted)rollRandomSkins();else runCosmeticSelections=null;
 saveAchievements();
 clearAllInputKeys();
 simulationMs=0;lastRamFishAt=-RAM_FISH_BASE_COOLDOWN;frameAccumulator=0;
-xpRequirementPhase="main";autoRamNextEvaluationAt=0;
+xpRequirementPhase="main";autoRamNextEvaluationAt=0;autoDecisionCooldown=0;autoDuckDirection=null;autoDuckDirectionUntil=0;autoLastStuckCheckAt=0;
 selectedTarget=null;lastStarTrail=0;screenShake=0;screenShakeX=0;screenShakeY=0;
 if(autoChoiceTimer)clearTimeout(autoChoiceTimer);
 autoChoiceToken++;autoChoiceMenu=null;
@@ -4732,6 +4734,24 @@ fish.vx=Math.cos(newAngle)*speed;fish.vy=Math.sin(newAngle)*speed;fish.angle=new
 }
 
 function limitArray(array,maxItems){if(array.length>maxItems)array.splice(0,array.length-maxItems)}
+// Never erase a living thief carrying stolen coins to enforce the entity cap.
+// First discard excess off-screen/remote ordinary cats; a few protected thieves
+// may temporarily exceed the cap rather than silently destroying the player's loot.
+function limitActiveCats(maxItems){
+  if(cats.length<=maxItems)return;
+  let excess=cats.length-maxItems;
+  const candidates=[];
+  for(let i=0;i<cats.length;i++){
+    const c=cats[i];
+    if(c?.type==="thief"&&(c.stolenCoins||0)>0)continue;
+    const dx=(c?.x||0)-player.x,dy=(c?.y||0)-player.y;
+    const dist2=dx*dx+dy*dy;
+    candidates.push({i,priority:isCatOnScreen(c)?0:1,dist2});
+  }
+  candidates.sort((a,b)=>b.priority-a.priority||b.dist2-a.dist2);
+  const remove=new Set(candidates.slice(0,excess).map(x=>x.i));
+  for(let i=cats.length-1;i>=0;i--)if(remove.has(i))cats.splice(i,1);
+}
 
 // Al compactar el exceso de botín, conservar TODAS las monedas y latas
 // garantizadas del Leviatán sin renderizar cientos de objetos adicionales.
@@ -5708,6 +5728,7 @@ if(paused)closePause();else openPause();
 function isFinitePos(o){return o&&Number.isFinite(o.x)&&Number.isFinite(o.y)}
 function isCatOnScreen(o){if(!o)return false;const m=(o.r||20)+8;return o.x>-m&&o.x<canvas.width+m&&o.y>-m&&o.y<canvas.height+m;}
 let lastSoftErrorAt=0;
+let lastSoftErrorSignature="";
 function clampNumber(value,min,max,fallback){
   if(!Number.isFinite(value))return fallback;
   return Math.max(min,Math.min(max,value));
@@ -5745,14 +5766,23 @@ function showSoftError(err){
   console.error(err);
   window.__lastGameError=String(err&&err.stack?err.stack:err);
   cleanBrokenEntities();
+  // One on-screen warning per error type and 30-second period; preserve
+  // diagnostic details in the console without spamming the player.
   const now=performance.now();
-  if(now-lastSoftErrorAt>2500){
+  const signature=String(err?.message||err).slice(0,160);
+  if(signature!==lastSoftErrorSignature||now-lastSoftErrorAt>30000){
     lastSoftErrorAt=now;
-    floatingTexts.push({x:canvas.width/2,y:110,text:"⚠️ Error recuperado",life:.9,maxLife:.9,big:false});
+    lastSoftErrorSignature=signature;
+    if(gameStarted&&!gameOver)floatingTexts.push({x:canvas.width/2,y:110,text:"⚠️ Error recuperado",life:.9,maxLife:.9,big:false});
   }
 }
 window.addEventListener('error',e=>{showSoftError(e.error||e.message)});
-window.addEventListener('unhandledrejection',e=>{showSoftError(e.reason||e)});
+window.addEventListener('unhandledrejection',e=>{
+  // Firestore/network and audio promises do not imply a simulation crash.
+  // Keep the real error accessible for debugging; do not show a false game warning.
+  console.error('Promesa rechazada',e.reason||e);
+  window.__lastAsyncError=String(e.reason?.stack||e.reason||e);
+});
 
 
 function updatePerformanceMode(rawDt){
@@ -6218,7 +6248,7 @@ limitArray(pawPrints,getEntityLimit(28,8));
 // Proyectiles, enemigos y objetos jugables mantienen límites seguros incluso en modo ligero.
 // Si se recortan demasiado, desaparecen balas de gatos/demonio y cambia la partida.
 limitActiveFishProjectiles(140);
-limitArray(cats,avalancheActive?150:105);
+limitActiveCats(avalancheActive?150:105);
 limitArray(quacks,getProjectileCap("quack"));
 compactLootDrops(coinsDrops,90,"coin");
 limitArray(dogBones,80);
@@ -6956,6 +6986,9 @@ let autoStuckTimer=0;
 let autoEmergencyEscapeUntil=0;
 let autoEmergencyEscapeAngle=0;
 let autoDecisionCooldown=0;
+let autoDuckDirection=null;
+let autoDuckDirectionUntil=0;
+let autoLastStuckCheckAt=0;
 let autoRamNextEvaluationAt=0;
 let autoStableTarget=null;
 let autoStableTargetUntil=0;
@@ -6980,7 +7013,7 @@ let autoMemory=autoLoadMemory();
 
 function initAutoMode(){autoMode=false;autoModeUsedThisRun=false;}
 function markRankingInvalidByAI(){autoModeUsedThisRun=true;rankingEligibleThisRun=false;rankingDisabledReason="Partida de pruebas: ranking desactivado.";}
-function setAutoMode(value){if(!adminUnlocked)return;autoMode=!!value;if(autoMode){markRankingInvalidByAI();autoDecisionCooldown=0;autoRamNextEvaluationAt=0;autoStableTarget=null;autoStableTargetUntil=0;if(autoChoiceMenu)autoScheduleChoice(autoChoiceMenu.choices,autoChoiceMenu.onPick,autoChoiceMenu.context);}else{keys.w=keys.a=keys.s=keys.d=false;autoStableTarget=null;}refreshAutoModeUI();}
+function setAutoMode(value){if(!adminUnlocked)return;autoMode=!!value;if(autoMode){markRankingInvalidByAI();autoDecisionCooldown=0;autoRamNextEvaluationAt=0;autoStableTarget=null;autoStableTargetUntil=0;autoDuckDirection=null;autoDuckDirectionUntil=0;autoLastStuckCheckAt=0;if(autoChoiceMenu)autoScheduleChoice(autoChoiceMenu.choices,autoChoiceMenu.onPick,autoChoiceMenu.context);}else{keys.w=keys.a=keys.s=keys.d=false;autoStableTarget=null;autoDuckDirection=null;autoDuckDirectionUntil=0;}refreshAutoModeUI();}
 function refreshAutoModeUI(){
   if(autoBadge)autoBadge.classList.remove("visible");
 }
@@ -7209,20 +7242,128 @@ function autoForceAwayFromBoss(v,weight=1){
   autoSafeAdd(v,dx/d,dy/d,weight);
 }
 function autoUpdateStuckState(dt,danger){
+  const now=performance.now();
+  const elapsed=autoLastStuckCheckAt?Math.min(.25,Math.max(dt,(now-autoLastStuckCheckAt)/1000)):dt;
+  autoLastStuckCheckAt=now;
   const moved=Math.hypot(player.x-autoLastPlayerX,player.y-autoLastPlayerY);
   autoLastPlayerX=player.x;
   autoLastPlayerY=player.y;
   const wall=autoDistanceToWall();
-  const demonNear=boss&&boss.type==="demon"&&Math.hypot(player.x-boss.x,player.y-boss.y)<520;
-  if(gameStarted&&!gameOver&&autoMode&&(moved<18*dt)&&(danger>.8||demonNear||wall<95))autoStuckTimer+=dt;
-  else autoStuckTimer=Math.max(0,autoStuckTimer-dt*1.8);
-  if(autoStuckTimer>.65||((autoIsInCorner()||wall<70)&&(danger>1.05||demonNear))){
-    autoEmergencyEscapeUntil=performance.now()+1300;
-    autoEmergencyEscapeAngle=Math.atan2(canvas.height/2-player.y,canvas.width/2-player.x)+(Math.random()*.55-.275);
+  const bossNear=boss&&isFinitePos(boss)&&Math.hypot(player.x-boss.x,player.y-boss.y)<(boss.type==="demon"?520:320);
+  const pressure=danger>.8||bossNear||wall<95;
+  if(gameStarted&&!gameOver&&autoMode&&moved<Math.max(2,player.speed*upgrades.moveSpeed*elapsed*.12)&&pressure)autoStuckTimer+=elapsed;
+  else autoStuckTimer=Math.max(0,autoStuckTimer-elapsed*1.8);
+  if(autoStuckTimer>.65||((autoIsInCorner()||wall<70)&&(danger>1.05||bossNear))){
+    autoEmergencyEscapeUntil=now+1300;
+    autoEmergencyEscapeAngle=Math.atan2(canvas.height/2-player.y,canvas.width/2-player.x)+(Math.random()*.5-.25);
     autoStuckTimer=0;
-    floatingTexts.push({x:player.x,y:player.y-82,text:"🤖 escape de emergencia",life:.85,maxLife:.85,big:false});
   }
 }
+// Enfrentamiento con el pato: planificador de rutas cortas (sin mensajes ni ventajas
+// artificiales). Evalúa dónde estarán los QUACK y los gatos si nos movemos,
+// y mantiene una dirección varios fotogramas en vez de oscilar a izquierda/derecha.
+function autoDuckSafeMovement(preferred){
+  if(!boss||boss.type!=="duck"||!isFinitePos(boss))return preferred;
+  const px=player.x,py=player.y;
+  const realSpeed=Math.max(70,player.speed*upgrades.moveSpeed*getZoomiesMoveMultiplier()*getStarSpeedMultiplier());
+  const now=performance.now(), horizon=1.05;
+  const bullets=[];
+  for(const group of [quacks,yarnBalls,demonOrbs]){
+    for(const p of group){
+      if(!isFinitePos(p)||!Number.isFinite(p.vx)||!Number.isFinite(p.vy))continue;
+      const dx=p.x-px,dy=p.y-py;
+      if(dx*dx+dy*dy<900*900)bullets.push({p,d2:dx*dx+dy*dy});
+    }
+  }
+  bullets.sort((a,b)=>a.d2-b.d2);
+  bullets.length=Math.min(bullets.length,20);
+  const enemies=[];
+  for(const c of cats){
+    if(!isFinitePos(c)||c.dead)continue;
+    const dx=c.x-px,dy=c.y-py;
+    if(dx*dx+dy*dy<470*470)enemies.push({c,d2:dx*dx+dy*dy});
+  }
+  enemies.sort((a,b)=>a.d2-b.d2);
+  enemies.length=Math.min(enemies.length,14);
+  const bossDx=px-boss.x,bossDy=py-boss.y,bd=Math.hypot(bossDx,bossDy)||1;
+  const tangent={x:-bossDy/bd,y:bossDx/bd};
+  // Tangential movement while the duck prepares a salvo: a stationary player
+  // is an easy target for QUACKs aimed at the position at launch.
+  const charging=(boss.pendingQuacks&&boss.pendingQuacks.length>0)||(boss.shoot||0)<.8;
+  const candidates=[];
+  function addDir(x,y){
+    const m=Math.hypot(x,y);
+    if(m<.10)return;
+    const dir={x:x/m,y:y/m};
+    if(!candidates.some(c=>c.x*dir.x+c.y*dir.y>.993))candidates.push(dir);
+  }
+  addDir(preferred.x,preferred.y);
+  if(autoDuckDirection)addDir(autoDuckDirection.x,autoDuckDirection.y);
+  // Both perpendicular escape routes plus 8 directions ensure the AI can
+  // reverse direction when a wall or a crossing salvo makes it necessary.
+  addDir(tangent.x,tangent.y);addDir(-tangent.x,-tangent.y);
+  for(let i=0;i<8;i++){const a=Math.PI*i/4;addDir(Math.cos(a),Math.sin(a));}
+  function score(dir){
+    const vx=dir.x*realSpeed,vy=dir.y*realSpeed;
+    const futureX=px+vx*horizon,futureY=py+vy*horizon;
+    // Heavily penalize getting pinned to an edge (and physically impossible
+    // trajectories). Use a softer penalty in the outer 115px of the arena.
+    const edge=Math.min(futureX-player.r,futureY-player.r,canvas.width-player.r-futureX,canvas.height-player.r-futureY);
+    let cost=edge<0?140+Math.abs(edge)*.9:edge<115?(115-edge)*.42:0;
+    for(const {p} of bullets){
+      // Closest approach of the moving player and a moving enemy projectile.
+      // Evaluating relative velocity prevents contradictory dodge vectors.
+      const rx=p.x-px,ry=p.y-py,rvx=p.vx-vx,rvy=p.vy-vy;
+      const v2=rvx*rvx+rvy*rvy;
+      const t=v2>1?Math.max(0,Math.min(horizon,-(rx*rvx+ry*rvy)/v2)):0;
+      const miss=Math.hypot(rx+rvx*t,ry+rvy*t);
+      const hit=(player.r||24)+(p.r||14)+12;
+      if(miss<hit+90){
+        const urgency=1.7-t/horizon;
+        cost+=miss<hit?(28+(hit-miss)*1.1)*urgency:(hit+90-miss)/90*12*urgency;
+      }
+      // Also discourage passing through the projectile immediately during
+      // the next decision tick, even if closest-approach time was clamped.
+      const nearT=Math.min(.2,horizon);
+      const shortDist=Math.hypot(rx+rvx*nearT,ry+rvy*nearT);
+      if(shortDist<hit+12)cost+=(hit+12-shortDist)*.6;
+    }
+    // Cats chase the player; measure projected space rather than just current
+    // positions to avoid fleeing directly into a second group of enemies.
+    for(const {c} of enemies){
+      const dx=px-c.x,dy=py-c.y,d=Math.hypot(dx,dy)||1;
+      const chase=Math.min(d,Math.max(0,c.speed||80)*.7);
+      const cx=c.x+dx/d*chase,cy=c.y+dy/d*chase;
+      const dist=Math.hypot(px+vx*.7-cx,py+vy*.7-cy);
+      const safe=(player.r||24)+(c.r||20)+90;
+      if(dist<safe)cost+=(safe-dist)/safe*38;
+    }
+    const distToBoss=Math.hypot(futureX-boss.x,futureY-boss.y);
+    const avoidBoss=(boss.r||60)+(player.r||24)+160;
+    if(distToBoss<avoidBoss)cost+=(avoidBoss-distToBoss)*.16;
+    // Pursue a consistent orbit only when actual collision risks allow it.
+    if(charging)cost-=Math.abs(dir.x*tangent.x+dir.y*tangent.y)*3;
+    const prefMag=Math.hypot(preferred.x,preferred.y);
+    if(prefMag>.15)cost-=(dir.x*preferred.x+dir.y*preferred.y)/prefMag*1.5;
+    if(autoDuckDirection){
+      const same=dir.x*autoDuckDirection.x+dir.y*autoDuckDirection.y;
+      cost-=Math.max(0,same)*((now<autoDuckDirectionUntil)?7:2.0);
+    }
+    return cost;
+  }
+  let best=null,bestCost=Infinity;
+  for(const dir of candidates){const c=score(dir);if(c<bestCost){best=dir;bestCost=c;}}
+  // Hysteresis: keep current course unless another is materially safer. It
+  // prevents two opposite QUACKs from summing to a zero movement vector.
+  if(autoDuckDirection&&now<autoDuckDirectionUntil&&score(autoDuckDirection)<bestCost+8){
+    best=autoDuckDirection;
+  }else if(best){
+    autoDuckDirection={x:best.x,y:best.y};
+    autoDuckDirectionUntil=now+480;
+  }
+  return best?{x:best.x*8,y:best.y*8}:preferred;
+}
+
 function autoApplyEmergencyEscape(v,danger){
   const now=performance.now();
   const wall=autoDistanceToWall();
@@ -7336,7 +7477,8 @@ function autoPlanRamFish(){
     const trappedRelease=catHits>=2&&nearHits>=2&&(nearPressure>=4||room<105);
     const bossPressure=bossHit&&catHits>=2&&nearPressure>=2;
     const defensiveVolley=bulletHits>=2&&bulletRisk>1.65;
-    const lifeSavingShot=emergency&&bulletHits>=1&&bulletRisk>1.0;
+    const duckDefense=boss&&boss.type==="duck"&&urgent&&bulletHits>=1&&bulletRisk>.8&&(nearPressure>=2||room<150||life<upgrades.maxLife*.73);
+    const lifeSavingShot=(emergency&&bulletHits>=1&&bulletRisk>1.0)||duckDefense;
     if(!(crowdRelease||trappedRelease||bossPressure||defensiveVolley||lifeSavingShot))continue;
     // Bajo peligro, una defensa efectiva tiene prioridad sobre daño extra.
     const score=catHits*1.8+nearHits*1.1+(bossHit?2.2:0)
@@ -7408,12 +7550,8 @@ function updateAutoPlayer(dt){
       danger+=force*.38;projectileDanger+=force*.45;
     }
   }
-  // Pato: durante una ráfaga, mantener un pequeño movimiento lateral respecto al tiro.
-  if(boss&&boss.type==="duck"&&boss.pendingQuacks&&boss.pendingQuacks.length&&isFinitePos(boss)){
-    const dx=player.x-boss.x,dy=player.y-boss.y,d=Math.hypot(dx,dy)||1;
-    const side=Math.sin(performance.now()/310)>0?1:-1;
-    autoSafeAdd(v,-dy/d*side,dx/d*side,1.35);
-  }
+  // El pato tiene un planificador dedicado al final de esta decisión:
+  // no sumar fuerzas laterales opuestas ni invertir la esquiva por tiempo.
 
   autoUpdateStuckState(dt,danger);
   const emergencyEscaping=autoApplyEmergencyEscape(v,danger);
@@ -7472,13 +7610,9 @@ function updateAutoPlayer(dt){
     autoSafeAdd(v,-dy/d,dx/d,strafe);
   }else autoSafeAdd(v,canvas.width/2-player.x,canvas.height/2-player.y,.002);
 
-  autoMoveKeysFromVector(v);
-
-  if(autoMode&&performance.now()-autoLastDebugText>9000&&gameStarted&&!choosingUpgrade&&!paused&&!gameOver){
-    autoLastDebugText=performance.now();
-    const msg=emergencyEscaping?"🤖 saliendo de peligro":(projectileDanger>.85?"🤖 esquivando proyectiles":(powerStars.length?"🤖 buscando estrella":(target&&target.rainbow?"🤖 cazando arcoíris":(danger>1.2?"🤖 esquivando":(target?"🤖 atacando":"🤖 buscando recursos")))));
-    floatingTexts.push({x:player.x,y:player.y-72,text:msg,life:.75,maxLife:.75,big:false});
-  }
+  autoMoveKeysFromVector(boss&&boss.type==="duck"?autoDuckSafeMovement(v):v);
+  // La IA no necesita texto flotante periódico: seguimos dejando espacio
+  // visual a enemigos, proyectiles y recompensas del combate.
 }
 
 /* Decisiones avanzadas */
