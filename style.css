@@ -1564,3 +1564,53 @@ body.panel-theme-dark #levelUpBox.shopMode h2{
   #levelUpBox.shopMode .shopActionRow .upgradeIconBubble{width:48px;height:48px;font-size:27px;}
   #levelUpBox.shopMode .shopActionRow .upgradePrice{font-size:10px;padding:4px 5px!important;}
 }
+
+
+/* v177.8: el catálogo de fusiones usa tarjetas condensadas y como máximo
+   dos filas por página en escritorio, sin ocultar descripciones ni bonus. */
+#levelUpBox.fusionMode{width:min(1160px,96vw);padding:17px 21px!important}
+#levelUpBox.fusionMode h2{font-size:clamp(24px,2.4vw,31px);margin:0 0 4px}
+#levelUpBox.fusionMode #levelUpPhrase{margin:2px 0 5px;font-size:14px}
+#levelUpBox.fusionMode #upgradeSubtitle{margin:0 0 10px;font-size:12px}
+#levelUpBox.fusionMode #upgradeCards{gap:9px;align-items:stretch}
+#levelUpBox.fusionMode .upgradeCard,
+body.panel-theme-dark #levelUpBox.fusionMode .upgradeCard{
+ min-height:0;padding:11px 12px 10px;border-radius:15px;
+ box-shadow:0 5px 15px rgba(0,0,0,.17)!important
+}
+#levelUpBox.fusionMode .visualTypeTag{display:none}
+#levelUpBox.fusionMode .upgradeCardTop{min-height:51px;margin:0}
+#levelUpBox.fusionMode .upgradeIconBubble,
+body.panel-theme-dark #levelUpBox.fusionMode .upgradeIconBubble,
+#levelUpBox.fusionMode .upgradeCard.specialUpgrade .upgradeIconBubble,
+#levelUpBox.fusionMode .upgradeCard.darkUpgrade .upgradeIconBubble{
+ width:52px;height:52px;margin:0 auto;font-size:27px;border-radius:14px
+}
+#levelUpBox.fusionMode .upgradeIconBubble.comboIconBubble{width:61px;height:53px}
+#levelUpBox.fusionMode .comboIconBubble .miniIcon{font-size:23px}
+#levelUpBox.fusionMode .upgradeTitle,
+body.panel-theme-dark #levelUpBox.fusionMode .upgradeTitle{
+ font-size:16px;line-height:1.2;margin:4px 0 3px
+}
+#levelUpBox.fusionMode .visualLevelDots{height:10px;margin:0 0 6px;gap:4px}
+#levelUpBox.fusionMode .visualLevelDots span{width:7px;height:7px}
+#levelUpBox.fusionMode .upgradeDesc{gap:4px;flex:0 1 auto}
+#levelUpBox.fusionMode .upgradeDescMain,
+body.panel-theme-dark #levelUpBox.fusionMode .upgradeDescMain{
+ min-height:0;padding:7px 8px;font-size:11.5px;line-height:1.29;border-radius:9px
+}
+#levelUpBox.fusionMode .upgradeFusionBonus{padding:6px 8px;margin:0;font-size:11px;line-height:1.3}
+#levelUpBox.fusionMode .upgradeLockedReason{margin-top:3px;font-size:10px}
+#levelUpBox.fusionMode .choicePreview{margin-top:5px!important;padding:6px 8px!important;font-size:10px}
+#levelUpBox.fusionMode .visualChooseButton{
+ min-height:30px;margin-top:7px;border-radius:9px;font-size:11px
+}
+#levelUpBox.fusionMode .recommendedTag{
+ min-height:24px!important;padding:5px 10px!important;margin-bottom:1px!important;font-size:9px!important
+}
+#levelUpBox.fusionMode .recommendReason{font-size:10px!important;line-height:1.22!important;margin-bottom:3px!important}
+#levelUpBox.fusionMode .fusionTopControls{gap:7px;margin-bottom:9px;padding:7px}
+#levelUpBox.fusionMode .fusionTopControls .fusionPageBtn,
+#levelUpBox.fusionMode .fusionTopControls #fusionBackBtn{padding:7px 12px!important;font-size:12px}
+@media(max-width:900px){#levelUpBox.fusionMode{padding:12px!important}#levelUpBox.fusionMode #upgradeCards{max-width:none;grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:720px){#levelUpBox.fusionMode #upgradeCards{grid-template-columns:1fr}#levelUpBox.fusionMode .upgradeCard{width:100%}}
