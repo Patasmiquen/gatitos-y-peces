@@ -1053,6 +1053,20 @@ let lastFusionShieldGuard=0,zoomiesEscapeHits=0,forcedZoomiesUntil=0,safeTelepor
 let screenShake=0,screenShakeX=0,screenShakeY=0,lastStarTrail=0;
 const fishes=[],cats=[],hearts=[],smokes=[],floatingTexts=[],pawPrints=[],quacks=[],coinsDrops=[],dogBones=[],demonOrbs=[],yarnBalls=[],powerStars=[],shockwaves=[],sparkles=[],tunaDrops=[];
 let audioCtx=null;
+// Restaurado: sin esta función, los sonidos generaban un ReferenceError en
+// cada disparo o eliminación (especialmente visible en el modo IA).
+function getAudioCtx(){
+  if(!audioCtx||audioCtx.state==="closed"){
+    const AudioContextClass=window.AudioContext||window.webkitAudioContext;
+    if(!AudioContextClass)throw new Error("Este navegador no admite Web Audio");
+    audioCtx=new AudioContextClass();
+  }
+  if(audioCtx.state==="suspended"){
+    const resumePromise=audioCtx.resume();
+    if(resumePromise&&typeof resumePromise.catch==="function")resumePromise.catch(()=>{});
+  }
+  return audioCtx;
+}
 let starAudio=null,starTwinkleTimer=0;
 let lastImpactSoundAt=0;
 let lastMeowSoundAt=0;
