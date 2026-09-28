@@ -645,8 +645,8 @@ function drawLowPolyCat(cat){
 }
 function drawLowPolyFish(f){
   const angle=Number.isFinite(f.angle)?f.angle:Math.atan2(f.vy||0,f.vx||1);
-  const body=f.giantEaster?"#ffd166":f.ramFish?"#7ef5ff":f.cardumenGigante?"#80d8ff":f.boomerang?"#ff9f1c":f.crit?"#ff6b6b":f.shieldShot?"#ffd166":"#4cc9f0";
-  const accent=f.giantEaster?"#fff0a6":f.ramFish?"#e3ffff":f.cardumenGigante?"#caf0f8":f.boomerang?"#ffd6a5":f.crit?"#ffc2d1":f.shieldShot?"#fff3bf":"#caf0f8";
+  const body=f.boomerang&&f.crit?"#ffe066":f.giantEaster?"#ffd166":f.ramFish?(f.boomerang?"#80ed99":f.crit?"#ff6b6b":"#7ef5ff"):f.cardumenGigante?"#80d8ff":f.boomerang?"#80ed99":f.crit?"#ff6b6b":f.shieldShot?"#ffd166":"#4cc9f0";
+  const accent=f.boomerang&&f.crit?"#e0a800":f.giantEaster?"#fff0a6":f.ramFish?(f.boomerang?"#57cc99":f.crit?"#e03131":"#e3ffff"):f.cardumenGigante?"#caf0f8":f.boomerang?"#57cc99":f.crit?"#ffc2d1":f.shieldShot?"#fff3bf":"#caf0f8";
   const outline=f.shieldShot?"#ffb703":"#12394a";
   drawEntityShadow(f.x,f.y,12*(f.scale||1),4*(f.scale||1),.08);
   ctx.save();ctx.translate(f.x,f.y);ctx.rotate(angle);ctx.scale(f.scale||1,f.scale||1);
@@ -1028,7 +1028,7 @@ let score,shots,lastShot,lastFrame,gameOver,wave,spawnCooldown,life,level,xp,xpN
 let perfFps=60,lowPerfMode=false,lowPerfTimer=0,perfNoticeTimer=0;
 let lastOrbitalGuard=-Infinity;
 const RAM_FISH_BASE_COOLDOWN=30000;
-// Escalado continuo del Pez Ariete: mejora un poco en cada nivel.
+// Escalado continuo del Bloquito: mejora un poco en cada nivel.
 function getRamFishCooldownMs(playerLevel=level){
   const lvl=Math.max(1,Number(playerLevel)||1);
   return Math.max(18000,RAM_FISH_BASE_COOLDOWN-(lvl-1)*420);
@@ -2346,8 +2346,6 @@ const speedScale=(firstBossIntro?.78:1)*(phase==="main"?1:phase==="postBoss"?(1+
 const damageScale=(firstBossIntro?.70:1)*(phase==="main"?1:phase==="postBoss"?(1+getPostBossPressure()*.012):(1+getEndlessPressure()*.038));
 if(bossRepeatLevel>0){
   floatingTexts.push({x:canvas.width/2,y:205,text:"👑 Jefe reforzado",life:1.6,maxLife:1.6,big:false});
-}else{
-  floatingTexts.push({x:canvas.width/2,y:205,text:"👑 Primer encuentro",life:1.4,maxLife:1.4,big:false});
 }
 
 if(type==="demon"){
@@ -2883,7 +2881,7 @@ const oldCoinBadge=levelUpBox.querySelector(".shopCoinBadge");
 if(oldCoinBadge)oldCoinBadge.remove();
 levelUpBox.classList.toggle("shopMode",context==="shop");
 levelUpBox.classList.toggle("fusionMode",context==="fusionFirst"||context==="fusionPartner");
-upgradeTitle.textContent=title;levelUpPhrase.textContent=phrase;upgradeSubtitle.textContent=subtitle;upgradeSubtitle.hidden=!subtitle;
+upgradeTitle.textContent=title;levelUpPhrase.textContent=phrase;levelUpPhrase.hidden=!phrase;upgradeSubtitle.textContent=subtitle;upgradeSubtitle.hidden=!subtitle;
 if(context==="shop"){
   const coinBadge=document.createElement("div");
   coinBadge.className="shopCoinBadge";
@@ -3184,7 +3182,7 @@ function getEffectiveShopFusionPrice(){
   return isFusionOnlyShopDiscountActive()?Math.max(1,Math.ceil(normal/2)):normal;
 }
 function startShopSession(){shopAvailable=true;openCoinShop()}
-function closeShopSession(){shopAvailable=false;choosingUpgrade=false;levelUpPanel.style.display="none";syncGamePointerLock();floatingTexts.push({x:player.x,y:player.y-65,text:"Tienda cerrada 💰",life:1.2,maxLife:1.2,big:false});updateHud()}
+function closeShopSession(){shopAvailable=false;choosingUpgrade=false;levelUpPanel.style.display="none";syncGamePointerLock();updateHud()}
 
 function getFusionLockReason(cost=getEffectiveShopFusionPrice()){
 const keys=getMaxedFusionKeys();
@@ -3245,7 +3243,7 @@ const randomChoice=randomUpgrade?{
 const choices=[...upgradeChoices,fusionChoice]; // Posición estable: mejoras arriba, fusión junto a sorpresa abajo.
 if(randomChoice)choices.push(randomChoice);
 choices.push({icon:"🚪",title:"Salir de la tienda",levelTag:"",desc:"Cierra la tienda y conserva las monedas que te queden.",special:true,skipShop:true});
-showCards("🪙 Tienda de gatitos","Compra todo lo que quieras hasta que decidas salir 💖","",choices,upgrade=>{
+showCards("🪙 Tienda de gatitos","","",choices,upgrade=>{
 if(upgrade.skipShop){closeShopSession();return}
 if(upgrade.openFusionShop){openFusionChoice(fusionPrice);return}
 if(upgrade.randomShopUpgrade){
@@ -3258,7 +3256,7 @@ if(upgrade.randomShopUpgrade){
   updateHud();checkGameCompletion();
   if(isGameCompleted())return;
   openCoinShop();
-  levelUpPhrase.textContent=`🎲 Has recibido: ${hidden.title}`;
+  levelUpPhrase.textContent=`🎲 Has recibido: ${hidden.title}`;levelUpPhrase.hidden=false;
   return;
 }
 if(coins<upgradePrice){openCoinShop();return}
@@ -3291,7 +3289,7 @@ aimAssist:["autoFire", "bigCursor", "catInstinct", "damage", "pierce", "fishSpee
 autoFire:["aimAssist", "bigCursor", "moralSupport"],
 bigCursor:["aimAssist", "autoFire", "moralSupport", "damage", "pierce", "critChance", "fishSize", "boomerang"],
 bigFish:["damage", "doubleFish", "fireRate", "fishSize", "pierce", "yarnBounce"],
-boomerang:["doubleFish", "fireRate", "fishSpeed", "omniBurst", "pierce", "yarnBounce", "bigCursor", "catInstinct"],
+boomerang:["critChance", "doubleFish", "fireRate", "fishSpeed", "omniBurst", "pierce", "yarnBounce", "bigCursor", "catInstinct"],
 catInstinct:["aimAssist", "darkPact", "moralSupport", "zoomies", "shield", "maxLife", "catSlow", "moveSpeed", "healOnWave", "coinMagnet", "boomerang", "omniBurst"],
 catSlow:["coinMagnet", "fishSize", "maxLife", "moveSpeed", "shield"],
 coinMagnet:["catSlow", "healOnWave", "moveSpeed", "xpBoost", "catInstinct", "darkPact"],
@@ -3630,6 +3628,9 @@ Object.assign(fusionEffectDescMap,{
 "luck+xpBoost":"La suerte acompaña a tu progreso de experiencia."
 });
 for(const pair of ["damageReduction+shield","damageReduction+lifeSteal","damageReduction+luck","damage+luck","critChance+luck","healOnWave+luck","damageReduction+maxLife","damageReduction+healOnWave","coinMagnet+luck","luck+xpBoost"])fusionShortDescMap[pair]=fusionEffectDescMap[pair];
+fusionNameMap["boomerang+critChance"]="Retorno crítico";
+fusionShortDescMap["boomerang+critChance"]="Los peces y Bloquito pueden combinar boomerang y crítico: se vuelven amarillos. Ambos atributos progresan al mejorar la fusión.";
+fusionEffectDescMap["boomerang+critChance"]=fusionShortDescMap["boomerang+critChance"];
 ensureFusionCatalogueComplete();
 auditFusionDefinitions();
 let FUSION_DATA=[];
@@ -3652,6 +3653,7 @@ rebuildFusionDataCatalogue();
 // v177: bonus específicos comprobables. Los que no poseen mecánica exclusiva
 // describen con precisión la mejora de atributos que realmente aplica applyFusionBonus.
 const fusionSignatureBonuses={
+  "boomerang+critChance":"permite aplicar boomerang y daño crítico al mismo pez, incluido Bloquito; las probabilidades de ambos atributos aumentan con los niveles de fusión.",
   "bigFish+damage":"los peces gigantes hacen entre un 10 % y un 35 % más de daño.",
   "fireRate+fishSpeed":"todos los peces ganan entre un 4 % y un 16 % de velocidad adicional.",
   "critChance+damage":"aumenta entre ×0,08 y ×0,30 el multiplicador de daño crítico.",
@@ -4076,7 +4078,7 @@ fusion:true
 };
 });
 const backToShop=()=>{choosingUpgrade=false;levelUpPanel.style.display="none";fusionBackBtn.style.display="none";if(shopAvailable)openCoinShop()};
-showCards("🔮 Fusión de mejoras","Elige la primera mejora","Después elegirás una compatible.",firstChoices,first=>{
+showCards("🔮 Fusión de mejoras","Elige la primera mejora","",firstChoices,first=>{
 // Paso 2: catálogo completo — todas las fusiones posibles con first.key (desbloqueadas y bloqueadas)
 const allCompatibleKeys=new Set();
 (fusionPairs[first.key]||[]).forEach(k=>allCompatibleKeys.add(k));
@@ -4104,7 +4106,7 @@ special:true,locked,
 fusion:!locked,
 easter:sortedPair(first.key,k)==="darkPact+moralSupport",first:first.key,fusionCost:cost
 }}).sort((a,b)=>Number(a.locked)-Number(b.locked));
-showCards("🔮 Fusión compatible",`Fusiones posibles con ${getAnyName(first.key)}`,"Elige una fusión. Las bloqueadas aún no están disponibles.",allPartners,second=>{
+showCards("🔮 Fusión compatible",`Fusiones posibles con ${getAnyName(first.key)}`,"Elige una fusión.",allPartners,second=>{
 if(second.locked)return;
 const wasShopOpen=shopAvailable;
 coins-=cost;
@@ -4113,7 +4115,7 @@ if(shopAvailable)shopFusionPurchases++;
 const pair=sortedPair(first.key,second.key);
 doneFusionPairs[pair]=true;
 registerFusionAchievements();
-// El antiguo bonus de mantener pulsado ya no existe: el clic lanza el Pez Ariete.
+// El antiguo bonus de mantener pulsado ya no existe: el clic lanza el Bloquito.
 const fusionName=getFusionNameFromPair(first.key,second.key);
 if(pair==="aimAssist+autoFire"){upgrades.combatAI=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🤖 IA de combate activada",life:1.8,maxLife:1.8,big:false})}
 if(pair==="autoFire+bigCursor"){upgrades.assistedShot=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🌈 Disparo asistido",life:1.8,maxLife:1.8,big:false})}
@@ -4492,12 +4494,19 @@ return !!doneFusionPairs[sortedPair("bigFish","fishSize")];
 
 // El ariete comparte los multiplicadores generales de daño del disparo normal:
 // daño comprado/fusionado, suerte ofensiva, Zoomies y bonos de vida crítica.
-function getRamFishDamage(playerLevel=level){
+// Sin Retorno crítico, una tirada doble elige un solo efecto con igual probabilidad.
+function resolveFishTraits(boomerang,crit){
+  if(boomerang&&crit&&!hasDoneFusionPair("boomerang+critChance")){
+    if(Math.random()<.5)crit=false;else boomerang=false;
+  }
+  return {boomerang,crit};
+}
+function getRamFishDamage(playerLevel=level,criticalHit=Math.random()<getCurrentCritChance()){
   const growth=Math.max(0,playerLevel-1);
   const lowLifeBonus=life<upgrades.maxLife*.35
     ?(upgrades.braveHeart ? .35 : 0)+(upgrades.cursedInstinct ? .45 : 0)
     :0;
-  const critical=Math.random()<getCurrentCritChance()?getCriticalDamageMultiplier():1;
+  const critical=criticalHit?getCriticalDamageMultiplier():1;
   return upgrades.damage*getLuckyShotMultiplier()*getZoomiesDamageMultiplier()
     *(1+lowLifeBonus)*(2.8+growth*.085)*critical;
 }
@@ -4507,23 +4516,35 @@ function getRamFishDamage(playerLevel=level){
 function launchRamFish(target=null){
   if(!gameStarted||gameOver||paused||choosingUpgrade)return false;
   const now=gameNow();
-  if(now-lastRamFishAt<getRamFishCooldownMs())return false;
+  const remaining=Math.max(0,(getRamFishCooldownMs()-(now-lastRamFishAt))/1000);
+  const fullyCharged=remaining<=0;
+  const damageFraction=1/Math.max(1,remaining);
   const aim=target||mouse;
   const angle=Math.atan2(aim.y-player.y,aim.x-player.x);
-  const scale=getRamFishScale();
-  const damage=getRamFishDamage();
+  const scale=getRamFishScale()*damageFraction;
+  const traits=resolveFishTraits(
+    Math.random()<Math.min(.95,upgrades.boomerangChance+(hasDoneFusionPair("boomerang+doubleFish")?.04+.08*fusionStrength("boomerang+doubleFish"):0)),
+    Math.random()<getCurrentCritChance());
+  const {boomerang,crit}=traits;
+  const boomerangLvl=effectLevel("boomerang");
+  const damage=getRamFishDamage(level,crit)*damageFraction;
   const speed=710*upgrades.fishSpeed;
   fishes.push({x:player.x+Math.cos(angle)*58,y:player.y+Math.sin(angle)*58,
     vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,angle,damage,
-    life:Math.max(2.6,Math.hypot(canvas.width,canvas.height)/speed+0.4),
-    scale,pierce:true,boomerang:false,ramFish:true,ramKnockback:getRamFishKnockback(),
+    life:boomerang?3.35+boomerangLvl*.18:Math.max(2.6,Math.hypot(canvas.width,canvas.height)/speed+0.4),
+    scale,pierce:true,boomerang,crit,turnTime:boomerang?.95+boomerangLvl*.06:0,
+    ramFish:true,ramFullyCharged:fullyCharged,ramDamageFraction:damageFraction,ramKnockback:getRamFishKnockback()*damageFraction,
     returning:false,age:0,hitIds:new Set()});
-  lastRamFishAt=now;
+  if(fullyCharged)lastRamFishAt=now;
+  shots++;if(runStats)runStats.shotsFired++;addAchievementStat("shots",1,{run:true});
+  player.shootAnim=.12;
+  if(fullyCharged){
   makeImpact(player.x+Math.cos(angle)*55,player.y+Math.sin(angle)*55,"#80eaff",1.6);
-  floatingTexts.push({x:player.x,y:player.y-75,text:"🐟 ¡PEZ ARIETE!",life:1,maxLife:1,big:true});
+  floatingTexts.push({x:player.x,y:player.y-75,text:"🐟 ¡BLOQUITO!",life:1,maxLife:1,big:true});
+  }
   return true;
 }
-// El Pez Ariete destruye proyectiles enemigos a lo largo de TODA su trayectoria.
+// El Bloquito destruye proyectiles enemigos a lo largo de TODA su trayectoria.
 // Intersección barrida: comprueba la posición anterior y actual tanto del pez
 // como del proyectil para no atravesar balas rápidas entre dos frames.
 function ramFishInterceptsProjectile(projectile, projectilePrevX, projectilePrevY, ramShots){
@@ -4531,7 +4552,7 @@ function ramFishInterceptsProjectile(projectile, projectilePrevX, projectilePrev
   const p0x=Number.isFinite(projectilePrevX)?projectilePrevX:projectile.x;
   const p0y=Number.isFinite(projectilePrevY)?projectilePrevY:projectile.y;
   for(const fish of ramShots){
-    if(!isFinitePos(fish))continue;
+    if(!isFinitePos(fish)||!fish.ramFish||fish.ramFullyCharged!==true)continue;
     const f0x=Number.isFinite(fish.prevX)?fish.prevX:fish.x;
     const f0y=Number.isFinite(fish.prevY)?fish.prevY:fish.y;
     // Las mismas dimensiones de impacto que las colisiones existentes del pez.
@@ -4605,12 +4626,13 @@ if(!gameStarted||gameOver||paused||choosingUpgrade)return;
 const delay=getShotInterval();
 if(now-lastShot<delay)return;
 lastShot=now;shots++;if(runStats)runStats.shotsFired++;addAchievementStat("shots",1,{run:true});player.shootAnim=.12;
-const rawAngle=Math.atan2(mouse.y-player.y,mouse.x-player.x),angle=getAutoFireCorrectedAngle(rawAngle),giantFishEasterEgg=hasFishSizeFusionForGiantFish()&&Math.random()<LEVIATHAN_GIANT_FISH_CHANCE,isBigFish=giantFishEasterEgg||Math.random()<upgrades.bigFishChance,fishScale=upgrades.fishSize*(giantFishEasterEgg?13.5:(isBigFish?1.65:1)),lowLifeBonus=(life<upgrades.maxLife*.35?(upgrades.braveHeart?0.35:0)+(upgrades.cursedInstinct?0.45:0):0),fishDamage=upgrades.damage*getLuckyShotMultiplier()*getZoomiesDamageMultiplier()*(1+lowLifeBonus)*(giantFishEasterEgg?60:(isBigFish?2.1*(hasDoneFusionPair("bigFish+damage")?1.10+.25*fusionStrength("bigFish+damage"):1):1)),canPierce=giantFishEasterEgg||Math.random()<upgrades.pierceChance,boomerang=!giantFishEasterEgg&&Math.random()<Math.min(.95,upgrades.boomerangChance+(hasDoneFusionPair("boomerang+doubleFish")?.04+.08*fusionStrength("boomerang+doubleFish"):0));
+const rawAngle=Math.atan2(mouse.y-player.y,mouse.x-player.x),angle=getAutoFireCorrectedAngle(rawAngle),giantFishEasterEgg=hasFishSizeFusionForGiantFish()&&Math.random()<LEVIATHAN_GIANT_FISH_CHANCE,isBigFish=giantFishEasterEgg||Math.random()<upgrades.bigFishChance,fishScale=upgrades.fishSize*(giantFishEasterEgg?13.5:(isBigFish?1.65:1)),lowLifeBonus=(life<upgrades.maxLife*.35?(upgrades.braveHeart?0.35:0)+(upgrades.cursedInstinct?0.45:0):0),fishDamage=upgrades.damage*getLuckyShotMultiplier()*getZoomiesDamageMultiplier()*(1+lowLifeBonus)*(giantFishEasterEgg?60:(isBigFish?2.1*(hasDoneFusionPair("bigFish+damage")?1.10+.25*fusionStrength("bigFish+damage"):1):1)),canPierce=giantFishEasterEgg||Math.random()<upgrades.pierceChance,rolledBoomerang=!giantFishEasterEgg&&Math.random()<Math.min(.95,upgrades.boomerangChance+(hasDoneFusionPair("boomerang+doubleFish")?.04+.08*fusionStrength("boomerang+doubleFish"):0));
 function addFish(offsetAngle=0,damageMultiplier=1){
 const finalAngle=angle+offsetAngle;
 const boomerangLvl=effectLevel("boomerang");
+const traits=resolveFishTraits(rolledBoomerang,Math.random()<Math.min(.95,getCurrentCritChance()+(offsetAngle!==0&&hasDoneFusionPair("critChance+doubleFish")?.04+.10*fusionStrength("critChance+doubleFish"):0)));
+const boomerang=traits.boomerang,critRoll=traits.crit;
 const boomerangRangeBonus=boomerang?1+boomerangLvl*.08:1;
-const critRoll=Math.random()<Math.min(.95,getCurrentCritChance()+(offsetAngle!==0&&hasDoneFusionPair("critChance+doubleFish")?.04+.10*fusionStrength("critChance+doubleFish"):0));
 const piercingStrike=canPierce&&hasDoneFusionPair("damage+pierce")?1.08+.17*fusionStrength("damage+pierce"):1;
 const extraFishStrike=offsetAngle!==0&&hasDoneFusionPair("damage+doubleFish")?1.10+.25*fusionStrength("damage+doubleFish"):1;
 // Su bonus particular no se agota al alcanzar el 95 % de probabilidad:
@@ -4622,7 +4644,7 @@ const lateralCritStrike=offsetAngle!==0&&critRoll&&hasDoneFusionPair("critChance
 const automaticCritStrike=critRoll&&hasDoneFusionPair("autoFire+critChance")?1.06+.14*fusionStrength("autoFire+critChance"):1;
 const piercingVelocity=canPierce&&hasDoneFusionPair("fishSpeed+pierce")?1.08+.20*fusionStrength("fishSpeed+pierce"):1;
 const burstVelocity=hasDoneFusionPair("fireRate+fishSpeed")?1.04+.12*fusionStrength("fireRate+fishSpeed"):1;
-fishes.push({x:player.x+Math.cos(finalAngle)*62,y:player.y+Math.sin(finalAngle)*62,vx:Math.cos(finalAngle)*610*upgrades.fishSpeed*boomerangRangeBonus*piercingVelocity*burstVelocity,vy:Math.sin(finalAngle)*610*upgrades.fishSpeed*boomerangRangeBonus*piercingVelocity*burstVelocity,angle:finalAngle,damage:fishDamage*damageMultiplier*piercingStrike*extraFishStrike*lateralBoomerangStrike*lateralCritStrike*automaticCritStrike*(critRoll?getCriticalDamageMultiplier():1),life:giantFishEasterEgg?2.2:(boomerang?3.35+boomerangLvl*.18:1.45),scale:fishScale,pierce:canPierce,boomerang,crit:critRoll&&!boomerang,giantEaster:giantFishEasterEgg,returning:false,age:0,turnTime:boomerang?0.95+boomerangLvl*.06:0,hitIds:new Set()})
+fishes.push({x:player.x+Math.cos(finalAngle)*62,y:player.y+Math.sin(finalAngle)*62,vx:Math.cos(finalAngle)*610*upgrades.fishSpeed*boomerangRangeBonus*piercingVelocity*burstVelocity,vy:Math.sin(finalAngle)*610*upgrades.fishSpeed*boomerangRangeBonus*piercingVelocity*burstVelocity,angle:finalAngle,damage:fishDamage*damageMultiplier*piercingStrike*extraFishStrike*lateralBoomerangStrike*lateralCritStrike*automaticCritStrike*(critRoll?getCriticalDamageMultiplier():1),life:giantFishEasterEgg?2.2:(boomerang?3.35+boomerangLvl*.18:1.45),scale:fishScale,pierce:canPierce,boomerang,crit:critRoll,giantEaster:giantFishEasterEgg,returning:false,age:0,turnTime:boomerang?0.95+boomerangLvl*.06:0,hitIds:new Set()})
 }
 function addCardumenGiganteFish(offsetAngle){
 const finalAngle=angle+offsetAngle;
@@ -4803,12 +4825,12 @@ function compactLootDrops(array,maxItems,kind){
 // Solo se recortan proyectiles normales, priorizando los de vida restante corta.
 function limitActiveFishProjectiles(maxNormal=140){
   if(fishes.length<=maxNormal)return;
-  const special=fishes.filter(f=>f.ramFish||f.giantEaster).length;
+  const special=fishes.filter(f=>(f.ramFish&&f.ramFullyCharged!==false)||f.giantEaster).length;
   let excess=Math.max(0,fishes.length-maxNormal-special);
   if(!excess)return;
   const removable=[];
   for(let i=0;i<fishes.length;i++){
-    const f=fishes[i];if(f.ramFish||f.giantEaster)continue;
+    const f=fishes[i];if((f.ramFish&&f.ramFullyCharged!==false)||f.giantEaster)continue;
     // Ráfagas secundarias primero, después peces normales; boomerangs y
     // perforantes conservan su tiempo de vuelo siempre que haya espacio.
     const priority=f.yarnBounceShot||f.shieldShot?0:f.boomerang||f.pierce?2:1;
@@ -4859,7 +4881,7 @@ function makeQuack(){
 if(!gameStarted||paused||gameOver||choosingUpgrade||!boss||boss.type!=="duck")return;
 if(quacks.length>=getProjectileCap("quack"))return;
 const angle=Math.atan2(player.y-boss.y,player.x-boss.x),speed=boss.quackSpeed||190+wave*8,word=Math.random()<.5?"QUACK!":"QUACK?";
-quacks.push({x:boss.x+Math.cos(angle)*65,y:boss.y+Math.sin(angle)*65,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,r:24,life:4,text:word,hp:2+Math.floor(wave/10)})
+quacks.push({x:boss.x+Math.cos(angle)*65,y:boss.y+Math.sin(angle)*65,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,r:24,life:4,text:word,hp:1+Math.max(0,boss.repeatLevel||0)})
 }
 
 function startSealJump(){
@@ -4968,6 +4990,7 @@ const offset=Math.random()*Math.PI*2;
 for(let i=0;i<count;i++){
 if(demonOrbs.length>=getProjectileCap("orb"))break;
 const a=offset+i*Math.PI*2/count;
+const reinforced=Math.random()<getDemonOrbResistanceChance();
 demonOrbs.push({
 x:boss.x,
 y:boss.y,
@@ -4975,7 +4998,7 @@ vx:Math.cos(a)*boss.orbSpeed,
 vy:Math.sin(a)*boss.orbSpeed,
 r:13,
 life:5,
-hitsLeft:Math.random()<getDemonOrbResistanceChance()?2:1,
+reinforced,hitsLeft:reinforced?2:1,
 damage:16+wave*.45
 });
 }
@@ -5094,7 +5117,7 @@ if(cat.leviathanLoot)guaranteedLeviathanLoot(cat.x,cat.y);
 if(cat.type==="mini")gainXP(2+Math.floor(wave/3));
 if(cat.type==="student"&&(cat.studyLevel||0)>0)gainXP((cat.studyLevel||0));
 score++;if(runStats)runStats.kills++;addAchievementStat("cats",1,{run:true});gainXP(1+Math.floor(wave/4));makeSmoke(cat.x,cat.y);playSoftPop();dropCoins(cat.x,cat.y,cat.rainbow?.25:.013);if(!cat.rainbow&&Math.random()<.10){tunaDrops.push({x:cat.x,y:cat.y+(Math.random()*20-10),r:16,life:16,wobble:0});floatingTexts.push({x:cat.x,y:cat.y-38,text:"🐟 ¡Lata!",life:1.0,maxLife:1.0,big:false});}
-if(cat.rainbow){rainbowChanceLevel=1;rainbowPendingUntilKilled=false;rainbowSelectedThisWave=false;floatingTexts.push({x:cat.x,y:cat.y-35,text:"🌈 Gatito arcoíris",life:1.2,maxLife:1.2,big:false});queueUpgradeMenus("rainbow",1)}
+if(cat.rainbow){rainbowChanceLevel=1;rainbowPendingUntilKilled=false;rainbowSelectedThisWave=false;queueUpgradeMenus("rainbow",1)}
 else if(cat.type!=="thief")floatingTexts.push({x:cat.x,y:cat.y-30,text:"miau~",life:.8,maxLife:.8,big:false});
 if(cats[index]===cat)cats.splice(index,1);
 else{const i=cats.indexOf(cat);if(i!==-1)cats.splice(i,1)}
@@ -5857,9 +5880,6 @@ if(starTime>0&&starTime<=3&&!starWarningPlayed){
   makeSmoke(player.x,player.y);
   playStarTwinkle(.28);
 }
-if(starTime>0&&starTime<=3&&Math.random()<.18){
-  floatingTexts.push({x:player.x,y:player.y-62,text:"pipipi ⭐",life:.45,maxLife:.45,big:false});
-}
 if(starTime<=0){
   if(hasDoneFusionPair("damageReduction+luck")){safeTeleportInvulnUntil=Math.max(safeTeleportInvulnUntil,gameNow()+(800+1700*fusionStrength("damageReduction+luck")));floatingTexts.push({x:player.x,y:player.y-90,text:"🔰 Amuleto protector",life:1.2,maxLife:1.2,big:false});}
   stopPowerStarLoop();
@@ -5962,11 +5982,17 @@ fish.vx=Math.cos(a)*speed;fish.vy=Math.sin(a)*speed;fish.angle=a;
 if(expireAtPlayer&&Math.hypot(player.x-fish.x,player.y-fish.y)<player.r+10)fish.life=0
 }else if(!fish.ramFish&&!fish.giantEaster)applyAimAssist(fish);
 fish.x+=fish.vx*dt;fish.y+=fish.vy*dt;fish.life-=dt
+// Bloquito boomerang vuelve al alcanzar el borde antes de poder ser descartado.
+if(fish.ramFish&&fish.boomerang&&!fish.returning&&(fish.x<20||fish.x>canvas.width-20||fish.y<20||fish.y>canvas.height-20)){
+  fish.returning=true;
+  fish.x=Math.max(20,Math.min(canvas.width-20,fish.x));
+  fish.y=Math.max(20,Math.min(canvas.height-20,fish.y));
+}
 });
 for(let i=fishes.length-1;i>=0;i--){const fish=fishes[i];if(fish.life<=0||fish.x<-120||fish.x>canvas.width+120||fish.y<-120||fish.y>canvas.height+120){if(runStats&&(!fish.hitIds||fish.hitIds.size===0))runStats.fishMisses++;fishes.splice(i,1)}}
 
 // Una lista por frame: evita escanear todos los peces por cada proyectil.
-const activeRamFishShots=fishes.filter(f=>f.ramFish&&isFinitePos(f));
+const activeRamFishShots=fishes.filter(f=>f.ramFish&&f.ramFullyCharged===true&&isFinitePos(f));
 for(let q=quacks.length-1;q>=0;q--){
 const quack=quacks[q],prevX=quack.x,prevY=quack.y;
 quack.x+=quack.vx*dt;quack.y+=quack.vy*dt;quack.life-=dt;
@@ -5988,7 +6014,7 @@ if(Math.hypot(player.x-orb.x,player.y-orb.y)<player.r+orb.r){
 takePlayerDamage(orb.damage,"El demonio oscuro te ha destruido 😈",.25);makeSmoke(orb.x,orb.y);demonOrbs.splice(i,1);continue
 }
 for(let j=fishes.length-1;j>=0;j--){
-const fish=fishes[j];if(!isFinitePos(fish))continue;
+const fish=fishes[j];if(!isFinitePos(fish)||(fish.ramFish&&fish.ramFullyCharged!==true&&(orb.reinforced||orb.hitsLeft>1)))continue;
 if(Math.hypot(fish.x-orb.x,fish.y-orb.y)<orb.r+12*(fish.scale||1)){
 if(!fish.orbsHit)fish.orbsHit=new WeakSet();
 if(fish.orbsHit.has(orb))continue;
@@ -6644,8 +6670,8 @@ if(selectedCosmetic("fish")==="fish_low_poly"){drawLowPolyFish(f);return;}
 drawEntityShadow(f.x,f.y,18*(f.scale||1),5*(f.scale||1),.10);
 ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.angle);ctx.scale(f.scale||1,f.scale||1);
 const skinPalette={fish_elegant:["#fff0c7","#c99b45"],fish_pirate:["#ecac58","#a9503f"],fish_heart:["#ff9bbd","#cf4a86"]}[selectedCosmetic("fish")];
-const body=f.giantEaster?"#ffd166":f.ramFish?"#7ef5ff":f.cardumenGigante?"#80d8ff":f.boomerang?"#80ed99":f.crit?"#ff6b6b":f.shieldShot?"#ffd166":(skinPalette?.[0]||"#6ed7ed");
-const tail=f.giantEaster?"#fb8500":f.ramFish?"#169fcb":f.cardumenGigante?"#00b4d8":f.boomerang?"#57cc99":f.crit?"#e03131":f.shieldShot?"#ffb703":(skinPalette?.[1]||"#45aecd");
+const body=f.boomerang&&f.crit?"#ffe066":f.giantEaster?"#ffd166":f.ramFish?(f.boomerang?"#80ed99":f.crit?"#ff6b6b":"#7ef5ff"):f.cardumenGigante?"#80d8ff":f.boomerang?"#80ed99":f.crit?"#ff6b6b":f.shieldShot?"#ffd166":(skinPalette?.[0]||"#6ed7ed");
+const tail=f.boomerang&&f.crit?"#e0a800":f.giantEaster?"#fb8500":f.ramFish?(f.boomerang?"#57cc99":f.crit?"#e03131":"#169fcb"):f.cardumenGigante?"#00b4d8":f.boomerang?"#57cc99":f.crit?"#e03131":f.shieldShot?"#ffb703":(skinPalette?.[1]||"#45aecd");
 ctx.shadowColor=body;ctx.shadowBlur=lowPerfMode?0:(f.giantEaster?12:f.crit?7:0);
 softFishBody(body,tail);drawFishSkinDetails(f);ctx.restore()
 
