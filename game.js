@@ -680,35 +680,43 @@ function getRealisticSardineTint(f={}){
   if(f.boomerang)return {color:"#35d06f",alpha:.48,glow:"#80ed99"};
   return null;
 }
+const realisticSardineTintCache=new Map();
+function getTintedRealisticSardine(tint){
+  if(!tint||!realisticSardineImage.complete||!realisticSardineImage.naturalWidth)return realisticSardineImage;
+  const key=tint.color+"|"+tint.alpha;
+  if(realisticSardineTintCache.has(key))return realisticSardineTintCache.get(key);
+  const c=document.createElement("canvas");
+  c.width=192;
+  c.height=Math.max(1,Math.round(c.width*realisticSardineImage.naturalHeight/realisticSardineImage.naturalWidth));
+  const cctx=c.getContext("2d");
+  cctx.clearRect(0,0,c.width,c.height);
+  cctx.drawImage(realisticSardineImage,0,0,c.width,c.height);
+  cctx.globalCompositeOperation="source-atop";
+  cctx.globalAlpha=tint.alpha;
+  cctx.fillStyle=tint.color;
+  cctx.fillRect(0,0,c.width,c.height);
+  cctx.globalCompositeOperation="source-over";
+  cctx.globalAlpha=1;
+  realisticSardineTintCache.set(key,c);
+  return c;
+}
 function drawRealisticSardineLocal(f={}){
   const tint=getRealisticSardineTint(f);
   ctx.save();
-
   if(realisticSardineImage.complete&&realisticSardineImage.naturalWidth>0){
     const w=48;
     const aspect=realisticSardineImage.naturalHeight/realisticSardineImage.naturalWidth;
     const h=w*aspect;
-    ctx.drawImage(realisticSardineImage,-w/2,-h/2,w,h);
-
-    if(tint){
-      ctx.globalCompositeOperation="source-atop";
-      ctx.globalAlpha=tint.alpha;
-      ctx.fillStyle=tint.color;
-      ctx.fillRect(-w/2-1,-h/2-1,w+2,h+2);
-      ctx.globalCompositeOperation="source-over";
-      ctx.globalAlpha=1;
-
-      if(!lowPerfMode){
-        ctx.globalCompositeOperation="destination-over";
-        ctx.shadowColor=tint.glow;
-        ctx.shadowBlur=6;
-        ctx.globalAlpha=.34;
-        ctx.drawImage(realisticSardineImage,-w/2,-h/2,w,h);
-        ctx.globalCompositeOperation="source-over";
-        ctx.globalAlpha=1;
-        ctx.shadowBlur=0;
-      }
+    const sprite=tint?getTintedRealisticSardine(tint):realisticSardineImage;
+    if(tint&&!lowPerfMode){
+      ctx.save();
+      ctx.globalAlpha=.28;
+      ctx.shadowColor=tint.glow;
+      ctx.shadowBlur=6;
+      ctx.drawImage(sprite,-w/2,-h/2,w,h);
+      ctx.restore();
     }
+    ctx.drawImage(sprite,-w/2,-h/2,w,h);
   }else{
     const g=ctx.createLinearGradient(0,-7,0,7);
     g.addColorStop(0,"#36566a");g.addColorStop(.45,"#a9c6cf");g.addColorStop(1,"#eef4ef");
