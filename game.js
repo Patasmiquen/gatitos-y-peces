@@ -695,39 +695,48 @@ function getRealisticSardineTint(f={}){
   return null;
 }
 function drawRealisticSardineLocal(f={}){
-  // Foto de dominio público: Sardina pilchardus, Alessandro Duci / Wikimedia Commons.
-  // Se usa un ejemplar lateral de la fotografía y se recorta con una silueta limpia
-  // para que a tamaño de proyectil siga leyéndose como una sardina.
   const tint=getRealisticSardineTint(f);
   ctx.save();
-  ctx.beginPath();
-  ctx.ellipse(1,0,16.2,6.7,0,0,Math.PI*2);
-  ctx.moveTo(-13.5,-3.7);ctx.lineTo(-23,-9);ctx.lineTo(-20,0);ctx.lineTo(-23,9);ctx.lineTo(-13.5,3.7);ctx.closePath();
-  ctx.clip();
+
+  // El asset v187+ ya ES una sardina completa con transparencia.
+  // Antes seguíamos recortándolo con las coordenadas de la antigua foto de Wikimedia;
+  // esas coordenadas caían casi por completo sobre zona transparente y solo quedaba
+  // visible el contorno elíptico. Ahora dibujamos el PNG completo.
   if(realisticSardineImage.complete&&realisticSardineImage.naturalWidth>0){
-    // Recorte de un pez completo que nada hacia la derecha en la foto original 1682x868.
-    ctx.drawImage(realisticSardineImage,575,350,610,180,-23,-9,46,18);
+    const w=48;
+    const aspect=realisticSardineImage.naturalHeight/realisticSardineImage.naturalWidth;
+    const h=w*aspect;
+    ctx.drawImage(realisticSardineImage,-w/2,-h/2,w,h);
+
+    if(tint){
+      // Colorea únicamente los píxeles visibles de la fotografía, conservando
+      // escamas, ojo, aletas y transparencia.
+      ctx.globalCompositeOperation="source-atop";
+      ctx.globalAlpha=tint.alpha;
+      ctx.fillStyle=tint.color;
+      ctx.fillRect(-w/2-1,-h/2-1,w+2,h+2);
+      ctx.globalCompositeOperation="source-over";
+      ctx.globalAlpha=1;
+
+      // Resplandor suave del color de la mejora, sin dibujar un borde artificial.
+      if(!lowPerfMode){
+        ctx.globalCompositeOperation="destination-over";
+        ctx.shadowColor=tint.glow;
+        ctx.shadowBlur=6;
+        ctx.globalAlpha=.34;
+        ctx.drawImage(realisticSardineImage,-w/2,-h/2,w,h);
+        ctx.globalCompositeOperation="source-over";
+        ctx.globalAlpha=1;
+        ctx.shadowBlur=0;
+      }
+    }
   }else{
-    // Fallback offline/carga lenta: nunca deja el proyectil invisible.
-    const g=ctx.createLinearGradient(0,-8,0,8);
+    // Fallback solo mientras termina de cargar el PNG local.
+    const g=ctx.createLinearGradient(0,-7,0,7);
     g.addColorStop(0,"#36566a");g.addColorStop(.45,"#a9c6cf");g.addColorStop(1,"#eef4ef");
-    ctx.fillStyle=g;ctx.fillRect(-24,-10,48,20);
+    ctx.fillStyle=g;
+    ctx.beginPath();ctx.ellipse(0,0,19,6.5,0,0,Math.PI*2);ctx.fill();
   }
-  if(tint){
-    ctx.globalCompositeOperation="source-atop";
-    ctx.globalAlpha=tint.alpha;
-    ctx.fillStyle=tint.color;
-    ctx.fillRect(-25,-11,50,22);
-    ctx.globalCompositeOperation="source-over";
-    ctx.globalAlpha=1;
-  }
-  ctx.restore();
-  ctx.save();
-  ctx.strokeStyle=tint?.glow||"rgba(225,245,250,.62)";
-  ctx.lineWidth=tint?1.55:1.05;
-  ctx.shadowColor=tint?.glow||"transparent";
-  ctx.shadowBlur=lowPerfMode?0:(tint?7:0);
-  ctx.beginPath();ctx.ellipse(1,0,16.2,6.7,0,0,Math.PI*2);ctx.stroke();
   ctx.restore();
 }
 function drawRealisticSardineWorld(f,x=f.x,y=f.y,angle=f.angle,scale=f.scale||1){
