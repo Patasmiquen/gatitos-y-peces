@@ -474,35 +474,35 @@ const COSMETIC_KEYS={scales:"gatitos_cosmetic_scales",owned:"gatitos_cosmetic_ow
 const cosmeticPanel=document.getElementById("cosmeticsPanel"),scaleBalanceEl=document.getElementById("scaleBalance"),cosmeticsContentEl=document.getElementById("cosmeticsContent"),cosmeticsSkinsTab=document.getElementById("cosmeticsSkinsTab"),cosmeticsPacksTab=document.getElementById("cosmeticsPacksTab"),cosmeticsResetBtn=document.getElementById("cosmeticsResetBtn");
 const COSMETIC_CATEGORIES={player:"Jugador",fish:"Peces",enemy:"Enemigos",boss_giant:"Jefe gato gigante",boss_duck:"Jefe pato",boss_seal:"Jefe foca",boss_demon:"Jefe demonio",boss_octopus:"Jefe pulpo"};
 const COSMETICS=[
-  {id:"boss_octopus_elegant",name:"Pulpo · Almirante de marfil",category:"boss_octopus",price:280,preview:"🐙",desc:"Piel marfil, tentáculos azules, gorra de almirante y pajarita dorada.",pack:"elegant"},
-  {id:"boss_octopus_low_poly",name:"Pulpo · Octágono abisal",category:"boss_octopus",price:280,preview:"🐙",desc:"Cabeza facetada turquesa y tentáculos angulares.",pack:"low_poly"},
-  {id:"boss_octopus_grayscale",name:"Pulpo · Tinta de plata",category:"boss_octopus",price:280,preview:"◐",desc:"Pulpo y tentáculos en blanco, negro y plata.",pack:"grayscale"},
-  {id:"player_green",name:"Jugador · Guardián del bosque",category:"player",price:100,preview:"🟢",desc:"Pelaje verde, marcas oscuras y corona de hojas."},
-  {id:"player_pink",name:"Jugador · Flor de cerezo",category:"player",price:100,preview:"🌸",desc:"Pelaje rosa, flor clara y marca de corazón."},
-  {id:"player_elegant",name:"Jugador · Gala de marfil",category:"player",price:200,preview:"🎀",desc:"Pelaje marfil, sombrero de copa y gran pajarita azul.",pack:"elegant"},
-  {id:"fish_elegant",name:"Peces · Sombrero de copa",category:"fish",price:250,preview:"🎩",desc:"Peces marfil con cola dorada y sombrero negro.",pack:"elegant"},
-  {id:"fish_pirate",name:"Peces · Corsarios",category:"fish",price:180,preview:"🏴‍☠️",desc:"Peces ámbar con pañuelo rojo y parche pirata."},
-  {id:"fish_heart",name:"Peces · Corazones",category:"fish",price:180,preview:"💖",desc:"Peces rosas con grandes marcas de corazón."},
-  {id:"enemy_gray",name:"Enemigos · Tigres de plata",category:"enemy",price:150,preview:"🐱",desc:"Gatos normales plateados con rayas oscuras y medalla dorada; conserva las variantes especiales."},
-  {id:"enemy_elegant",name:"Enemigos · Pajarita de gala",category:"enemy",price:250,preview:"🎀",desc:"Los gatos enemigos llevan pajarita.",pack:"elegant"},
-  {id:"boss_duck_monocle",name:"Pato · Señor Monóculo",category:"boss_duck",price:250,preview:"🦆",desc:"Pato marfil con ala azul, pajarita, sombrero y monóculo.",pack:"elegant"},
-  {id:"boss_seal_tie",name:"Foca · Dama de las perlas",category:"boss_seal",price:250,preview:"🦭",desc:"Pelaje lavanda, corona dorada y collar de perlas.",pack:"elegant"},
-  {id:"boss_demon_cape",name:"Demonio · Conde Carmesí",category:"boss_demon",price:300,preview:"😈",desc:"Demonio carmesí, cuernos dorados y capa granate.",pack:"elegant"},
-  {id:"player_low_poly",name:"Jugador · Gato poligonal",category:"player",price:180,preview:"🐱",desc:"Gato facetado con orejas, hocico, bigotes y cola.",pack:"low_poly"},
-  {id:"fish_low_poly",name:"Peces · Pez poligonal",category:"fish",price:180,preview:"🐟",desc:"Peces facetados con cola, aletas y ojo bien visibles.",pack:"low_poly"},
-  {id:"enemy_low_poly",name:"Enemigos · Gatos poligonales",category:"enemy",price:220,preview:"🐈",desc:"Gatos facetados reconocibles, conservando los accesorios de cada variante.",pack:"low_poly"},
-  {id:"boss_giant_low_poly",name:"Gato jefe · Coloso poligonal",category:"boss_giant",price:260,preview:"😼",desc:"Gato jefe facetado con orejas, cara y bigotes marcados.",pack:"low_poly"},
-  {id:"boss_giant_elegant",name:"Gato jefe · Duque de marfil",category:"boss_giant",price:300,preview:"👑",desc:"Pelaje marfil, capa azul noche, corona dorada y pajarita de gala.",pack:"elegant"},
-  {id:"boss_duck_low_poly",name:"Pato · Pico poligonal",category:"boss_duck",price:260,preview:"🦆",desc:"Pato facetado amarillo con pico, ojo, ala y cola reconocibles.",pack:"low_poly"},
-  {id:"boss_seal_low_poly",name:"Foca · Bloque polar",category:"boss_seal",price:260,preview:"🦭",desc:"Foca facetada con hocico, bigotes y aletas claramente visibles.",pack:"low_poly"},
-  {id:"boss_demon_low_poly",name:"Demonio · Prisma oscuro",category:"boss_demon",price:300,preview:"😈",desc:"Demonio facetado con cuernos, alas y mirada luminosa.",pack:"low_poly"},
-  {"id": "player_grayscale", "name": "Jugador · Retrato en blanco y negro", "category": "player", "price": 180, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"},
-  {"id": "fish_grayscale", "name": "Peces · Tinta y plata", "category": "fish", "price": 180, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"},
-  {"id": "enemy_grayscale", "name": "Enemigos · Cine mudo", "category": "enemy", "price": 220, "preview": "◐", "desc": "Convierte todas las variantes enemigas a blanco y negro; conserva sus formas y accesorios.", "pack": "grayscale"},
-  {"id": "boss_giant_grayscale", "name": "Gato jefe · Titán monocromo", "category": "boss_giant", "price": 260, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"},
-  {"id": "boss_duck_grayscale", "name": "Pato · Fotograma clásico", "category": "boss_duck", "price": 260, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"},
-  {"id": "boss_seal_grayscale", "name": "Foca · Nieve y carbón", "category": "boss_seal", "price": 260, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"},
-  {"id": "boss_demon_grayscale", "name": "Demonio · Sombra de celuloide", "category": "boss_demon", "price": 300, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"}
+  {id:"boss_octopus_elegant",name:"Pulpo · Almirante de marfil",category:"boss_octopus",price:280,preview:"🐙",pack:"elegant"},
+  {id:"boss_octopus_low_poly",name:"Pulpo · Octágono abisal",category:"boss_octopus",price:280,preview:"🐙",pack:"low_poly"},
+  {id:"boss_octopus_grayscale",name:"Pulpo · Tinta de plata",category:"boss_octopus",price:280,preview:"◐",pack:"grayscale"},
+  {id:"player_green",name:"Jugador · Guardián del bosque",category:"player",price:100,preview:"🟢"},
+  {id:"player_pink",name:"Jugador · Flor de cerezo",category:"player",price:100,preview:"🌸"},
+  {id:"player_elegant",name:"Jugador · Gala de marfil",category:"player",price:200,preview:"🎀",pack:"elegant"},
+  {id:"fish_elegant",name:"Peces · Sombrero de copa",category:"fish",price:250,preview:"🎩",pack:"elegant"},
+  {id:"fish_pirate",name:"Peces · Corsarios",category:"fish",price:180,preview:"🏴‍☠️"},
+  {id:"fish_heart",name:"Peces · Corazones",category:"fish",price:180,preview:"💖"},
+  {id:"enemy_gray",name:"Enemigos · Tigres de plata",category:"enemy",price:150,preview:"🐱"},
+  {id:"enemy_elegant",name:"Enemigos · Pajarita de gala",category:"enemy",price:250,preview:"🎀",pack:"elegant"},
+  {id:"boss_duck_monocle",name:"Pato · Señor Monóculo",category:"boss_duck",price:250,preview:"🦆",pack:"elegant"},
+  {id:"boss_seal_tie",name:"Foca · Dama de las perlas",category:"boss_seal",price:250,preview:"🦭",pack:"elegant"},
+  {id:"boss_demon_cape",name:"Demonio · Conde Carmesí",category:"boss_demon",price:300,preview:"😈",pack:"elegant"},
+  {id:"player_low_poly",name:"Jugador · Gato poligonal",category:"player",price:180,preview:"🐱",pack:"low_poly"},
+  {id:"fish_low_poly",name:"Peces · Pez poligonal",category:"fish",price:180,preview:"🐟",pack:"low_poly"},
+  {id:"enemy_low_poly",name:"Enemigos · Gatos poligonales",category:"enemy",price:220,preview:"🐈",pack:"low_poly"},
+  {id:"boss_giant_low_poly",name:"Gato jefe · Coloso poligonal",category:"boss_giant",price:260,preview:"😼",pack:"low_poly"},
+  {id:"boss_giant_elegant",name:"Gato jefe · Duque de marfil",category:"boss_giant",price:300,preview:"👑",pack:"elegant"},
+  {id:"boss_duck_low_poly",name:"Pato · Pico poligonal",category:"boss_duck",price:260,preview:"🦆",pack:"low_poly"},
+  {id:"boss_seal_low_poly",name:"Foca · Bloque polar",category:"boss_seal",price:260,preview:"🦭",pack:"low_poly"},
+  {id:"boss_demon_low_poly",name:"Demonio · Prisma oscuro",category:"boss_demon",price:300,preview:"😈",pack:"low_poly"},
+  {"id": "player_grayscale", "name": "Jugador · Retrato en blanco y negro", "category": "player", "price": 180, "preview": "◐", "pack": "grayscale"},
+  {"id": "fish_grayscale", "name": "Peces · Tinta y plata", "category": "fish", "price": 180, "preview": "◐", "pack": "grayscale"},
+  {"id": "enemy_grayscale", "name": "Enemigos · Cine mudo", "category": "enemy", "price": 220, "preview": "◐", "pack": "grayscale"},
+  {"id": "boss_giant_grayscale", "name": "Gato jefe · Titán monocromo", "category": "boss_giant", "price": 260, "preview": "◐", "pack": "grayscale"},
+  {"id": "boss_duck_grayscale", "name": "Pato · Fotograma clásico", "category": "boss_duck", "price": 260, "preview": "◐", "pack": "grayscale"},
+  {"id": "boss_seal_grayscale", "name": "Foca · Nieve y carbón", "category": "boss_seal", "price": 260, "preview": "◐", "pack": "grayscale"},
+  {"id": "boss_demon_grayscale", "name": "Demonio · Sombra de celuloide", "category": "boss_demon", "price": 300, "preview": "◐", "pack": "grayscale"}
 ];
 const COSMETIC_PACKS=[{id:"elegant",name:"Pack Elegante",discount:.20,items:["player_elegant","fish_elegant","enemy_elegant","boss_giant_elegant","boss_duck_monocle","boss_seal_tie","boss_demon_cape","boss_octopus_elegant"],desc:"Marfil, pajaritas, sombreros, monóculos, coronas, perlas, capas y gorra de almirante."},{id:"low_poly",name:"Pack Low Poly",discount:.25,items:["player_low_poly","fish_low_poly","enemy_low_poly","boss_giant_low_poly","boss_duck_low_poly","boss_seal_low_poly","boss_demon_low_poly","boss_octopus_low_poly"],desc:"Personajes y proyectiles facetados, con siluetas propias y reconocibles."}];
 COSMETIC_PACKS.push({"id": "grayscale", "name": "Pack Escala de grises", "discount": 0.25, "items": ["player_grayscale", "fish_grayscale", "enemy_grayscale", "boss_giant_grayscale", "boss_duck_grayscale", "boss_seal_grayscale", "boss_demon_grayscale", "boss_octopus_grayscale"], "desc": "Ocho skins en blanco y negro. Las variantes se distinguen por sus formas y accesorios."});
@@ -548,7 +548,7 @@ function equipPack(id){const pack=COSMETIC_PACKS.find(p=>p.id===id);if(!pack)ret
 function renderCosmeticCard(c){
   const owned=isCosmeticOwned(c.id),equipped=selectedCosmetic(c.category)===c.id;
   const btn=equipped?`<button class="cosmeticButton owned" disabled>Equipada</button>`:owned?`<button class="cosmeticButton secondary" onclick="equipCosmetic('${c.id}')">Equipar</button>`:`<button class="cosmeticButton" ${cosmeticScales<c.price?"disabled":""} onclick="buyCosmetic('${c.id}')">Comprar ${c.price} escamas</button>`;
-  return `<div class="cosmeticCard ${equipped?"equipped":owned?"owned":""}"><div class="cosmeticPreview" data-skin="${c.id}" data-category="${c.category}" aria-label="${escapeHtml(c.name)}"></div><div class="cosmeticName">${escapeHtml(c.name)}</div><div class="cosmeticMeta">${escapeHtml(COSMETIC_CATEGORIES[c.category]||c.category)} · ${escapeHtml(c.desc||"")}</div>${btn}</div>`;
+  return `<div class="cosmeticCard ${equipped?"equipped":owned?"owned":""}"><div class="cosmeticPreview" data-skin="${c.id}" data-category="${c.category}" aria-label="${escapeHtml(c.name)}"></div><div class="cosmeticName">${escapeHtml(c.name)}</div><div class="cosmeticMeta">${escapeHtml(COSMETIC_CATEGORIES[c.category]||c.category)}</div>${btn}</div>`;
 }
 function renderSkinsTab(){
   const cats=Object.keys(COSMETIC_CATEGORIES);
