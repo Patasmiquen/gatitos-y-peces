@@ -35,7 +35,7 @@ const victoryPanel=document.getElementById("victoryPanel"),victoryFinishBtn=docu
 const gameOverPanel=document.getElementById("gameOverPanel"),gameOverRestartBtn=document.getElementById("gameOverRestart"),gameOverMenuBtn=document.getElementById("gameOverMenu"),gameOverTotalEl=document.getElementById("gameOverTotal"),gameOverBreakdownEl=document.getElementById("gameOverBreakdown"),gameOverRankEmojiEl=document.getElementById("gameOverRankEmoji"),gameOverRankLabelEl=document.getElementById("gameOverRankLabel"),victoryScoreAreaEl=document.getElementById("victoryScoreArea");
 const fusionBackBtn=document.getElementById("fusionBackBtn");
 const objectiveMainEl=document.getElementById("objectiveMain"),objectiveFusionEl=document.getElementById("objectiveFusion"),helpEl=document.getElementById("help");
-const pausePanel=document.getElementById("pausePanel"),pauseStats=document.getElementById("pauseStats"),pauseRecordBadge=document.getElementById("pauseRecordBadge"),pauseUpgradesList=document.getElementById("pauseUpgradesList"),resumeButton=document.getElementById("resumeButton"),restartButton=document.getElementById("restartButton"),menuButton=document.getElementById("menuButton"),perfNotice=document.getElementById("perfNotice"),themeButtons=[...document.querySelectorAll(".themeChoice")];
+const pausePanel=document.getElementById("pausePanel"),pauseStats=document.getElementById("pauseStats"),pauseRecordBadge=document.getElementById("pauseRecordBadge"),pauseUpgradesList=document.getElementById("pauseUpgradesList"),resumeButton=document.getElementById("resumeButton"),restartButton=document.getElementById("restartButton"),menuButton=document.getElementById("menuButton"),perfNotice=null,themeButtons=[...document.querySelectorAll(".themeChoice")];
 const playerNameInput=document.getElementById("playerNameInput"),nameWarning=document.getElementById("nameWarning"),refreshRankingBtn=document.getElementById("refreshRankingBtn"),startRankingList=document.getElementById("startRankingList"),victoryRankingList=document.getElementById("victoryRankingList"),gameOverRankingList=document.getElementById("gameOverRankingList"),victoryOnlineStatus=document.getElementById("victoryOnlineStatus"),gameOverOnlineStatus=document.getElementById("gameOverOnlineStatus");
 
 const MUSIC_KEY="gatitos_music_enabled";
@@ -224,9 +224,10 @@ let rankingCursor=null,rankingHasMore=false,rankingRequestId=0;
 let expandedRankingNameKey="";
 function initRanking(){
   try{
-    if(window.firebase&&firebaseConfig?.projectId){
-      if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
-      rankingDb=firebase.firestore();
+    const fb=window.firebase;
+    if(fb&&firebaseConfig?.projectId){
+      if(!fb.apps.length)fb.initializeApp(firebaseConfig);
+      rankingDb=fb.firestore();
       firebaseReady=true;
     }
   }catch(e){firebaseReady=false;console.warn("Firebase ranking no disponible",e)}
@@ -409,7 +410,7 @@ async function submitOnlineScore(finalScore, statusEl, rankingEl){
     impacts:Math.max(0,Math.floor(Number(finalScore.impactCount)||0)),
     result:defeatedBossTypes?.size>=BOSS_TYPES.length?"boss_victory":"game_over",
     version:GAME_VERSION,
-    createdAt:firebase.firestore.FieldValue.serverTimestamp()
+    createdAt:window.firebase.firestore.FieldValue.serverTimestamp()
   };
   const uploadKey=getScoreIdentityKey(data);
   if(uploadKey===lastScoreUploadKey||uploadingScoreKeys.has(uploadKey)){
@@ -650,9 +651,10 @@ function drawLowPolyCat(cat){
 }
 function drawLowPolyFish(f){
   const angle=Number.isFinite(f.angle)?f.angle:Math.atan2(f.vy||0,f.vx||1);
-  const body=f.boomerang&&f.crit&&hasDoneFusionPair("boomerang+critChance")?"#ffe066":f.giantEaster?"#ffd166":f.ramFish?(f.boomerang?"#80ed99":f.crit?"#ff6b6b":"#7ef5ff"):f.cardumenGigante?"#80d8ff":f.boomerang?"#80ed99":f.crit?"#ff6b6b":f.shieldShot?"#6ed7ed":"#4cc9f0";
-  const accent=f.boomerang&&f.crit&&hasDoneFusionPair("boomerang+critChance")?"#e0a800":f.giantEaster?"#fff0a6":f.ramFish?(f.boomerang?"#57cc99":f.crit?"#e03131":"#e3ffff"):f.cardumenGigante?"#caf0f8":f.boomerang?"#57cc99":f.crit?"#ffc2d1":"#caf0f8";
-  const outline=f.shieldShot?"#45aecd":"#12394a";
+  const goldenShield=!!(f.shieldShot&&effectLevel("shield")>=5);
+  const body=f.boomerang&&f.crit&&hasDoneFusionPair("boomerang+critChance")?"#ffe066":goldenShield?"#ffd166":f.giantEaster?"#ffd166":f.ramFish?(f.boomerang?"#80ed99":f.crit?"#ff6b6b":"#7ef5ff"):f.cardumenGigante?"#80d8ff":f.boomerang?"#80ed99":f.crit?"#ff6b6b":f.shieldShot?"#6ed7ed":"#4cc9f0";
+  const accent=f.boomerang&&f.crit&&hasDoneFusionPair("boomerang+critChance")?"#e0a800":goldenShield?"#ffb703":f.giantEaster?"#fff0a6":f.ramFish?(f.boomerang?"#57cc99":f.crit?"#e03131":"#e3ffff"):f.cardumenGigante?"#caf0f8":f.boomerang?"#57cc99":f.crit?"#ffc2d1":"#caf0f8";
+  const outline=goldenShield?"#b77900":f.shieldShot?"#45aecd":"#12394a";
   drawEntityShadow(f.x,f.y,12*(f.scale||1),4*(f.scale||1),.08);
   ctx.save();ctx.translate(f.x,f.y);ctx.rotate(angle);ctx.scale(f.scale||1,f.scale||1);
   ctx.lineJoin="round";ctx.strokeStyle=outline;ctx.lineWidth=2;
@@ -1107,7 +1109,7 @@ document.addEventListener("pointerlockchange",()=>{
 });
 
 let score,shots,lastShot,lastFrame,gameOver,wave,spawnCooldown,life,level,xp,xpNeed,choosingUpgrade,gameStarted=false,paused=false,waveTime,waveDuration,waveUpgradePending=false,boss=null,shieldAngle=0,lastShieldHit=0,lastOmniBurst=0,rainbowChanceLevel=1,rainbowSelectedThisWave=false,rainbowSpawnedThisWave=false,rainbowPendingUntilKilled=false,coins=0,shopAvailable=false,firstShopReached=false,shopBossPending=false,fusionAvailable=false,lastBossType="",shopUpgradePurchases=0,shopFusionPurchases=0,dogKidnapped=false,avalancheActive=false,avalancheTime=0,avalancheDelay=999,avalancheThisWave=false,avalancheSpawnTimer=0,starChanceLevel=1,starActive=false,starTime=0,starWarningPlayed=false,forceDemonNextBoss=false,sevenLivesTime=0,sevenLivesCooldown=0,sevenLivesUsedThisWave=false,musicianSpawnedThisWave=false,musicianNoteTimer=0,musicianMelodyIdx=0;
-let perfFps=60,lowPerfMode=false,lowPerfTimer=0,perfNoticeTimer=0;
+let perfFps=60,lowPerfMode=false,lowPerfTimer=0;
 let lastOrbitalGuard=-Infinity;
 const RAM_FISH_BASE_COOLDOWN=30000;
 // Escalado continuo del Bloquito: mejora un poco en cada nivel.
@@ -1164,7 +1166,7 @@ let fusedUpgradeNames={};
 let doneFusionPairs={};
 let fusionProgressLevels={};
 let bossVictoryAlreadyShown=false;
-let bossVictoryScoreSaved=false;
+let bossVictoryScoreSaved="";
 let bossVictoryPending=false;
 let dogRelaxTime=0;
 let enemyIntroSeen={};
@@ -1173,7 +1175,7 @@ let finalCompletionContinue=false;
 let finalCompletionStartWave=0;
 let demonSpawnPressure=0;
 let thiefCoinsStolenThisWave=0;
-perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
+perfFps=60;lowPerfMode=false;lowPerfTimer=0;
 
 const upgrades={damageReduction:0,luck:0,fireRate:1,fishSpeed:1,damage:1,moveSpeed:1,maxLife:100,bigFishChance:0,doubleFishChance:0,pierceChance:0,fishSize:1,catSlow:0,healOnWave:8,lifeSteal:0,xpBoost:1,boomerangChance:0,shield:false,shieldLevel:0,autoFire:false,autoFireLevel:0,critChance:0,zoomies:false,zoomiesHyper:false,zoomiesCannon:false,zoomiesCrit:false,aimAssist:false,moralSupport:false,darkPact:false,catInstinct:false,boyfriendDog:false,boyfriendDogSpirit:false,boyfriendDogReturned:false,bigCursor:false,coinMagnetRange:0,combatAI:false,assistedShot:false,perfectAim:false,moraleFire:false,braveHeart:false,reflexBurst:false,valorCasa:false,cursedInstinct:false,zoomiesEscape:false,fusionBonusPower:0,sevenLives:false};
 const upgradeLevels={damageReduction:0,luck:0,moveSpeed:0,fireRate:0,fishSpeed:0,bigFish:0,doubleFish:0,pierce:0,damage:0,catSlow:0,healOnWave:0,fishSize:0,maxLife:0,lifeSteal:0,xpBoost:0,boomerang:0,shield:0,coinMagnet:0,omniBurst:0,yarnBounce:0,autoFire:0,critChance:0};
@@ -1465,7 +1467,7 @@ function recommendationReasonForChoice(choice,needs,context){
 }
 function applyRecommendationsToChoices(choices,context="generic"){
   const list=choices||[];
-  list.forEach(c=>{if(c){delete c.recommended;delete c.recommendReason;delete c.recommendScore;delete c.recommendBadge;}});
+  list.forEach(c=>{if(c){delete c.recommended;delete c.recommendScore;}});
   if(context==='internal')return choices;
   const needs=getRecommendationNeeds(context);
   const contextMin={shop:.50,level:.48,wave:.48,rainbow:.49,fusionFirst:.52,fusionPartner:.52};
@@ -1474,9 +1476,9 @@ function applyRecommendationsToChoices(choices,context="generic"){
   if(context==='fusionFirst'){
     const offered=new Set(list.filter(c=>!c.locked).map(c=>c.key));
     const pairs=availableRecommendationPairs(needs).filter(r=>r.pair.split('+').every(k=>offered.has(k)));
-    if(pairs.length<2||pairs[0].score<minScore||pairs[0].score-pairs[1].score<minGap)return choices;
+    if(!pairs.length)return choices;
     const best=pairs[0],parts=best.pair.split('+');
-    list.forEach(c=>{if(parts.includes(c.key)&&!c.locked){c.recommended=true;c.recommendScore=best.score;c.recommendReason=fusionRecommendationReason(c,needs);}});
+    list.forEach(c=>{if(parts.includes(c.key)&&!c.locked){c.recommended=true;c.recommendScore=best.score;}});
     return choices;
   }
   const valid=list.filter(c=>!c.locked&&!c.skipShop&&!c.randomShopUpgrade&&(c.key||c.openFusionShop))
@@ -1489,18 +1491,22 @@ function applyRecommendationsToChoices(choices,context="generic"){
     if(best.score>=minScore&&(best.score-next.score>=minGap||urgent&&best.score>=.65)){
       best.choice.recommended=true;
       best.choice.recommendScore=best.score;
-      best.choice.recommendReason=recommendationReasonForChoice(best.choice,needs,context);
     }else if(best.score>=Math.max(.54,minScore)&&next.score>=Math.max(.54,minScore)
        && best.choice.key!==next.choice.key){
       // Empate convincente: mostrar dos buenas alternativas en vez de fingir
       // que una es claramente superior por unas centésimas.
       for(const entry of [best,next]){
         entry.choice.recommended=true;
-        entry.choice.recommendBadge='💡 BUENA OPCIÓN';
         entry.choice.recommendScore=entry.score;
-        entry.choice.recommendReason=recommendationReasonForChoice(entry.choice,needs,context);
       }
     }
+  }
+  // La tienda y las fusiones siempre ofrecen orientación si existe al menos
+  // una opción válida. Toda recomendación usa exactamente el mismo indicador visual.
+  if((context==='shop'||context==='fusionPartner')&&valid.length&&!list.some(c=>c?.recommended)){
+    const best=valid[0];
+    best.choice.recommended=true;
+    best.choice.recommendScore=best.score;
   }
   return choices;
 }
@@ -1802,7 +1808,7 @@ rankingEligibleThisRun=!autoModeUsedThisRun;
 rankingDisabledReason=rankingEligibleThisRun?"":"Ranking desactivado: la partida empezó con IA activada.";
 cosmeticAwardedThisRun=false;cosmeticScalesAwardedThisRun=0;
 currentWaveHadDamage=false;currentNoDamageStreak=0;
-score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=-Infinity;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=1;thiefCoinsStolenThisWave=0;spawnCooldown=0;life=upgrades.maxLife;level=1;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;musicianSpawnedThisWave=false;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starSpawnTimer=12;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();bossEncounterCounts={giantCat:0,duck:0,seal:0,demon:0,octopus:0};bossVictoryAlreadyShown=false;bossVictoryScoreSaved=false;bossVictoryPending=false;dogRelaxTime=0;fusionMoveXpTimer=0;lastFusionShieldGuard=0;enemyIntroSeen={};finalChoiceLocked=false;finalCompletionContinue=false;finalCompletionStartWave=0;demonSpawnPressure=0;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
+score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=-Infinity;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=1;thiefCoinsStolenThisWave=0;spawnCooldown=0;life=upgrades.maxLife;level=1;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;musicianSpawnedThisWave=false;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starSpawnTimer=12;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();bossEncounterCounts={giantCat:0,duck:0,seal:0,demon:0,octopus:0};bossVictoryAlreadyShown=false;bossVictoryScoreSaved="";bossVictoryPending=false;dogRelaxTime=0;fusionMoveXpTimer=0;lastFusionShieldGuard=0;enemyIntroSeen={};finalChoiceLocked=false;finalCompletionContinue=false;finalCompletionStartWave=0;demonSpawnPressure=0;perfFps=60;lowPerfMode=false;lowPerfTimer=0;
 powerStars.length=0;tunaDrops.length=0;
 player.x=canvas.width/2;player.y=canvas.height/2;player.angle=0;player.shootAnim=0;player.hurtAnim=0;dogCompanion.x=player.x-50;dogCompanion.y=player.y+45;dogCompanion.shootCooldown=0;
 fishes.length=0;ramFishTrails.length=0;cats.length=0;hearts.length=0;smokes.length=0;floatingTexts.length=0;pawPrints.length=0;quacks.length=0;coinsDrops.length=0;dogBones.length=0;demonOrbs.length=0;yarnBalls.length=0;shockwaves.length=0;sparkles.length=0;
@@ -1916,8 +1922,7 @@ const avalancheCfg=getAvalancheConfig();
 // Avalancha progresiva:
 // - Siempre ocurre en la ronda posterior a un boss: 6, 11, 16, 21...
 // - Además puede aparecer de forma aleatoria en rondas avanzadas que no sean boss.
-const phaseForAvalanche=getGamePhase();
-const forcedPostBossAvalanche=phaseForAvalanche!=="main"&&wave>=6&&wave%5===1;
+const forcedPostBossAvalanche=wave>=6&&wave%5===1;
 const randomAvalanche=wave>=14&&wave%5!==0&&Math.random()<avalancheCfg.chance;
 avalancheThisWave=forcedPostBossAvalanche||randomAvalanche;
 avalancheDelay=avalancheThisWave?Math.max(2.8,waveDuration*(.58-avalancheCfg.intensity*.14)):999;
@@ -2322,8 +2327,13 @@ function getUpcomingFusionHints(limit=3){
   const seen=new Set();
   return hints.sort((a,b)=>a.need-b.need).filter(h=>{if(seen.has(h.text))return false;seen.add(h.text);return true;}).slice(0,limit).map(h=>h.text);
 }
+let objectivePanelSignature="";
 function updateObjectivePanel(){
   if(!objectiveMainEl||!objectiveFusionEl)return;
+  const fusionSig=Object.keys(doneFusionPairs||{}).sort().map(pair=>`${pair}:${getFusionProgress(pair)}`).join(",");
+  const signature=[gameStarted?1:0,wave||0,boss?.type||"",[...defeatedBossTypes].sort().join(","),Object.values(upgradeLevels).join(","),fusionSig].join("|");
+  if(signature===objectivePanelSignature)return;
+  objectivePanelSignature=signature;
   if(!gameStarted){objectiveMainEl.textContent="🎯 Objetivo: empieza la partida";objectiveFusionEl.textContent="🔮 Fusiones próximas: todavía no";return;}
   const pending=getPendingBossTypes().map(t=>BOSS_DISPLAY_NAMES[t]);
   let main=boss?`👑 Objetivo: derrota a ${BOSS_DISPLAY_NAMES[boss.type]||"el jefe"}`:wave%5===0?"👑 Objetivo: prepárate para jefe":"🎯 Objetivo: sobrevive y sube mejoras";
@@ -2912,7 +2922,8 @@ const isComboIcon=iconParts.length>1;
 const iconHTML=isComboIcon?iconParts.slice(0,2).map(i=>`<span class="miniIcon">${escapeHtml(i)}</span>`).join(""):escapeHtml(iconText);
 const showTypeTag=!(upgrade?.randomShopUpgrade||upgrade?.skipShop);
 const priceExtra=upgrade?.priceMeta?`<small class="upgradePriceMeta">${escapeHtml(upgrade.priceMeta)}</small>`:"";
-return `${upgrade.recommended?`<div class="recommendedTag">${escapeHtml(upgrade.recommendBadge||"✨ RECOMENDADO")}</div><div class="recommendReason">${escapeHtml(upgrade.recommendReason||"Encaja con tu partida actual.")}</div>`:""}${showTypeTag?`<div class="visualTypeTag visualType-${visualGroup}">${getUpgradeVisualGroupLabel(visualGroup)}</div>`:""}<div class="upgradeCardTop"><div class="upgradeIconBubble${isComboIcon?" comboIconBubble":""}">${iconHTML}</div><div class="upgradeBadges">${Number.isFinite(upgrade.price)?`<span class="upgradePrice" aria-label="${upgrade.price} monedas">🪙 ${upgrade.price}${priceExtra}</span>`:""}</div></div><div class="upgradeTitle">${escapeHtml(upgrade.title)}</div>${buildVisualLevelDots(upgrade)}<div class="upgradeDesc"><span class="upgradeDescMain">${formatCardText(desc)}</span>${bonus?`<span class="upgradeFusionBonus">${formatCardText(bonus)}</span>`:""}${upgrade.lockReason?`<span class="upgradeLockedReason">🔒 ${formatCardText(upgrade.lockReason)}</span>`:""}</div>${buildChoicePreviewHTML(upgrade)}<span class="visualChooseButton">${getVisualActionLabel(upgrade,context)}</span>`;
+const recommendationMark=upgrade.recommended?`<span class="recommendThumb" aria-hidden="true">👍</span>`:"";
+return `${showTypeTag?`<div class="visualTypeTag visualType-${visualGroup}">${getUpgradeVisualGroupLabel(visualGroup)}</div>`:""}<div class="upgradeCardTop"><div class="upgradeIconBubble${isComboIcon?" comboIconBubble":""}">${iconHTML}</div><div class="upgradeBadges">${Number.isFinite(upgrade.price)?`<span class="upgradePrice" aria-label="${upgrade.price} monedas">🪙 ${upgrade.price}${priceExtra}</span>`:""}</div></div><div class="upgradeTitle">${escapeHtml(upgrade.title)}</div>${buildVisualLevelDots(upgrade)}<div class="upgradeDesc"><span class="upgradeDescMain">${formatCardText(desc)}</span>${bonus?`<span class="upgradeFusionBonus">${formatCardText(bonus)}</span>`:""}${upgrade.lockReason?`<span class="upgradeLockedReason">🔒 ${formatCardText(upgrade.lockReason)}</span>`:""}</div>${buildChoicePreviewHTML(upgrade)}<span class="visualChooseButton">${getVisualActionLabel(upgrade,context)}${recommendationMark}</span>`;
 }
 function showCards(title,phrase,subtitle,choices,onPick,onBack,context="generic"){
 choices=applyRecommendationsToChoices(choices,context);
@@ -2985,7 +2996,7 @@ function renderCardList(){
     let visualClass=getOfferTierClass(upgrade);
     const _uniqueClassMap={aimAssist:" aimAssistUpgrade",bigCursor:" bigCursorUpgrade",catInstinct:" catInstinctUpgrade",zoomies:" zoomiesUpgrade",moralSupport:" apoyoMoralUpgrade",darkPact:" voluntadOscuraUpgrade"};
     const _uniqueClass=upgrade.key&&!upgrade.fusion?(_uniqueClassMap[upgrade.key]||""):"";
-    card.className="upgradeCard "+visualClass+(upgrade.fusion?" fusionCard":"")+(_uniqueClass||((upgrade.special&&!upgrade.fusion?" specialUpgrade":"")+(upgrade.dark?" darkUpgrade":"")))+(upgrade.easter?" easterUpgrade":"")+(upgrade.locked?" locked":"")+(upgrade.recommended?" recommended":"");
+    card.className="upgradeCard "+visualClass+(upgrade.fusion?" fusionCard":"")+(_uniqueClass||((upgrade.special&&!upgrade.fusion?" specialUpgrade":"")+(upgrade.dark?" darkUpgrade":"")))+(upgrade.easter?" easterUpgrade":"")+(upgrade.locked?" locked":"");
     card.dataset.visualGroup=getUpgradeVisualGroup(upgrade);
     card.innerHTML=buildUpgradeCardHTML(upgrade,context);
     if(upgrade.locked)card.disabled=true;
@@ -6026,9 +6037,7 @@ function updatePerformanceMode(rawDt){
   const shouldUseLow=lowPerfMode?lowPerfTimer>.28:lowPerfTimer>1.05;
   if(shouldUseLow!==lowPerfMode){
     lowPerfMode=shouldUseLow;
-    perfNoticeTimer=0;
   }
-  if(perfNotice)perfNotice.classList.remove("visible");
 }
 function getEffectQuality(){
   return lowPerfMode?.34:1;
@@ -6609,6 +6618,7 @@ setHudText(shotsEl,runStats?Math.floor(runStats.fishHits||0):0);
 setHudText(lifeEl,Math.ceil(life));setHudText(levelEl,level);setHudText(xpEl,xp);setHudText(xpNeedEl,xpNeed);setHudText(waveEl,wave);setHudText(coinsEl,coins);setHudText(timeLeftEl,boss&&waveTime<=0?"Jefe":Math.ceil(waveTime));
 setHudWidth(lifeBar,`${Math.max(0,(life/upgrades.maxLife)*100)}%`);setHudWidth(xpBar,`${Math.min(100,(xp/xpNeed)*100)}%`);setHudWidth(timeBar,`${Math.max(0,(waveTime/waveDuration)*100)}%`);
 if(helpEl){const hidden=gameStarted&&wave>=3;if(helpEl.classList.contains("hiddenAfterIntro")!==hidden)helpEl.classList.toggle("hiddenAfterIntro",hidden);}
+updateObjectivePanel();
 }
 
 function drawAmbientBackgroundHeart(x,y,scale,alpha,angle,color){
