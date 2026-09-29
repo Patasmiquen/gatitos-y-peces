@@ -22,6 +22,7 @@ const gameStorage=(()=>{
 function savedObject(value){return value&&typeof value==="object"&&!Array.isArray(value)?value:{}}
 function safeCount(value,fallback=0){const n=Number(value);return Number.isFinite(n)?Math.max(0,Math.min(Number.MAX_SAFE_INTEGER,Math.floor(n))):fallback}
 let simulationMs=0,frameAccumulator=0,updatingWorld=false;
+const BOSS_TYPES=Object.freeze(["giantCat","duck","seal","demon","octopus"]);
 const END_GAME_FRAME=Symbol("end-game-frame");
 function gameNow(){return simulationMs}
 
@@ -404,9 +405,9 @@ async function submitOnlineScore(finalScore, statusEl, rankingEl){
     wave:Math.max(1,Math.floor(Number(wave)||1)),
     level:Math.max(1,Math.floor(Number(level)||1)),
     elapsedSeconds:Math.floor(runStats?.elapsed||0),
-    bosses:Math.max(0,Math.min(4,Math.floor(defeatedBossTypes?.size||0))),
+    bosses:Math.max(0,Math.min(BOSS_TYPES.length,Math.floor(defeatedBossTypes?.size||0))),
     impacts:Math.max(0,Math.floor(Number(finalScore.impactCount)||0)),
-    result:defeatedBossTypes?.size>=4?"boss_victory":"game_over",
+    result:defeatedBossTypes?.size>=BOSS_TYPES.length?"boss_victory":"game_over",
     version:GAME_VERSION,
     createdAt:firebase.firestore.FieldValue.serverTimestamp()
   };
@@ -471,8 +472,11 @@ loadOnlineRanking([startRankingList]);
 /* === Cosméticos permanentes === */
 const COSMETIC_KEYS={scales:"gatitos_cosmetic_scales",owned:"gatitos_cosmetic_owned",selected:"gatitos_cosmetic_selected"};
 const cosmeticPanel=document.getElementById("cosmeticsPanel"),scaleBalanceEl=document.getElementById("scaleBalance"),cosmeticsContentEl=document.getElementById("cosmeticsContent"),cosmeticsSkinsTab=document.getElementById("cosmeticsSkinsTab"),cosmeticsPacksTab=document.getElementById("cosmeticsPacksTab"),cosmeticsResetBtn=document.getElementById("cosmeticsResetBtn");
-const COSMETIC_CATEGORIES={player:"Jugador",fish:"Peces",enemy:"Enemigos",boss_giant:"Jefe gato gigante",boss_duck:"Jefe pato",boss_seal:"Jefe foca",boss_demon:"Jefe demonio"};
+const COSMETIC_CATEGORIES={player:"Jugador",fish:"Peces",enemy:"Enemigos",boss_giant:"Jefe gato gigante",boss_duck:"Jefe pato",boss_seal:"Jefe foca",boss_demon:"Jefe demonio",boss_octopus:"Jefe pulpo"};
 const COSMETICS=[
+  {id:"boss_octopus_elegant",name:"Pulpo · Almirante de marfil",category:"boss_octopus",price:280,preview:"🐙",desc:"Piel marfil, tentáculos azules, gorra de almirante y pajarita dorada.",pack:"elegant"},
+  {id:"boss_octopus_low_poly",name:"Pulpo · Octágono abisal",category:"boss_octopus",price:280,preview:"🐙",desc:"Cabeza facetada turquesa y tentáculos angulares.",pack:"low_poly"},
+  {id:"boss_octopus_grayscale",name:"Pulpo · Tinta de plata",category:"boss_octopus",price:280,preview:"◐",desc:"Pulpo y tentáculos en blanco, negro y plata.",pack:"grayscale"},
   {id:"player_green",name:"Jugador · Guardián del bosque",category:"player",price:100,preview:"🟢",desc:"Pelaje verde, marcas oscuras y corona de hojas."},
   {id:"player_pink",name:"Jugador · Flor de cerezo",category:"player",price:100,preview:"🌸",desc:"Pelaje rosa, flor clara y marca de corazón."},
   {id:"player_elegant",name:"Jugador · Gala de marfil",category:"player",price:200,preview:"🎀",desc:"Pelaje marfil, sombrero de copa y gran pajarita azul.",pack:"elegant"},
@@ -487,7 +491,7 @@ const COSMETICS=[
   {id:"player_low_poly",name:"Jugador · Gato poligonal",category:"player",price:180,preview:"🐱",desc:"Gato facetado con orejas, hocico, bigotes y cola.",pack:"low_poly"},
   {id:"fish_low_poly",name:"Peces · Pez poligonal",category:"fish",price:180,preview:"🐟",desc:"Peces facetados con cola, aletas y ojo bien visibles.",pack:"low_poly"},
   {id:"enemy_low_poly",name:"Enemigos · Gatos poligonales",category:"enemy",price:220,preview:"🐈",desc:"Gatos facetados reconocibles, conservando los accesorios de cada variante.",pack:"low_poly"},
-  {id:"boss_giant_low_poly",name:"Gato jefe · Coloso poligonal",category:"boss_giant",price:260,preview:"😼",desc:"Gato jefe facetado con orejas, cara y bigotes marcados.",pack:"low_poly"},
+  {id:"boss_giant_low_poly",name:"Gato jefe · Coloso poligonal",category:"boss_giant",price:260,preview:"😼",desc:"Gato jefe facetado con orejas, cara y bigotes marcados.",pack:"low_poly"},\n  {id:"boss_giant_elegant",name:"Gato jefe · Duque de marfil",category:"boss_giant",price:300,preview:"👑",desc:"Gato jefe con pelaje marfil, corona dorada, capa elegante y detalles de gala.",pack:"elegant"},
   {id:"boss_duck_low_poly",name:"Pato · Pico poligonal",category:"boss_duck",price:260,preview:"🦆",desc:"Pato facetado amarillo con pico, ojo, ala y cola reconocibles.",pack:"low_poly"},
   {id:"boss_seal_low_poly",name:"Foca · Bloque polar",category:"boss_seal",price:260,preview:"🦭",desc:"Foca facetada con hocico, bigotes y aletas claramente visibles.",pack:"low_poly"},
   {id:"boss_demon_low_poly",name:"Demonio · Prisma oscuro",category:"boss_demon",price:300,preview:"😈",desc:"Demonio facetado con cuernos, alas y mirada luminosa.",pack:"low_poly"},
@@ -499,13 +503,13 @@ const COSMETICS=[
   {"id": "boss_seal_grayscale", "name": "Foca · Nieve y carbón", "category": "boss_seal", "price": 260, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"},
   {"id": "boss_demon_grayscale", "name": "Demonio · Sombra de celuloide", "category": "boss_demon", "price": 300, "preview": "◐", "desc": "Blanco, negro y grises, con sus detalles originales.", "pack": "grayscale"}
 ];
-const COSMETIC_PACKS=[{id:"elegant",name:"Pack Elegante",discount:.20,items:["player_elegant","fish_elegant","enemy_elegant","boss_duck_monocle","boss_seal_tie","boss_demon_cape"],desc:"Marfil, pajaritas, sombreros, monóculos, corona, perlas y capa."},{id:"low_poly",name:"Pack Low Poly",discount:.25,items:["player_low_poly","fish_low_poly","enemy_low_poly","boss_giant_low_poly","boss_duck_low_poly","boss_seal_low_poly","boss_demon_low_poly"],desc:"Personajes y proyectiles facetados, con siluetas propias y reconocibles."}];
-COSMETIC_PACKS.push({"id": "grayscale", "name": "Pack Escala de grises", "discount": 0.25, "items": ["player_grayscale", "fish_grayscale", "enemy_grayscale", "boss_giant_grayscale", "boss_duck_grayscale", "boss_seal_grayscale", "boss_demon_grayscale"], "desc": "Siete skins en blanco y negro. Las variantes se distinguen por sus formas y accesorios."});
+const COSMETIC_PACKS=[{id:"elegant",name:"Pack Elegante",discount:.20,items:["player_elegant","fish_elegant","enemy_elegant","boss_duck_monocle","boss_seal_tie","boss_demon_cape","boss_octopus_elegant","boss_giant_elegant"],desc:"Marfil, pajaritas, sombreros, monóculos, corona, perlas, capa y variantes de gala de los jefes."},{id:"low_poly",name:"Pack Low Poly",discount:.25,items:["player_low_poly","fish_low_poly","enemy_low_poly","boss_giant_low_poly","boss_duck_low_poly","boss_seal_low_poly","boss_demon_low_poly","boss_octopus_low_poly"],desc:"Personajes y proyectiles facetados, con siluetas propias y reconocibles."}];
+COSMETIC_PACKS.push({"id": "grayscale", "name": "Pack Escala de grises", "discount": 0.25, "items": ["player_grayscale", "fish_grayscale", "enemy_grayscale", "boss_giant_grayscale", "boss_duck_grayscale", "boss_seal_grayscale", "boss_demon_grayscale", "boss_octopus_grayscale"], "desc": "Ocho skins en blanco y negro. Las variantes se distinguen por sus formas y accesorios."});
 
 let cosmeticTab="skins";
 let randomSkinsEnabled=gameStorage.getItem("gatitos_random_skins")==="true";
 let runCosmeticSelections=null;
-let cosmeticScales=0,ownedCosmetics=new Set(),selectedCosmetics={player:"default",fish:"default",enemy:"default",boss_giant:"default",boss_duck:"default",boss_seal:"default",boss_demon:"default"};
+let cosmeticScales=0,ownedCosmetics=new Set(),selectedCosmetics={player:"default",fish:"default",enemy:"default",boss_giant:"default",boss_duck:"default",boss_seal:"default",boss_demon:"default",boss_octopus:"default"};
 let cosmeticAwardedThisRun=false,cosmeticScalesAwardedThisRun=0;
 function safeJsonParse(value,fallback){try{return JSON.parse(value)}catch(e){return fallback}}
 function loadCosmetics(){
@@ -526,7 +530,7 @@ function isCosmeticOwned(id){return id==="default"||ownedCosmetics.has(id)}
 function selectedCosmetic(category){return (runCosmeticSelections||selectedCosmetics)[category]||"default"}
 function updateScaleBalance(){if(scaleBalanceEl)scaleBalanceEl.textContent=cosmeticScales.toLocaleString()}
 function equipCosmetic(id){const c=getCosmetic(id);if(!c||!isCosmeticOwned(id))return;selectedCosmetics[c.category]=id;saveCosmetics();renderCosmetics()}
-function resetCosmeticSelections(){selectedCosmetics={player:"default",fish:"default",enemy:"default",boss_giant:"default",boss_duck:"default",boss_seal:"default",boss_demon:"default"};saveCosmetics();renderCosmetics()}
+function resetCosmeticSelections(){selectedCosmetics={player:"default",fish:"default",enemy:"default",boss_giant:"default",boss_duck:"default",boss_seal:"default",boss_demon:"default",boss_octopus:"default"};saveCosmetics();renderCosmetics()}
 function buyCosmetic(id){const c=getCosmetic(id);if(!c||ownedCosmetics.has(id)||cosmeticScales<c.price)return;cosmeticScales-=c.price;registerScalesSpent(c.price);ownedCosmetics.add(id);selectedCosmetics[c.category]=id;saveCosmetics();renderCosmetics()}
 function getPackInfo(pack){
   const items=pack.items.map(getCosmetic).filter(Boolean);
@@ -546,7 +550,7 @@ function renderCosmeticCard(c){
   return `<div class="cosmeticCard ${equipped?"equipped":owned?"owned":""}"><div class="cosmeticPreview" data-skin="${c.id}" data-category="${c.category}" aria-label="${escapeHtml(c.name)}"></div><div class="cosmeticName">${escapeHtml(c.name)}</div><div class="cosmeticMeta">${escapeHtml(COSMETIC_CATEGORIES[c.category]||c.category)} · ${escapeHtml(c.desc||"")}</div>${btn}</div>`;
 }
 function renderSkinsTab(){
-  const cats=["player","fish","enemy","boss_giant","boss_duck","boss_seal","boss_demon"];
+  const cats=Object.keys(COSMETIC_CATEGORIES);
   return cats.map(cat=>{
     const items=COSMETICS.filter(c=>c.category===cat);
     const normal=`<div class="cosmeticCard ${selectedCosmetic(cat)==="default"?"equipped":"owned"}"><div class="cosmeticPreview" data-skin="default" data-category="${cat}" aria-label="Aspecto normal"></div><div class="cosmeticName">Aspecto normal</div><div class="cosmeticMeta">${escapeHtml(COSMETIC_CATEGORIES[cat]||cat)} · Gratis</div>${selectedCosmetic(cat)==="default"?`<button class="cosmeticButton owned" disabled>Equipada</button>`:`<button class="cosmeticButton secondary" onclick="selectedCosmetics['${cat}']='default';saveCosmetics();renderCosmetics()">Equipar</button>`}</div>`;
@@ -644,9 +648,9 @@ function drawLowPolyCat(cat){
 }
 function drawLowPolyFish(f){
   const angle=Number.isFinite(f.angle)?f.angle:Math.atan2(f.vy||0,f.vx||1);
-  const body=f.boomerang&&f.crit?"#ffe066":f.giantEaster?"#ffd166":f.ramFish?(f.boomerang?"#80ed99":f.crit?"#ff6b6b":"#7ef5ff"):f.cardumenGigante?"#80d8ff":f.boomerang?"#80ed99":f.crit?"#ff6b6b":f.shieldShot?"#ffd166":"#4cc9f0";
-  const accent=f.boomerang&&f.crit?"#e0a800":f.giantEaster?"#fff0a6":f.ramFish?(f.boomerang?"#57cc99":f.crit?"#e03131":"#e3ffff"):f.cardumenGigante?"#caf0f8":f.boomerang?"#57cc99":f.crit?"#ffc2d1":f.shieldShot?"#fff3bf":"#caf0f8";
-  const outline=f.shieldShot?"#ffb703":"#12394a";
+  const body=f.boomerang&&f.crit&&hasDoneFusionPair("boomerang+critChance")?"#ffe066":f.giantEaster?"#ffd166":f.ramFish?(f.boomerang?"#80ed99":f.crit?"#ff6b6b":"#7ef5ff"):f.cardumenGigante?"#80d8ff":f.boomerang?"#80ed99":f.crit?"#ff6b6b":f.shieldShot?"#6ed7ed":"#4cc9f0";
+  const accent=f.boomerang&&f.crit&&hasDoneFusionPair("boomerang+critChance")?"#e0a800":f.giantEaster?"#fff0a6":f.ramFish?(f.boomerang?"#57cc99":f.crit?"#e03131":"#e3ffff"):f.cardumenGigante?"#caf0f8":f.boomerang?"#57cc99":f.crit?"#ffc2d1":"#caf0f8";
+  const outline=f.shieldShot?"#45aecd":"#12394a";
   drawEntityShadow(f.x,f.y,12*(f.scale||1),4*(f.scale||1),.08);
   ctx.save();ctx.translate(f.x,f.y);ctx.rotate(angle);ctx.scale(f.scale||1,f.scale||1);
   ctx.lineJoin="round";ctx.strokeStyle=outline;ctx.lineWidth=2;
@@ -771,7 +775,7 @@ const ACHIEVEMENT_KEYS={state:"gatitos_achievements_state_v1"};
 const achievementsPanel=document.getElementById("achievementsPanel"),achievementsContentEl=document.getElementById("achievementsContent"),achievementProgressText=document.getElementById("achievementProgressText"),achievementsRefreshBtn=document.getElementById("achievementsRefreshBtn");
 const ACHIEVEMENTS=[
   {id:"complete_game",icon:"🌟",name:"Poder absoluto gatuno",stat:"completeGame",desc:"Fusiona las 28 mejoras en 14 parejas y lleva todas las fusiones al máximo.",phases:[{target:1,label:"Completa el juego al 100%",reward:0}]},
-  {id:"bosses_run",icon:"👑",name:"Los venciste a todos",stat:"bossesInRun",desc:"Derrota a los 4 jefes diferentes en una misma partida.",phases:[{target:4,label:"4 jefes en una partida",reward:0}]},
+  {id:"bosses_run",icon:"👑",name:"Los venciste a todos",stat:"bossesInRun",desc:"Derrota a los 5 jefes diferentes en una misma partida.",phases:[{target:5,label:"5 jefes en una partida",reward:0}]},
   {id:"shots",icon:"🐟",name:"Lluvia de peces",stat:"shots",desc:"Dispara peces a lo largo de tus partidas.",phases:[{target:500,label:"500 peces",reward:0},{target:2500,label:"2.500 peces",reward:0},{target:10000,label:"10.000 peces",reward:0},{target:50000,label:"50.000 peces",reward:0}]},
   {id:"cats",icon:"🐱",name:"Mimos gatunos",stat:"cats",desc:"Mima gatitos a lo largo de tus partidas.",phases:[{target:100,label:"100 gatos",reward:0},{target:1000,label:"1.000 gatos",reward:0},{target:5000,label:"5.000 gatos",reward:0},{target:25000,label:"25.000 gatos",reward:0}]},
   {id:"thieves",icon:"😾",name:"Ladrones desgraciados",stat:"coinsStolen",desc:"Pierde monedas por culpa de los gatos ladrones.",phases:[{target:25,label:"25 monedas robadas",reward:0},{target:100,label:"100 monedas robadas",reward:0},{target:300,label:"300 monedas robadas",reward:0},{target:1000,label:"1.000 monedas robadas",reward:0}]},
@@ -966,7 +970,7 @@ function renderAchievements(){
     </div>`;
   }).join("");
 }
-function registerFinalScoreAchievement(finalScore){setAchievementStatMax("maxScore",Number(finalScore?.total)||0,{run:true});setAchievementStatMax("maxWave",wave,{run:true});if(defeatedBossTypes?.size>=4)setAchievementStatMax("bossesInRun",4,{run:true});}
+function registerFinalScoreAchievement(finalScore){setAchievementStatMax("maxScore",Number(finalScore?.total)||0,{run:true});setAchievementStatMax("maxWave",wave,{run:true});if(defeatedBossTypes?.size>=BOSS_TYPES.length)setAchievementStatMax("bossesInRun",BOSS_TYPES.length,{run:true});}
 function registerScalesSpent(amount){addAchievementStat("scalesSpent",amount,{})}
 function registerShopCoinsSpent(amount){addAchievementStat("shopCoinsSpent",amount,{run:true})}
 function registerFusionAchievements(){
@@ -1049,11 +1053,12 @@ let backgroundFishSeed=Math.floor(Math.random()*1000000);
 let pendingUpgradeQueue=[];
 let runStats;
 let defeatedBossTypes=new Set();
-let bossEncounterCounts={giantCat:0,duck:0,seal:0,demon:0};
+let bossEncounterCounts={giantCat:0,duck:0,seal:0,demon:0,octopus:0};
 let selectedTarget=null;
 let fusionMoveXpTimer=0;
 let lastFusionShieldGuard=0,zoomiesEscapeHits=0,forcedZoomiesUntil=0,safeTeleportInvulnUntil=0;
 let screenShake=0,screenShakeX=0,screenShakeY=0,lastStarTrail=0;
+const ramFishTrails=[];
 const fishes=[],cats=[],hearts=[],smokes=[],floatingTexts=[],pawPrints=[],quacks=[],coinsDrops=[],dogBones=[],demonOrbs=[],yarnBalls=[],powerStars=[],shockwaves=[],sparkles=[],tunaDrops=[];
 let audioCtx=null;
 // Restaurado: sin esta función, los sonidos generaban un ReferenceError en
@@ -1671,8 +1676,8 @@ function nextXpRequirement(current,phase=xpRequirementPhase){
   return Math.ceil(current*(XP_PHASE_RATES[phase]||XP_PHASE_RATES.main)+2);
 }
 function getXpProgressionPhase(){
-  // Early: los cuatro jefes distintos aún no se han derrotado.
-  if(!defeatedBossTypes||defeatedBossTypes.size<4)return "main";
+  // Early: los cinco jefes distintos aún no se han derrotado.
+  if(!defeatedBossTypes||defeatedBossTypes.size<BOSS_TYPES.length)return "main";
   // Late: todas las fusiones al máximo. También cubre las partidas que
   // han continuado tras completar el juego.
   if(finalCompletionContinue)return "endless";
@@ -1702,7 +1707,7 @@ if(gameStarted)rollRandomSkins();else runCosmeticSelections=null;
 saveAchievements();
 clearAllInputKeys();
 simulationMs=0;lastRamFishAt=-RAM_FISH_BASE_COOLDOWN;lastManualShotAt=-Infinity;frameAccumulator=0;
-xpRequirementPhase="main";autoRamNextEvaluationAt=0;autoDecisionCooldown=0;autoDuckDirection=null;autoDuckDirectionUntil=0;autoLastStuckCheckAt=0;
+xpRequirementPhase="main";autoRamNextEvaluationAt=0;autoDecisionCooldown=0;autoProjectileDirection=null;autoProjectileDirectionUntil=0;autoLastStuckCheckAt=0;
 selectedTarget=null;lastStarTrail=0;screenShake=0;screenShakeX=0;screenShakeY=0;
 if(autoChoiceTimer)clearTimeout(autoChoiceTimer);
 autoChoiceToken++;autoChoiceMenu=null;
@@ -1718,10 +1723,10 @@ rankingEligibleThisRun=!autoModeUsedThisRun;
 rankingDisabledReason=rankingEligibleThisRun?"":"Ranking desactivado: la partida empezó con IA activada.";
 cosmeticAwardedThisRun=false;cosmeticScalesAwardedThisRun=0;
 currentWaveHadDamage=false;currentNoDamageStreak=0;
-score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=-Infinity;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=1;thiefCoinsStolenThisWave=0;spawnCooldown=0;life=upgrades.maxLife;level=1;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;musicianSpawnedThisWave=false;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starSpawnTimer=12;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();bossEncounterCounts={giantCat:0,duck:0,seal:0,demon:0};bossVictoryAlreadyShown=false;bossVictoryScoreSaved=false;bossVictoryPending=false;dogRelaxTime=0;fusionMoveXpTimer=0;lastFusionShieldGuard=0;enemyIntroSeen={};finalChoiceLocked=false;finalCompletionContinue=false;finalCompletionStartWave=0;demonSpawnPressure=0;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
+score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";lastShot=-Infinity;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=1;thiefCoinsStolenThisWave=0;spawnCooldown=0;life=upgrades.maxLife;level=1;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;musicianSpawnedThisWave=false;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starSpawnTimer=12;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();bossEncounterCounts={giantCat:0,duck:0,seal:0,demon:0,octopus:0};bossVictoryAlreadyShown=false;bossVictoryScoreSaved=false;bossVictoryPending=false;dogRelaxTime=0;fusionMoveXpTimer=0;lastFusionShieldGuard=0;enemyIntroSeen={};finalChoiceLocked=false;finalCompletionContinue=false;finalCompletionStartWave=0;demonSpawnPressure=0;perfFps=60;lowPerfMode=false;lowPerfTimer=0;perfNoticeTimer=0;if(perfNotice)perfNotice.classList.remove("visible");
 powerStars.length=0;tunaDrops.length=0;
 player.x=canvas.width/2;player.y=canvas.height/2;player.angle=0;player.shootAnim=0;player.hurtAnim=0;dogCompanion.x=player.x-50;dogCompanion.y=player.y+45;dogCompanion.shootCooldown=0;
-fishes.length=0;cats.length=0;hearts.length=0;smokes.length=0;floatingTexts.length=0;pawPrints.length=0;quacks.length=0;coinsDrops.length=0;dogBones.length=0;demonOrbs.length=0;yarnBalls.length=0;shockwaves.length=0;sparkles.length=0;
+fishes.length=0;ramFishTrails.length=0;cats.length=0;hearts.length=0;smokes.length=0;floatingTexts.length=0;pawPrints.length=0;quacks.length=0;coinsDrops.length=0;dogBones.length=0;demonOrbs.length=0;yarnBalls.length=0;shockwaves.length=0;sparkles.length=0;
 canvas.style.cursor="crosshair";
 messageEl.classList.remove("dogSave");messageEl.style.display="none";levelUpPanel.style.display="none";gameOverPanel.style.display="none";victoryPanel.style.display="none";startWave();updateHud();syncMusic()
 }
@@ -1755,6 +1760,7 @@ function cleanupRoundScreen(opts={}){
   let keptFish=0;
   for(const fish of fishes)if(fish.giantEaster&&fish.life>0)fishes[keptFish++]=fish;
   fishes.length=keptFish;
+  ramFishTrails.length=0;
   quacks.length=0;
   coinsDrops.length=0;
   dogBones.length=0;
@@ -2032,19 +2038,19 @@ function activateSevenLives(){
   return true;
 }
 function getDangerAtPoint(x,y){
-let danger=0;
+let danger=getOctopusAreaDanger(x,y,player.r+25)*2500;
 const margin=72;
 const edge=Math.min(x,y,canvas.width-x,canvas.height-y);
 if(edge<margin)danger+=(margin-edge)*8;
 
 cats.forEach(cat=>{
-  if(!isFinitePos(cat)||cat.dead)return;
+  if(!isCombatTargetAvailable(cat))return;
   const d=Math.max(1,Math.hypot(cat.x-x,cat.y-y)-(cat.r||18));
   danger+=Math.max(0,540-d)*((cat.small?.72:1)+(cat.type==="yarn"?.35:0)+(cat.type==="glutton"?.25:0));
   if(d<90)danger+=900;
 });
 
-if(boss&&isFinitePos(boss)&&boss.hp>0){
+if(isCombatTargetAvailable(boss)){
   const d=Math.max(1,Math.hypot(boss.x-x,boss.y-y)-(boss.r||55));
   danger+=Math.max(0,780-d)*2.25;
   if(d<150)danger+=1900;
@@ -2130,7 +2136,7 @@ if(hasDoneFusionPair("catInstinct+shield")&&upgrades.shield&&gameNow()-lastFusio
 lastFusionShieldGuard=gameNow();
 amount*=0.35;
 shockwaves.push({x:player.x,y:player.y,r:8,maxR:150,life:.55,maxLife:.55,color:"#90e0ef",line:6});
-cats.forEach(cat=>{if(!isFinitePos(cat))return;const dx=cat.x-player.x,dy=cat.y-player.y,d=Math.hypot(dx,dy)||1;if(d<330){cat.knockVx=(cat.knockVx||0)+(dx/d)*420;cat.knockVy=(cat.knockVy||0)+(dy/d)*420;cat.hitAnim=.18;}});
+cats.forEach(cat=>{if(!isCombatTargetAvailable(cat))return;const dx=cat.x-player.x,dy=cat.y-player.y,d=Math.hypot(dx,dy)||1;if(d<330){cat.knockVx=(cat.knockVx||0)+(dx/d)*420;cat.knockVy=(cat.knockVy||0)+(dy/d)*420;cat.hitAnim=.18;}});
 floatingTexts.push({x:player.x,y:player.y-86,text:"🛡️ Guardia felina",life:1.1,maxLife:1.1,big:false});
 }
 // El tope de Pelaje protector debe coincidir con su progresión fusionada (45 %).
@@ -2153,7 +2159,7 @@ if(life<=0)endGame(deathText);
 return true;
 }
 
-const BOSS_DISPLAY_NAMES={giantCat:"Gato gigante",duck:"Pato",seal:"Foca",demon:"Demonio"};
+const BOSS_DISPLAY_NAMES={giantCat:"Gato gigante",duck:"Pato",seal:"Foca",demon:"Demonio",octopus:"Pulpo"};
 function getBossRepeatLevel(type){
   return Math.max(0,(bossEncounterCounts&&bossEncounterCounts[type]?bossEncounterCounts[type]:0)-1);
 }
@@ -2174,9 +2180,10 @@ function showBossVictoryPanel(){
 }
 
 function getPendingBossTypes(){
-  return ["giantCat","duck","seal","demon"].filter(t=>!defeatedBossTypes.has(t));
+  return BOSS_TYPES.filter(t=>!defeatedBossTypes.has(t));
 }
 function isBossTypeAllowedNow(type){
+  if(type==="octopus")return wave>=10;
   if(type!=="demon")return true;
 
   // Primer jefe: nunca demonio. La ronda 5 debe ser una pelea normal y balanceada.
@@ -2205,51 +2212,19 @@ function weightedRandomBoss(weightedList){
 
   return valid[valid.length-1].type;
 }
-function chooseNextBossType(types){
-  let valid=types.filter(t=>isBossTypeAllowedNow(t));
-
-  if(lastBossType==="demon"){
-    const withoutDemon=valid.filter(t=>t!=="demon");
-    if(withoutDemon.length)valid=withoutDemon;
-  }
-
-  if(!valid.length)return types.find(t=>t!=="demon")||"giantCat";
-
+function chooseNextBossType(types=BOSS_TYPES){
   const pending=getPendingBossTypes();
+  const available=types.filter(t=>BOSS_TYPES.includes(t)&&isBossTypeAllowedNow(t));
+  // Antes del primer final, solo jefes pendientes. Un peso nunca puede
+  // volver a introducir uno derrotado, ni siquiera con la fusión del perro.
+  let pool=pending.length?available.filter(t=>pending.includes(t)):available.filter(t=>t!==lastBossType);
+  // Mantener las garantías incluso si una llamada ofrece una lista incompleta.
+  if(!pool.length)pool=pending.length?pending.filter(isBossTypeAllowedNow):BOSS_TYPES.filter(t=>t!==lastBossType&&isBossTypeAllowedNow(t));
+  if(!pool.length)pool=pending.length?pending:BOSS_TYPES.filter(t=>t!==lastBossType);
   const hasDogFusion=upgrades.boyfriendDog&&!dogKidnapped&&!dogSacrificeUsed;
-  const allBossesDefeated=pending.length===0;
-
-  const weighted=valid.map(type=>{
-    let weight=1;
-
-    // Los jefes que todavía no han salido pesan más, pero no fuerzan un orden fijo.
-    if(pending.includes(type))weight+=4;
-
-    // Repetir el mismo jefe seguido es posible, pero muy raro.
-    if(type===lastBossType)weight*=0.08;
-
-    if(type==="demon"){
-      if(wave<=5)return{type,weight:0};
-
-      if(hasDogFusion){
-        // Mucha probabilidad al tener perro, y cada boss fallido aumenta presión.
-        weight+=8+demonSpawnPressure*7;
-      }else if(forceDemonNextBoss){
-        weight+=5+demonSpawnPressure*4;
-      }else{
-        weight+=wave>=20?1.5:0;
-      }
-
-      if(pending.includes("demon"))weight+=3;
-    }
-
-    // Una vez derrotados todos, vuelve a ser más libre, evitando repetir demasiado.
-    if(allBossesDefeated)weight=type===lastBossType?0.12:1;
-
-    return{type,weight};
-  });
-
-  return weightedRandomBoss(weighted)||valid[Math.floor(Math.random()*valid.length)]||"giantCat";
+  const weighted=pool.map(type=>({type,weight:type==="demon"&&(hasDogFusion||forceDemonNextBoss)
+    ?1+(hasDogFusion?8:5)+demonSpawnPressure*(hasDogFusion?7:4):1}));
+  return weightedRandomBoss(weighted);
 }
 function getUpcomingFusionHints(limit=3){
   const hints=[];
@@ -2308,6 +2283,7 @@ function getDemonOrbResistanceChance(round=wave){return Math.min(.12,Math.max(0,
 function spawnBoss(){
 syncMusic();
 let types=["giantCat","duck","seal"];
+if(isBossTypeAllowedNow("octopus"))types.push("octopus");
 
 if(isBossTypeAllowedNow("demon")){
   types.push("demon");
@@ -2368,10 +2344,18 @@ floatingTexts.push({x:canvas.width/2,y:170,text:demonMsg,life:2.6,maxLife:2.6,bi
 return;
 }
 
+if(type==="octopus"){
+const hp=Math.round((115+wave*19)*hpScale);
+boss={type,x:canvas.width/2,y:canvas.height/2,r:62+Math.min(20,wave*.6),hp,maxHp:hp,
+  state:"surface",dives:0,attackTimer:1.5,attacks:[],hitAnim:0,wobble:0,
+  tentacleDamage:(12+wave*.32)*damageScale,strikeRadius:68*getOctopusGrowth().size,tentacleScale:getOctopusGrowth().size,salvoCount:getOctopusGrowth().salvo,extraTentacles:getOctopusGrowth().extra,repeatLevel:bossRepeatLevel};
+floatingTexts.push({x:boss.x,y:boss.y-boss.r-45,text:"🐙 ¡El pulpo emerge!",life:2,maxLife:2,big:true});
+syncMusic();return;
+}
 if(type==="giantCat"){
 const hp=Math.round((80+wave*16)*hpScale);
-const summonBase=Math.max(firstBossIntro?.85:.35,2.15-wave*.07-bossRepeatLevel*.12-getEndlessPressure()*.018);
-boss={type,x:canvas.width/2,y:-90,r:62+Math.min(28,wave*1.2),hp,maxHp:hp,speed:(42+wave*3.4)*speedScale,summon:summonBase,baseSummon:summonBase,summonCount:firstBossIntro?Math.min(3,1+Math.floor(wave/12)):Math.min(10,2+Math.floor(wave/10)+Math.floor((bossRepeatLevel+1)/2)+Math.floor(getEndlessPressure()/4)),hitAnim:0,wobble:0,contactDamage:(16+wave*.7)*damageScale}
+const summonBase=Math.max(phase==="main"?1.25:phase==="postBoss"?1.05:.85,2.15-wave*.04-bossRepeatLevel*.06-getEndlessPressure()*.01);
+boss={type,x:canvas.width/2,y:-90,r:62+Math.min(28,wave*1.2),hp,maxHp:hp,speed:(42+wave*3.4)*speedScale,summon:summonBase,baseSummon:summonBase,summonCount:firstBossIntro?Math.min(3,1+Math.floor(wave/12)):Math.min(phase==="main"?4:phase==="postBoss"?5:6,2+Math.floor(wave/15)+Math.floor((bossRepeatLevel+1)/2)+Math.floor(getEndlessPressure()/8)),hitAnim:0,wobble:0,contactDamage:(16+wave*.7)*damageScale}
 }else if(type==="duck"){
 const hp=Math.round((90+wave*18)*hpScale);
 const duckShoot=Math.max(firstBossIntro?.72:.24,1.25-wave*.045-bossRepeatLevel*.10-getEndlessPressure()*.018);
@@ -3868,10 +3852,10 @@ function computeFinalScore(){
 // se convierten en el factor principal de la puntuación.
 const bossBonus=defeatedBossTypes.size*3500;
 // Bono por victoria completa (todos los jefes): el logro real del juego
-const completionBonus=defeatedBossTypes.size===4?25000:0;
+const completionBonus=defeatedBossTypes.size===BOSS_TYPES.length?25000:0;
 // Bono de eficiencia: terminar antes implica haber peleado con menos mejoras (más difícil)
 // Máximo en ronda 15, cero a partir de ronda 65. Solo si se completó el juego.
-const efficiencyBonus=defeatedBossTypes.size===4?Math.max(0,Math.floor((65-Math.min(wave,65))*120)):0;
+const efficiencyBonus=defeatedBossTypes.size===BOSS_TYPES.length?Math.max(0,Math.floor((65-Math.min(wave,65))*120)):0;
 // Factores de partida (peso reducido porque la cuenta de rondas depende en parte de la suerte)
 const wavePoints=wave*150;
 const levelPoints=level*250;
@@ -3880,7 +3864,7 @@ const impactCount=runStats?Math.floor(runStats.fishHits||0):0;
 const fishBonus=Math.floor(impactCount*0.6);
 const total=wavePoints+levelPoints+killPoints+fishBonus+bossBonus+completionBonus+efficiencyBonus;
 let rank,rankEmoji,rankMsg;
-if(total>=65000&&defeatedBossTypes.size>=4){rank="S";rankEmoji="🌟";rankMsg="¡Rango S! Eres una leyenda gatuna"}
+if(total>=65000&&defeatedBossTypes.size>=BOSS_TYPES.length){rank="S";rankEmoji="🌟";rankMsg="¡Rango S! Eres una leyenda gatuna"}
 else if(total>=35000){rank="A";rankEmoji="⭐";rankMsg="¡Rango A! Muy impresionante"}
 else if(total>=16000){rank="B";rankEmoji="💫";rankMsg="¡Rango B! Buen trabajo"}
 else if(total>=6000){rank="C";rankEmoji="🐾";rankMsg="Rango C — sigue practicando"}
@@ -3891,7 +3875,7 @@ function buildScoreRowContent(r,totalLabel="PUNTUACIÓN TOTAL"){
 return `
 ${r.completionBonus>0?`<div class="sRow"><span>🏆 Victoria completa</span><span>+${r.completionBonus.toLocaleString()}</span></div>`:""}
 ${r.efficiencyBonus>0?`<div class="sRow"><span>⚡ Eficiencia (ronda ${wave})</span><span>+${r.efficiencyBonus.toLocaleString()}</span></div>`:""}
-<div class="sRow"><span>💀 Jefes derrotados</span><span>${defeatedBossTypes.size}/4 jefes: +${r.bossBonus.toLocaleString()}</span></div>
+<div class="sRow"><span>💀 Jefes derrotados</span><span>${defeatedBossTypes.size}/${BOSS_TYPES.length} jefes: +${r.bossBonus.toLocaleString()}</span></div>
 <div class="sRow"><span>🌊 Rondas superadas</span><span>Ronda ${wave}: +${r.wavePoints.toLocaleString()}</span></div>
 <div class="sRow"><span>⭐ Nivel alcanzado</span><span>Nivel ${level}: +${r.levelPoints.toLocaleString()}</span></div>
 <div class="sRow"><span>🐱 Gatitos mimados</span><span>${score} gatitos: +${r.killPoints.toLocaleString()}</span></div>
@@ -3964,12 +3948,12 @@ return allPaired&&allFusionMaxed&&allUniqueOwned&&noUpgradeableLevels;
 
 function getGamePhase(){
   if(finalCompletionContinue)return "endless";
-  if(defeatedBossTypes&&defeatedBossTypes.size>=4)return "postBoss";
+  if(defeatedBossTypes&&defeatedBossTypes.size>=BOSS_TYPES.length)return "postBoss";
   return "main";
 }
 function getPostBossPressure(){
   if(getGamePhase()!=="postBoss")return 0;
-  return Math.max(0,wave-20);
+  return Math.max(0,wave-BOSS_TYPES.length*5);
 }
 function getEndlessPressure(){
   if(getGamePhase()!=="endless")return 0;
@@ -4261,7 +4245,14 @@ if(catType==="musician"&&(hasActiveMusicianCat()||musicianSpawnedThisWave))retur
 return catType;
 }
 
-function getActiveCatCap(){return avalancheActive?150:105;}
+function getActiveCatCap(){
+  if(boss)return getGamePhase()==="endless"?70:getGamePhase()==="postBoss"?55:40;
+  return avalancheActive?150:105;
+}
+function getBossReinforcementInterval(){
+  return Math.max(getGamePhase()==="endless"?.65:.85,
+    Math.max(1,1.85-wave*.025)/getEndlessSpawnMultiplier());
+}
 function spawnCat(x=null,y=null,small=false){
 // Reservar una plaza para el arcoíris pendiente; no generar y borrar enemigos.
 const rainbowDue=rainbowSelectedThisWave&&!rainbowSpawnedThisWave;
@@ -4364,13 +4355,16 @@ coinsDrops.push({x,y,r:10,amount,life:18})
 }
 
 function damageBoss(amount,leviathanKill=false){
-if(!boss)return;
-const real=boss.type==="seal"&&boss.state!=="stunned"?amount*.35:amount;
+if(!boss||(boss.type==="octopus"&&boss.state!=="surface"))return;
+let real=boss.type==="seal"&&boss.state!=="stunned"?amount*.35:amount;
+const diveThreshold=boss.type==="octopus"&&boss.dives<2?boss.maxHp*(boss.dives===0?.70:.35):0;
+if(diveThreshold)real=Math.min(real,Math.max(0,boss.hp-diveThreshold));
 const healthLost=Math.min(Math.max(0,boss.hp),Math.max(0,real));
 if(runStats)runStats.bossDamage+=healthLost;
 boss.hp-=real;boss.hitAnim=.15;
 makeImpact(boss.x,boss.y,boss.type==="demon"?"#ff4d8d":"#ffd166",1.35);addScreenShake(boss.type==="demon"?5:3);playImpactSound();
 if(upgrades.lifeSteal>0)life=Math.min(upgrades.maxLife,life+healthLost*getCurrentLifeSteal());
+if(diveThreshold&&boss.hp<=diveThreshold+1e-7){beginOctopusDive(boss);return;}
 if(boss.hp<=0){
 const defeatedType=boss.type;
 makeSmoke(boss.x,boss.y);
@@ -4398,7 +4392,7 @@ floatingTexts.push({x:boss.x,y:boss.y-70,text:"¡Jefe mimado!",life:1.3,maxLife:
 }
 
 score+=5;
-// El cuarto jefe marca el comienzo del mid game ANTES de entregar su nivel.
+// El último jefe diferente marca el comienzo del mid game ANTES de entregar su nivel.
 defeatedBossTypes.add(defeatedType);
 syncXpRequirementPhase();
 if(finalCompletionContinue||isGameCompleted()){
@@ -4413,12 +4407,12 @@ if(finalCompletionContinue||isGameCompleted()){
   shopBossPending=true;
 }
 addAchievementStat("bossesTotal",1,{run:true});
-if(defeatedBossTypes.size>=4)setAchievementStatMax("bossesInRun",4,{run:true});
+if(defeatedBossTypes.size>=BOSS_TYPES.length)setAchievementStatMax("bossesInRun",BOSS_TYPES.length,{run:true});
 boss=null;
 syncMusic();
 collectAllMapLootAfterBoss();
 cleanupRoundScreen({keepFloating:true,keepSoftEffects:true});
-const allBossTypes=["giantCat","duck","seal","demon"];
+const allBossTypes=BOSS_TYPES;
 if(allBossTypes.every(t=>defeatedBossTypes.has(t))&&victoryPanel&&!gameOver&&!bossVictoryAlreadyShown){
   shopBossPending=false;
   shopAvailable=true;
@@ -4561,7 +4555,7 @@ function triggerLeviathanMassiveDamage(){
   const baseDamage=Math.max(1,upgrades.damage*getZoomiesDamageMultiplier());
   for(let i=cats.length-1;i>=0;i--){
     const cat=cats[i];
-    if(!cat||cat.dead||!Number.isFinite(cat.hp))continue;
+    if(!isCombatTargetAvailable(cat))continue;
     const dealt=Math.max(cat.maxHp*(1.15+Math.min(1.2,(leviathanPower-1)*.25)),baseDamage*38*leviathanPower);
     cat.hp-=dealt;
     cat.hitAnim=.35;
@@ -4587,6 +4581,10 @@ function triggerLeviathanMassiveDamage(){
   floatingTexts.push({x:player.x,y:player.y-120,text:"🌊 ¡LEVIATÁN! DAÑO MASIVO",life:2.2,maxLife:2.2,big:true});
 }
 
+function getLeviathanGiantFishChance(){
+  return LEVIATHAN_GIANT_FISH_CHANCE*(1+Math.max(0,Math.min(.5,upgrades.luck||0)));
+}
+
 function hasCardumenGiganteFusion(){
 return !!doneFusionPairs[sortedPair("bigFish","doubleFish")];
 }
@@ -4597,7 +4595,7 @@ if(!gameStarted||gameOver||paused||choosingUpgrade)return;
 const delay=getShotInterval();
 if(now-lastShot<delay)return;
 lastShot=now;shots++;if(runStats)runStats.shotsFired++;addAchievementStat("shots",1,{run:true});player.shootAnim=.12;
-const rawAngle=Math.atan2(mouse.y-player.y,mouse.x-player.x),angle=getAutoFireCorrectedAngle(rawAngle),giantFishEasterEgg=hasFishSizeFusionForGiantFish()&&Math.random()<LEVIATHAN_GIANT_FISH_CHANCE,isBigFish=giantFishEasterEgg||Math.random()<upgrades.bigFishChance,fishScale=upgrades.fishSize*(giantFishEasterEgg?40.5:(isBigFish?1.65:1)),lowLifeBonus=(life<upgrades.maxLife*.35?(upgrades.braveHeart?0.35:0)+(upgrades.cursedInstinct?0.45:0):0),fishDamage=upgrades.damage*getLuckyShotMultiplier()*getZoomiesDamageMultiplier()*(1+lowLifeBonus)*(giantFishEasterEgg?60:(isBigFish?2.1*(hasDoneFusionPair("bigFish+damage")?1.10+.25*fusionStrength("bigFish+damage"):1):1)),canPierce=giantFishEasterEgg||Math.random()<upgrades.pierceChance,rolledBoomerang=!giantFishEasterEgg&&Math.random()<Math.min(.95,upgrades.boomerangChance+(hasDoneFusionPair("boomerang+doubleFish")?.04+.08*fusionStrength("boomerang+doubleFish"):0));
+const rawAngle=Math.atan2(mouse.y-player.y,mouse.x-player.x),angle=getAutoFireCorrectedAngle(rawAngle),giantFishEasterEgg=hasFishSizeFusionForGiantFish()&&Math.random()<getLeviathanGiantFishChance(),isBigFish=giantFishEasterEgg||Math.random()<upgrades.bigFishChance,fishScale=upgrades.fishSize*(giantFishEasterEgg?40.5:(isBigFish?1.65:1)),lowLifeBonus=(life<upgrades.maxLife*.35?(upgrades.braveHeart?0.35:0)+(upgrades.cursedInstinct?0.45:0):0),fishDamage=upgrades.damage*getLuckyShotMultiplier()*getZoomiesDamageMultiplier()*(1+lowLifeBonus)*(giantFishEasterEgg?60:(isBigFish?2.1*(hasDoneFusionPair("bigFish+damage")?1.10+.25*fusionStrength("bigFish+damage"):1):1)),canPierce=giantFishEasterEgg||Math.random()<upgrades.pierceChance,rolledBoomerang=!giantFishEasterEgg&&Math.random()<Math.min(.95,upgrades.boomerangChance+(hasDoneFusionPair("boomerang+doubleFish")?.04+.08*fusionStrength("boomerang+doubleFish"):0));
 function addFish(offsetAngle=0,damageMultiplier=1){
 const finalAngle=angle+offsetAngle;
 const boomerangLvl=effectLevel("boomerang");
@@ -4709,8 +4707,8 @@ function shieldAttack(){
 if(effectLevel("shield")<5)return;
 if(Math.random()>.012)return;
 let target=null,dist=Infinity;
-cats.forEach(cat=>{if(!isFinitePos(cat))return;const d=Math.hypot(cat.x-player.x,cat.y-player.y);if(d<dist){dist=d;target=cat}});
-if(boss){const d=Math.hypot(boss.x-player.x,boss.y-player.y);if(d<dist){dist=d;target=boss}}
+cats.forEach(cat=>{if(!isCombatTargetAvailable(cat))return;const d=Math.hypot(cat.x-player.x,cat.y-player.y);if(d<dist){dist=d;target=cat}});
+if(isCombatTargetAvailable(boss)){const d=Math.hypot(boss.x-player.x,boss.y-player.y);if(d<dist){dist=d;target=boss}}
 if(!target)return;
 const a=Math.atan2(target.y-player.y,target.x-player.x);
 fishes.push({x:player.x+Math.cos(a)*56,y:player.y+Math.sin(a)*56,vx:Math.cos(a)*530,vy:Math.sin(a)*530,angle:a,damage:upgrades.damage*getZoomiesDamageMultiplier()*.75,life:1.2,scale:.85,pierce:false,boomerang:false,returning:false,age:0,hitIds:new Set(),shieldShot:true})
@@ -4727,11 +4725,11 @@ if(d2<1200*1200){nearest=fixed;nearestDist2=d2}
 }
 if(!nearest){
 for(const cat of cats){
-  if(!isFinitePos(cat)||cat.dead)continue;
+  if(!isCombatTargetAvailable(cat))continue;
   const dx=cat.x-fish.x,dy=cat.y-fish.y,d2=dx*dx+dy*dy;
   if(d2<nearestDist2){nearestDist2=d2;nearest=cat;}
 }
-if(boss&&isFinitePos(boss)){const dx=boss.x-fish.x,dy=boss.y-fish.y,d2=dx*dx+dy*dy;if(d2<nearestDist2){nearestDist2=d2;nearest=boss}}
+if(isCombatTargetAvailable(boss)){const dx=boss.x-fish.x,dy=boss.y-fish.y,d2=dx*dx+dy*dy;if(d2<nearestDist2){nearestDist2=d2;nearest=boss}}
 }
 const assistRange=fixed?1200:(upgrades.perfectAim?720:(upgrades.combatAI?520:380));
 if(nearest&&nearestDist2<assistRange*assistRange){
@@ -4759,7 +4757,7 @@ function limitActiveCats(maxItems){
   const candidates=[];
   for(let i=0;i<cats.length;i++){
     const c=cats[i];
-    if(c?.rainbow||(c?.type==="thief"&&(c.stolenCoins||0)>0))continue;
+    if(isOctopusTentacle(c)||c?.rainbow||(c?.type==="thief"&&(c.stolenCoins||0)>0))continue;
     const dx=(c?.x||0)-player.x,dy=(c?.y||0)-player.y;
     const dist2=dx*dx+dy*dy;
     candidates.push({i,priority:isCatOnScreen(c)?0:1,dist2});
@@ -4899,25 +4897,155 @@ function constrainBossToArena(entity){
 // También limita a los jefes si cambia el tamaño de la ventana a mitad de combate.
 window.addEventListener("resize",()=>{if(boss)constrainBossToArena(boss);});
 
+// Los tentáculos usan la misma lista de blancos que los gatos para compartir
+// impactos, críticos, perforación, escudo, perro y cadenas de rebote.
+function getOctopusGrowth(round=wave){
+  const tier=Math.floor(Math.max(0,round-10)/10);
+  return {size:1+Math.min(.6,tier*.08),salvo:Math.min(4,1+tier),extra:Math.min(4,tier)};
+}
+function isOctopusTentacle(target){return target?.type==="octopusTentacle";}
+function isCombatTargetAvailable(target){
+  return !!target&&!target.dead&&isFinitePos(target)&&target.hp>0&&
+    !(target.type==="octopus"&&target.state!=="surface")&&
+    !(isOctopusTentacle(target)&&target.emergeTimer>0);
+}
+function octopusArenaPoint(x,y,margin=55){
+  return {x:Math.max(Math.min(margin,canvas.width/2),Math.min(canvas.width-margin,x)),
+    y:Math.max(Math.min(margin,canvas.height/2),Math.min(canvas.height-margin,y))};
+}
+function getOctopusTentacles(owner=boss){return cats.filter(c=>isOctopusTentacle(c)&&c.owner===owner&&!c.dead);}
+function createOctopusStrike(owner,x,y,radius,warning=1.05,source=null){
+  if(!owner||owner!==boss||owner.attacks.length>=8)return;
+  const p=octopusArenaPoint(x,y,35);
+  owner.attacks.push({x:p.x,y:p.y,r:radius,timer:warning,warning,hit:false,life:.30,source});
+}
+function beginOctopusDive(owner){
+  if(owner!==boss||owner.state!=="surface")return;
+  owner.state="submerged";owner.dives++;owner.attacks.length=0;
+  selectedTarget=selectedTarget===owner?null:selectedTarget;
+  const count=Math.min(8,2+owner.dives+(owner.extraTentacles||0)+Math.floor(owner.repeatLevel/2));
+  const spots=[];
+  for(let i=0;i<count;i++){
+    // El primero persigue la posición actual del jugador; el resto abre frentes.
+    let p=octopusArenaPoint(player.x,player.y);
+    if(i>0){
+      let best=null,bestDistance=-1;
+      for(let trial=0;trial<12;trial++){
+        const candidate=octopusArenaPoint(55+Math.random()*Math.max(1,canvas.width-110),55+Math.random()*Math.max(1,canvas.height-110));
+        const distance=Math.min(...spots.map(s=>Math.hypot(s.x-candidate.x,s.y-candidate.y)));
+        if(distance>bestDistance){best=candidate;bestDistance=distance;}
+      }
+      p=best;
+    }
+    spots.push(p);
+    const hp=Math.max(4,Math.round(owner.maxHp*.045));
+    cats.push({type:"octopusTentacle",owner,x:p.x,y:p.y,r:27*(owner.tentacleScale||1),hp,maxHp:hp,speed:0,baseSpeed:0,
+      emergeTimer:1.25+Math.floor(i/(owner.salvoCount||1))*.18,emergeDuration:1.25+Math.floor(i/(owner.salvoCount||1))*.18,attackTimer:1.2,
+      hitAnim:0,wobble:i,damageCooldown:0,freezeTimer:0,knockVx:0,knockVy:0});
+  }
+  floatingTexts.push({x:owner.x,y:owner.y-owner.r-45,text:"🐙 ¡Destruye los tentáculos!",life:1.8,maxLife:1.8,big:true});
+}
+function killOctopusTentacle(index,tentacle){
+  if(tentacle.dead)return;
+  tentacle.dead=true;
+  if(tentacle.owner?.attacks)tentacle.owner.attacks=tentacle.owner.attacks.filter(a=>a.source!==tentacle);
+  if(tentacle.leviathanLoot)guaranteedLeviathanLoot(tentacle.x,tentacle.y);
+  else dropCoins(tentacle.x,tentacle.y,.35);
+  makeSmoke(tentacle.x,tentacle.y);playSoftPop();gainXP(2);
+  const actual=cats[index]===tentacle?index:cats.indexOf(tentacle);
+  if(actual>=0)cats.splice(actual,1);
+}
+function resolveOctopusStrike(owner,attack){
+  if(Math.hypot(player.x-attack.x,player.y-attack.y)<attack.r+player.r)
+    takePlayerDamage(owner.tentacleDamage,"Te ha golpeado un tentáculo 🐙",.35);
+  for(let i=cats.length-1;i>=0;i--){
+    const cat=cats[i];
+    if(isOctopusTentacle(cat)||!isFinitePos(cat)||cat.dead)continue;
+    if(Math.hypot(cat.x-attack.x,cat.y-attack.y)>=attack.r+cat.r)continue;
+    cat.hp-=owner.tentacleDamage;cat.hitAnim=.2;
+    if(cat.hp<=0)killCat(i,cat);
+  }
+  makeImpact(attack.x,attack.y,"#b88ae8",1);addScreenShake(3);
+}
+function updateOctopusBoss(owner,dt){
+  owner.x=canvas.width/2;owner.y=canvas.height/2;owner.knockVx=owner.knockVy=0;
+  owner.wobble+=dt*3;
+  for(let i=owner.attacks.length-1;i>=0;i--){
+    const a=owner.attacks[i];
+    if(a.source?.dead){owner.attacks.splice(i,1);continue;}
+    a.timer-=dt;
+    if(a.timer<=0&&!a.hit){a.hit=true;resolveOctopusStrike(owner,a);}
+    if(a.hit){a.life-=dt;if(a.life<=0)owner.attacks.splice(i,1);}
+  }
+  if(owner.state==="resurfacing"){
+    owner.surfaceTimer-=dt;
+    if(owner.surfaceTimer<=0){owner.state="surface";owner.attackTimer=1.2;}
+    return;
+  }
+  if(owner.state==="submerged"){
+    const tentacles=getOctopusTentacles(owner);
+    if(!tentacles.length){owner.state="resurfacing";owner.surfaceTimer=.8;owner.attacks.length=0;return;}
+    for(const t of tentacles){
+      const p=octopusArenaPoint(t.x,t.y);t.x=p.x;t.y=p.y;
+      t.wobble+=dt*3;t.hitAnim=Math.max(0,t.hitAnim-dt);
+      t.freezeTimer=Math.max(0,(t.freezeTimer||0)-dt);
+      if(t.emergeTimer>0){
+        t.emergeTimer=Math.max(0,t.emergeTimer-dt);
+        if(t.emergeTimer===0)createOctopusStrike(owner,t.x,t.y,owner.strikeRadius,.5,t);
+        continue;
+      }
+      if(t.freezeTimer>0)continue;
+      t.attackTimer-=dt;
+      if(t.attackTimer<=0){
+        const dx=player.x-t.x,dy=player.y-t.y,d=Math.hypot(dx,dy)||1;
+        const reach=Math.min(40,d);
+        createOctopusStrike(owner,t.x+dx/d*reach,t.y+dy/d*reach,owner.strikeRadius,1.05,t);
+        t.attackTimer=3.0;
+      }
+    }
+    return;
+  }
+  owner.attackTimer-=dt;
+  if(owner.attackTimer<=0){
+    const dx=player.x-owner.x,dy=player.y-owner.y,d=Math.hypot(dx,dy)||1;
+    const reach=Math.min(d,Math.min(330,Math.max(140,Math.min(canvas.width,canvas.height)*.43)));
+    const angle=Math.atan2(dy,dx),count=owner.salvoCount||1;
+    for(let i=0;i<count;i++){
+      // Primer brazo al jugador; los demás abren un abanico sin tapar todo el mapa.
+      const offset=i===0?0:(i%2?1:-1)*Math.ceil(i/2)*.72;
+      const a=angle+offset;
+      createOctopusStrike(owner,owner.x+Math.cos(a)*reach,owner.y+Math.sin(a)*reach,owner.strikeRadius,1.1);
+    }
+    owner.attackTimer=Math.max(1.7,2.7-owner.repeatLevel*.12);
+  }
+}
+
 function updateBoss(dt){
 if(!boss)return;
 constrainBossToArena(boss);
 boss.hitAnim=Math.max(0,boss.hitAnim-dt);
 boss.relaxTimer=Math.max(0,(boss.relaxTimer||0)-dt);
 if(boss.relaxTimer>0){boss.hitAnim=Math.max(boss.hitAnim,.12);return;}
+if(boss.type==="octopus"){updateOctopusBoss(boss,dt);return;}
 boss.wobble+=dt*4;
+const trailSlow=getRamTrailSlow(boss);
 if(boss.knockVx||boss.knockVy){boss.x+=(boss.knockVx||0)*dt;boss.y+=(boss.knockVy||0)*dt;boss.knockVx=(boss.knockVx||0)*Math.pow(.12,dt);boss.knockVy=(boss.knockVy||0)*Math.pow(.12,dt);if(Math.abs(boss.knockVx)<8)boss.knockVx=0;if(Math.abs(boss.knockVy)<8)boss.knockVy=0;}
 constrainBossToArena(boss);
 if(boss.type==="giantCat"){
 const dx=player.x-boss.x,dy=player.y-boss.y,dist=Math.hypot(dx,dy)||1;
-boss.x+=(dx/dist)*boss.speed*dt;boss.y+=(dy/dist)*boss.speed*dt;boss.summon-=dt;
+boss.x+=(dx/dist)*boss.speed*trailSlow*dt;boss.y+=(dy/dist)*boss.speed*trailSlow*dt;boss.summon-=dt;
 if(boss.summon<=0&&isCatOnScreen(boss)){boss.summon=boss.baseSummon||Math.max(.55,2.15-wave*.07);for(let i=0;i<(boss.summonCount||2);i++){
-if(i%2===1){const left=(boss.sideSummons||0)%2===0;boss.sideSummons=(boss.sideSummons||0)+1;spawnCat(left?-20:canvas.width+20,canvas.height*(.12+Math.random()*.76),true);}
+if(i%2===1){
+  const edge=(boss.sideSummons||0)%4,pos=.12+Math.random()*.76;
+  boss.sideSummons=(boss.sideSummons||0)+1;
+  spawnCat(edge===0?-20:edge===1?canvas.width+20:canvas.width*pos,
+    edge===2?-20:edge===3?canvas.height+20:canvas.height*pos,true);
+}
 else spawnCat(boss.x+(Math.random()*110-55),boss.y+(Math.random()*110-55),true);
 }}else if(boss.summon<=0){boss.summon=Math.max(.32,boss.baseSummon||Math.max(.55,2.15-wave*.07));}
 if(dist<player.r+boss.r-8){takePlayerDamage((boss.contactDamage||18)*dt,"El jefe te ha llenado de mimos 🐱",.1)}
 }else if(boss.type==="duck"){
-if(wave>=15){const speed=Math.min(100,25+(wave-15)*1.5),margin=boss.r+18;boss.x=Math.max(margin,Math.min(canvas.width-margin,boss.x+Math.cos(boss.wobble*.6)*speed*dt));}
+if(wave>=15){const speed=Math.min(100,25+(wave-15)*1.5),margin=boss.r+18;boss.x=Math.max(margin,Math.min(canvas.width-margin,boss.x+Math.cos(boss.wobble*.6)*speed*trailSlow*dt));}
 boss.shoot-=dt;
 if(boss.shoot<=0){
 boss.shoot=boss.baseShoot||Math.max(.42,1.25-wave*.045);
@@ -4955,8 +5083,8 @@ const dx=targetX-boss.x;
 const dy=targetY-boss.y;
 const d=Math.hypot(dx,dy)||1;
 
-boss.x+=(dx/d)*boss.speed*dt;
-boss.y+=(dy/d)*boss.speed*dt;
+boss.x+=(dx/d)*boss.speed*trailSlow*dt;
+boss.y+=(dy/d)*boss.speed*trailSlow*dt;
 boss.x=Math.max(90,Math.min(canvas.width-90,boss.x));
 boss.y=Math.max(90,Math.min(canvas.height-90,boss.y));
 
@@ -5037,7 +5165,7 @@ const shieldR=52+shieldLvl*4,orbs=2+Math.min(4,shieldLvl),orbSize=12+Math.min(12
 for(let i=0;i<orbs;i++){
 const a=shieldAngle+i*Math.PI*2/orbs,ox=player.x+Math.cos(a)*shieldR,oy=player.y+Math.sin(a)*shieldR;
 for(let c=cats.length-1;c>=0;c--){
-const cat=cats[c];if(!isFinitePos(cat))continue;const d=Math.hypot(cat.x-ox,cat.y-oy);
+const cat=cats[c];if(!isCombatTargetAvailable(cat))continue;const d=Math.hypot(cat.x-ox,cat.y-oy);
 if(d<cat.r+orbSize){
 const shieldDamage=(1+shieldLvl*.95)*(hasDoneFusionPair("maxLife+shield")?1.08+.20*fusionStrength("maxLife+shield"):1),healthLost=Math.min(Math.max(0,cat.hp),shieldDamage);
 cat.hp-=shieldDamage;cat.hitAnim=.15;makeHearts(cat.x,cat.y);if(hasDoneFusionPair("lifeSteal+shield"))life=Math.min(upgrades.maxLife,life+healthLost*getCurrentLifeSteal());lastShieldHit=now;
@@ -5087,6 +5215,7 @@ if(!cat||cat.dead)return;
 const realIndex=cats.indexOf(cat);
 if(realIndex!==-1)index=realIndex;
 if(index<0||index>=cats.length||cats[index]!==cat)return;
+if(isOctopusTentacle(cat)){killOctopusTentacle(index,cat);return;}
 cat.dead=true;
 dropRecoveredStolenCoins(cat);
 if(cat.type==="yarn")explodeYarnCat(cat);
@@ -5121,14 +5250,14 @@ if(currentTargetId!==null&&currentTargetId!==undefined)visited.add(currentTarget
 let target=null,best=430;
 
 cats.forEach(c=>{
-if(!isFinitePos(c)||c.dead)return;
+if(!isCombatTargetAvailable(c))return;
 const id=getYarnTargetId(c);
 if(visited.has(id))return;
 const d=Math.hypot(c.x-sourceX,c.y-sourceY);
 if(d<best){best=d;target=c}
 });
 
-if(boss&&isFinitePos(boss)){
+if(isCombatTargetAvailable(boss)){
 const id=getYarnTargetId(boss);
 if(!visited.has(id)){
 const d=Math.hypot(boss.x-sourceX,boss.y-sourceY);
@@ -5211,8 +5340,8 @@ shootOmniBurst();
 
 function isTargetAlive(target){
 if(!target)return false;
-if(target===boss)return !!boss&&isFinitePos(boss)&&boss.hp>0;
-return cats.includes(target)&&isFinitePos(target)&&!target.dead&&target.hp>0;
+if(target===boss)return isCombatTargetAvailable(boss);
+return cats.includes(target)&&isCombatTargetAvailable(target);
 }
 
 function getSelectedTarget(){
@@ -5224,12 +5353,12 @@ return null;
 function selectTargetAt(x,y){
 let target=null;
 let best=Infinity;
-if(boss&&isFinitePos(boss)){
+if(isCombatTargetAvailable(boss)){
 const d=Math.hypot(x-boss.x,y-boss.y);
 if(d<boss.r+26){target=boss;best=d}
 }
 cats.forEach(cat=>{
-if(!isFinitePos(cat)||cat.dead)return;
+if(!isCombatTargetAvailable(cat))return;
 const d=Math.hypot(x-cat.x,y-cat.y);
 if(d<cat.r+22&&d<best){target=cat;best=d}
 });
@@ -5266,11 +5395,11 @@ if(d<range*2.2)return fixed;
 }
 let best=null,bestD=range;
 cats.forEach(c=>{
-if(!isFinitePos(c))return;
+if(!isCombatTargetAvailable(c))return;
 const d=Math.hypot(c.x-x,c.y-y);
 if(d<bestD){best=c;bestD=d}
 });
-if(boss&&isFinitePos(boss)){
+if(isCombatTargetAvailable(boss)){
 const d=Math.hypot(boss.x-x,boss.y-y);
 if(d<bestD){best=boss;bestD=d}
 }
@@ -5300,14 +5429,14 @@ b.x+=(Number.isFinite(b.vx)?b.vx:0)*dt;b.y+=(Number.isFinite(b.vy)?b.vy:0)*dt;b.
 let hit=false;
 for(let j=cats.length-1;j>=0;j--){
 const c=cats[j];
-if(!isFinitePos(c)||!isFinitePos(b)||!isCatOnScreen(c))continue;
+if(!isCombatTargetAvailable(c)||!isFinitePos(b)||!isCatOnScreen(c))continue;
 if(Math.hypot(c.x-b.x,c.y-b.y)<c.r+8){
 c.hp-=b.damage;c.hitAnim=.12;makeHearts(c.x,c.y);hit=true;
 if(c.hp<=0)killCat(j,c);
 break
 }
 }
-if(!hit&&boss&&Math.hypot(boss.x-b.x,boss.y-b.y)<boss.r+8){
+if(!hit&&isCombatTargetAvailable(boss)&&Math.hypot(boss.x-b.x,boss.y-b.y)<boss.r+8){
 damageBoss(b.damage);hit=true
 }
 if(hit||b.life<=0||b.x<-80||b.x>canvas.width+80||b.y<-80||b.y>canvas.height+80)dogBones.splice(i,1)
@@ -5387,8 +5516,8 @@ function pullResourcesWithCatInstinct(){
 
 function getNearestCombatTargetFrom(x,y,maxDist=900){
   let target=null,best=maxDist;
-  cats.forEach(cat=>{if(!isFinitePos(cat)||cat.dead)return;const d=Math.hypot(cat.x-x,cat.y-y);if(d<best){best=d;target=cat;}});
-  if(boss&&isFinitePos(boss)&&boss.hp>0){const d=Math.hypot(boss.x-x,boss.y-y);if(d<best){best=d;target=boss;}}
+  cats.forEach(cat=>{if(!isCombatTargetAvailable(cat))return;const d=Math.hypot(cat.x-x,cat.y-y);if(d<best){best=d;target=cat;}});
+  if(isCombatTargetAvailable(boss)){const d=Math.hypot(boss.x-x,boss.y-y);if(d<best){best=d;target=boss;}}
   return target;
 }
 function redirectBoomerangsWithCatInstinct(){
@@ -5665,7 +5794,7 @@ pauseStats.innerHTML=`
 <div class="pStat"><div class="pStatVal">🪙 ${coins}</div><div class="pStatLbl">Monedas</div></div>
 <div class="pStat"><div class="pStatVal">🐱 ${score}</div><div class="pStatLbl">Gatitos mimados</div></div>
 <div class="pStat"><div class="pStatVal">🐟 ${runStats?Math.floor(runStats.fishHits||0):0}</div><div class="pStatLbl">Impactos</div></div>
-<div class="pStat"><div class="pStatVal">💀 ${bossCount}/4</div><div class="pStatLbl">Jefes</div></div>
+<div class="pStat"><div class="pStatVal">💀 ${bossCount}/${BOSS_TYPES.length}</div><div class="pStatLbl">Jefes</div></div>
 `;
 if(hs>0){
   pauseRecordBadge.style.display="block";
@@ -5838,7 +5967,41 @@ finally{updatingWorld=false;}
 processPendingUpgradeQueue();
 checkGameCompletion();
 }
+function updateRamFishTrails(dt){
+  let count=0;
+  for(const trail of ramFishTrails){trail.life-=dt;if(trail.life>0)ramFishTrails[count++]=trail;}
+  ramFishTrails.length=count;
+}
+function addRamFishTrail(fish,dt){
+  if(!fish.ramFish||fish.ramFullyCharged!==true||fish.life<=0)return;
+  if(!Number.isFinite(fish.trailX)){fish.trailX=fish.prevX;fish.trailY=fish.prevY;}
+  fish.trailTimer=(fish.trailTimer||0)+dt;
+  if(fish.trailTimer<.04)return;
+  fish.trailTimer=0;
+  ramFishTrails.push({x:fish.trailX,y:fish.trailY,x2:fish.x,y2:fish.y,r:Math.min(48,8*(fish.scale||1)),life:1.6});
+  fish.trailX=fish.x;fish.trailY=fish.y;
+  if(ramFishTrails.length>100)ramFishTrails.splice(0,ramFishTrails.length-100);
+}
+function getRamTrailSlow(enemy){
+  for(const t of ramFishTrails){
+    const dx=t.x2-t.x,dy=t.y2-t.y,d2=dx*dx+dy*dy;
+    const u=d2?Math.max(0,Math.min(1,((enemy.x-t.x)*dx+(enemy.y-t.y)*dy)/d2)):0;
+    const ex=enemy.x-t.x-dx*u,ey=enemy.y-t.y-dy*u,r=(enemy.r||20)+t.r;
+    if(ex*ex+ey*ey<r*r)return .85;
+  }
+  return 1;
+}
+function drawRamFishTrails(){
+  if(!ramFishTrails.length)return;
+  ctx.save();ctx.lineCap="round";ctx.strokeStyle="#8de5e5";
+  for(const t of ramFishTrails){
+    ctx.globalAlpha=.16*t.life/1.6;ctx.lineWidth=t.r*2;
+    ctx.beginPath();ctx.moveTo(t.x,t.y);ctx.lineTo(t.x2,t.y2);ctx.stroke();
+  }
+  ctx.restore();
+}
 function updateWorld(dt){
+updateRamFishTrails(dt);
 starSpawnTimer-=dt;if(starSpawnTimer<=0){trySpawnPowerStar();starSpawnTimer=12+Math.random()*8;}
 // render() refreshes the indicators once per display frame (also when paused).
 if(autoMode)updateAutoPlayer(dt);
@@ -5907,7 +6070,7 @@ if(waveTime<=0&&boss)waveTime=0;
 
 spawnCooldown-=dt;
 if(spawnCooldown<=0&&!boss){spawnCat();spawnCooldown=Math.max(getGamePhase()==="endless"?.075:.20,Math.max(.28,1.10-wave*.033)/getEndlessSpawnMultiplier())}
-if(spawnCooldown<=0&&boss&&boss.type!=="giantCat"){spawnCat();spawnCooldown=Math.max(getGamePhase()==="endless"?.16:.50,Math.max(.55,1.55-wave*.030)/getEndlessSpawnMultiplier())}
+if(spawnCooldown<=0&&boss&&boss.type!=="giantCat"){spawnCat();spawnCooldown=getBossReinforcementInterval()}
 
 let mx=0,my=0;
 if(keys.w||keys.arrowup)my--;if(keys.s||keys.arrowdown)my++;if(keys.a||keys.arrowleft)mx--;if(keys.d||keys.arrowright)mx++;
@@ -5956,7 +6119,8 @@ const a=Math.atan2(returnTarget.y-fish.y,returnTarget.x-fish.x),speed=690*upgrad
 fish.vx=Math.cos(a)*speed;fish.vy=Math.sin(a)*speed;fish.angle=a;
 if(expireAtPlayer&&Math.hypot(player.x-fish.x,player.y-fish.y)<player.r+10)fish.life=0
 }else if(!fish.ramFish&&!fish.giantEaster)applyAimAssist(fish);
-fish.x+=fish.vx*dt;fish.y+=fish.vy*dt;fish.life-=dt
+fish.x+=fish.vx*dt;fish.y+=fish.vy*dt;fish.life-=dt;
+addRamFishTrail(fish,dt);
 // Bloquito boomerang vuelve al alcanzar el borde antes de poder ser descartado.
 if(fish.ramFish&&fish.boomerang&&!fish.returning&&(fish.x<20||fish.x>canvas.width-20||fish.y<20||fish.y>canvas.height-20)){
   fish.returning=true;
@@ -6059,11 +6223,16 @@ const musicianPositions=cats.filter(c=>c.type==="musician"&&!c.dead&&isFinitePos
 if(musicianPositions.length>0&&!paused&&!gameOver){musicianNoteTimer-=dt;if(musicianNoteTimer<=0){playMusicianNote();musicianNoteTimer=.36;}}else if(musicianPositions.length===0){musicianNoteTimer=0;}
 cats.slice().forEach(cat=>{
 if(!isFinitePos(cat)||cat.dead)return;
+if(isOctopusTentacle(cat)){
+  if(isCombatTargetAvailable(cat)&&isPowerStarActive()&&Math.hypot(player.x-cat.x,player.y-cat.y)<player.r+cat.r+10)killCat(cats.indexOf(cat),cat);
+  return;
+}
 if(cat.spawnAnim>0)cat.spawnAnim=Math.max(0,cat.spawnAnim-dt);
 let dx=player.x-cat.x,dy=player.y-cat.y,dist=Math.hypot(dx,dy)||1;
 cat.wobble+=dt*7;cat.damageCooldown=Math.max(0,cat.damageCooldown-dt);cat.hitAnim=Math.max(0,cat.hitAnim-dt);cat.stealCooldown=Math.max(0,(cat.stealCooldown||0)-dt);cat.fleeTimer=Math.max(0,(cat.fleeTimer||0)-dt);cat.freezeTimer=Math.max(0,(cat.freezeTimer||0)-dt);cat.musicImmuneTimer=Math.max(0,(cat.musicImmuneTimer||0)-dt);
 if(cat.freezeTimer>0){cat.hitAnim=Math.max(cat.hitAnim,.12);return;}
 if(isPowerStarActive()&&dist<player.r+cat.r+10){killCat(cats.indexOf(cat),cat);return;}
+const walkX=cat.x,walkY=cat.y,trailSlow=getRamTrailSlow(cat);
 if(cat.type==="yarn"){
   cat.yarnCooldown-=dt;
   if(cat.yarnCooldown<=0&&isCatOnScreen(cat)){
@@ -6142,6 +6311,7 @@ if(musicianPositions.length>0&&cat.type!=="musician"){
     if(Math.random()<.006)floatingTexts.push({x:cat.x,y:cat.y-cat.r-12,text:"♪ rápido",life:.45,maxLife:.45,big:false});
   }
 }
+cat.x=walkX+(cat.x-walkX)*trailSlow;cat.y=walkY+(cat.y-walkY)*trailSlow;
 if(cat.knockVx||cat.knockVy){cat.x+=(cat.knockVx||0)*dt;cat.y+=(cat.knockVy||0)*dt;cat.knockVx=(cat.knockVx||0)*Math.pow(.08,dt);cat.knockVy=(cat.knockVy||0)*Math.pow(.08,dt);if(Math.abs(cat.knockVx)<8)cat.knockVx=0;if(Math.abs(cat.knockVy)<8)cat.knockVy=0;}
 cat.x=Math.max(-240,Math.min(canvas.width+240,cat.x));cat.y=Math.max(-240,Math.min(canvas.height+240,cat.y));
 if(Math.hypot(player.x-cat.x,player.y-cat.y)<player.r+cat.r-4&&cat.damageCooldown<=0&&isCatOnScreen(cat)){
@@ -6154,7 +6324,7 @@ if(Math.hypot(player.x-cat.x,player.y-cat.y)<player.r+cat.r-4&&cat.damageCooldow
 
 for(let i=cats.length-1;i>=0;i--){
 const cat=cats[i];
-if(!isFinitePos(cat))continue;
+if(!isCombatTargetAvailable(cat))continue;
 if(!isCatOnScreen(cat))continue;
 for(let j=fishes.length-1;j>=0;j--){
 const fish=fishes[j];
@@ -6219,9 +6389,9 @@ break
 }
 }
 
-if(boss){
+if(isCombatTargetAvailable(boss)){
 for(let j=fishes.length-1;j>=0;j--){
-if(!boss)break;
+if(!isCombatTargetAvailable(boss))break;
 const fish=fishes[j],d=Math.hypot(boss.x-fish.x,boss.y-fish.y);
 if(d<boss.r+16*(fish.scale||1)){
 const bossYarnId=getYarnTargetId(boss);
@@ -6687,14 +6857,16 @@ if(selectedCosmetic("fish")==="fish_low_poly"){drawLowPolyFish(f);return;}
 drawEntityShadow(f.x,f.y,18*(f.scale||1),5*(f.scale||1),.10);
 ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.angle);ctx.scale(f.scale||1,f.scale||1);
 const skinPalette={fish_elegant:["#fff0c7","#c99b45"],fish_pirate:["#ecac58","#a9503f"],fish_heart:["#ff9bbd","#cf4a86"]}[selectedCosmetic("fish")];
-const body=f.boomerang&&f.crit?"#ffe066":f.giantEaster?"#ffd166":f.ramFish?(f.boomerang?"#80ed99":f.crit?"#ff6b6b":"#7ef5ff"):f.cardumenGigante?"#80d8ff":f.boomerang?"#80ed99":f.crit?"#ff6b6b":f.shieldShot?"#ffd166":(skinPalette?.[0]||"#6ed7ed");
-const tail=f.boomerang&&f.crit?"#e0a800":f.giantEaster?"#fb8500":f.ramFish?(f.boomerang?"#57cc99":f.crit?"#e03131":"#169fcb"):f.cardumenGigante?"#00b4d8":f.boomerang?"#57cc99":f.crit?"#e03131":f.shieldShot?"#ffb703":(skinPalette?.[1]||"#45aecd");
+const body=f.boomerang&&f.crit&&hasDoneFusionPair("boomerang+critChance")?"#ffe066":f.giantEaster?"#ffd166":f.ramFish?(f.boomerang?"#80ed99":f.crit?"#ff6b6b":"#7ef5ff"):f.cardumenGigante?"#80d8ff":f.boomerang?"#80ed99":f.crit?"#ff6b6b":f.shieldShot?"#6ed7ed":(skinPalette?.[0]||"#6ed7ed");
+const tail=f.boomerang&&f.crit&&hasDoneFusionPair("boomerang+critChance")?"#e0a800":f.giantEaster?"#fb8500":f.ramFish?(f.boomerang?"#57cc99":f.crit?"#e03131":"#169fcb"):f.cardumenGigante?"#00b4d8":f.boomerang?"#57cc99":f.crit?"#e03131":f.shieldShot?"#45aecd":(skinPalette?.[1]||"#45aecd");
 ctx.shadowColor=body;ctx.shadowBlur=lowPerfMode?0:(f.giantEaster?12:f.crit?7:0);
 softFishBody(body,tail);drawFishSkinDetails(f);ctx.restore()
 
 }
 
 function drawCat(cat){
+if(isOctopusTentacle(cat)){drawOctopusTentacle(cat);return;}
+
   const category="enemy";
   if(selectedCosmetic(category)!==category+"_grayscale")drawCatArt(cat);
   else{
@@ -6775,9 +6947,128 @@ if(cat.maxHp>1){ctx.fillStyle='rgba(255,255,255,.8)';ctx.fillRect(-18,-cat.r-26,
 ctx.restore();
 }
 
+function getOctopusPalette(){
+ const id=selectedCosmetic("boss_octopus");
+ if(id==="boss_octopus_elegant")return {top:"#fff4d8",bottom:"#c6ad7b",arm:"#6286aa",outline:"#304a65",sucker:"#ffdf99",elegant:true};
+ if(id==="boss_octopus_low_poly")return {top:"#8ceadd",bottom:"#277e99",arm:"#42b8b8",outline:"#18475f",sucker:"#c7fff2",poly:true};
+ if(id==="boss_octopus_grayscale")return {top:"#e5e5e5",bottom:"#818181",arm:"#ababab",outline:"#414141",sucker:"#eeeeee",gray:true};
+ return {top:"#f1b1d8",bottom:"#b863ac",arm:"#d889c0",outline:"#713a83",sucker:"#f5cbdf"};
+}
+function drawOctopusPool(x,y,r,alpha=.7){
+  ctx.save();ctx.translate(x,y);ctx.globalAlpha=alpha;
+  const water=ctx.createRadialGradient(0,0,r*.12,0,0,r);
+  water.addColorStop(0,"#102431");water.addColorStop(.7,"#244d63");water.addColorStop(1,"rgba(35,84,110,0)");
+  ctx.fillStyle=water;ctx.beginPath();ctx.ellipse(0,0,r,r*.72,0,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle="#73b9ce";ctx.lineWidth=2;ctx.beginPath();ctx.ellipse(0,0,r*.78,r*.48,0,0,Math.PI*2);ctx.stroke();ctx.restore();
+}
+function drawOctopusWarning(x,y,r,progress){
+  ctx.save();ctx.globalAlpha=.24+.35*Math.min(1,progress);ctx.fillStyle="#091321";
+  ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+  ctx.globalAlpha=.85;ctx.strokeStyle="#c5a0ee";ctx.lineWidth=2;ctx.stroke();
+  ctx.strokeStyle="#edc1f6";ctx.lineWidth=3;ctx.beginPath();ctx.arc(x,y,r*Math.max(.08,1-progress),0,Math.PI*2);ctx.stroke();ctx.restore();
+}
+function drawOctopusZones(){
+  const palette=getOctopusPalette();
+  if(boss?.type!=="octopus")return;
+  for(const t of getOctopusTentacles())if(t.emergeTimer>0)
+    drawOctopusWarning(t.x,t.y,boss.strikeRadius,1-t.emergeTimer/t.emergeDuration);
+  for(const a of boss.attacks){
+    if(!a.hit){drawOctopusWarning(a.x,a.y,a.r,1-a.timer/a.warning);continue;}
+    ctx.save();ctx.globalAlpha=Math.max(.15,a.life/.3);
+    ctx.fillStyle="rgba(157,83,191,.35)";ctx.beginPath();ctx.arc(a.x,a.y,a.r,0,Math.PI*2);ctx.fill();
+    const from=a.source||boss;
+    ctx.lineCap="round";ctx.strokeStyle=palette.outline;ctx.lineWidth=28*(boss.tentacleScale||1);
+    ctx.beginPath();ctx.moveTo(from.x,from.y);ctx.quadraticCurveTo((from.x+a.x)/2,(from.y+a.y)/2-65,a.x,a.y);ctx.stroke();
+    ctx.strokeStyle=palette.arm;ctx.lineWidth=18*(boss.tentacleScale||1);ctx.stroke();
+    ctx.fillStyle=palette.sucker;ctx.beginPath();ctx.ellipse(a.x,a.y,24*(boss.tentacleScale||1),13*(boss.tentacleScale||1),0,0,Math.PI*2);ctx.fill();ctx.restore();
+  }
+}
+function drawOctopusTentacle(t){
+ ctx.save();try{if(selectedCosmetic("boss_octopus")==="boss_octopus_grayscale")ctx.filter="grayscale(1)";drawOctopusTentacleArt(t);}finally{ctx.restore();}
+}
+function drawOctopusTentacleArt(t){
+  const palette=getOctopusPalette();
+  if(t.emergeTimer>0)return;
+  drawOctopusPool(t.x,t.y,t.r*1.5,.7);
+  ctx.save();ctx.translate(t.x,t.y);ctx.scale(t.r/27,t.r/27);
+  const sway=Math.sin(t.wobble)*5;
+  ctx.lineCap="round";ctx.strokeStyle=palette.outline;ctx.lineWidth=23;
+  ctx.beginPath();ctx.moveTo(-5,9);if(palette.poly){ctx.lineTo(-14,-12);ctx.lineTo(14+sway,-28);ctx.lineTo(10+sway,-48);}else ctx.bezierCurveTo(-25,-14,19+sway,-22,10+sway,-48);ctx.stroke();
+  ctx.strokeStyle=t.hitAnim>0?"#fff0fa":palette.arm;ctx.lineWidth=17;ctx.stroke();
+  ctx.fillStyle=palette.sucker;
+  for(let i=0;i<5;i++){ctx.beginPath();ctx.ellipse(2+Math.sin(i*.9)*6+sway*.4,4-i*10,3.5,2.6,-.3,0,Math.PI*2);ctx.fill();}
+  ctx.restore();
+  ctx.fillStyle="#291d35";ctx.fillRect(t.x-24,t.y+22,48,5);
+  ctx.fillStyle=palette.arm;ctx.fillRect(t.x-24,t.y+22,48*Math.max(0,t.hp/t.maxHp),5);
+}
+function drawOctopusBossArt(owner){
+  const palette=getOctopusPalette();
+  drawOctopusPool(owner.x,owner.y,owner.r*1.55,.8);
+  if(owner.state==="submerged")return;
+  ctx.save();ctx.translate(owner.x,owner.y);
+  const rise=owner.state==="resurfacing"?Math.max(.12,1-owner.surfaceTimer/.8):1;
+  ctx.globalAlpha=rise;ctx.scale(owner.r*rise,owner.r*rise);
+  ctx.lineCap="round";ctx.lineJoin="round";
+  for(let i=0;i<8;i++){
+    const a=Math.PI*2*i/8,wiggle=Math.sin(owner.wobble+i)*.10;
+    const ex=Math.cos(a)*1.3,ey=.25+Math.sin(a)*.68;
+    ctx.strokeStyle=palette.outline;ctx.lineWidth=.25;ctx.beginPath();ctx.moveTo(Math.cos(a)*.35,.25);
+    if(palette.poly){ctx.lineTo(Math.cos(a)*.8,.65+Math.sin(a)*.25);ctx.lineTo(ex+wiggle,ey+.3);ctx.lineTo(ex,ey);}else ctx.bezierCurveTo(Math.cos(a)*.8,.8+Math.sin(a)*.25,ex+wiggle,ey+.4,ex,ey);ctx.stroke();
+    ctx.strokeStyle=palette.arm;ctx.lineWidth=.18;ctx.stroke();
+    ctx.fillStyle=palette.sucker;ctx.beginPath();ctx.ellipse(ex*.88,ey+.13,.06,.04,a,0,Math.PI*2);ctx.fill();
+  }
+  const skin=ctx.createLinearGradient(0,-1,0,.6);skin.addColorStop(0,palette.top);skin.addColorStop(1,palette.bottom);
+  ctx.fillStyle=owner.hitAnim>0?"#ffe8f8":skin;ctx.strokeStyle=palette.outline;ctx.lineWidth=.035;
+  ctx.beginPath();
+  if(palette.poly){for(let i=0;i<8;i++){const a=i*Math.PI/4-Math.PI/8;const x=Math.cos(a)*.81,y=-.2+Math.sin(a)*.85;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);}ctx.closePath();}
+  else ctx.ellipse(0,-.2,.77,.81,0,0,Math.PI*2);
+  ctx.fill();ctx.stroke();
+  if(palette.poly){ctx.fillStyle="rgba(255,255,255,.18)";ctx.beginPath();ctx.moveTo(-.75,-.52);ctx.lineTo(.3,-.98);ctx.lineTo(0,.05);ctx.closePath();ctx.fill();}
+  ctx.fillStyle=palette.sucker;ctx.beginPath();ctx.ellipse(-.3,-.6,.18,.25,.5,0,Math.PI*2);ctx.fill();
+  for(const side of [-1,1]){
+    ctx.fillStyle="#fff7ed";ctx.beginPath();ctx.ellipse(side*.29,-.14,.18,.22,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#38203f";ctx.beginPath();ctx.ellipse(side*.26,-.12,.07,.12,0,0,Math.PI*2);ctx.fill();
+    ctx.strokeStyle=palette.outline;ctx.lineWidth=.055;ctx.beginPath();ctx.moveTo(side*.47,-.4);ctx.lineTo(side*.13,-.28);ctx.stroke();
+  }
+  ctx.fillStyle=palette.outline;ctx.beginPath();ctx.ellipse(0,.26,.12,.15,0,0,Math.PI*2);ctx.fill();
+  if(palette.elegant){
+    ctx.fillStyle="#233d59";ctx.beginPath();ctx.ellipse(0,-.92,.66,.12,0,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle="#fff7df";ctx.strokeStyle=palette.outline;ctx.lineWidth=.035;
+    ctx.beginPath();ctx.moveTo(-.48,-.95);ctx.lineTo(-.55,-1.23);ctx.quadraticCurveTo(0,-1.50,.55,-1.23);ctx.lineTo(.48,-.95);ctx.closePath();ctx.fill();ctx.stroke();
+    ctx.fillStyle="#d4ac48";ctx.fillRect(-.48,-1.02,.96,.075);
+    ctx.beginPath();ctx.arc(0,-1.20,.075,0,Math.PI*2);ctx.fill();
+    drawBowTieShape(0,.58,.23,"#d4ac48","#ffe6a4",palette.outline);
+  }
+  ctx.restore();
+}
+function getOctopusAreaDanger(x,y,padding=0){
+  if(boss?.type!=="octopus")return 0;
+  let danger=0;
+  const add=(tx,ty,r)=>{const d=Math.hypot(x-tx,y-ty),reach=r+padding;if(d<reach)danger+=1+(reach-d)/Math.max(1,reach);};
+  for(const a of boss.attacks)add(a.x,a.y,a.r);
+  for(const t of getOctopusTentacles())if(t.emergeTimer>0)add(t.x,t.y,boss.strikeRadius);
+  return danger;
+}
+function autoAvoidOctopus(v){
+  const current=getOctopusAreaDanger(player.x,player.y,player.r+38);
+  if(current<=0)return 0;
+  let best=null,bestScore=Infinity;
+  for(let i=0;i<16;i++){
+    const a=i*Math.PI/8,dx=Math.cos(a),dy=Math.sin(a);
+    const p=octopusArenaPoint(player.x+dx*150,player.y+dy*150,player.r+12);
+    const moved=Math.hypot(p.x-player.x,p.y-player.y);
+    const score=getOctopusAreaDanger(p.x,p.y,player.r+24)*1000+(150-moved)*3+
+      cats.reduce((n,c)=>n+(!isOctopusTentacle(c)&&isFinitePos(c)&&Math.hypot(c.x-p.x,c.y-p.y)<c.r+player.r+20?180:0),0);
+    if(score<bestScore){bestScore=score;best={dx,dy};}
+  }
+  if(best)autoSafeAdd(v,best.dx,best.dy,14+current*4);
+  return current*3;
+}
+
 function drawBossHealthBar(){
 if(!boss||!isFinitePos(boss)||!boss.maxHp)return;
 ctx.save();
+if(boss.type==="octopus"&&boss.state!=="surface"){ctx.fillStyle="rgba(29,22,43,.85)";ctx.fillRect(boss.x-88,boss.y-boss.r-63,176,22);ctx.fillStyle="#f4e8ff";ctx.font="bold 13px sans-serif";ctx.textAlign="center";ctx.fillText(boss.state==="submerged"?`Tentáculos: ${getOctopusTentacles().length}`:"¡El pulpo emerge!",boss.x,boss.y-boss.r-46);}
 ctx.shadowColor="rgba(0,0,0,.45)";ctx.shadowBlur=10;
 ctx.fillStyle="rgba(20,10,24,.62)";ctx.beginPath();ctx.roundRect(boss.x-76,boss.y-boss.r-38,152,18,9);ctx.fill();
 ctx.shadowBlur=0;ctx.fillStyle="rgba(255,255,255,.82)";ctx.beginPath();ctx.roundRect(boss.x-70,boss.y-boss.r-32,140,8,4);ctx.fill();
@@ -6787,12 +7078,13 @@ ctx.restore();
 }
 
 function drawBoss(){
-const category=boss?({giantCat:"boss_giant",duck:"boss_duck",seal:"boss_seal",demon:"boss_demon"}[boss.type]):"";
+const category=boss?({giantCat:"boss_giant",duck:"boss_duck",seal:"boss_seal",demon:"boss_demon",octopus:"boss_octopus"}[boss.type]):"";
 if(selectedCosmetic(category)!==category+"_grayscale")return drawBossArt();
 ctx.save();try{ctx.filter="grayscale(1)";return drawBossArt();}finally{ctx.restore();}
 }
 function drawBossArt(){
 if(!boss||!isFinitePos(boss))return;
+if(boss.type==="octopus"){drawOctopusBossArt(boss);drawBossHealthBar();return;}
 const now=performance.now()/1000;
 drawEntityShadow(boss.x,boss.y,boss.r*1.12,boss.r*.34,boss.type==="demon"?.34:.22);
 if(boss.type==="seal"){
@@ -6987,6 +7279,8 @@ sparkles.forEach(sp=>{if(isFinitePos(sp))drawSparkle(sp)});
 drawShield();
 coinsDrops.forEach(c=>{if(isFinitePos(c))drawCoin(c)});tunaDrops.forEach(t=>{if(isFinitePos(t))drawTuna(t)});
 powerStars.forEach(s=>{if(isFinitePos(s))drawPowerStar(s)});
+drawRamFishTrails();
+drawOctopusZones();
 cats.forEach(cat=>{if(isFinitePos(cat))drawCat(cat)});
 drawBoss();
 drawTargetMarker(selectedTarget);
@@ -7054,8 +7348,8 @@ let autoStuckTimer=0;
 let autoEmergencyEscapeUntil=0;
 let autoEmergencyEscapeAngle=0;
 let autoDecisionCooldown=0;
-let autoDuckDirection=null;
-let autoDuckDirectionUntil=0;
+let autoProjectileDirection=null;
+let autoProjectileDirectionUntil=0;
 let autoLastStuckCheckAt=0;
 let autoRamNextEvaluationAt=0;
 let autoStableTarget=null;
@@ -7081,7 +7375,7 @@ let autoMemory=autoLoadMemory();
 
 function initAutoMode(){autoMode=false;autoModeUsedThisRun=false;}
 function markRankingInvalidByAI(){autoModeUsedThisRun=true;rankingEligibleThisRun=false;rankingDisabledReason="Partida de pruebas: ranking desactivado.";}
-function setAutoMode(value){if(!adminUnlocked)return;autoMode=!!value;if(autoMode){markRankingInvalidByAI();autoDecisionCooldown=0;autoRamNextEvaluationAt=0;autoStableTarget=null;autoStableTargetUntil=0;autoDuckDirection=null;autoDuckDirectionUntil=0;autoLastStuckCheckAt=0;if(autoChoiceMenu)autoScheduleChoice(autoChoiceMenu.choices,autoChoiceMenu.onPick,autoChoiceMenu.context);}else{keys.w=keys.a=keys.s=keys.d=false;autoStableTarget=null;autoDuckDirection=null;autoDuckDirectionUntil=0;}refreshAutoModeUI();}
+function setAutoMode(value){if(!adminUnlocked)return;autoMode=!!value;if(autoMode){markRankingInvalidByAI();autoDecisionCooldown=0;autoRamNextEvaluationAt=0;autoStableTarget=null;autoStableTargetUntil=0;autoProjectileDirection=null;autoProjectileDirectionUntil=0;autoLastStuckCheckAt=0;if(autoChoiceMenu)autoScheduleChoice(autoChoiceMenu.choices,autoChoiceMenu.onPick,autoChoiceMenu.context);}else{keys.w=keys.a=keys.s=keys.d=false;autoStableTarget=null;autoProjectileDirection=null;autoProjectileDirectionUntil=0;}refreshAutoModeUI();}
 function refreshAutoModeUI(){
   if(autoBadge)autoBadge.classList.remove("visible");
 }
@@ -7194,6 +7488,7 @@ function autoDodgeProjectile(v,obj,radius,weight=1){
   return threat+info.risk*weight;
 }
 function autoHasImminentProjectileThreat(){
+  if(getOctopusAreaDanger(player.x,player.y,player.r+35)>0)return true;
   const sets=[quacks,yarnBalls,demonOrbs];
   for(const arr of sets){
     // Top-8 por distancia sin crear/ordenar una copia de todos los proyectiles.
@@ -7221,8 +7516,8 @@ function autoHasImminentProjectileThreat(){
   return false;
 }
 function autoTargetStillValid(t){
-  if(!t||!isFinitePos(t))return false;
-  if(t===boss)return !!boss;
+  if(!isCombatTargetAvailable(t))return false;
+  if(t===boss)return true;
   return !t.dead&&cats.includes(t)&&isCatOnScreen(t);
 }
 function autoFindBestTarget(){
@@ -7233,7 +7528,7 @@ function autoFindBestTarget(){
   let best=null,bestScore=-999;
   const candidates=[];
   cats.forEach(c=>{
-    if(!isFinitePos(c)||c.dead||!isCatOnScreen(c))return;
+    if(!isCombatTargetAvailable(c)||!isCatOnScreen(c))return;
     const d=Math.hypot(c.x-player.x,c.y-player.y);
     // Arcoíris siempre entra; del resto solo se valoran los más cercanos.
     if(c.rainbow)candidates.push({c,d,priority:1});
@@ -7247,6 +7542,7 @@ function autoFindBestTarget(){
     if(c.rainbow)s=1800-d*.10;
     else{
       s=360-d*.18;
+      if(isOctopusTentacle(c))s+=1600;
       if(c.type==="yarn")s+=230;
       if(c.type==="thief")s+=190;
       if(c.type==="musician")s+=260;
@@ -7260,7 +7556,7 @@ function autoFindBestTarget(){
   }
 
   // El jefe importa, pero los enemigos normales peligrosos siguen compitiendo como amenaza.
-  if(boss&&isFinitePos(boss)){
+  if(isCombatTargetAvailable(boss)){
     const d=Math.hypot(boss.x-player.x,boss.y-player.y);
     let s=1120-d*.07;
     if(boss.type==="demon")s+=160;
@@ -7287,7 +7583,11 @@ function autoUpdateAimAndShoot(target){
     mouse.x=canvas.width/2;
     mouse.y=canvas.height/2;
   }
-  if(target&&!choosingUpgrade&&!paused&&!gameOver)shootFish();
+  if(isCombatTargetAvailable(target)&&!choosingUpgrade&&!paused&&!gameOver){
+    shootFish();
+    // Los residuales no gastan ni reinician la recarga del Bloquito táctico.
+    if(gameNow()-lastRamFishAt<getRamFishCooldownMs())launchRamFish({x:mouse.x,y:mouse.y});
+  }
 }
 
 function autoDistanceToWall(){
@@ -7327,14 +7627,15 @@ function autoUpdateStuckState(dt,danger){
     autoStuckTimer=0;
   }
 }
-// Enfrentamiento con el pato: planificador de rutas cortas (sin mensajes ni ventajas
-// artificiales). Evalúa dónde estarán los QUACK y los gatos si nos movemos,
+// Planificador de rutas cortas para QUACK, ovillos y orbes.
+// Evalúa dónde estarán los proyectiles y los gatos si nos movemos,
 // y mantiene una dirección varios fotogramas en vez de oscilar a izquierda/derecha.
-function autoDuckSafeMovement(preferred){
-  if(!boss||boss.type!=="duck"||!isFinitePos(boss))return preferred;
+function autoProjectileSafeMovement(preferred){
+  const duck=boss&&boss.type==="duck"&&isFinitePos(boss);
+  if(!duck&&!yarnBalls.length&&!demonOrbs.length&&!quacks.length)return preferred;
   const px=player.x,py=player.y;
   const realSpeed=Math.max(70,player.speed*upgrades.moveSpeed*getZoomiesMoveMultiplier()*getStarSpeedMultiplier());
-  const now=performance.now(), horizon=1.05;
+  const now=gameNow(), horizon=.85;
   const bullets=[];
   for(const group of [quacks,yarnBalls,demonOrbs]){
     for(const p of group){
@@ -7344,7 +7645,7 @@ function autoDuckSafeMovement(preferred){
     }
   }
   bullets.sort((a,b)=>a.d2-b.d2);
-  bullets.length=Math.min(bullets.length,20);
+  bullets.length=Math.min(bullets.length,32);
   const enemies=[];
   for(const c of cats){
     if(!isFinitePos(c)||c.dead)continue;
@@ -7353,20 +7654,22 @@ function autoDuckSafeMovement(preferred){
   }
   enemies.sort((a,b)=>a.d2-b.d2);
   enemies.length=Math.min(enemies.length,14);
-  const bossDx=px-boss.x,bossDy=py-boss.y,bd=Math.hypot(bossDx,bossDy)||1;
+  const bossDx=px-(boss?.x??canvas.width/2),bossDy=py-(boss?.y??canvas.height/2),bd=Math.hypot(bossDx,bossDy)||1;
   const tangent={x:-bossDy/bd,y:bossDx/bd};
   // Tangential movement while the duck prepares a salvo: a stationary player
   // is an easy target for QUACKs aimed at the position at launch.
-  const charging=(boss.pendingQuacks&&boss.pendingQuacks.length>0)||(boss.shoot||0)<.8;
+  const charging=duck&&((boss.pendingQuacks&&boss.pendingQuacks.length>0)||(boss.shoot||0)<.8);
   const candidates=[];
   function addDir(x,y){
     const m=Math.hypot(x,y);
     if(m<.10)return;
-    const dir={x:x/m,y:y/m};
+    // Puntuar las ocho direcciones que las teclas realmente pueden ejecutar.
+    const kx=Math.abs(x/m)>.24?Math.sign(x):0,ky=Math.abs(y/m)>.24?Math.sign(y):0;
+    const km=Math.hypot(kx,ky)||1,dir={x:kx/km,y:ky/km};
     if(!candidates.some(c=>c.x*dir.x+c.y*dir.y>.993))candidates.push(dir);
   }
   addDir(preferred.x,preferred.y);
-  if(autoDuckDirection)addDir(autoDuckDirection.x,autoDuckDirection.y);
+  if(autoProjectileDirection)addDir(autoProjectileDirection.x,autoProjectileDirection.y);
   // Both perpendicular escape routes plus 8 directions ensure the AI can
   // reverse direction when a wall or a crossing salvo makes it necessary.
   addDir(tangent.x,tangent.y);addDir(-tangent.x,-tangent.y);
@@ -7406,16 +7709,19 @@ function autoDuckSafeMovement(preferred){
       const safe=(player.r||24)+(c.r||20)+90;
       if(dist<safe)cost+=(safe-dist)/safe*38;
     }
-    const distToBoss=Math.hypot(futureX-boss.x,futureY-boss.y);
-    const avoidBoss=(boss.r||60)+(player.r||24)+160;
-    if(distToBoss<avoidBoss)cost+=(avoidBoss-distToBoss)*.16;
+    if(isCombatTargetAvailable(boss)){
+      const distToBoss=Math.hypot(futureX-boss.x,futureY-boss.y);
+      const avoidBoss=(boss.r||60)+(player.r||24)+160;
+      if(distToBoss<avoidBoss)cost+=(avoidBoss-distToBoss)*.16;
+    }
+    cost+=getOctopusAreaDanger(futureX,futureY)*80;
     // Pursue a consistent orbit only when actual collision risks allow it.
     if(charging)cost-=Math.abs(dir.x*tangent.x+dir.y*tangent.y)*3;
     const prefMag=Math.hypot(preferred.x,preferred.y);
     if(prefMag>.15)cost-=(dir.x*preferred.x+dir.y*preferred.y)/prefMag*1.5;
-    if(autoDuckDirection){
-      const same=dir.x*autoDuckDirection.x+dir.y*autoDuckDirection.y;
-      cost-=Math.max(0,same)*((now<autoDuckDirectionUntil)?7:2.0);
+    if(autoProjectileDirection){
+      const same=dir.x*autoProjectileDirection.x+dir.y*autoProjectileDirection.y;
+      cost-=Math.max(0,same)*((now<autoProjectileDirectionUntil)?7:2.0);
     }
     return cost;
   }
@@ -7423,11 +7729,11 @@ function autoDuckSafeMovement(preferred){
   for(const dir of candidates){const c=score(dir);if(c<bestCost){best=dir;bestCost=c;}}
   // Hysteresis: keep current course unless another is materially safer. It
   // prevents two opposite QUACKs from summing to a zero movement vector.
-  if(autoDuckDirection&&now<autoDuckDirectionUntil&&score(autoDuckDirection)<bestCost+8){
-    best=autoDuckDirection;
+  if(autoProjectileDirection&&now<autoProjectileDirectionUntil&&score(autoProjectileDirection)<bestCost+8){
+    best=autoProjectileDirection;
   }else if(best){
-    autoDuckDirection={x:best.x,y:best.y};
-    autoDuckDirectionUntil=now+480;
+    autoProjectileDirection={x:best.x,y:best.y};
+    autoProjectileDirectionUntil=now+240;
   }
   return best?{x:best.x*8,y:best.y*8}:preferred;
 }
@@ -7582,11 +7888,11 @@ function updateAutoPlayer(dt){
   autoDecisionCooldown=imminentProjectile?.045:(lowPerfMode?.16:.10);
   const target=autoFindBestTarget();
   // La ráfaga lateral de Patita nerviosa también aprovecha el apuntado
-  // inteligente existente. No altera el intervalo ni dispara manualmente.
+  // inteligente existente; los residuales respetan su propio límite de 10/s.
   autoUpdateAimAndShoot(target);
 
   const v={x:0,y:0};
-  let danger=0;
+  let danger=autoAvoidOctopus(v);
   const nearbyCats=cats.filter(c=>isFinitePos(c)&&!c.dead)
     .map(c=>({c,d:Math.hypot(c.x-player.x,c.y-player.y)}))
     .sort((a,b)=>a.d-b.d).slice(0,18);
@@ -7595,7 +7901,7 @@ function updateAutoPlayer(dt){
     const weight=c.type==="glutton"?4.6:c.type==="mini"?2.9:c.type==="yarn"?4.1:c.type==="thief"?3.5:3.25;
     danger+=autoRepelFrom(v,c,radius,weight);
   }
-  if(boss&&isFinitePos(boss))danger+=autoRepelFrom(v,boss,(boss.r||60)+280,boss.type==="demon"?5.9:4.5);
+  if(isCombatTargetAvailable(boss))danger+=autoRepelFrom(v,boss,(boss.r||60)+280,boss.type==="demon"?5.9:4.5);
 
   let projectileDanger=0;
   const projectileSets=[[quacks,430,5.8],[yarnBalls,420,6.4],[demonOrbs,470,7.4]];
@@ -7678,7 +7984,7 @@ function updateAutoPlayer(dt){
     autoSafeAdd(v,-dy/d,dx/d,strafe);
   }else autoSafeAdd(v,canvas.width/2-player.x,canvas.height/2-player.y,.002);
 
-  autoMoveKeysFromVector(boss&&boss.type==="duck"?autoDuckSafeMovement(v):v);
+  autoMoveKeysFromVector(autoProjectileSafeMovement(v));
   // La IA no necesita texto flotante periódico: seguimos dejando espacio
   // visual a enemigos, proyectiles y recompensas del combate.
 }
@@ -8054,7 +8360,7 @@ function paintCosmeticPreviews(){
     if(category==="player"){Object.assign(player,{x:0,y:0,angle:0,r:24,hurtAnim:0,shootAnim:0});drawPlayer();}
     else if(category==="fish"){ctx.scale(1.65,1.65);drawFish({x:0,y:0,angle:0,scale:1});}
     else if(category==="enemy"){drawCat({x:0,y:0,r:24,color:"#f7b7c9",type:"normal",hp:1,maxHp:1,hitAnim:0});}
-    else {const type={boss_giant:"giantCat",boss_duck:"duck",boss_seal:"seal",boss_demon:"demon"}[category];boss={type,x:0,y:0,r:27,hitAnim:0,wobble:0,state:"idle",shadowX:0,shadowY:0};drawBoss();}
+    else {const type={boss_giant:"giantCat",boss_duck:"duck",boss_seal:"seal",boss_demon:"demon",boss_octopus:"octopus"}[category];boss={type,x:0,y:0,r:27,hitAnim:0,wobble:0,state:"idle",shadowX:0,shadowY:0};drawBoss();}
     cosmeticPreviewCache.set(key,thumbnail.toDataURL());
    }finally{runCosmeticSelections=saved.runCosmeticSelections;ctx=saved.ctx;Object.assign(player,saved.player);boss=saved.boss;selectedCosmetics=saved.selected;starActive=saved.starActive;starTime=saved.starTime;sevenLivesTime=saved.sevenLivesTime;lowPerfMode=saved.lowPerfMode;dogKidnapped=saved.dogKidnapped;}
   }
@@ -8165,6 +8471,7 @@ function formatRunTime(seconds){const n=Math.max(0,Math.floor(Number(seconds)||0
 const runClockEl=document.getElementById('runClock');
 const runTimeEl=document.getElementById('runTime');
 const starCountdownEl=document.getElementById('starCountdown');
+function getStarCountdownText(){return (Math.ceil(Math.max(0,starTime)*10-1e-9)/10).toFixed(1);}
 function updateRunIndicators(){
  updateAdminVisibility();
  if(runClockEl){
@@ -8177,7 +8484,7 @@ function updateRunIndicators(){
    if(starCountdownEl.hidden!==hidden)starCountdownEl.hidden=hidden;
    const ending=starTime<=3;
    if(starCountdownEl.classList.contains('ending')!==ending)starCountdownEl.classList.toggle('ending',ending);
-   if(!hidden)setHudText(starCountdownEl,ending?`⭐ ¡Se acaba! ${Math.max(0,starTime).toFixed(1)} s`:`⭐ Invulnerable · ${Math.ceil(starTime)} s`);
+   if(!hidden)setHudText(starCountdownEl,ending?`⭐ ¡Se acaba! ${getStarCountdownText()} s`:`⭐ Invulnerable · ${getStarCountdownText()} s`);
  }
 }
 
