@@ -1,4 +1,3 @@
-// Compatible storage: a blocked browser or malformed save must not stop the game.
 const gameStorage=(()=>{
   const memory=new Map();
   let unavailable=false;
@@ -26,10 +25,9 @@ const BOSS_TYPES=Object.freeze(["giantCat","duck","seal","demon","octopus"]);
 const END_GAME_FRAME=Symbol("end-game-frame");
 function gameNow(){return simulationMs}
 
-
 const canvas=document.getElementById("game");
 const bossPathCache=new Map();
-let ctx=canvas.getContext("2d"); // Temporarily redirected only while drawing cosmetic thumbnails.
+let ctx=canvas.getContext("2d");
 const scoreEl=document.getElementById("score"),shotsEl=document.getElementById("shots"),lifeEl=document.getElementById("life"),levelEl=document.getElementById("level"),xpEl=document.getElementById("xp"),xpNeedEl=document.getElementById("xpNeed"),waveEl=document.getElementById("wave"),timeLeftEl=document.getElementById("timeLeft"),lifeBar=document.getElementById("lifeBar"),xpBar=document.getElementById("xpBar"),timeBar=document.getElementById("timeBar"),messageEl=document.getElementById("message"),startPanel=document.getElementById("startPanel"),startButton=document.getElementById("startButton"),levelUpPhrase=document.getElementById("levelUpPhrase"),levelUpPanel=document.getElementById("levelUpPanel"),levelUpBox=document.getElementById("levelUpBox"),upgradeCards=document.getElementById("upgradeCards"),upgradeTitle=document.getElementById("upgradeTitle"),upgradeSubtitle=document.getElementById("upgradeSubtitle"),coinsEl=document.getElementById("coins");
 const victoryPanel=document.getElementById("victoryPanel"),victoryFinishBtn=document.getElementById("victoryFinish"),victoryContinueBtn=document.getElementById("victoryContinue");
 const gameOverPanel=document.getElementById("gameOverPanel"),gameOverRestartBtn=document.getElementById("gameOverRestart"),gameOverMenuBtn=document.getElementById("gameOverMenu"),gameOverTotalEl=document.getElementById("gameOverTotal"),gameOverBreakdownEl=document.getElementById("gameOverBreakdown"),gameOverRankEmojiEl=document.getElementById("gameOverRankEmoji"),gameOverRankLabelEl=document.getElementById("gameOverRankLabel"),victoryScoreAreaEl=document.getElementById("victoryScoreArea");
@@ -155,7 +153,6 @@ musicVolumeRange?.addEventListener("input",handleMusicVolumeInput);
 pauseMusicVolumeRange?.addEventListener("input",handleMusicVolumeInput);
 updateMusicButton();
 
-
 function getGameViewportSize(){
   const screenW=Number(window.screen?.availWidth)||window.innerWidth;
   const screenH=Number(window.screen?.availHeight)||window.innerHeight;
@@ -188,13 +185,11 @@ function applyPanelTheme(theme){
   themeButtons.forEach(btn=>btn.classList.toggle("active",btn.dataset.theme===panelTheme));
   try{gameStorage.setItem("gatitosPanelTheme",panelTheme)}catch(e){}
 
-  
 }
 themeButtons.forEach(btn=>btn.addEventListener("click",()=>applyPanelTheme(btn.dataset.theme)));
 
 applyPanelTheme(panelTheme);
 
-/* === Ranking online con Firebase === */
 const GAME_VERSION=window.GAME_BUILD||"v.144";
 const PLAYER_NAME_KEY="gatitos_player_name";
 const firebaseConfig={
@@ -421,9 +416,6 @@ async function submitOnlineScore(finalScore, statusEl, rankingEl){
   uploadingScoreKeys.add(uploadKey);
   try{
     setOnlineStatus(statusEl,"Subiendo puntuación al ranking online...","info");
-    // Enviar sin lectura previa del documento. El ranking se deduplica por
-    // identidad de puntuación al mostrarlo; así no exige permisos get/update.
-    // add() solo requiere permiso create en la colección scores.
     await rankingDb.collection("scores").add(data);
     lastScoreUploadKey=uploadKey;
     setOnlineStatus(statusEl,"Puntuación guardada en el ranking online 💖","ok");
@@ -469,8 +461,6 @@ rankingLists.forEach(id=>{
 initRanking();
 loadOnlineRanking([startRankingList]);
 
-
-/* === Cosméticos permanentes === */
 const COSMETIC_KEYS={scales:"gatitos_cosmetic_scales",owned:"gatitos_cosmetic_owned",selected:"gatitos_cosmetic_selected"};
 const cosmeticPanel=document.getElementById("cosmeticsPanel"),scaleBalanceEl=document.getElementById("scaleBalance"),cosmeticsContentEl=document.getElementById("cosmeticsContent"),cosmeticsSkinsTab=document.getElementById("cosmeticsSkinsTab"),cosmeticsPacksTab=document.getElementById("cosmeticsPacksTab"),cosmeticsResetBtn=document.getElementById("cosmeticsResetBtn");
 const COSMETIC_CATEGORIES={player:"Jugador",fish:"Peces",enemy:"Enemigos",boss_giant:"Jefe gato gigante",boss_duck:"Jefe pato",boss_seal:"Jefe foca",boss_demon:"Jefe demonio",boss_octopus:"Jefe pulpo"};
@@ -579,8 +569,6 @@ updateRandomSkinsButton();
 }
 function earnScalesFromScore(finalScore){
   const total=safeCount(finalScore?.total);
-  // Progresión lineal hasta 30.000 puntos; después crece con la raíz
-  // para premiar las partidas largas sin vaciar la tienda de una vez.
   const entitled=Math.floor(total<=30000?total/300:100*Math.sqrt(total/30000));
   const gained=Math.max(0,entitled-cosmeticScalesAwardedThisRun);
   if(gained>0){cosmeticScales+=gained;cosmeticScalesAwardedThisRun+=gained;cosmeticAwardedThisRun=true;saveCosmetics();renderCosmetics();}
@@ -615,14 +603,12 @@ function drawLowPolyPlayer(){
   if(hurtBlink&&!starOn&&!sevenOn)ctx.globalAlpha=Math.sin(performance.now()*0.07)>0?.42:.96;
   const color=starOn?`hsl(${(performance.now()/6)%360},100%,70%)`:(sevenOn?"#80ed99":(player.hurtAnim>0?"#ff6b9a":"#4dabf7"));
   const s=player.r*1.58;
-  // Cabeza cúbica, pero con una silueta inequívocamente gatuna.
   drawLowPolyCube(s,color,"#1c2b36","#d0ebff");
   ctx.fillStyle=color;ctx.strokeStyle="#1c2b36";ctx.lineWidth=Math.max(2,s*.075);
   ctx.beginPath();ctx.moveTo(-s*.43,-s*.42);ctx.lineTo(-s*.29,-s*.82);ctx.lineTo(-s*.05,-s*.48);ctx.closePath();ctx.fill();ctx.stroke();
   ctx.beginPath();ctx.moveTo(s*.43,-s*.42);ctx.lineTo(s*.29,-s*.82);ctx.lineTo(s*.05,-s*.48);ctx.closePath();ctx.fill();ctx.stroke();
   ctx.fillStyle="#ffb3c7";ctx.beginPath();ctx.moveTo(-s*.34,-s*.49);ctx.lineTo(-s*.28,-s*.70);ctx.lineTo(-s*.15,-s*.50);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(s*.34,-s*.49);ctx.lineTo(s*.28,-s*.70);ctx.lineTo(s*.15,-s*.50);ctx.closePath();ctx.fill();
   drawLowPolyFace(s);
-  // Hocico, bigotes y cola para que no parezca un bloque genérico.
   ctx.fillStyle="#ff9fba";ctx.beginPath();ctx.moveTo(-s*.07,s*.03);ctx.lineTo(s*.07,s*.03);ctx.lineTo(0,s*.12);ctx.closePath();ctx.fill();
   ctx.strokeStyle="#263746";ctx.lineWidth=Math.max(1.5,s*.035);for(const side of [-1,1]){ctx.beginPath();ctx.moveTo(side*s*.10,s*.13);ctx.lineTo(side*s*.52,s*.08);ctx.moveTo(side*s*.10,s*.19);ctx.lineTo(side*s*.50,s*.25);ctx.stroke();}
   ctx.strokeStyle=color;ctx.lineWidth=Math.max(4,s*.12);ctx.beginPath();ctx.moveTo(-s*.46,s*.30);ctx.bezierCurveTo(-s*.82,s*.34,-s*.82,-s*.10,-s*.58,-s*.08);ctx.stroke();
@@ -637,7 +623,6 @@ function drawLowPolyCat(cat){
   const base=cat.rainbow?"#ffd43b":cat.type==="thief"?"#343a40":cat.type==="yarn"?"#b197fc":cat.type==="sleepy"?"#c8b6e2":cat.type==="mini"?"#ffb347":cat.type==="glutton"?"#e8956d":cat.type==="musician"?"#d084c8":cat.type==="student"?"#74b9ff":"#c08457";
   const s=cat.r*1.58;
   drawLowPolyCube(s,base,"#2b2118","#ffe8cc");
-  // Orejas, hocico y cola conservan la estética facetada pero dejan claro que es un gato.
   ctx.fillStyle=base;ctx.strokeStyle="#2b2118";ctx.lineWidth=Math.max(2,s*.07);
   for(const side of [-1,1]){ctx.beginPath();ctx.moveTo(side*s*.42,-s*.39);ctx.lineTo(side*s*.29,-s*.79);ctx.lineTo(side*s*.05,-s*.47);ctx.closePath();ctx.fill();ctx.stroke();}
   ctx.fillStyle="#f4b6ad";for(const side of [-1,1]){ctx.beginPath();ctx.moveTo(side*s*.33,-s*.47);ctx.lineTo(side*s*.28,-s*.66);ctx.lineTo(side*s*.16,-s*.49);ctx.closePath();ctx.fill();}
@@ -658,7 +643,6 @@ function drawLowPolyFish(f){
   drawEntityShadow(f.x,f.y,12*(f.scale||1),4*(f.scale||1),.08);
   ctx.save();ctx.translate(f.x,f.y);ctx.rotate(angle);ctx.scale(f.scale||1,f.scale||1);
   ctx.lineJoin="round";ctx.strokeStyle=outline;ctx.lineWidth=2;
-  // Cuerpo romboidal + cola + aletas: low poly, pero sigue leyendo como pez incluso pequeño.
   ctx.fillStyle=body;ctx.beginPath();ctx.moveTo(-10,0);ctx.lineTo(-4,-8);ctx.lineTo(8,-7);ctx.lineTo(13,0);ctx.lineTo(8,7);ctx.lineTo(-4,8);ctx.closePath();ctx.fill();ctx.stroke();
   ctx.fillStyle=accent;ctx.beginPath();ctx.moveTo(-9,0);ctx.lineTo(-18,-9);ctx.lineTo(-16,0);ctx.lineTo(-18,9);ctx.closePath();ctx.fill();ctx.stroke();
   ctx.beginPath();ctx.moveTo(-2,-7);ctx.lineTo(3,-13);ctx.lineTo(6,-6);ctx.closePath();ctx.fill();ctx.stroke();
@@ -700,10 +684,6 @@ function drawRealisticSardineLocal(f={}){
   const tint=getRealisticSardineTint(f);
   ctx.save();
 
-  // El asset v187+ ya ES una sardina completa con transparencia.
-  // Antes seguíamos recortándolo con las coordenadas de la antigua foto de Wikimedia;
-  // esas coordenadas caían casi por completo sobre zona transparente y solo quedaba
-  // visible el contorno elíptico. Ahora dibujamos el PNG completo.
   if(realisticSardineImage.complete&&realisticSardineImage.naturalWidth>0){
     const w=48;
     const aspect=realisticSardineImage.naturalHeight/realisticSardineImage.naturalWidth;
@@ -711,8 +691,6 @@ function drawRealisticSardineLocal(f={}){
     ctx.drawImage(realisticSardineImage,-w/2,-h/2,w,h);
 
     if(tint){
-      // Colorea únicamente los píxeles visibles de la fotografía, conservando
-      // escamas, ojo, aletas y transparencia.
       ctx.globalCompositeOperation="source-atop";
       ctx.globalAlpha=tint.alpha;
       ctx.fillStyle=tint.color;
@@ -720,7 +698,6 @@ function drawRealisticSardineLocal(f={}){
       ctx.globalCompositeOperation="source-over";
       ctx.globalAlpha=1;
 
-      // Resplandor suave del color de la mejora, sin dibujar un borde artificial.
       if(!lowPerfMode){
         ctx.globalCompositeOperation="destination-over";
         ctx.shadowColor=tint.glow;
@@ -733,7 +710,6 @@ function drawRealisticSardineLocal(f={}){
       }
     }
   }else{
-    // Fallback solo mientras termina de cargar el PNG local.
     const g=ctx.createLinearGradient(0,-7,0,7);
     g.addColorStop(0,"#36566a");g.addColorStop(.45,"#a9c6cf");g.addColorStop(1,"#eef4ef");
     ctx.fillStyle=g;
@@ -756,8 +732,7 @@ ctx.lineWidth=1.6;
 
 if(s==="fish_elegant"){
   ctx.translate(0,8);
-  /* Solo sombrero, más pegado a la cabeza del pez.
-     Como drawFish ya hace ctx.scale(f.scale), este sombrero también escala. */
+  
   ctx.fillStyle="#171018";
   ctx.beginPath();
   ctx.roundRect(-2,-19,17,5.5,2);
@@ -825,7 +800,6 @@ ctx.strokeStyle="#d39362";for(const side of [-1,1]){ctx.beginPath();ctx.moveTo(s
 function drawBossSkinDetails(type,r){
  if(type==="giantCat"&&selectedCosmetic("boss_giant")==="boss_giant_elegant"){
   ctx.save();ctx.shadowBlur=0;
-  // Corona centrada sobre la cabeza.
   ctx.fillStyle="#e4b94f";ctx.strokeStyle="#7a5620";ctx.lineWidth=Math.max(2,r*.022);ctx.beginPath();
   ctx.moveTo(-r*.42,-r*.72);ctx.lineTo(-r*.48,-r*1.03);ctx.lineTo(-r*.19,-r*.87);ctx.lineTo(0,-r*1.12);ctx.lineTo(r*.19,-r*.87);ctx.lineTo(r*.48,-r*1.03);ctx.lineTo(r*.42,-r*.72);ctx.closePath();ctx.fill();ctx.stroke();
   ctx.fillStyle="#8f4fb5";for(const x of [-.24,0,.24]){ctx.beginPath();ctx.arc(x*r,-r*.82,r*.045,0,Math.PI*2);ctx.fill();}
@@ -851,7 +825,6 @@ cosmeticsResetBtn?.addEventListener("click",resetCosmeticSelections);
 cosmeticPanel?.addEventListener("toggle",()=>{if(cosmeticPanel.open)renderCosmetics()});
 renderCosmetics();
 
-/* === Sistema de logros permanentes === */
 const ACHIEVEMENT_KEYS={state:"gatitos_achievements_state_v1"};
 const achievementsPanel=document.getElementById("achievementsPanel"),achievementsContentEl=document.getElementById("achievementsContent"),achievementProgressText=document.getElementById("achievementProgressText"),achievementsRefreshBtn=document.getElementById("achievementsRefreshBtn");
 const ACHIEVEMENTS=[
@@ -1059,7 +1032,6 @@ function registerFusionAchievements(){
   const maxed=new Set(achievementState.fusionMaxedPairs||[]);
   Object.keys(doneFusionPairs||{}).forEach(pair=>{
     created.add(pair);
-    // A newly registered pair still has its pre-fusion levels until setFusionProgress.
     if(Object.prototype.hasOwnProperty.call(fusionProgressLevels,pair)&&getFusionProgress(pair)>=5)maxed.add(pair);
   });
   achievementState.fusionCreatedPairs=[...created];
@@ -1083,7 +1055,6 @@ syncStartDropdowns();
 renderAchievements();
 applyGoldenPlayerNameUI();
 
-
 const keys={},mouse={x:canvas.width/2,y:canvas.height/2};
 const player={x:canvas.width/2,y:canvas.height/2,r:24,speed:270,angle:0,shootAnim:0,hurtAnim:0};
 const dogCompanion={x:canvas.width/2-50,y:canvas.height/2+45,r:15,shootCooldown:0,wag:0};
@@ -1095,7 +1066,6 @@ function releaseGamePointer(){
   document.body.style.cursor="auto";
 }
 function requestGamePointerLock(){
-  // No usamos Pointer Lock para mantener el click derecho y el cursor normal del navegador.
   releaseGamePointer();
 }
 function syncGamePointerLock(){
@@ -1112,7 +1082,6 @@ let score,shots,lastShot,lastFrame,gameOver,wave,spawnCooldown,life,level,xp,xpN
 let perfFps=60,lowPerfMode=false,lowPerfTimer=0;
 let lastOrbitalGuard=-Infinity;
 const RAM_FISH_BASE_COOLDOWN=30000;
-// Escalado continuo del Bloquito: mejora un poco en cada nivel.
 function getRamFishCooldownMs(playerLevel=level){
   const lvl=Math.max(1,Number(playerLevel)||1);
   return Math.max(18000,RAM_FISH_BASE_COOLDOWN-(lvl-1)*420);
@@ -1127,6 +1096,7 @@ function getRamFishScale(playerLevel=level){
 }
 let lastRamFishAt=-RAM_FISH_BASE_COOLDOWN;
 let lastManualShotAt=-Infinity;
+let lastDemonOrbDamageAt=-Infinity;
 const MANUAL_SHOT_INTERVAL_MS=100;
 let starSpawnTimer=12;
 let starSpawnedThisWave=false;
@@ -1142,8 +1112,6 @@ let screenShake=0,screenShakeX=0,screenShakeY=0,lastStarTrail=0;
 const ramFishTrails=[];
 const fishes=[],cats=[],hearts=[],smokes=[],floatingTexts=[],pawPrints=[],quacks=[],coinsDrops=[],dogBones=[],demonOrbs=[],yarnBalls=[],powerStars=[],shockwaves=[],sparkles=[],tunaDrops=[];
 let audioCtx=null;
-// Restaurado: sin esta función, los sonidos generaban un ReferenceError en
-// cada disparo o eliminación (especialmente visible en el modo IA).
 function getAudioCtx(){
   if(!audioCtx||audioCtx.state==="closed"){
     const AudioContextClass=window.AudioContext||window.webkitAudioContext;
@@ -1180,7 +1148,7 @@ perfFps=60;lowPerfMode=false;lowPerfTimer=0;
 const upgrades={damageReduction:0,luck:0,fireRate:1,fishSpeed:1,damage:1,moveSpeed:1,maxLife:100,bigFishChance:0,doubleFishChance:0,pierceChance:0,fishSize:1,catSlow:0,healOnWave:8,lifeSteal:0,xpBoost:1,boomerangChance:0,shield:false,shieldLevel:0,autoFire:false,autoFireLevel:0,critChance:0,zoomies:false,zoomiesHyper:false,zoomiesCannon:false,zoomiesCrit:false,aimAssist:false,moralSupport:false,darkPact:false,catInstinct:false,boyfriendDog:false,boyfriendDogSpirit:false,boyfriendDogReturned:false,bigCursor:false,coinMagnetRange:0,combatAI:false,assistedShot:false,perfectAim:false,moraleFire:false,braveHeart:false,reflexBurst:false,valorCasa:false,cursedInstinct:false,zoomiesEscape:false,fusionBonusPower:0,sevenLives:false};
 const upgradeLevels={damageReduction:0,luck:0,moveSpeed:0,fireRate:0,fishSpeed:0,bigFish:0,doubleFish:0,pierce:0,damage:0,catSlow:0,healOnWave:0,fishSize:0,maxLife:0,lifeSteal:0,xpBoost:0,boomerang:0,shield:0,coinMagnet:0,omniBurst:0,yarnBounce:0,autoFire:0,critChance:0};
 const upgradeMaxLevels={damageReduction:5,luck:5,moveSpeed:5,fireRate:5,fishSpeed:5,bigFish:5,doubleFish:5,pierce:5,damage:5,catSlow:5,healOnWave:5,fishSize:5,maxLife:5,lifeSteal:5,xpBoost:5,boomerang:5,shield:5,coinMagnet:5,omniBurst:5,yarnBounce:5,autoFire:5,critChance:5};
-const fusedBaseLevels={}; // niveles ya "conservados" por fusiones: mantienen stats aunque la mejora vuelva a 0/5
+const fusedBaseLevels={};
 
 const UPGRADE_META={
 damageReduction:{icon:"🔰",name:"Pelaje protector",desc:l=>"Recibes menos daño."},
@@ -1330,8 +1298,6 @@ function recommendationProfileFit(prof,needs){
 }
 function recommendationStrategicFitForKey(key){
   if(!key||getFusedPairForKey(key)||fusedUpgradeNames[key])return 0;
-  // La ruta de fusiones es una ventaja moderada, nunca una orden que ignore
-  // que el jugador pueda estar al borde de morir.
   const route=Math.max(0,autoFusionRouteValue(key)||0);
   const future=Math.max(0,autoFusionFutureValue(key)||0);
   return clamp01(clamp01(route/2000)*.7+clamp01(future/1800)*.3);
@@ -1354,8 +1320,6 @@ function recommendationPairEvaluation(a,b,needs){
   const prof=FUSION_RECOMMENDATION_PROFILE[pair]||mergeProfiles(profileForKey(a),profileForKey(b),.55,.55);
   let score=recommendationProfileFit(prof,needs)*.82+.085;
   let reason=recommendationReasonForProfile(prof,needs);
-  // Los bonus exclusivos y el incremento real cuentan, sin volver a sumar
-  // íntegramente el valor de las dos mejoras que ya posee el jugador.
   const bonusKeys=getFusionBonusKeys(pair);
   const marginal=bonusKeys.map(k=>Math.max(0,coreUpgradeStat(k,fusionPostLevel(k)+1)-coreUpgradeStat(k))/Math.max(1,Math.abs(coreUpgradeStat(k))));
   score+=Math.min(.14,marginal.reduce((sum,n)=>sum+n,0)*.48);
@@ -1390,8 +1354,6 @@ function scoreRecommendationChoice(choice,needs,context="generic"){
   if(context==="shop"&&Number.isFinite(choice.price)&&choice.price>coins)return -999;
   const key=choice.key;
   if(choice.openFusionShop||context==="fusionFirst"){
-    // Las parejas disponibles ya están validadas contra las futuras fusiones;
-    // no confundimos dos mejoras simplemente maximizadas con una fusión viable.
     const pairs=availableRecommendationPairs(needs,key||null);
     return choice.openFusionShop&&!canFuse(getEffectiveShopFusionPrice())?-999:(pairs[0]?.score??-999)+(choice.openFusionShop?.035:0);
   }
@@ -1402,8 +1364,6 @@ function scoreRecommendationChoice(choice,needs,context="generic"){
   const prof=profileForChoice(choice),hp=life/Math.max(1,upgrades.maxLife);
   const parts=pair?pair.split("+"):[key];
   let score=recommendationProfileFit(prof,needs)*.83+recommendationContextFit(key,context,needs)*.57;
-  // Ganancia del nivel que realmente va a recibirse (incluidos los dos de
-  // Voluntad Oscura), no toda la potencia acumulada de la mejora.
   const steps=Math.max(1,Math.floor(Number(choice.previewSteps)||1));
   const gains=parts.filter(k=>k in upgradeLevels).map(k=>{
     const cur=fusionPostLevel(k),next=Math.min(5,cur+steps);
@@ -1418,8 +1378,6 @@ function scoreRecommendationChoice(choice,needs,context="generic"){
       const ready=getMaxedFusionKeys().filter(other=>other!==key&&!fusedUpgradeNames[other]&&areFusionCompatible(key,other)&&!hasFusionBeenDone(key,other));
       if(ready.length)score+=remaining===0?.19:.10;
     }
-    // No se premia un camino de fusión imposible o lejano tanto como un
-    // beneficio inmediato; la ruta estratégica es un desempate moderado.
     const routeValue=recommendationStrategicFitForKey(key);
     if(routeValue>.20)score+=Math.min(.10,routeValue*.13);
   }
@@ -1430,13 +1388,11 @@ function scoreRecommendationChoice(choice,needs,context="generic"){
   if(parts.includes("healOnWave")&&boss)score-=.10;
   if(parts.includes("coinMagnet")&&!(runStats?.coinsMissed>2))score-=.11;
   if(parts.includes("xpBoost")&&hp<.47)score-=.18;
-  if(parts.includes("bigCursor")&&!pair)score-=.16; // Mirilla visual, salvo ruta real de fusión.
+  if(parts.includes("bigCursor")&&!pair)score-=.16;
   if(parts.includes("critChance")&&getCurrentCritChance()>=.94)score-=.13;
   if(parts.includes("boomerang")&&upgrades.boomerangChance>=.94)score-=.10;
   if(context==="rainbow"&&hp>.48&&wave<12&&parts.includes("xpBoost"))score+=.06;
   if(context==="shop"&&Number.isFinite(choice.price)){
-    // Misma utilidad para todas las compras normales; fusionar puede tener
-    // coste mayor. Penalización suave, no descarta fusiones interesantes.
     score-=Math.min(.07,(choice.price/Math.max(1,coins+choice.price))*.12);
   }
   return Math.max(0,score);
@@ -1493,16 +1449,12 @@ function applyRecommendationsToChoices(choices,context="generic"){
       best.choice.recommendScore=best.score;
     }else if(best.score>=Math.max(.54,minScore)&&next.score>=Math.max(.54,minScore)
        && best.choice.key!==next.choice.key){
-      // Empate convincente: mostrar dos buenas alternativas en vez de fingir
-      // que una es claramente superior por unas centésimas.
       for(const entry of [best,next]){
         entry.choice.recommended=true;
         entry.choice.recommendScore=entry.score;
       }
     }
   }
-  // La tienda y las fusiones siempre ofrecen orientación si existe al menos
-  // una opción válida. Toda recomendación usa exactamente el mismo indicador visual.
   if((context==='shop'||context==='fusionPartner')&&valid.length&&!list.some(c=>c?.recommended)){
     const best=valid[0];
     best.choice.recommended=true;
@@ -1510,8 +1462,8 @@ function applyRecommendationsToChoices(choices,context="generic"){
   }
   return choices;
 }
-function playCuteMeow(){try{const ac=getAudioCtx(),g=ac.createGain();g.gain.setValueAtTime(.045,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.34);g.connect(ac.destination);const o1=ac.createOscillator();o1.type="sine";o1.frequency.setValueAtTime(760+Math.random()*60,ac.currentTime);o1.frequency.exponentialRampToValueAtTime(520+Math.random()*40,ac.currentTime+.14);o1.connect(g);o1.start();o1.stop(ac.currentTime+.16);const o2=ac.createOscillator();o2.type="triangle";o2.frequency.setValueAtTime(470+Math.random()*40,ac.currentTime+.13);o2.frequency.exponentialRampToValueAtTime(330+Math.random()*30,ac.currentTime+.34);o2.connect(g);o2.start(ac.currentTime+.12);o2.stop(ac.currentTime+.36)}catch(e){/* El audio opcional no puede interrumpir la partida. */}}
-function playFishSound(type="bloop"){try{const ac=getAudioCtx(),o=ac.createOscillator(),g=ac.createGain();if(type==="fiu"){o.type="sine";o.frequency.setValueAtTime(900,ac.currentTime);o.frequency.exponentialRampToValueAtTime(360,ac.currentTime+.18);g.gain.setValueAtTime(.023,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.2)}else{o.type="sine";o.frequency.setValueAtTime(260+Math.random()*80,ac.currentTime);o.frequency.exponentialRampToValueAtTime(190+Math.random()*60,ac.currentTime+.11);g.gain.setValueAtTime(.021,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.13)}o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+.22)}catch(e){/* El audio opcional no puede interrumpir la partida. */}}
+function playCuteMeow(){try{const ac=getAudioCtx(),g=ac.createGain();g.gain.setValueAtTime(.045,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.34);g.connect(ac.destination);const o1=ac.createOscillator();o1.type="sine";o1.frequency.setValueAtTime(760+Math.random()*60,ac.currentTime);o1.frequency.exponentialRampToValueAtTime(520+Math.random()*40,ac.currentTime+.14);o1.connect(g);o1.start();o1.stop(ac.currentTime+.16);const o2=ac.createOscillator();o2.type="triangle";o2.frequency.setValueAtTime(470+Math.random()*40,ac.currentTime+.13);o2.frequency.exponentialRampToValueAtTime(330+Math.random()*30,ac.currentTime+.34);o2.connect(g);o2.start(ac.currentTime+.12);o2.stop(ac.currentTime+.36)}catch(e){}}
+function playFishSound(type="bloop"){try{const ac=getAudioCtx(),o=ac.createOscillator(),g=ac.createGain();if(type==="fiu"){o.type="sine";o.frequency.setValueAtTime(900,ac.currentTime);o.frequency.exponentialRampToValueAtTime(360,ac.currentTime+.18);g.gain.setValueAtTime(.023,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.2)}else{o.type="sine";o.frequency.setValueAtTime(260+Math.random()*80,ac.currentTime);o.frequency.exponentialRampToValueAtTime(190+Math.random()*60,ac.currentTime+.11);g.gain.setValueAtTime(.021,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.13)}o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+.22)}catch(e){}}
 function startGame(){
   autoMode=false;
   gameStarted=true;
@@ -1523,7 +1475,7 @@ function startGame(){
   syncMusic();
 }
 
-function playSoftPop(){try{const ac=getAudioCtx(),o=ac.createOscillator(),g=ac.createGain();o.type="triangle";o.frequency.setValueAtTime(210,ac.currentTime);o.frequency.exponentialRampToValueAtTime(95,ac.currentTime+.16);g.gain.setValueAtTime(.03,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.18);o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+.2)}catch(e){/* El audio opcional no puede interrumpir la partida. */}}
+function playSoftPop(){try{const ac=getAudioCtx(),o=ac.createOscillator(),g=ac.createGain();o.type="triangle";o.frequency.setValueAtTime(210,ac.currentTime);o.frequency.exponentialRampToValueAtTime(95,ac.currentTime+.16);g.gain.setValueAtTime(.03,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.18);o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+.2)}catch(e){}}
 function playCuteMeowThrottled(chance=.18,cooldown=180){
 const now=performance.now();
 if(now-lastMeowSoundAt<cooldown||Math.random()>chance)return;
@@ -1543,31 +1495,30 @@ g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.55);
 g.connect(ac.destination);
 const low=ac.createOscillator();low.type="sine";low.frequency.setValueAtTime(150,ac.currentTime);low.frequency.exponentialRampToValueAtTime(58,ac.currentTime+.45);low.connect(g);low.start();low.stop(ac.currentTime+.5);
 const high=ac.createOscillator();high.type="triangle";high.frequency.setValueAtTime(620,ac.currentTime+.03);high.frequency.exponentialRampToValueAtTime(980,ac.currentTime+.22);high.connect(g);high.start(ac.currentTime+.03);high.stop(ac.currentTime+.28);
-}catch(e){/* El audio opcional no puede interrumpir la partida. */}}
+}catch(e){}}
 function playMagicChime(){try{
 const ac=getAudioCtx(),g=ac.createGain();g.gain.setValueAtTime(.035,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.7);g.connect(ac.destination);
 [660,880,1320].forEach((f,i)=>{const o=ac.createOscillator();o.type="sine";o.frequency.setValueAtTime(f,ac.currentTime+i*.055);o.connect(g);o.start(ac.currentTime+i*.055);o.stop(ac.currentTime+.45+i*.03)});
-}catch(e){/* El audio opcional no puede interrumpir la partida. */}}
+}catch(e){}}
 
 function playShopBuySound(){try{
 const ac=getAudioCtx(),g=ac.createGain();
 g.gain.setValueAtTime(.028,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.22);
 g.connect(ac.destination);
 [523,659].forEach((f,i)=>{const o=ac.createOscillator();o.type="triangle";o.frequency.setValueAtTime(f,ac.currentTime+i*.07);o.connect(g);o.start(ac.currentTime+i*.07);o.stop(ac.currentTime+.22+i*.04)});
-}catch(e){/* El audio opcional no puede interrumpir la partida. */}}
+}catch(e){}}
 function playFusionCompleteSound(){try{
 const ac=getAudioCtx(),g=ac.createGain();
 g.gain.setValueAtTime(.038,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.9);
 g.connect(ac.destination);
 [440,550,660,880].forEach((f,i)=>{const o=ac.createOscillator();o.type="sine";o.frequency.setValueAtTime(f,ac.currentTime+i*.09);o.frequency.linearRampToValueAtTime(f*1.04,ac.currentTime+i*.09+.18);o.connect(g);o.start(ac.currentTime+i*.09);o.stop(ac.currentTime+.55+i*.07)});
-}catch(e){/* El audio opcional no puede interrumpir la partida. */}}
+}catch(e){}}
 function playVictoryJingle(){try{
 const ac=getAudioCtx(),g=ac.createGain();
 g.gain.setValueAtTime(.042,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+1.4);
 g.connect(ac.destination);
 [523,659,784,1047,1319].forEach((f,i)=>{const o=ac.createOscillator();o.type="sine";o.frequency.setValueAtTime(f,ac.currentTime+i*.12);o.connect(g);o.start(ac.currentTime+i*.12);o.stop(ac.currentTime+.55+i*.12)});
-}catch(e){/* El audio opcional no puede interrumpir la partida. */}}
-
+}catch(e){}}
 
 function clearMovementKeys(){
   keys.w=false;keys.a=false;keys.s=false;keys.d=false;keys.arrowup=keys.arrowdown=keys.arrowleft=keys.arrowright=false;
@@ -1592,7 +1543,6 @@ if(["arrowup","arrowdown","arrowleft","arrowright"].includes(k)&&gameStarted){e.
 if(["w","a","s","d"].includes(k))keys[k]=true;
 else keys[k]=true;
 if(k===" "||k==="spacebar"){e.preventDefault();if(e.repeat)return;if(gameStarted&&!gameOver&&!choosingUpgrade)togglePause()}
-// La R solo reinicia desde Game Over. En el menú inicial no hace nada.
 if(k==="r"&&gameStarted&&gameOver&&startPanel.style.display==="none"){restart()}
 });
 window.addEventListener("keyup",e=>{
@@ -1752,8 +1702,6 @@ Object.assign(upgrades,{damageReduction:0,luck:0,fireRate:1,fishSpeed:1,damage:1
 Object.keys(upgradeLevels).forEach(k=>upgradeLevels[k]=0);Object.keys(upgradeMaxLevels).forEach(k=>upgradeMaxLevels[k]=5);Object.keys(fusedBaseLevels).forEach(k=>delete fusedBaseLevels[k]);fusedUpgradeNames={};doneFusionPairs={};fusionProgressLevels={};
 }
 
-// La primera etapa conserva la curva histórica. Las otras dos dependen de
-// hitos reales de la partida, NO de niveles o rondas arbitrarios.
 const XP_PHASE_RATES={main:1.35,postBoss:1.33,endless:1.30};
 const XP_PHASE_ENTRY_DISCOUNT={postBoss:.90,endless:.92};
 let xpRequirementPhase="main";
@@ -1761,10 +1709,7 @@ function nextXpRequirement(current,phase=xpRequirementPhase){
   return Math.ceil(current*(XP_PHASE_RATES[phase]||XP_PHASE_RATES.main)+2);
 }
 function getXpProgressionPhase(){
-  // Early: los cinco jefes distintos aún no se han derrotado.
   if(!defeatedBossTypes||defeatedBossTypes.size<BOSS_TYPES.length)return "main";
-  // Late: todas las fusiones al máximo. También cubre las partidas que
-  // han continuado tras completar el juego.
   if(finalCompletionContinue)return "endless";
   const pairs=Object.keys(doneFusionPairs||{});
   const expected=getAllFusionKeys().length/2;
@@ -1774,8 +1719,6 @@ function getXpProgressionPhase(){
 function syncXpRequirementPhase(){
   const phase=getXpProgressionPhase();
   if(phase===xpRequirementPhase)return false;
-  // Única pequeña rebaja al desbloquear cada nueva etapa, sin retirar XP
-  // acumulada ni recalcular retrospectivamente niveles ya conseguidos.
   xpNeed=Math.max(5,Math.ceil(xpNeed*(XP_PHASE_ENTRY_DISCOUNT[phase]||1)));
   xpRequirementPhase=phase;
   return true;
@@ -1798,7 +1741,7 @@ if(autoChoiceTimer)clearTimeout(autoChoiceTimer);
 autoChoiceToken++;autoChoiceMenu=null;
 pausePanel.style.display="none";
 stopPowerStarLoop();
-lastOrbitalGuard=-Infinity;zoomiesEscapeHits=0;forcedZoomiesUntil=0;safeTeleportInvulnUntil=0;
+lastOrbitalGuard=-Infinity;zoomiesEscapeHits=0;forcedZoomiesUntil=0;safeTeleportInvulnUntil=0;lastDemonOrbDamageAt=-Infinity;
 backgroundFishSeed=Math.floor(Math.random()*1000000);
 autoRunChoices=[];autoRunStartTime=performance.now();autoLastPlayerX=player.x;autoLastPlayerY=player.y;autoStuckTimer=0;autoEmergencyEscapeUntil=0;
 resetUpgrades();
@@ -1835,13 +1778,11 @@ function processPendingUpgradeQueue(){
 function cleanupRoundScreen(opts={}){
   const keepFloating=!!opts.keepFloating;
   const keepSoftEffects=!!opts.keepSoftEffects;
-  // Las limpiezas técnicas no son derrotas: devolver el botín robado íntegro.
   for(const cat of cats)refundRemovedThief(cat);
   for(const coin of coinsDrops)if(coin?.recovered)collectCoinDrop(coin);
   if(cats.some(cat=>cat?.rainbow&&!cat.dead))rainbowSpawnedThisWave=false;
   selectedTarget=null;
   cats.length=0;
-  // El evento del Leviatán conserva sus cinco segundos entre rondas y jefes.
   let keptFish=0;
   for(const fish of fishes)if(fish.giantEaster&&fish.life>0)fishes[keptFish++]=fish;
   fishes.length=keptFish;
@@ -1919,9 +1860,6 @@ avalancheActive=false;
 avalancheTime=0;
 avalancheSpawnTimer=0;
 const avalancheCfg=getAvalancheConfig();
-// Avalancha progresiva:
-// - Siempre ocurre en la ronda posterior a un boss: 6, 11, 16, 21...
-// - Además puede aparecer de forma aleatoria en rondas avanzadas que no sean boss.
 const forcedPostBossAvalanche=wave>=6&&wave%5===1;
 const randomAvalanche=wave>=14&&wave%5!==0&&Math.random()<avalancheCfg.chance;
 avalancheThisWave=forcedPostBossAvalanche||randomAvalanche;
@@ -1984,7 +1922,6 @@ floatingTexts.push({x:canvas.width/2,y:145,text:"La avalancha terminó 🐾",lif
 }
 
 function trySpawnPowerStar(){
-// Nunca se genera más de una estrella natural por ronda, incluso con mucha suerte.
 if(starSpawnedThisWave||starActive||powerStars.length>0)return;
 const chance=Math.min(.28,(.018+starChanceLevel*.012)*(1+upgrades.luck));
 if(Math.random()<chance){
@@ -1997,7 +1934,6 @@ floatingTexts.push({x:canvas.width/2,y:175,text:"⭐ ¡Ha aparecido una estrella
 }
 
 function playStarPickupSound(){
-// Sonido de recoger estrella: toma como base el “cling” de moneda/compra, pero más suave y musical.
 try{
   const ac=getAudioCtx();
   const t=ac.currentTime;
@@ -2046,7 +1982,6 @@ try{
   main.gain.setValueAtTime(.0001,t);
   main.gain.linearRampToValueAtTime(.020,t+.18);
   main.connect(ac.destination);
-  // No hay zumbido constante: solo pequeñas notas tranquilas mientras dura la estrella.
   starAudio={gain:main,duration:10,melodyIndex:0};
   starTwinkleTimer=.08;
 }catch(e){starAudio=null;}
@@ -2067,7 +2002,6 @@ try{
   const ac=getAudioCtx(),t=ac.currentTime;
   const ratio=Math.max(0,Math.min(1,intensity));
 
-  // Melodía tranquila, inspirada en el sonido de moneda: notas cortas, dulces y sin golpe fuerte.
   const melody=[523.25,659.25,783.99,1046.50,783.99,659.25,587.33,659.25,783.99,659.25,523.25,392.00];
   const idx=starAudio.melodyIndex||0;
   const freq=melody[idx%melody.length];
@@ -2207,6 +2141,21 @@ zoomiesEscapeHits=0;
 return activateZoomiesEscape();
 }
 
+function getPlayerBodyDamagePerSecond(){
+return Math.min(4,Math.max(.55,(upgrades.damage||1)*.55));
+}
+
+function applyFreshDemonOrbBodyHit(orb){
+if(!orb||!boss||boss.type!=="demon")return false;
+const insideDemon=Math.hypot(player.x-boss.x,player.y-boss.y)<Math.max(8,boss.r-player.r*.15);
+if(!insideDemon)return false;
+orb.hitsLeft=Math.max(0,(orb.hitsLeft||1)-1);
+makeSmoke(orb.x,orb.y);
+if(orb.hitsLeft<=0)return true;
+orb.bodySafeUntil=gameNow()+320;
+return false;
+}
+
 function takePlayerDamage(amount,deathText,hurt=.2){
 if(gameOver||!gameStarted||paused||choosingUpgrade)return false;
 amount=Number.isFinite(amount)?Math.max(0,amount):0;
@@ -2223,7 +2172,6 @@ shockwaves.push({x:player.x,y:player.y,r:8,maxR:150,life:.55,maxLife:.55,color:"
 cats.forEach(cat=>{if(!isCombatTargetAvailable(cat))return;const dx=cat.x-player.x,dy=cat.y-player.y,d=Math.hypot(dx,dy)||1;if(d<330){cat.knockVx=(cat.knockVx||0)+(dx/d)*420;cat.knockVy=(cat.knockVy||0)+(dy/d)*420;cat.hitAnim=.18;}});
 floatingTexts.push({x:player.x,y:player.y-86,text:"🛡️ Guardia felina",life:1.1,maxLife:1.1,big:false});
 }
-// El tope de Pelaje protector debe coincidir con su progresión fusionada (45 %).
 amount*=1-Math.min(.45,Math.max(0,upgrades.damageReduction||0));
 if(hasDoneFusionPair("damageReduction+shield")&&gameNow()-lastOrbitalGuard>=(8-3*fusionStrength("damageReduction+shield"))*1000){
  lastOrbitalGuard=gameNow();const force=160+140*fusionStrength("damageReduction+shield");
@@ -2270,16 +2218,13 @@ function isBossTypeAllowedNow(type){
   if(type==="octopus")return wave>=10;
   if(type!=="demon")return true;
 
-  // Primer jefe: nunca demonio. La ronda 5 debe ser una pelea normal y balanceada.
   if(wave<=5)return false;
 
   const hasDogFusion=upgrades.boyfriendDog&&!dogKidnapped&&!dogSacrificeUsed;
 
-  // Con la fusión del perro, el demonio puede aparecer antes y con mucho más peso.
   if(hasDogFusion)return wave>=10;
   if(forceDemonNextBoss)return wave>=10;
 
-  // Sin perro, el demonio aparece como jefe tardío.
   return wave>=20;
 }
 function weightedRandomBoss(weightedList){
@@ -2299,10 +2244,7 @@ function weightedRandomBoss(weightedList){
 function chooseNextBossType(types=BOSS_TYPES){
   const pending=getPendingBossTypes();
   const available=types.filter(t=>BOSS_TYPES.includes(t)&&isBossTypeAllowedNow(t));
-  // Antes del primer final, solo jefes pendientes. Un peso nunca puede
-  // volver a introducir uno derrotado, ni siquiera con la fusión del perro.
   let pool=pending.length?available.filter(t=>pending.includes(t)):available.filter(t=>t!==lastBossType);
-  // Mantener las garantías incluso si una llamada ofrece una lista incompleta.
   if(!pool.length)pool=pending.length?pending.filter(isBossTypeAllowedNow):BOSS_TYPES.filter(t=>t!==lastBossType&&isBossTypeAllowedNow(t));
   if(!pool.length)pool=pending.length?pending:BOSS_TYPES.filter(t=>t!==lastBossType);
   const hasDogFusion=upgrades.boyfriendDog&&!dogKidnapped&&!dogSacrificeUsed;
@@ -2344,8 +2286,6 @@ function updateObjectivePanel(){
   objectiveFusionEl.textContent=hints.length?`🔮 Fusiones próximas: ${hints.join(" / ")}`:"🔮 Fusiones próximas: sube mejoras compatibles";
 }
 function showEnemyIntro(type){
-  // Sin pop-ups explicativos para gatos especiales.
-  // Se dejan solo sus señales visuales y comportamiento propio durante la partida.
   if(!type||type==="normal")return;
   enemyIntroSeen[type]=true;
 }
@@ -2385,7 +2325,6 @@ if(type==="demon"){
   demonSpawnPressure=0;
   forceDemonNextBoss=false;
 }else if(hasDogFusion&&wave>5){
-  // Si tienes perro y no sale demonio, la siguiente batalla de jefe sube su probabilidad.
   demonSpawnPressure++;
 }
 
@@ -2564,7 +2503,6 @@ return `${displayName} Nv.${n}`
 function upgradeDesc(key){return getUpgradeDisplayDesc(key,nextLevel(key))}
 function pct(n){return Math.min(100,Math.round(n*13))}
 
-// Las fusiones distribuyen el incremento restante según su curva de cinco niveles.
 function fusionStatScale(key,preRate,postRate,cap=5*(preRate+postRate),post=fusionPostLevel(key)){
 const base=fusedBaseLevels[key]||0;
 if(!hasFusionComponent(key))return Math.min(cap,(base+post)*preRate);
@@ -2572,7 +2510,6 @@ const initial=Math.min(cap,base*preRate);
 return initial+(cap-initial)*[0,.14,.31,.51,.74,1][Math.min(5,Math.max(0,Math.floor(post)))];
 }
 function coreUpgradeStat(key,post=fusionPostLevel(key)){
-// Retorno crítico: 65 % al fusionar, +2 puntos por nivel hasta el 75 %.
 if((key==="boomerang"||key==="critChance")&&hasDoneFusionPair("boomerang+critChance")){
   return .65+.02*Math.min(5,Math.max(0,Math.floor(post)));
 }
@@ -2593,13 +2530,11 @@ if(key==="fishSize"){const initial=Math.min(1.45,((fusedBaseLevels[key]||0)+getF
 const level=(fusedBaseLevels[key]||0)+post;
 return key==="autoFire"||key==="shield"?Math.min(10,level):level;
 }
-// porcentaje del PRÓXIMO nivel (para etiqueta DEF)
 function nextPercentValue(key){
 const value=coreUpgradeStat(key,Math.min(5,fusionPostLevel(key)+1));
 return Math.round((value-(["moveSpeed","fireRate","fishSpeed","damage","fishSize","xpBoost"].includes(key)?1:0))*1000)/10;
 }
 function percentValue(key){return getPauseActualPercent(key)}
-
 
 function applyUpgradeStatsFromLevels(){
 const oldSlow=Math.max(.15,1-upgrades.catSlow);
@@ -2612,10 +2547,8 @@ const slowRatio=Math.max(.15,1-upgrades.catSlow)/oldSlow;
 if(slowRatio!==1)cats.forEach(cat=>{cat.speed*=slowRatio;if(Number.isFinite(cat.baseSpeed))cat.baseSpeed*=slowRatio;});
 }
 
-
 function isPercentLimitedKey(key){return ["luck","damageReduction","moveSpeed","fireRate","fishSpeed","bigFish","doubleFish","pierce","damage","catSlow","fishSize","xpBoost","boomerang","omniBurst","yarnBounce","autoFire","critChance"].includes(key)}
 function isUpgradeFinal(key){return isPercentLimitedKey(key)&&(upgradeLevels[key]||0)>=(upgradeMaxLevels[key]||5)}
-
 
 function getFusedPairForKey(key){
   return Object.keys(doneFusionPairs).find(pair=>pair.split("+").includes(key))||null;
@@ -2712,7 +2645,6 @@ return arr
 function getRandomUpgradeChoices(amount){
 const pool=getUpgradePool();
 const choices=[];
-// Si faltan mejoras únicas, forzar al menos 1 en las opciones
 const missingUniques=pool.filter(u=>u.key&&uniqueFusionKeys.includes(u.key));
 if(missingUniques.length>0&&amount>0){
   const idx=Math.floor(Math.random()*missingUniques.length);
@@ -2730,8 +2662,6 @@ while(choices.length<amount&&pool.length>0){const index=Math.floor(Math.random()
 return choices
 }
 
-
-/* ─── ALGORITMO DE RECOMENDACIÓN ─────────────────────────── */
 function scoreUpgradeRecommendation(key){
 if(!key)return{score:0,reason:null};
 const pair=getFusedPairForKey(key);
@@ -2781,7 +2711,7 @@ const anyCompatible=Object.keys(fusionPairs).filter(m=>m!==key&&areFusionCompati
 if(anyCompatible.length>0&&stepsToMax<=3)return{score:48,reason:null};
 return{score:0,reason:null};
 }
-/* ─────────────────────────────────────────────────────────── */
+
 function escapeHtml(str){
 return String(str??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[ch]||ch));
 }
@@ -2830,7 +2760,6 @@ if(upgrade.key){
 }
 return "Mejora";
 }
-// Read-only previews: use the same base-stat formula as the purchased upgrade.
 function formatPreviewStat(key,post=fusionPostLevel(key)){
   const v=coreUpgradeStat(key,post);
   const n=x=>Number(x.toFixed(2)).toLocaleString("es-ES");
@@ -2852,8 +2781,6 @@ function getUpgradePreviewRows(upgrade){
   const pair=getFusedPairForKey(upgrade.key);
   const keys=(pair?pair.split("+"):[upgrade.key]).filter(k=>Object.prototype.hasOwnProperty.call(upgradeLevels,k));
   const labels={moveSpeed:"Velocidad base",fireRate:"Cadencia base",fishSpeed:"Velocidad del pez",damage:"Daño base",fishSize:"Tamaño del pez",xpBoost:"Experiencia",bigFish:"Pez grande",doubleFish:"Pez extra",pierce:"Perforación",boomerang:"Boomerang",critChance:"Crítico",catSlow:"Ralentización",lifeSteal:"Robo de vida",yarnBounce:"Rebote",maxLife:"Vida máxima",healOnWave:"Curación por ronda",coinMagnet:"Radio del imán",omniBurst:"Ráfaga",shield:"Escudo",autoFire:"Disparo automático"};
-  // Voluntad Oscura aplica la elección dos veces. La tarjeta debe enseñar el
-  // resultado real de esa elección, no el incremento normal de un solo nivel.
   const requestedSteps=Math.max(1,Math.floor(Number(upgrade.previewSteps)||1));
   const rows=keys.map(key=>{
     const current=fusionPostLevel(key);
@@ -2976,8 +2903,6 @@ function renderCardList(){
   levelUpBox.scrollTop=0;
   upgradeCards.innerHTML="";
   fusionTopPages.replaceChildren();
-  // La tienda separa las mejoras de las acciones para que Fusión siempre
-  // permanezca justo a la izquierda de Sorpresa, aunque esté bloqueada.
   const isShopLayout=context==="shop";
   upgradeCards.classList.toggle("shopSplitRows",isShopLayout);
   const shopUpgradeRow=isShopLayout?document.createElement("div"):null;
@@ -3041,7 +2966,6 @@ renderCardList();
 autoRegisterChoiceMenu(choices,onPick,context);
 }
 
-
 function allDirectUpgradesMaxed(){
 const allScalable=Object.keys(upgradeLevels).every(k=>{
   if(isHiddenFusedComponent(k))return true;
@@ -3066,9 +2990,6 @@ releaseGamePointer();
 const darkWave=reason==="wave"&&upgrades.darkPact;
 const choices=darkWave?getRandomScalableUpgradeChoices(1):getRandomUpgradeChoices(3);
 if(darkWave){
-  // La Voluntad Oscura concede hasta dos niveles de una vez. Reflejarlo ya en
-  // título, puntos de nivel y previsualización para que los números coincidan
-  // exactamente con lo que recibirá el jugador al aceptar.
   choices.forEach(upgrade=>{
     if(!upgrade.key)return;
     const pair=getFusedPairForKey(upgrade.key);
@@ -3180,21 +3101,15 @@ function scoreKey(key){
   const max=upgradeMaxLevels[key]||5;
   let score=0;
 
-  // Prioridad 1: terminar una mejora que ya puede fusionar con algo listo.
   if(lvl>=max-1&&hasUsefulFusionPath(key))score+=1000;
 
-  // Prioridad 2: subir piezas que están cerca de crear una fusión útil.
   if(hasCompatibleAlmostReady(key))score+=420;
 
-  // Prioridad 3: si una fusión escalable acaba de empezar, enseñarla como progreso nuevo.
   if(fusedUpgradeNames[key])score+=360-lvl*20;
 
-  // Prioridad 4: cubrir mejoras atrasadas o sin desbloquear.
   if(lvl===0)score+=260;
   score+=(max-lvl)*35;
 
-  // Las ofertas incluyen encaje real con la partida, además de progreso de
-  // fusión. La variación evita enseñar siempre las mismas tres cartas.
   const suitability=scoreRecommendationChoice({key},shopNeeds,"shop");
   if(suitability>=0)score+=Math.min(380,suitability*460);
   score+=Math.random()*26;
@@ -3209,8 +3124,6 @@ keys.forEach(k=>{
 });
 
 const ranked=[...bestByGroup.values()].sort((a,b)=>b.score-a.score);
-// Si la vida está crítica, no dejar que varios caminos de fusión atractivos
-// escondan TODAS las opciones defensivas de las tres cartas de la tienda.
 if(life<upgrades.maxLife*.42){
   const rescueKeys=["maxLife","damageReduction","shield","lifeSteal","catSlow"];
   const alreadyVisible=ranked.slice(0,Math.min(3,amount)).some(entry=>rescueKeys.includes(entry.key));
@@ -3302,7 +3215,7 @@ const randomChoice=randomUpgrade?{
   hiddenUpgrade:randomUpgrade,
   locked:coins<randomPrice
 }:null;
-const choices=[...upgradeChoices,fusionChoice]; // Posición estable: mejoras arriba, fusión junto a sorpresa abajo.
+const choices=[...upgradeChoices,fusionChoice];
 if(randomChoice)choices.push(randomChoice);
 choices.push({icon:"🚪",title:"Salir de la tienda",levelTag:"",desc:"Cierra la tienda y conserva las monedas que te queden.",special:true,skipShop:true});
 showCards("🪙 Tienda de gatitos","","",choices,upgrade=>{
@@ -3330,7 +3243,6 @@ if(isGameCompleted())return;
 openCoinShop();
 },null,"shop")
 }
-
 
 const uniqueFusionKeys=["aimAssist","bigCursor","moralSupport","darkPact","catInstinct","zoomies"];
 const uniqueFusionMeta={
@@ -3549,7 +3461,6 @@ Object.keys(map).forEach(k=>{
 normalizeFusionMap(fusionNameMap);
 normalizeFusionMap(fusionEffectDescMap);
 
-
 const fusionShortDescMap={
 "damage+pierce":"Peces fuertes que atraviesan enemigos.",
 "bigFish+damage":"Peces grandes con golpes brutales.",
@@ -3710,8 +3621,6 @@ function rebuildFusionDataCatalogue(){
 }
 rebuildFusionDataCatalogue();
 
-// v177: bonus específicos comprobables. Los que no poseen mecánica exclusiva
-// describen con precisión la mejora de atributos que realmente aplica applyFusionBonus.
 const fusionSignatureBonuses={
   "boomerang+critChance":"permite aplicar boomerang y daño crítico al mismo pez, incluido Bloquito; ambas probabilidades progresan 67 %, 69 %, 71 %, 73 % y 75 % en los niveles 1 a 5.",
   "bigFish+damage":"los peces gigantes hacen entre un 10 % y un 35 % más de daño.",
@@ -3774,8 +3683,6 @@ function getFusionExtraBonusDesc(pair){
   if(fusionSignatureBonuses[pair])return "Bonus de fusión: "+fusionSignatureBonuses[pair];
   const keys=getFusionBonusKeys(pair);
   const stats=[...new Set(keys)].map(k=>fusionBonusStatLabels[k]||k);
-  // No inventar poderes: las fusiones sin mecánica especial progresan
-  // mediante los niveles efectivos que aplica el sistema de verdad.
   if(stats.length===2)return `Bonus de fusión: +1 nivel efectivo inicial a ${stats[0]} y ${stats[1]}; ambos siguen progresando al mejorar esta fusión.`;
   if(stats.length===1){const other=pair.split("+").find(k=>!keys.includes(k));const otherName=fusionBonusComponentNames[other]||fusionBonusStatLabels[other]||other;return `Bonus de fusión: +1 nivel efectivo inicial a ${stats[0]}; se combina con ${otherName} y sigue progresando al mejorar la fusión.`;}
   return "Bonus de fusión: combina las dos habilidades; sus efectos originales permanecen activos.";
@@ -3838,7 +3745,6 @@ function getFusionEffectDesc(a,b){
  const pair=sortedPair(a,b);
  const data=FUSION_BY_PAIR[pair];
  let desc=data?.shortDesc||fusionShortDescMap[pair]||`Combina ${getOriginalUpgradeName(a)} y ${getOriginalUpgradeName(b)}.`;
- // These six entries previously repeated their exact text in the bonus box.
  const redundant=new Set(["damageReduction+shield","damageReduction+lifeSteal","damageReduction+luck","damage+luck","critChance+luck","healOnWave+luck"]);
  if(redundant.has(pair))desc=`Combina ${getOriginalUpgradeName(a)} y ${getOriginalUpgradeName(b)}.`;
  if(pair==="darkPact+moralSupport"){
@@ -3923,10 +3829,6 @@ function hasPendingFusionPairs(){
   return keys.some((a,i)=>keys.slice(i+1).some(b=>isFusionChoiceCompletionSafe(a,b)))
 }
 
-
-/* ─── SISTEMA DE PUNTUACIÓN FINAL ──────────────────────────── */
-
-/* ─── RÉCORD LOCAL ─────────────────────────────────────────── */
 const HS_KEY="gatitos_peces_hs";
 function getHighScore(){return safeCount(gameStorage.getItem(HS_KEY))}
 function saveHighScore(s){gameStorage.setItem(HS_KEY,String(s))}
@@ -3935,18 +3837,11 @@ const prev=getHighScore();
 if(total>prev){saveHighScore(total);return true;}
 return false;
 }
-/* ─────────────────────────────────────────────────────────── */
+
 function computeFinalScore(){
-// Los jefes aparecen aleatoriamente: podrías terminar en ronda 20 (mucha suerte)
-// o en ronda 55 (poca suerte). El peso de las rondas se reduce y los jefes
-// se convierten en el factor principal de la puntuación.
 const bossBonus=defeatedBossTypes.size*3500;
-// Bono por victoria completa (todos los jefes): el logro real del juego
 const completionBonus=defeatedBossTypes.size===BOSS_TYPES.length?25000:0;
-// Bono de eficiencia: terminar antes implica haber peleado con menos mejoras (más difícil)
-// Máximo en ronda 15, cero a partir de ronda 65. Solo si se completó el juego.
 const efficiencyBonus=defeatedBossTypes.size===BOSS_TYPES.length?Math.max(0,Math.floor((65-Math.min(wave,65))*120)):0;
-// Factores de partida (peso reducido porque la cuenta de rondas depende en parte de la suerte)
 const wavePoints=wave*150;
 const levelPoints=level*250;
 const killPoints=score*50;
@@ -4022,10 +3917,8 @@ setOnlineStatus(victoryOnlineStatus,"Victoria ya enviada al ranking.","ok");
 loadOnlineRanking([startRankingList,victoryRankingList].filter(Boolean));
 }
 }
-/* ─────────────────────────────────────────────────────────── */
+
 function isGameCompleted(){
-// Final real: las 28 mejoras deben estar emparejadas en 14 fusiones y cada fusión debe estar a nivel 5.
-// El selector de fusiones impide elegir una pareja que deje el tablero sin emparejamiento completo.
 const allKeys=getAllFusionKeys();
 const expectedFusionCount=allKeys.length/2;
 const allPaired=allKeys.length%2===0&&allKeys.every(k=>!!getFusedPairForKey(k));
@@ -4091,8 +3984,6 @@ function getEndlessBossMultiplier(){
   return Math.min(10,1+p*.18+Math.pow(p,1.23)*.025);
 }
 function getProjectileCap(kind){
-  // Proteger los QUACK existentes: al alcanzar el límite no se generan
-  // otros nuevos que provoquen el descarte silencioso de balas anteriores.
   if(kind==="quack")return 70;
   if(kind==="orb"||kind==="yarn")return 110;
   return Infinity;
@@ -4123,7 +4014,6 @@ function openFusionChoice(cost=5){
 releaseGamePointer();
 if(!canFuse(cost)){openCoinShop();return}
 const maxed=getMaxedFusionKeys();
-// Paso 1: solo claves que tienen AL MENOS 1 pareja válida en maxed
 const firstChoices=maxed.filter(k=>maxed.some(other=>other!==k&&isFusionChoiceCompletionSafe(k,other))).map(k=>{
 const lvl=Object.prototype.hasOwnProperty.call(upgradeLevels,k)?(upgradeLevels[k]||0):1;
 const normalDesc=isUniqueKey(k)?(uniqueFusionMeta[k]?.desc||"Mejora única."):getUpgradeDisplayDesc(k,Math.max(1,lvl));
@@ -4139,7 +4029,6 @@ fusion:true
 });
 const backToShop=()=>{choosingUpgrade=false;levelUpPanel.style.display="none";fusionBackBtn.style.display="none";if(shopAvailable)openCoinShop()};
 showCards("🔮 Fusión de mejoras","Elige la primera mejora","",firstChoices,first=>{
-// Paso 2: solo parejas disponibles que permiten completar todas las fusiones.
 const allCompatibleKeys=new Set();
 (fusionPairs[first.key]||[]).forEach(k=>allCompatibleKeys.add(k));
 Object.keys(fusionPairs).forEach(k=>{if((fusionPairs[k]||[]).includes(first.key))allCompatibleKeys.add(k)});
@@ -4164,7 +4053,6 @@ if(shopAvailable)shopFusionPurchases++;
 const pair=sortedPair(first.key,second.key);
 doneFusionPairs[pair]=true;
 registerFusionAchievements();
-// El antiguo bonus de mantener pulsado ya no existe: el clic lanza el Bloquito.
 const fusionName=getFusionNameFromPair(first.key,second.key);
 if(pair==="aimAssist+autoFire"){upgrades.combatAI=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🤖 IA de combate activada",life:1.8,maxLife:1.8,big:false})}
 if(pair==="autoFire+bigCursor"){upgrades.assistedShot=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🌈 Disparo asistido",life:1.8,maxLife:1.8,big:false})}
@@ -4207,7 +4095,6 @@ if(!gameOver&&wasShopOpen)openCoinShop();else maybeOpenShopOrFusion()
 },()=>{fusionBackBtn.style.display="none";openFusionChoice(cost)},"fusionPartner")
 },backToShop,"fusionFirst")
 }
-
 
 function getRainbowLowestChoices(amount=3){
 const pool=[];
@@ -4291,7 +4178,6 @@ while(xp>=xpNeed){xp-=xpNeed;level++;xpNeed=nextXpRequirement(xpNeed);gainedLeve
 if(gainedLevels>0)queueUpgradeMenus("level",gainedLevels);
 }
 
-
 function getThiefStealTier(){
   return Math.max(1,Math.min(5,Math.ceil(Math.max(1,wave)/10)));
 }
@@ -4304,16 +4190,13 @@ function getThiefWaveStealLimit(){
 function getThiefRemainingWaveSteal(){
   return Math.max(0,getThiefWaveStealLimit()-thiefCoinsStolenThisWave);
 }
-// Matar al ladrón siempre resuelve su botín: 20 % todo, 50 % la mitad,
-// 30 % nada. Agrupamos monedas recuperadas para evitar sobrecargar la arena.
 function dropRecoveredStolenCoins(cat){
   const stolen=Math.max(0,Math.floor(Number(cat?.stolenCoins)||0));
   if(!stolen)return 0;
-  cat.stolenCoins=0; // Resolver una sola vez, incluso si falla después un efecto.
+  cat.stolenCoins=0;
   const roll=Math.random();
   const recovered=roll<.20?stolen:roll<.70?Math.max(1,Math.floor(stolen/2)):0;
   if(!recovered)return 0;
-  // Como mucho cinco bolsas visibles, conservando exactamente el botín obtenido.
   const bundles=Math.min(5,recovered);
   const perBundle=Math.floor(recovered/bundles);
   const remainder=recovered%bundles;
@@ -4344,7 +4227,6 @@ function getBossReinforcementInterval(){
     Math.max(1,1.85-wave*.025)/getEndlessSpawnMultiplier());
 }
 function spawnCat(x=null,y=null,small=false){
-// Reservar una plaza para el arcoíris pendiente; no generar y borrar enemigos.
 const rainbowDue=rainbowSelectedThisWave&&!rainbowSpawnedThisWave;
 const spawnCap=getActiveCatCap()-(rainbowDue&&small?1:0);
 if(cats.length>=spawnCap)return false;
@@ -4387,7 +4269,6 @@ let hp=rainbow?Math.max(2,maxHp):maxHp;
 if(catType==="yarn"){
   color="#b197fc";
   r=29;
-  // Más vida para que el gato lanero sea un objetivo prioritario, pero sin volverse un jefe.
   hp+=4+Math.floor(wave/5);
   speed*=.72;
 }
@@ -4418,7 +4299,6 @@ const spawnColor=catType==="thief"?"#ffd166":catType==="yarn"?"#b197fc":catType=
 makeSpawnPuff(x,y,spawnColor)
 }
 
-// Un mismo cálculo para recogida manual, bolsas compactadas y final de jefe.
 function collectCoinDrop(coin){
   const amount=safeCount(coin?.amount);
   if(!amount)return;
@@ -4432,7 +4312,6 @@ function refundRemovedThief(cat){
   if(!cat||cat.type!=="thief")return;
   const amount=safeCount(cat.stolenCoins);
   cat.stolenCoins=0;
-  // Reembolso, no una moneda nueva: no genera curación, EXP ni botín duplicado.
   coins+=amount;
 }
 function dropCoins(x,y,chance=.013){
@@ -4482,7 +4361,6 @@ floatingTexts.push({x:boss.x,y:boss.y-70,text:"¡Jefe mimado!",life:1.3,maxLife:
 }
 
 score+=5;
-// El último jefe diferente marca el comienzo del mid game ANTES de entregar su nivel.
 defeatedBossTypes.add(defeatedType);
 syncXpRequirementPhase();
 if(finalCompletionContinue||isGameCompleted()){
@@ -4526,19 +4404,12 @@ function getZoomiesDamageMultiplier(){return isZoomiesActive()?1.35:1}
 function getZoomiesMoveMultiplier(){return isZoomiesActive()?(upgrades.zoomiesHyper?1.85:1.45):1}
 function getZoomiesFireMultiplier(){return isZoomiesActive()?(upgrades.zoomiesCannon?2.05:1.45):1}
 function getCurrentCritChance(){const autoCrit=hasDoneFusionPair("autoFire+critChance")?.05+.10*fusionStrength("autoFire+critChance"):0;return Math.min(hasDoneFusionPair("boomerang+critChance")?.75:.95,upgrades.critChance+autoCrit+((isZoomiesActive()&&upgrades.zoomiesCrit)?0.22:0))}
-// Compatibilidad: comprar guiado y automatización NO penaliza la perforación.
-// Con las dos mejoras, los peces perforantes conservan ligeramente más daño
-// al atravesar enemigos; sin ellas se respeta el 72 % histórico.
 function getPiercingDamageRetention(){return upgrades.autoFire&&upgrades.aimAssist?.76:.72}
-
 
 function hasFishSizeFusionForGiantFish(){
 return !!doneFusionPairs[sortedPair("bigFish","fishSize")];
 }
 
-// El ariete comparte los multiplicadores generales de daño del disparo normal:
-// daño comprado/fusionado, suerte ofensiva, Zoomies y bonos de vida crítica.
-// Sin Retorno crítico, una tirada doble elige un solo efecto con igual probabilidad.
 function resolveFishTraits(boomerang,crit){
   if(boomerang&&crit&&!hasDoneFusionPair("boomerang+critChance")){
     if(Math.random()<.5)crit=false;else boomerang=false;
@@ -4555,8 +4426,6 @@ function getRamFishDamage(playerLevel=level,criticalHit=Math.random()<getCurrent
     *(1+lowLifeBonus)*(2.8+growth*.085)*critical;
 }
 
-// Habilidad básica: hereda daño y tamaño comprados (incluidos niveles fusionados)
-// y mejora su propio daño, tamaño, empuje y recarga poco a poco en cada nivel.
 function launchRamFish(target=null){
   if(!gameStarted||gameOver||paused||choosingUpgrade)return false;
   const now=gameNow();
@@ -4590,9 +4459,6 @@ function launchRamFish(target=null){
   }
   return true;
 }
-// El Bloquito destruye proyectiles enemigos a lo largo de TODA su trayectoria.
-// Intersección barrida: comprueba la posición anterior y actual tanto del pez
-// como del proyectil para no atravesar balas rápidas entre dos frames.
 function ramFishInterceptsProjectile(projectile, projectilePrevX, projectilePrevY, ramShots){
   if(!isFinitePos(projectile)||!ramShots.length)return false;
   const p0x=Number.isFinite(projectilePrevX)?projectilePrevX:projectile.x;
@@ -4601,7 +4467,6 @@ function ramFishInterceptsProjectile(projectile, projectilePrevX, projectilePrev
     if(!isFinitePos(fish)||!fish.ramFish||fish.ramFullyCharged!==true)continue;
     const f0x=Number.isFinite(fish.prevX)?fish.prevX:fish.x;
     const f0y=Number.isFinite(fish.prevY)?fish.prevY:fish.y;
-    // Las mismas dimensiones de impacto que las colisiones existentes del pez.
     const radius=(projectile.r||12)+14*(fish.scale||1);
     const rx=f0x-p0x, ry=f0y-p0y;
     const dx=(fish.x-f0x)-(projectile.x-p0x);
@@ -4616,13 +4481,11 @@ function ramFishInterceptsProjectile(projectile, projectilePrevX, projectilePrev
 function breakProjectileWithRamFish(projectile,previousX,previousY,ramShots,color){
   if(!ramFishInterceptsProjectile(projectile,previousX,previousY,ramShots))return false;
   makeSmoke(projectile.x,projectile.y);
-  // Efecto contenido incluso cuando el ariete atraviesa varias balas a la vez.
   if(!lowPerfMode||Math.random()<.25)makeImpact(projectile.x,projectile.y,color,.5);
   return true;
 }
 
 function guaranteedLeviathanLoot(x,y){
-  // Cada baja del evento da ORO Y LATA, sin tiradas aleatorias.
   const amount=Math.random()<(upgrades.luck||0)*.5?2:1;
   if(runStats)runStats.coinsGenerated+=amount;
   coinsDrops.push({x,y,r:10,amount,life:18});
@@ -4631,17 +4494,14 @@ function guaranteedLeviathanLoot(x,y){
 const LEVIATHAN_VISIBLE_SECONDS=5;
 const LEVIATHAN_CENTER_TRAVEL_SECONDS=3.5;
 function getLeviathanTravelSpeed(angle){
-  // Mantener el centro dentro de la pantalla al menos 3,5 s desde su aparición.
   const dx=Math.cos(angle),dy=Math.sin(angle);
   const tx=Math.abs(dx)>1e-8?(dx>0?canvas.width-player.x:player.x)/Math.abs(dx):Infinity;
   const ty=Math.abs(dy)>1e-8?(dy>0?canvas.height-player.y:player.y)/Math.abs(dy):Infinity;
   return Math.max(0,Math.min(tx,ty))/LEVIATHAN_CENTER_TRAVEL_SECONDS;
 }
-const LEVIATHAN_GIANT_FISH_CHANCE=0.00001; // 0,001 % por disparo: extremadamente raro, pero sin límite por partida.
+const LEVIATHAN_GIANT_FISH_CHANCE=0.00001;
 function triggerLeviathanMassiveDamage(){
   const leviathanPower=1+Math.max(0,level-1)*.035+Math.max(0,upgrades.damage-1)*.22;
-  // EL GRAN PEZ sacude todo el campo al aparecer. El proyectil gigante sigue existiendo
-  // y puede golpear después, pero esta onda garantiza que el evento se sienta excepcional.
   const baseDamage=Math.max(1,upgrades.damage*getZoomiesDamageMultiplier());
   for(let i=cats.length-1;i>=0;i--){
     const cat=cats[i];
@@ -4653,13 +4513,10 @@ function triggerLeviathanMassiveDamage(){
     if(cat.hp<=0){cat.leviathanLoot=true;killCat(i,cat);}
   }
   if(boss&&Number.isFinite(boss.hp)&&boss.hp>0){
-    // El daño especial ignora la reducción defensiva de la foca para asegurar
-    // aproximadamente un 30 % de la vida máxima del jefe.
     const desired=Math.max(boss.maxHp*Math.min(.80,.35+Math.max(0,level-1)*.006+Math.max(0,upgrades.damage-1)*.018),baseDamage*55*leviathanPower);
     const input=boss.type==="seal"&&boss.state!=="stunned"?desired/.35:desired;
     damageBoss(input,true);
   }
-  // Los patitos invocados también cuentan como enemigos del campo.
   for(let i=quacks.length-1;i>=0;i--){
     const q=quacks[i];
     if(!q||!Number.isFinite(q.hp))continue;
@@ -4694,11 +4551,7 @@ const boomerang=traits.boomerang,critRoll=traits.crit;
 const boomerangRangeBonus=boomerang?1+boomerangLvl*.08:1;
 const piercingStrike=canPierce&&hasDoneFusionPair("damage+pierce")?1.08+.17*fusionStrength("damage+pierce"):1;
 const extraFishStrike=offsetAngle!==0&&hasDoneFusionPair("damage+doubleFish")?1.10+.25*fusionStrength("damage+doubleFish"):1;
-// Su bonus particular no se agota al alcanzar el 95 % de probabilidad:
-// también aumenta moderadamente el daño de boomerangs laterales.
 const lateralBoomerangStrike=offsetAngle!==0&&boomerang&&hasDoneFusionPair("boomerang+doubleFish")?1.08+.12*fusionStrength("boomerang+doubleFish"):1;
-// La probabilidad crítica lateral puede llegar al límite del 95 %; el
-// extra de daño crítico permite que la fusión siga creciendo después.
 const lateralCritStrike=offsetAngle!==0&&critRoll&&hasDoneFusionPair("critChance+doubleFish")?1.06+.14*fusionStrength("critChance+doubleFish"):1;
 const automaticCritStrike=critRoll&&hasDoneFusionPair("autoFire+critChance")?1.06+.14*fusionStrength("autoFire+critChance"):1;
 const piercingVelocity=canPierce&&hasDoneFusionPair("fishSpeed+pierce")?1.08+.20*fusionStrength("fishSpeed+pierce"):1;
@@ -4713,10 +4566,6 @@ const critRoll=Math.random()<getCurrentCritChance();
 fishes.push({x:player.x+Math.cos(finalAngle)*66,y:player.y+Math.sin(finalAngle)*66,vx:Math.cos(finalAngle)*585*upgrades.fishSpeed,vy:Math.sin(finalAngle)*585*upgrades.fishSpeed,angle:finalAngle,damage:upgrades.damage*getZoomiesDamageMultiplier()*2.4*(critRoll?1.7+(getCriticalDamageMultiplier()-2):1),life:1.55,scale:Math.max(upgrades.fishSize*2.15,2.05),pierce:Math.random()<Math.max(.15,upgrades.pierceChance*.55),boomerang:false,crit:critRoll,cardumenGigante:true,returning:false,age:0,turnTime:0,hitIds:new Set()})
 }
 addFish();
-// Patita nerviosa: progresión ofensiva visible sin crear una ráfaga descontrolada.
-// Nv.3: +1 pez lateral al 32 % de daño; Nv.5: +2 al 26 % cada uno.
-// La fusión conserva estos hitos y mejora la cadencia, pero no multiplica
-// indefinidamente el número de proyectiles por cada nivel posterior.
 if(!giantFishEasterEgg){
   const cadenceLevel=effectLevel("fireRate");
   if(cadenceLevel>=5){addFish(-.12,.26);addFish(.12,.26);}
@@ -4739,8 +4588,6 @@ if(upgrades.moralSupport&&Math.random()<.16)floatingTexts.push({x:player.x+Math.
 }
 
 function getAutomaticFireMultiplier(){
-// Patita automática ya no duplica a Patita nerviosa: la cadencia base pertenece a fireRate.
-// Aquí solo permanecen los bonus de fusiones que explícitamente aceleran el arma.
 let rate=1;
 if(upgrades.assistedShot)rate*=1.06;
 if(upgrades.combatAI)rate*=1.10;
@@ -4752,7 +4599,6 @@ function getAutoFireCorrectionStrength(){
   const pair=getFusedPairForKey("autoFire");
   const baseLvl=pair?Math.min(5,Math.max(0,fusedBaseLevels.autoFire||5)):Math.min(5,Math.max(0,upgradeLevels.autoFire||0));
   if(baseLvl<=0)return 0;
-  // 5 niveles base: 6–30 %. La fusión añade hasta +20 % con una curva donde cada nivel pesa más que el anterior.
   const fusionBonus=pair?.20*fusionStrength(pair):0;
   return Math.min(.50,baseLvl*.06+fusionBonus);
 }
@@ -4768,16 +4614,13 @@ function getAutoFireCorrectedAngle(baseAngle){
   return baseAngle+diff*strength;
 }
 function getAutoFireCadenceMultiplier(){
-  // Patita automática aporta una bonificación constante al disparo automático;
-  // pulsar o mantener el ratón no modifica la cadencia.
   const pair=getFusedPairForKey("autoFire");
   const baseLvl=pair?Math.min(5,Math.max(0,fusedBaseLevels.autoFire||5)):Math.min(5,Math.max(0,upgradeLevels.autoFire||0));
   if(baseLvl<=0)return 1;
   const fusionBonus=pair?.15*fusionStrength(pair):0;
-  return 1+baseLvl*.04+fusionBonus; // +4 %/nivel; hasta +35 % al completar su fusión.
+  return 1+baseLvl*.04+fusionBonus;
 }
 function getShotInterval(){
-  // Disparo automático independiente del ratón; el clic solo lanza el Ariete.
   const autoBoost=getAutoFireCadenceMultiplier();
   const baseInterval=600;
   const rate=Math.max(1,upgrades.fireRate)*getAutomaticFireMultiplier()*getZoomiesFireMultiplier()*autoBoost;
@@ -4827,8 +4670,6 @@ const desiredAngle=Math.atan2(nearest.y-fish.y,nearest.x-fish.x),currentAngle=Ma
 let diff=desiredAngle-currentAngle;
 while(diff>Math.PI)diff-=Math.PI*2;
 while(diff<-Math.PI)diff+=Math.PI*2;
-// Si un Pez cohete vuela más rápido, gira proporcionalmente más por fotograma:
-// aumentar la velocidad ya no agranda el radio de giro del guiado.
 const speed=Math.hypot(fish.vx,fish.vy);
 const baseTurnStrength=fixed?.14:(upgrades.perfectAim?.145:(upgrades.combatAI?.075:(fish.shieldShot?.075:.05)));
 const turnStrength=Math.min(.38,baseTurnStrength*Math.max(1,speed/610));
@@ -4838,9 +4679,6 @@ fish.vx=Math.cos(newAngle)*speed;fish.vy=Math.sin(newAngle)*speed;fish.angle=new
 }
 
 function limitArray(array,maxItems){if(array.length>maxItems)array.splice(0,array.length-maxItems)}
-// Never erase a living thief carrying stolen coins to enforce the entity cap.
-// First discard excess off-screen/remote ordinary cats; a few protected thieves
-// may temporarily exceed the cap rather than silently destroying the player's loot.
 function limitActiveCats(maxItems){
   if(cats.length<=maxItems)return;
   let excess=cats.length-maxItems;
@@ -4859,8 +4697,6 @@ function limitActiveCats(maxItems){
   cats.length=kept;
 }
 
-// Al compactar el exceso de botín, conservar TODAS las monedas y latas
-// garantizadas del Leviatán sin renderizar cientos de objetos adicionales.
 function compactLootDrops(array,maxItems,kind){
   if(array.length<=maxItems)return;
   const excess=array.length-maxItems;
@@ -4886,9 +4722,6 @@ function compactLootDrops(array,maxItems,kind){
   array.splice(0,array.length,...kept);
 }
 
-// Protección ante configuraciones extremas: los peces especiales nunca desaparecen
-// porque una combinación de cadencia, ráfagas y rebotes llene el límite general.
-// Solo se recortan proyectiles normales, priorizando los de vida restante corta.
 function limitActiveFishProjectiles(maxNormal=140){
   if(fishes.length<=maxNormal)return;
   const special=fishes.filter(f=>(f.ramFish&&f.ramFullyCharged!==false)||f.giantEaster).length;
@@ -4897,8 +4730,6 @@ function limitActiveFishProjectiles(maxNormal=140){
   const removable=[];
   for(let i=0;i<fishes.length;i++){
     const f=fishes[i];if((f.ramFish&&f.ramFullyCharged!==false)||f.giantEaster)continue;
-    // Ráfagas secundarias primero, después peces normales; boomerangs y
-    // perforantes conservan su tiempo de vuelo siempre que haya espacio.
     const priority=f.yarnBounceShot||f.shieldShot?0:f.boomerang||f.pierce?2:1;
     removable.push({index:i,priority,remaining:Math.max(0,Number(f.life)||0)});
   }
@@ -4960,8 +4791,6 @@ boss.jumpDuration=Math.max(1.05,(boss.baseJumpDuration||1.05)+.55+Math.random()*
 boss.jumpTimer=boss.jumpDuration;boss.startX=boss.x;boss.startY=boss.y;boss.targetX=tx;boss.targetY=ty;boss.shadowX=tx;boss.shadowY=ty
 }
 
-// Los jefes no pueden cruzar el borde, ni por instinto, ariete o efecto del perro.
-// El margen protege tanto su cuerpo como la barra de vida (situada sobre ellos).
 function getBossArenaBounds(entity){
   const r=Math.max(0,Number(entity?.r)||60);
   const marginX=Math.max(82,r+18), marginTop=r+44, marginBottom=r+20;
@@ -4979,16 +4808,11 @@ function constrainBossToArena(entity){
   const limits=getBossArenaBounds(entity);
   entity.x=Math.max(limits.minX,Math.min(limits.maxX,entity.x));
   entity.y=Math.max(limits.minY,Math.min(limits.maxY,entity.y));
-  // Anular solamente la inercia que apunta fuera del mapa; conservar el
-  // movimiento hacia dentro para que el jefe pueda despegarse del borde.
   if((entity.x<=limits.minX&&(entity.knockVx||0)<0)||(entity.x>=limits.maxX&&(entity.knockVx||0)>0))entity.knockVx=0;
   if((entity.y<=limits.minY&&(entity.knockVy||0)<0)||(entity.y>=limits.maxY&&(entity.knockVy||0)>0))entity.knockVy=0;
 }
-// También limita a los jefes si cambia el tamaño de la ventana a mitad de combate.
 window.addEventListener("resize",()=>{if(boss)constrainBossToArena(boss);});
 
-// Los tentáculos usan la misma lista de blancos que los gatos para compartir
-// impactos, críticos, perforación, escudo, perro y cadenas de rebote.
 function getOctopusGrowth(round=wave){
   const tier=Math.floor(Math.max(0,round-10)/10);
   return {size:1+Math.min(.6,tier*.08),salvo:Math.min(4,1+tier),extra:Math.min(4,tier)};
@@ -5016,7 +4840,6 @@ function beginOctopusDive(owner){
   const count=Math.min(8,2+owner.dives+(owner.extraTentacles||0)+Math.floor(owner.repeatLevel/2));
   const spots=[];
   for(let i=0;i<count;i++){
-    // El primero persigue la posición actual del jugador; el resto abre frentes.
     let p=octopusArenaPoint(player.x,player.y);
     if(i>0){
       let best=null,bestDistance=-1;
@@ -5101,7 +4924,6 @@ function updateOctopusBoss(owner,dt){
     const reach=Math.min(d,Math.min(330,Math.max(140,Math.min(canvas.width,canvas.height)*.43)));
     const angle=Math.atan2(dy,dx),count=owner.salvoCount||1;
     for(let i=0;i<count;i++){
-      // Primer brazo al jugador; los demás abren un abanico sin tapar todo el mapa.
       const offset=i===0?0:(i%2?1:-1)*Math.ceil(i/2)*.72;
       const a=angle+offset;
       createOctopusStrike(owner,owner.x+Math.cos(a)*reach,owner.y+Math.sin(a)*reach,owner.strikeRadius,1.1);
@@ -5187,7 +5009,7 @@ for(let i=0;i<count;i++){
 if(demonOrbs.length>=getProjectileCap("orb"))break;
 const a=offset+i*Math.PI*2/count;
 const reinforced=Math.random()<getDemonOrbResistanceChance();
-demonOrbs.push({
+const orb={
 x:boss.x,
 y:boss.y,
 vx:Math.cos(a)*boss.orbSpeed,
@@ -5196,7 +5018,8 @@ r:13,
 life:5,
 reinforced,hitsLeft:reinforced?2:1,
 damage:16+wave*.45
-});
+};
+if(!applyFreshDemonOrbBodyHit(orb))demonOrbs.push(orb);
 }
 floatingTexts.push({x:boss.x,y:boss.y-boss.r-32,text:"círculo oscuro",life:.8,maxLife:.8,big:false});
 shockwaves.push({x:boss.x,y:boss.y,r:8,maxR:boss.r+90,life:.45,maxLife:.45,color:"#ff4d8d",line:6});
@@ -5209,7 +5032,6 @@ if(Math.hypot(player.x-boss.x,player.y-boss.y)<player.r+boss.r-8){
 takePlayerDamage(boss.contactDamage*dt,"El demonio oscuro te ha atrapado 😈",.15);
 }
 }
-// Moverse, teletransportarse o saltar nunca permite terminar fuera del mapa.
 if(boss)constrainBossToArena(boss);
 }
 
@@ -5238,6 +5060,7 @@ if(triggerDogSacrifice())return;
 stopPowerStarLoop();
 stopAllMusic();
 life=0;gameOver=true;choosingUpgrade=false;
+updateHud();
 levelUpPanel.style.display="none";pendingUpgradeQueue=[];
 clearAllInputKeys();
 showGameOverScreen();
@@ -5321,7 +5144,6 @@ else{const i=cats.indexOf(cat);if(i!==-1)cats.splice(i,1)}
 maybeOpenShopOrFusion()
 }
 
-
 function getYarnTargetId(target){
 if(!target)return null;
 if(!target.yarnTargetId)target.yarnTargetId=yarnTargetCounter++;
@@ -5332,8 +5154,6 @@ function spawnYarnBounce(sourceX,sourceY,currentTargetId=null,visitedIds=[]){
 const chance=coreUpgradeStat("yarnBounce");
 if(chance<=0||Math.random()>chance)return false;
 
-// Cada rebote recuerda TODOS los enemigos tocados por esa cadena.
-// Así no puede quedarse rebotando infinitamente contra un jefe o el mismo gato.
 const visited=new Set(Array.isArray(visitedIds)?visitedIds:[]);
 if(currentTargetId!==null&&currentTargetId!==undefined)visited.add(currentTargetId);
 
@@ -5378,8 +5198,6 @@ return true;
 }
 
 function getOmniBurstPowerMultiplier(lvl=effectLevel("omniBurst")){
-  // Desde 7 niveles efectivos el número de peces llega a 24. Los niveles
-  // posteriores refuerzan moderadamente el daño para evitar niveles vacíos.
   return 1+Math.min(.20,Math.max(0,lvl-7)*.04);
 }
 function getOmniBurstCooldownMs(lvl=effectLevel("omniBurst"),fusionProgress=null){
@@ -5426,7 +5244,6 @@ lastOmniBurst=now;
 shootOmniBurst();
 }
 }
-
 
 function isTargetAlive(target){
 if(!target)return false;
@@ -5540,7 +5357,6 @@ const bob=Math.sin(dogCompanion.wag)*1.5;
 ctx.lineJoin='round';ctx.lineCap='round';ctx.lineWidth=1.8;
 const oval=(x,y,rx,ry,color,angle=0)=>{ctx.fillStyle=color;ctx.strokeStyle='#785244';ctx.beginPath();ctx.ellipse(x,y,rx,ry,angle,0,Math.PI*2);ctx.fill();ctx.stroke();};
 ctx.fillStyle='rgba(15,8,24,.20)';ctx.beginPath();ctx.ellipse(0,18,22,6,0,0,Math.PI*2);ctx.fill();
-// Wagging tail behind a cream-and-caramel puppy silhouette.
 ctx.save();ctx.translate(-16,5+bob);ctx.rotate(Math.sin(dogCompanion.wag)*.35);
 ctx.strokeStyle='#785244';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(0,0);ctx.quadraticCurveTo(-17,-3,-13,-17);ctx.stroke();
 ctx.strokeStyle='#e5b17c';ctx.lineWidth=5;ctx.stroke();ctx.restore();
@@ -5573,7 +5389,6 @@ ctx.fillStyle="#fff3d6";
 [[-12,-4],[-12,4],[12,-4],[12,4]].forEach(p=>{ctx.beginPath();ctx.arc(p[0],p[1],4,0,Math.PI*2);ctx.fill()});
 ctx.restore()
 }
-
 
 function getCatInstinctMagnetRange(){
   const pair="catInstinct+coinMagnet";
@@ -5960,7 +5775,6 @@ function togglePause(){
 if(paused)closePause();else openPause();
 }
 
-
 function isFinitePos(o){return o&&Number.isFinite(o.x)&&Number.isFinite(o.y)}
 function isCatOnScreen(o){if(!o)return false;const m=(o.r||20)+8;return o.x>-m&&o.x<canvas.width+m&&o.y>-m&&o.y<canvas.height+m;}
 let lastSoftErrorAt=0;
@@ -6007,8 +5821,6 @@ function showSoftError(err){
   console.error(err);
   window.__lastGameError=String(err&&err.stack?err.stack:err);
   cleanBrokenEntities();
-  // One on-screen warning per error type and 30-second period; preserve
-  // diagnostic details in the console without spamming the player.
   const now=performance.now();
   const signature=String(err?.message||err).slice(0,160);
   if(signature!==lastSoftErrorSignature||now-lastSoftErrorAt>30000){
@@ -6019,12 +5831,9 @@ function showSoftError(err){
 }
 window.addEventListener('error',e=>{showSoftError(e.error||e.message)});
 window.addEventListener('unhandledrejection',e=>{
-  // Firestore/network and audio promises do not imply a simulation crash.
-  // Keep the real error accessible for debugging; do not show a false game warning.
   console.error('Promesa rechazada',e.reason||e);
   window.__lastAsyncError=String(e.reason?.stack||e.reason||e);
 });
-
 
 function updatePerformanceMode(rawDt){
   if(!Number.isFinite(rawDt)||rawDt<=0)return;
@@ -6088,7 +5897,6 @@ function drawRamTrailFish(x,y,angle,size,alpha){
   ctx.lineJoin="round";
   ctx.lineWidth=1.35;
   ctx.strokeStyle="rgba(37,103,130,.72)";
-  // Cola.
   ctx.fillStyle="rgba(78,194,215,.76)";
   ctx.beginPath();
   ctx.moveTo(-10,0);
@@ -6101,13 +5909,11 @@ function drawRamTrailFish(x,y,angle,size,alpha){
   ctx.closePath();
   ctx.fill();
   ctx.stroke();
-  // Cuerpo: silueta de pez reconocible incluso cuando el rastro se desvanece.
   ctx.fillStyle="rgba(126,245,255,.82)";
   ctx.beginPath();
   ctx.ellipse(0,0,12,6.5,0,0,Math.PI*2);
   ctx.fill();
   ctx.stroke();
-  // Brillo y ojo.
   ctx.fillStyle="rgba(255,255,255,.30)";
   ctx.beginPath();
   ctx.ellipse(-1.5,-2.7,5.5,1.35,-.12,0,Math.PI*2);
@@ -6127,10 +5933,6 @@ function drawRamFishTrails(){
     if(dist<.5)continue;
     const angle=Math.atan2(dy,dx);
     const fade=Math.max(0,Math.min(1,t.life/1.6));
-    // Una sucesión de peces pequeños ocupa la trayectoria que antes era una franja azul.
-    // La colisión/ralentización continúa usando el segmento completo.
-    // Dejamos aire suficiente entre siluetas para que cada pez se lea por separado.
-    // Antes (17–29 px) llegaban a solaparse visualmente; ahora son 42–58 px.
     const spacing=Math.max(42,Math.min(58,t.r*3.4));
     const count=Math.max(1,Math.ceil(dist/spacing));
     for(let i=0;i<count;i++){
@@ -6145,7 +5947,6 @@ function drawRamFishTrails(){
 function updateWorld(dt){
 updateRamFishTrails(dt);
 starSpawnTimer-=dt;if(starSpawnTimer<=0){trySpawnPowerStar();starSpawnTimer=12+Math.random()*8;}
-// render() refreshes the indicators once per display frame (also when paused).
 if(autoMode)updateAutoPlayer(dt);
 if(runStats){runStats.elapsed+=dt;if(life<upgrades.maxLife*.35)runStats.lowHpTime+=dt;}
 triggerCatInstinct();if(dogRelaxTime>0)dogRelaxTime=Math.max(0,dogRelaxTime-dt);updateAvalanche(dt);
@@ -6223,7 +6024,6 @@ if(movementLen>0){mx/=movementLen;my/=movementLen;player.x+=mx*player.speed*upgr
 
 player.x=Math.max(player.r,Math.min(canvas.width-player.r,player.x));
 player.y=Math.max(player.r,Math.min(canvas.height-player.r,player.y));
-// Solo desplazamiento real por movimiento: empujar el borde no concede EXP.
 if(movementLen>0&&(Math.abs(player.x-moveStartX)>1e-7||Math.abs(player.y-moveStartY)>1e-7)&&hasDoneFusionPair("moveSpeed+xpBoost")){
   fusionMoveXpTimer+=dt;
   const ticks=Math.floor((fusionMoveXpTimer+1e-9)/2.8);
@@ -6240,11 +6040,11 @@ updateOmniBurst();
 updateDog(dt);
 updateShield(dt);
 updateBoss(dt);
+if(isCombatTargetAvailable(boss)&&Math.hypot(player.x-boss.x,player.y-boss.y)<player.r+boss.r-8)damageBoss(getPlayerBodyDamagePerSecond()*dt);
 if(runStats){const nearbyCats=cats.some(c=>isFinitePos(c)&&Math.hypot(player.x-c.x,player.y-c.y)<190);const nearbyBoss=boss&&Math.hypot(player.x-boss.x,player.y-boss.y)<boss.r+210;if(nearbyCats||nearbyBoss)runStats.enemiesNearTime+=dt;}
 if(isPowerStarActive()&&boss&&Math.hypot(player.x-boss.x,player.y-boss.y)<player.r+boss.r+18){damageBoss(Math.max(1.5,upgrades.damage*getZoomiesDamageMultiplier()*18*dt));}
 
 fishes.forEach(fish=>{
-// Guardamos la posición previa del ariete para detectar impactos barridos.
 if(fish.ramFish){fish.prevX=fish.x;fish.prevY=fish.y;}
 fish.age=(fish.age||0)+dt;
 if(fish.boomerang&&!fish.returning&&fish.age>(fish.turnTime||.95)){fish.returning=true;fish.pierce=true}
@@ -6263,7 +6063,6 @@ if(expireAtPlayer&&Math.hypot(player.x-fish.x,player.y-fish.y)<player.r+10)fish.
 }else if(!fish.ramFish&&!fish.giantEaster)applyAimAssist(fish);
 fish.x+=fish.vx*dt;fish.y+=fish.vy*dt;fish.life-=dt;
 addRamFishTrail(fish,dt);
-// Bloquito boomerang vuelve al alcanzar el borde antes de poder ser descartado.
 if(fish.ramFish&&fish.boomerang&&!fish.returning&&(fish.x<20||fish.x>canvas.width-20||fish.y<20||fish.y>canvas.height-20)){
   fish.returning=true;
   fish.x=Math.max(20,Math.min(canvas.width-20,fish.x));
@@ -6272,7 +6071,6 @@ if(fish.ramFish&&fish.boomerang&&!fish.returning&&(fish.x<20||fish.x>canvas.widt
 });
 for(let i=fishes.length-1;i>=0;i--){const fish=fishes[i];if(fish.life<=0||(!fish.giantEaster&&(fish.x<-120||fish.x>canvas.width+120||fish.y<-120||fish.y>canvas.height+120))){if(runStats&&(!fish.hitIds||fish.hitIds.size===0))runStats.fishMisses++;fishes.splice(i,1)}}
 
-// Una lista por frame: evita escanear todos los peces por cada proyectil.
 const activeRamFishShots=fishes.filter(f=>f.ramFish&&f.ramFullyCharged===true&&isFinitePos(f));
 for(let q=quacks.length-1;q>=0;q--){
 const quack=quacks[q],prevX=quack.x,prevY=quack.y;
@@ -6287,12 +6085,17 @@ if(quack.life<=0||quack.x<-100||quack.x>canvas.width+100||quack.y<-100||quack.y>
 for(let i=demonOrbs.length-1;i>=0;i--){
 const orb=demonOrbs[i],prevX=orb.x,prevY=orb.y;
 orb.x+=orb.vx*dt;orb.y+=orb.vy*dt;orb.life-=dt;
-// El ariete rompe incluso los orbes resistentes (hitsLeft > 1) de un golpe.
 if(breakProjectileWithRamFish(orb,prevX,prevY,activeRamFishShots,"#b197fc")){
   demonOrbs.splice(i,1);continue;
 }
 if(Math.hypot(player.x-orb.x,player.y-orb.y)<player.r+orb.r){
-takePlayerDamage(orb.damage,"El demonio oscuro te ha destruido 😈",.25);makeSmoke(orb.x,orb.y);demonOrbs.splice(i,1);continue
+if((orb.bodySafeUntil||0)>gameNow())continue;
+const canDamage=gameNow()-lastDemonOrbDamageAt>=180;
+if(canDamage){
+  lastDemonOrbDamageAt=gameNow();
+  takePlayerDamage(orb.damage,"El demonio oscuro te ha destruido 😈",.25);
+}
+makeSmoke(orb.x,orb.y);demonOrbs.splice(i,1);continue
 }
 for(let j=fishes.length-1;j>=0;j--){
 const fish=fishes[j];if(!isFinitePos(fish)||(fish.ramFish&&fish.ramFullyCharged!==true&&(orb.reinforced||orb.hitsLeft>1)))continue;
@@ -6374,6 +6177,11 @@ let dx=player.x-cat.x,dy=player.y-cat.y,dist=Math.hypot(dx,dy)||1;
 cat.wobble+=dt*7;cat.damageCooldown=Math.max(0,cat.damageCooldown-dt);cat.hitAnim=Math.max(0,cat.hitAnim-dt);cat.stealCooldown=Math.max(0,(cat.stealCooldown||0)-dt);cat.fleeTimer=Math.max(0,(cat.fleeTimer||0)-dt);cat.freezeTimer=Math.max(0,(cat.freezeTimer||0)-dt);cat.musicImmuneTimer=Math.max(0,(cat.musicImmuneTimer||0)-dt);
 if(cat.freezeTimer>0){cat.hitAnim=Math.max(cat.hitAnim,.12);return;}
 if(isPowerStarActive()&&dist<player.r+cat.r+10){killCat(cats.indexOf(cat),cat);return;}
+if(dist<player.r+cat.r-4){
+  cat.hp-=getPlayerBodyDamagePerSecond()*dt;
+  cat.hitAnim=Math.max(cat.hitAnim,.08);
+  if(cat.hp<=0){killCat(cats.indexOf(cat),cat);return;}
+}
 const walkX=cat.x,walkY=cat.y,trailSlow=getRamTrailSlow(cat);
 if(cat.type==="yarn"){
   cat.yarnCooldown-=dt;
@@ -6496,8 +6304,6 @@ if(runStats)runStats.fishHits++;
 cat.hitAnim=.15;
 if(cat.type==="musician"&&cat.hp>0)cat.musicImmuneTimer=1;
 
-// Primero aplicamos daño y quitamos el pez. Los efectos van protegidos para que
-// nunca bloqueen el daño si algún efecto visual/sonoro falla.
 if(!fish.pierce)fishes.splice(j,1);else if(!fish.ramFish&&!fish.giantEaster)fish.damage*=getPiercingDamageRetention();
 
 try{makeImpact(hitX,hitY,cat.type==="yarn"?"#b197fc":cat.type==="thief"?"#ffd166":cat.type==="sleepy"?"#c8b6e2":cat.type==="mini"?"#ffb347":cat.type==="glutton"?"#e8956d":cat.type==="musician"?"#d084c8":cat.type==="student"?"#74b9ff":"#ffc2d1",.65)}catch(e){console.warn(e)}
@@ -6520,7 +6326,6 @@ if(upgrades.lifeSteal>0)life=Math.min(upgrades.maxLife,life+healthLost*getCurren
 if(cat.type!=="thief")floatingTexts.push({x:hitX,y:hitY-34,text:cat.rainbow?"🌈 miua!":Math.random()<.5?"miua!":"miau!",life:.65,maxLife:.65,big:false});
 if(fish.ramFish&&cat.hp>0){
   const direction=Math.atan2(fish.vy,fish.vx);
-  // Único empuje: hacia delante, en la dirección de avance del ariete.
   const force=fish.ramKnockback||getRamFishKnockback();
   cat.knockVx=(cat.knockVx||0)+Math.cos(direction)*force;
   cat.knockVy=(cat.knockVy||0)+Math.sin(direction)*force;
@@ -6545,7 +6350,6 @@ const hitX=fish.x, hitY=fish.y;
 const dealt=Number.isFinite(fish.damage)?fish.damage:1;
 if(runStats)runStats.fishHits++;
 damageBoss(dealt,!!fish.giantEaster);
-// Derrotar al jefe puede compactar la lista conservando solo al Leviatán.
 if(!fish.pierce){if(fishes[j]===fish)fishes.splice(j,1);}
 else if(!fish.ramFish&&!fish.giantEaster)fish.damage*=getPiercingDamageRetention();
 try{spawnYarnBounce(hitX,hitY,bossYarnId,fish.yarnVisitedIds||[])}catch(e){console.warn(e)}
@@ -6576,7 +6380,6 @@ for(let i=pawPrints.length-1;i>=0;i--)if(pawPrints[i].life<=0)pawPrints.splice(i
 for(let i=shockwaves.length-1;i>=0;i--)if(shockwaves[i].life<=0)shockwaves.splice(i,1);
 for(let i=sparkles.length-1;i>=0;i--)if(sparkles[i].life<=0)sparkles.splice(i,1);
 
-// El modo ligero solo debe recortar elementos visuales, no elementos de gameplay.
 limitArray(hearts,getEntityLimit(120,42));
 limitArray(smokes,getEntityLimit(160,52));
 limitArray(shockwaves,getEntityLimit(20,8));
@@ -6584,8 +6387,6 @@ limitArray(sparkles,getEntityLimit(180,50));
 limitArray(floatingTexts,getEntityLimit(42,16));
 limitArray(pawPrints,getEntityLimit(28,8));
 
-// Proyectiles, enemigos y objetos jugables mantienen límites seguros incluso en modo ligero.
-// Si se recortan demasiado, desaparecen balas de gatos/demonio y cambia la partida.
 limitActiveFishProjectiles(140);
 limitActiveCats(getActiveCatCap());
 limitArray(quacks,getProjectileCap("quack"));
@@ -6598,7 +6399,6 @@ limitArray(powerStars,2);
 updateHud()
 }
 
-// Avoid DOM mutations when the visible value has not changed.
 function setHudText(element,value){
 if(element){const text=String(value);if(element.textContent!==text)element.textContent=text;}
 }
@@ -6638,7 +6438,6 @@ ctx.fill();
 ctx.restore();
 }
 
-// These random parameters stay constant for the current background seed.
 let ambientRandSeed=null,ambientRandCache=[],ambientCycles=[],ambientEnabled=[];
 function ambientFishRand(i,offset=0){
 if(ambientRandSeed!==backgroundFishSeed){ambientRandSeed=backgroundFishSeed;ambientRandCache=[];ambientCycles=[];ambientEnabled=[];}
@@ -6672,7 +6471,6 @@ for(let i=0;i<count;i++){
   drawOneAmbientFish(x,y,dir,scale,alpha,tint,now*(.00032+ambientFishRand(i,12)*.00035)+ambientFishRand(i,13)*6,false);
 }
 
-// Pez enorme muy raro: conserva su trayectoria también en modo de rendimiento.
 {
   const rareCycle=48000+ambientFishRand(90,1)*26000;
   const shiftedNow=now+ambientFishRand(90,2)*rareCycle;
@@ -6691,7 +6489,6 @@ for(let i=0;i<count;i++){
   }
 }
 
-// Corazones de fondo, suaves y lentos, también con posición distinta por partida.
 const heartCount=0;
 for(let h=0;h<heartCount;h++){
   const cycle=23000+ambientFishRand(120+h,1)*16000;
@@ -6717,7 +6514,6 @@ if(!art){
 ctx.save();ctx.translate(x,y);ctx.scale(dir<0?-scale:scale,scale);ctx.rotate(Math.sin(wave||0)*(giant?.035:.055));ctx.globalAlpha=alpha;ctx.shadowBlur=0;ctx.drawImage(art,-48,-24,80,48);ctx.restore();
 }
 
-
 let backdropCache=null;
 function getBackdrop(){
 if(backdropCache&&backdropCache.width===canvas.width&&backdropCache.height===canvas.height)return backdropCache;
@@ -6727,7 +6523,6 @@ const gradient=ctx.createLinearGradient(0,0,0,canvas.height);
 gradient.addColorStop(0,"#123a52");gradient.addColorStop(.55,"#102f47");gradient.addColorStop(1,"#0a2036");
 ctx.fillStyle=gradient;ctx.fillRect(0,0,canvas.width,canvas.height);
 
-// Luces suaves de fondo para que el escenario no se vea plano.
 const glow1=ctx.createRadialGradient(canvas.width*.22,canvas.height*.2,0,canvas.width*.22,canvas.height*.2,canvas.width*.55);
 glow1.addColorStop(0,"rgba(124,212,235,.14)");glow1.addColorStop(.48,"rgba(124,212,235,.045)");glow1.addColorStop(1,"rgba(124,212,235,0)");
 ctx.fillStyle=glow1;ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -6744,10 +6539,8 @@ function drawBackground(){
 ctx.setTransform(1,0,0,1,0,0);ctx.globalAlpha=1;ctx.shadowBlur=0;ctx.globalCompositeOperation="source-over";
 ctx.drawImage(getBackdrop(),0,0);
 const now=performance.now();
-// Peces decorativos muy suaves por el fondo, para dar más vida sin molestar.
 drawAmbientBackgroundFish(now);
 
-// Partículas marinas estables al alternar el modo de rendimiento.
 {
 for(let i=0;i<24;i++){
   const x=(i*173+now*.012*(1+i%3))%canvas.width;
@@ -6760,9 +6553,7 @@ for(let i=0;i<24;i++){
 ctx.globalAlpha=1;
 }
 
-
 }
-
 
 function drawEntityShadow(x,y,w,h,alpha=.18){
 if(!Number.isFinite(x)||!Number.isFinite(y))return;
@@ -6775,8 +6566,6 @@ ctx.fill();
 ctx.restore();
 }
 
-
-/* v145: shared procedural artwork. Visual geometry never changes collision radii. */
 function softCatHead(r,color){
 ctx.fillStyle=color;ctx.strokeStyle="#443454";ctx.lineWidth=2.2;ctx.lineJoin="round";
 ctx.beginPath();ctx.moveTo(-r*.83,-r*.34);ctx.lineTo(-r*.86,-r*1.24);ctx.quadraticCurveTo(-r*.72,-r*1.32,-r*.36,-r*.87);ctx.quadraticCurveTo(0,-r*1.04,r*.36,-r*.87);ctx.quadraticCurveTo(r*.72,-r*1.32,r*.86,-r*1.24);ctx.lineTo(r*.83,-r*.34);ctx.bezierCurveTo(r*1.22,r*.28,r*.72,r*.96,0,r*.96);ctx.bezierCurveTo(-r*.72,r*.96,-r*1.22,r*.28,-r*.83,-r*.34);ctx.closePath();ctx.fill();ctx.stroke();
@@ -6879,12 +6668,10 @@ ctx.stroke();
 ctx.strokeStyle=starOn?(starEnding?"#ff4d8d":"#ffd166"):"#ff8fab";
 ctx.lineWidth=3;
 ctx.fillStyle=starOn?(starEnding?"#ffd6e7":"#fff3bf"):"#ffc2d1";
-// Almohadilla central (pad)
 ctx.beginPath();
 ctx.ellipse(6,0,12,10,0,0,Math.PI*2);
 ctx.fill();
 ctx.stroke();
-// 4 dedos claramente por delante del pad (pad acaba en x≈18, dedos empiezan en x=24)
 const toes=[{x:24,y:-13,r:4.4},{x:32,y:-5,r:5.1},{x:32,y:5,r:5.1},{x:24,y:13,r:4.4}];
 toes.forEach(t=>{ctx.beginPath();ctx.arc(t.x,t.y,t.r,0,Math.PI*2);ctx.fill();ctx.stroke()});
 ctx.fillStyle="#f17da9";ctx.beginPath();ctx.ellipse(6,0,6,5,0,0,Math.PI*2);ctx.fill();
@@ -6961,7 +6748,6 @@ function drawLeviathanFish(f){
     for(let i=1;i<points.length;i++)ctx.lineTo(...points[i]);
     ctx.closePath();ctx.fill();ctx.stroke();
   };
-  // Cola, pinchos y aletas: silueta propia, independiente de las skins.
   polygon([[-10,0],[-22,-10],[-19,0],[-22,10]],"#9262c4");
   for(const side of [-1,1]){
     for(let i=0;i<5;i++){
@@ -6972,7 +6758,6 @@ function drawLeviathanFish(f){
   ctx.fillStyle="#ba8ce3";ctx.beginPath();ctx.ellipse(-1,0,15,9,0,0,Math.PI*2);ctx.fill();ctx.stroke();
   ctx.fillStyle="#d9b8f4";ctx.beginPath();ctx.ellipse(-3,4,9,3,0,0,Math.PI*2);ctx.fill();
   polygon([[-8,1],[-3,2],[-9,10],[-11,6]],"#9262c4");
-  // Mandíbula abierta y dos filas de dientes triangulares.
   ctx.fillStyle="#32123e";ctx.beginPath();ctx.moveTo(6,-2);
   ctx.quadraticCurveTo(12,-5,16,-3);ctx.lineTo(15,6);
   ctx.quadraticCurveTo(8,10,5,5);ctx.closePath();ctx.fill();ctx.stroke();
@@ -6983,7 +6768,6 @@ function drawLeviathanFish(f){
     polygon([[x,-2.5],[x+1.7,-2.5],[x+.8,.8+(i%2)*.7]],"#fff7ed");
     polygon([[x,6],[x+1.7,6],[x+.9,3-(i%2)*.5]],"#fff7ed");
   }
-  // Ojo estrecho y ceja inclinada hacia el hocico: expresión enfadada.
   ctx.lineWidth=.6;
   polygon([[3,-7],[9,-5],[8,-2],[4,-3]],"#fff0a6");
   ctx.fillStyle="#25122d";ctx.beginPath();ctx.ellipse(7,-4,0.8,1.4,0,0,Math.PI*2);ctx.fill();
@@ -7357,7 +7141,6 @@ ctx.beginPath();ctx.arc(Math.cos(a)*(player.r+24),Math.sin(a)*(player.r+24),4,0,
 ctx.restore()
 }
 
-
 function drawShockwave(w){
 ctx.save();
 const alpha=Math.max(0,w.life/w.maxLife);
@@ -7456,7 +7239,6 @@ const safeNow=Number.isFinite(now)?now:performance.now();
 const rawDt=Math.max(0,Math.min((safeNow-lastFrame)/1000,.25));
 updatePerformanceMode(rawDt);
 lastFrame=safeNow;
-// Fixed 60 Hz simulation keeps homing, movement and cooldowns consistent across refresh rates.
 if(gameStarted&&!gameOver&&!choosingUpgrade&&!paused){
   frameAccumulator+=rawDt;
   let steps=0;
@@ -7465,7 +7247,6 @@ if(gameStarted&&!gameOver&&!choosingUpgrade&&!paused){
     update(1/60);
     if(gameOver||choosingUpgrade||paused){frameAccumulator=0;break;}
   }
-  // Evitar una espiral de 15 actualizaciones por fotograma en equipos saturados.
   if(frameAccumulator>=1/60)frameAccumulator%=1/60;
 }else frameAccumulator=0;
 cleanBrokenEntities();
@@ -7479,8 +7260,6 @@ try{render()}catch(renderErr){console.error(renderErr)}
 requestAnimationFrame(loop)
 }
 
-
-/* ─── SISTEMA DE RECOMENDACIONES AVANZADAS ────────────────── */
 let autoMode=false;
 let autoChoiceToken=0;
 let autoBadge=null;
@@ -7559,7 +7338,6 @@ function autoScheduleChoice(choices,onPick,context){
   },context==="shop"?3600:3400);
 }
 
-/* Movimiento y combate */
 function autoSafeAdd(v,dx,dy,weight){
   if(!Number.isFinite(dx)||!Number.isFinite(dy)||!Number.isFinite(weight))return;
   v.x+=dx*weight;
@@ -7592,7 +7370,6 @@ function autoProjectileRisk(obj,horizon=1.25,padding=34){
   const miss=Math.hypot(missX,missY);
   const hitRadius=(player.r||18)+(obj.r||14)+padding;
   const nowDist=Math.hypot(rx,ry);
-  // Solo interesa si viene hacia nosotros o ya está peligrosamente cerca.
   const approaching=(rx*vx+ry*vy)>0;
   if(!approaching&&nowDist>hitRadius*1.45)return null;
   const pathRisk=Math.max(0,1-miss/hitRadius);
@@ -7619,8 +7396,6 @@ function autoDodgeProjectile(v,obj,radius,weight=1){
   }
   const sp=Math.hypot(info.vx,info.vy)||1;
   const ux=info.vx/sp,uy=info.vy/sp;
-  // Esquivar perpendicularmente a la trayectoria es mucho más eficaz que huir
-  // en la misma dirección del proyectil. Elegimos el lado con más espacio.
   const px=-uy,py=ux;
   const look=150;
   const ax=player.x+px*look,ay=player.y+py*look;
@@ -7633,7 +7408,6 @@ function autoDodgeProjectile(v,obj,radius,weight=1){
   const side=chooseA?1:-1;
   const urgency=Math.min(2.4,.65+info.risk*1.45+(info.t<.42?.75:0));
   autoSafeAdd(v,px*side,py*side,weight*urgency);
-  // Si ya está encima, añadimos también separación radial para no cruzar su hitbox.
   if(d<Math.max(115,radius*.42))autoSafeAdd(v,dx/d,dy/d,weight*(1-d/Math.max(116,radius*.42))*1.5);
   return threat+info.risk*weight;
 }
@@ -7641,8 +7415,6 @@ function autoHasImminentProjectileThreat(){
   if(getOctopusAreaDanger(player.x,player.y,player.r+35)>0)return true;
   const sets=[quacks,yarnBalls,demonOrbs];
   for(const arr of sets){
-    // Top-8 por distancia sin crear/ordenar una copia de todos los proyectiles.
-    // Conserva las mismas prioridades de detección de la IA anterior.
     const nearby=[];
     for(const o of arr){
       if(!isFinitePos(o))continue;
@@ -7658,7 +7430,6 @@ function autoHasImminentProjectileThreat(){
       if(r&&r.risk>.34&&r.t<.72)return true;
     }
   }
-  // La sombra de la foca anuncia exactamente dónde va a caer.
   if(boss&&boss.type==="seal"&&boss.state==="jumping"&&Number.isFinite(boss.targetX)&&Number.isFinite(boss.targetY)){
     const d=Math.hypot(player.x-boss.targetX,player.y-boss.targetY);
     if(d<(boss.r||60)+(player.r||18)+105&&boss.jumpTimer<.9)return true;
@@ -7672,7 +7443,6 @@ function autoTargetStillValid(t){
 }
 function autoFindBestTarget(){
   const now=performance.now();
-  // Mantener el objetivo unos instantes evita el zigzag cuando hay muchos enemigos.
   if(autoTargetStillValid(autoStableTarget)&&now<autoStableTargetUntil)return autoStableTarget;
 
   let best=null,bestScore=-999;
@@ -7680,13 +7450,11 @@ function autoFindBestTarget(){
   cats.forEach(c=>{
     if(!isCombatTargetAvailable(c)||!isCatOnScreen(c))return;
     const d=Math.hypot(c.x-player.x,c.y-player.y);
-    // Arcoíris siempre entra; del resto solo se valoran los más cercanos.
     if(c.rainbow)candidates.push({c,d,priority:1});
     else candidates.push({c,d,priority:0});
   });
   candidates.sort((a,b)=>b.priority-a.priority||a.d-b.d);
 
-  // Limitar la percepción evita que la IA intente reaccionar a toda la pantalla a la vez.
   for(const {c,d} of candidates.slice(0,24)){
     let s;
     if(c.rainbow)s=1800-d*.10;
@@ -7705,7 +7473,6 @@ function autoFindBestTarget(){
     if(s>bestScore){best=c;bestScore=s;}
   }
 
-  // El jefe importa, pero los enemigos normales peligrosos siguen compitiendo como amenaza.
   if(isCombatTargetAvailable(boss)){
     const d=Math.hypot(boss.x-player.x,boss.y-player.y);
     let s=1120-d*.07;
@@ -7724,7 +7491,7 @@ function autoMoveKeysFromVector(v){
   const x=v.x/mag,y=v.y/mag;
   keys.a=x<-.24;keys.d=x>.24;keys.w=y<-.24;keys.s=y>.24;
 }
-const AUTO_RESIDUAL_HARD_INTERVAL_MS=500; // La IA nunca supera 2 residuales/s.
+const AUTO_RESIDUAL_HARD_INTERVAL_MS=500;
 function autoResidualThreatSnapshot(target){
   const px=player.x,py=player.y;
   const dist=target&&isFinitePos(target)?Math.hypot(target.x-px,target.y-py):Infinity;
@@ -7753,8 +7520,6 @@ function autoShouldUseResidualShot(target){
   const now=gameNow();
   const cooldown=getRamFishCooldownMs();
   const elapsed=now-lastRamFishAt;
-  // El Bloquito cargado se reserva para autoTryTacticalRamFish(), que analiza líneas,
-  // multigolpes y proyectiles. Esta función solo administra disparos residuales.
   if(elapsed>=cooldown)return false;
   if(now<autoResidualNextDecisionAt)return false;
 
@@ -7769,8 +7534,6 @@ function autoShouldUseResidualShot(target){
   const urgentProjectile=s.projectileRisk>1.0;
   const immediateTarget=s.dist<205;
 
-  // Un jefe por sí solo NO justifica ametrallar residuales. Solo se usan si hay
-  // presión real, peligro, proximidad extrema o si el jefe está a punto de caer.
   let score=0;
   if(tentacle)score+=4.2;
   if(crowded)score+=2.4;
@@ -7781,8 +7544,6 @@ function autoShouldUseResidualShot(target){
   if(bossFinisher)score+=1.7;
   if(targetIsBoss&&!tentacle&&!crowded&&!urgentProjectile&&!immediateTarget&&!bossFinisher)score-=6;
 
-  // En rondas normales puede ayudar a limpiar amenazas prioritarias, pero tampoco
-  // dispara por sistema contra un gato corriente que está lejos y bajo control.
   if(!targetIsBoss&&!tentacle){
     if(target.rainbow)score+=2.5;
     if(target.type==="yarn"||target.type==="musician"||target.type==="student")score+=1.7;
@@ -7794,8 +7555,6 @@ function autoShouldUseResidualShot(target){
     return false;
   }
 
-  // Cadencia adaptativa. 2/s es un techo absoluto y solo se alcanza en emergencia.
-  // En combate normal queda alrededor de 0,8–1,4/s; contra un jefe aislado, 0/s.
   let interval=1150;
   if(score>=6.0)interval=500;
   else if(score>=4.6)interval=700;
@@ -7868,9 +7627,6 @@ function autoUpdateStuckState(dt,danger){
     autoStuckTimer=0;
   }
 }
-// Planificador de rutas cortas para QUACK, ovillos y orbes.
-// Evalúa dónde estarán los proyectiles y los gatos si nos movemos,
-// y mantiene una dirección varios fotogramas en vez de oscilar a izquierda/derecha.
 function autoProjectileSafeMovement(preferred){
   const duck=boss&&boss.type==="duck"&&isFinitePos(boss);
   if(!duck&&!yarnBalls.length&&!demonOrbs.length&&!quacks.length)return preferred;
@@ -7897,34 +7653,25 @@ function autoProjectileSafeMovement(preferred){
   enemies.length=Math.min(enemies.length,14);
   const bossDx=px-(boss?.x??canvas.width/2),bossDy=py-(boss?.y??canvas.height/2),bd=Math.hypot(bossDx,bossDy)||1;
   const tangent={x:-bossDy/bd,y:bossDx/bd};
-  // Tangential movement while the duck prepares a salvo: a stationary player
-  // is an easy target for QUACKs aimed at the position at launch.
   const charging=duck&&((boss.pendingQuacks&&boss.pendingQuacks.length>0)||(boss.shoot||0)<.8);
   const candidates=[];
   function addDir(x,y){
     const m=Math.hypot(x,y);
     if(m<.10)return;
-    // Puntuar las ocho direcciones que las teclas realmente pueden ejecutar.
     const kx=Math.abs(x/m)>.24?Math.sign(x):0,ky=Math.abs(y/m)>.24?Math.sign(y):0;
     const km=Math.hypot(kx,ky)||1,dir={x:kx/km,y:ky/km};
     if(!candidates.some(c=>c.x*dir.x+c.y*dir.y>.993))candidates.push(dir);
   }
   addDir(preferred.x,preferred.y);
   if(autoProjectileDirection)addDir(autoProjectileDirection.x,autoProjectileDirection.y);
-  // Both perpendicular escape routes plus 8 directions ensure the AI can
-  // reverse direction when a wall or a crossing salvo makes it necessary.
   addDir(tangent.x,tangent.y);addDir(-tangent.x,-tangent.y);
   for(let i=0;i<8;i++){const a=Math.PI*i/4;addDir(Math.cos(a),Math.sin(a));}
   function score(dir){
     const vx=dir.x*realSpeed,vy=dir.y*realSpeed;
     const futureX=px+vx*horizon,futureY=py+vy*horizon;
-    // Heavily penalize getting pinned to an edge (and physically impossible
-    // trajectories). Use a softer penalty in the outer 115px of the arena.
     const edge=Math.min(futureX-player.r,futureY-player.r,canvas.width-player.r-futureX,canvas.height-player.r-futureY);
     let cost=edge<0?140+Math.abs(edge)*.9:edge<115?(115-edge)*.42:0;
     for(const {p} of bullets){
-      // Closest approach of the moving player and a moving enemy projectile.
-      // Evaluating relative velocity prevents contradictory dodge vectors.
       const rx=p.x-px,ry=p.y-py,rvx=p.vx-vx,rvy=p.vy-vy;
       const v2=rvx*rvx+rvy*rvy;
       const t=v2>1?Math.max(0,Math.min(horizon,-(rx*rvx+ry*rvy)/v2)):0;
@@ -7934,14 +7681,10 @@ function autoProjectileSafeMovement(preferred){
         const urgency=1.7-t/horizon;
         cost+=miss<hit?(28+(hit-miss)*1.1)*urgency:(hit+90-miss)/90*12*urgency;
       }
-      // Also discourage passing through the projectile immediately during
-      // the next decision tick, even if closest-approach time was clamped.
       const nearT=Math.min(.2,horizon);
       const shortDist=Math.hypot(rx+rvx*nearT,ry+rvy*nearT);
       if(shortDist<hit+12)cost+=(hit+12-shortDist)*.6;
     }
-    // Cats chase the player; measure projected space rather than just current
-    // positions to avoid fleeing directly into a second group of enemies.
     for(const {c} of enemies){
       const dx=px-c.x,dy=py-c.y,d=Math.hypot(dx,dy)||1;
       const chase=Math.min(d,Math.max(0,c.speed||80)*.7);
@@ -7956,7 +7699,6 @@ function autoProjectileSafeMovement(preferred){
       if(distToBoss<avoidBoss)cost+=(avoidBoss-distToBoss)*.16;
     }
     cost+=getOctopusAreaDanger(futureX,futureY)*80;
-    // Pursue a consistent orbit only when actual collision risks allow it.
     if(charging)cost-=Math.abs(dir.x*tangent.x+dir.y*tangent.y)*3;
     const prefMag=Math.hypot(preferred.x,preferred.y);
     if(prefMag>.15)cost-=(dir.x*preferred.x+dir.y*preferred.y)/prefMag*1.5;
@@ -7968,8 +7710,6 @@ function autoProjectileSafeMovement(preferred){
   }
   let best=null,bestCost=Infinity;
   for(const dir of candidates){const c=score(dir);if(c<bestCost){best=dir;bestCost=c;}}
-  // Hysteresis: keep current course unless another is materially safer. It
-  // prevents two opposite QUACKs from summing to a zero movement vector.
   if(autoProjectileDirection&&now<autoProjectileDirectionUntil&&score(autoProjectileDirection)<bestCost+8){
     best=autoProjectileDirection;
   }else if(best){
@@ -7997,8 +7737,6 @@ function autoApplyEmergencyEscape(v,danger){
   return false;
 }
 
-// El ariete es una habilidad con recarga larga: solo se dispara si su línea
-// despeja un grupo o intercepta un ataque peligroso. No se gasta en un gato solo.
 function autoPlanRamFish(){
   const x=player.x,y=player.y;
   const fishSpeed=Math.max(300,710*upgrades.fishSpeed);
@@ -8014,7 +7752,6 @@ function autoPlanRamFish(){
     if(d<Math.min(850,maxReach))closeCats.push({entity:c,d});
   }
   closeCats.sort((a,b)=>a.d-b.d);
-  // Solo analizamos una muestra representativa de los enemigos próximos.
   closeCats.length=Math.min(closeCats.length,22);
   const closeBoss=boss&&isFinitePos(boss)&&Math.hypot(boss.x-x,boss.y-y)<650?boss:null;
   const threats=[];
@@ -8029,7 +7766,6 @@ function autoPlanRamFish(){
   threats.length=Math.min(threats.length,10);
   const urgent=threats.some(t=>t.info.risk>1.06&&t.info.t<.50);
   const emergency=urgent&&(life<upgrades.maxLife*.42||room<115||nearPressure>=4);
-  // No revisar todas las direcciones si no existe una razón para gastar el pez.
   if(nearPressure<3&&!closeBoss&&threats.length<2&&!emergency)return null;
   const directions=[];
   function addDirection(tx,ty){
@@ -8050,7 +7786,6 @@ function autoPlanRamFish(){
   }
   if(closeBoss)addDirection(closeBoss.x,closeBoss.y);
   for(const {entity:p} of threats){
-    // La posición futura es más útil que apuntar donde está ahora la bala.
     const d=Math.hypot(p.x-x,p.y-y);
     const eta=Math.min(.7,Math.max(.025,(d-58)/(fishSpeed+Math.hypot(p.vx||0,p.vy||0)*.30)));
     addDirection(p.x+(p.vx||0)*eta,p.y+(p.vy||0)*eta);
@@ -8072,8 +7807,6 @@ function autoPlanRamFish(){
       bossHit=along>25&&along<maxReach&&Math.abs(dx*dir.y-dy*dir.x)<fishRadius+(closeBoss.r||65);
     }
     for(const {entity:p,info} of threats){
-      // Aproximar el instante en que el ariete alcanza la bala. Recalcular
-      // la posición evita apuntar a un proyectil que ya habrá pasado.
       let along=(p.x-x)*dir.x+(p.y-y)*dir.y;
       if(along<25||along>maxReach)continue;
       let eta=Math.min(.9,Math.max(0,(along-58)/fishSpeed));
@@ -8095,7 +7828,6 @@ function autoPlanRamFish(){
     const duckDefense=boss&&boss.type==="duck"&&urgent&&bulletHits>=1&&bulletRisk>.8&&(nearPressure>=2||room<150||life<upgrades.maxLife*.73);
     const lifeSavingShot=(emergency&&bulletHits>=1&&bulletRisk>1.0)||duckDefense;
     if(!(crowdRelease||trappedRelease||bossPressure||defensiveVolley||lifeSavingShot))continue;
-    // Bajo peligro, una defensa efectiva tiene prioridad sobre daño extra.
     const score=catHits*1.8+nearHits*1.1+(bossHit?2.2:0)
       +bulletRisk*(emergency?5.3:3.0)+(trappedRelease?3.2:0);
     if(score>bestScore){bestScore=score;best={x:x+dir.x*600,y:y+dir.y*600};}
@@ -8105,7 +7837,6 @@ function autoPlanRamFish(){
 function autoTryTacticalRamFish(){
   const now=gameNow();
   if(now<autoRamNextEvaluationAt||now-lastRamFishAt<getRamFishCooldownMs())return;
-  // Un análisis de rayos cada ~1/4 s basta; la esquiva normal sigue instantánea.
   autoRamNextEvaluationAt=now+(lowPerfMode?370:230);
   const aim=autoPlanRamFish();
   if(aim)launchRamFish(aim);
@@ -8116,8 +7847,6 @@ function updateAutoPlayer(dt){
   refreshAutoModeUI();
   if(!autoRunStartTime)autoRunStartTime=performance.now();
 
-  // Apuntar y disparar sigue siendo fluido, pero la decisión de movimiento se recalcula
-  // solo varias veces por segundo para evitar oscilaciones con hordas grandes.
   autoDecisionCooldown-=dt;
   const imminentProjectile=autoHasImminentProjectileThreat();
   if(autoDecisionCooldown>0&&!imminentProjectile){
@@ -8125,11 +7854,8 @@ function updateAutoPlayer(dt){
     autoUpdateAimAndShoot(autoStableTarget);
     return;
   }
-  // Ante una bala con trayectoria de colisión la IA reacciona casi al instante.
   autoDecisionCooldown=imminentProjectile?.045:(lowPerfMode?.16:.10);
   const target=autoFindBestTarget();
-  // El apuntado se mantiene fluido. Los residuales pasan por una decisión táctica
-  // independiente: la IA tiene un techo de 2/s y normalmente dispara bastante menos.
   autoUpdateAimAndShoot(target);
 
   const v={x:0,y:0};
@@ -8154,7 +7880,6 @@ function updateAutoPlayer(dt){
       danger+=t;
     }
   }
-  // Foca: no esperar a que caiga encima; abandonar la zona marcada durante el salto.
   if(boss&&boss.type==="seal"&&boss.state==="jumping"&&Number.isFinite(boss.targetX)&&Number.isFinite(boss.targetY)){
     const dx=player.x-boss.targetX,dy=player.y-boss.targetY,d=Math.hypot(dx,dy)||1;
     const safeRadius=(boss.r||60)+(player.r||18)+145;
@@ -8165,8 +7890,6 @@ function updateAutoPlayer(dt){
       danger+=force*.38;projectileDanger+=force*.45;
     }
   }
-  // El pato tiene un planificador dedicado al final de esta decisión:
-  // no sumar fuerzas laterales opuestas ni invertir la esquiva por tiempo.
 
   autoUpdateStuckState(dt,danger);
   const emergencyEscaping=autoApplyEmergencyEscape(v,danger);
@@ -8181,7 +7904,6 @@ function updateAutoPlayer(dt){
   const safeToLoot=!emergencyEscaping&&projectileDanger<.72&&danger<.82&&hpRatio>.58;
   const verySafeToLoot=!emergencyEscaping&&projectileDanger<.28&&danger<.46&&hpRatio>.72;
 
-  // Estrella: prioridad de recogida muy alta, salvo peligro extremo.
   let nearestStar=null,nearestStarD=Infinity;
   powerStars.forEach(s=>{
     if(!isFinitePos(s))return;
@@ -8189,18 +7911,15 @@ function updateAutoPlayer(dt){
     if(d<nearestStarD){nearestStar=s;nearestStarD=d;}
   });
   if(nearestStar){
-    // La estrella es valiosa, pero no merece atravesar una trayectoria de proyectil mortal.
     const starWeight=projectileDanger>1.25?.35:(danger>1.35?2.2:9.5);
     autoAttractTo(v,nearestStar,1200,starWeight);
   }
 
-  // Latas: prioridad real cuando falta vida; solo considera las más cercanas para no oscilar.
   if(hpRatio<.82){
     const cans=tunaDrops.filter(isFinitePos).map(t=>({t,d:Math.hypot(t.x-player.x,t.y-player.y)})).sort((a,b)=>a.d-b.d).slice(0,3);
     for(const {t} of cans)autoAttractTo(v,t,hpRatio<.42?1050:760,hpRatio<.42?9.0:5.0);
   }
 
-  // Monedas: se recogen cuando la ruta es razonablemente segura y sin perseguir toda la pantalla.
   if(safeToLoot){
     const coinRange=verySafeToLoot?760:520;
     const collectWeight=verySafeToLoot?3.3:1.55;
@@ -8213,7 +7932,6 @@ function updateAutoPlayer(dt){
     let desired=boss?(boss.type==="demon"?560:430):335;
     if(target.rainbow)desired=260;
     if(!emergencyEscaping&&target.rainbow&&danger<1.05){
-      // Arcoíris: acercarse más para matarlo rápido y asegurar la recompensa.
       if(d>desired)autoSafeAdd(v,dx/d,dy/d,1.65);
       else autoSafeAdd(v,-dx/d,-dy/d,.35);
     }else{
@@ -8226,11 +7944,8 @@ function updateAutoPlayer(dt){
   }else autoSafeAdd(v,canvas.width/2-player.x,canvas.height/2-player.y,.002);
 
   autoMoveKeysFromVector(autoProjectileSafeMovement(v));
-  // La IA no necesita texto flotante periódico: seguimos dejando espacio
-  // visual a enemigos, proyectiles y recompensas del combate.
 }
 
-/* Decisiones avanzadas */
 function autoKeyOwned(key){
   if(!key)return false;
   if(Object.prototype.hasOwnProperty.call(upgradeLevels,key))return (upgradeLevels[key]||0)>0;
@@ -8393,8 +8108,6 @@ function autoRandomShopUpgradeScore(choice,context){
     if(Number.isFinite(minLevel)&&current<=minLevel)score+=130;
     if(autoFusionRouteValue(key)>420)score+=210;
   }
-  // Es más barata que una mejora normal, así que se premia la eficiencia,
-  // pero no por encima de una fusión claramente buena.
   score+=260;
   const tag=String(choice.levelTag||"");
   const price=parseInt(tag,10);
@@ -8510,7 +8223,6 @@ function autoChoiceScore(choice,context){
     if((runStats.fishHits||0)<Math.max(4,(runStats.shotsFired||0)*.35)&&["aimAssist","fishSpeed","fishSize","autoFire","bigCursor"].includes(key))score+=150;
   }
 
-  // No coge "mejoras flojas" salvo que tengan futuro real.
   if(key==="bigCursor"||key==="moralSupport"||key==="darkPact"){
     const future=autoFusionFutureValue(key);
     if(future<420)score-=320;
@@ -8550,13 +8262,10 @@ function autoPickChoice(choices,context){
 
   return usable.sort((a,b)=>autoChoiceScore(b,context)-autoChoiceScore(a,context))[0];
 }
-/* ─────────────────────────────────────────────────────────── */
-
 
 initAutoMode();
 
 restart();gameStarted=false;startPanel.style.display="flex";requestAnimationFrame(loop);
-
 
 if(gameStorage.unavailable){
   const note=document.createElement("p");
@@ -8564,7 +8273,6 @@ if(gameStorage.unavailable){
   note.textContent="El navegador no permite guardar el progreso. Esta sesión funciona, pero los nuevos logros y cosméticos se perderán al cerrar.";
   document.getElementById("startBox").appendChild(note);
 }
-// Firebase is optional: its CDN must never delay the local game's startup.
 async function loadRankingDependencies(){
   if(window.firebase?.firestore){initRanking();return;}
   async function script(src){
@@ -8586,20 +8294,15 @@ async function loadRankingDependencies(){
 }
 loadRankingDependencies();
 
-// Render previews with the very same drawing functions as gameplay. No simulation runs here.
 const cosmeticPreviewCache=new Map();
 function paintCosmeticPreviews(){
  if(!cosmeticsContentEl)return;
  for(const el of cosmeticsContentEl.querySelectorAll("[data-skin]")){
   const category=el.dataset.category,id=el.dataset.skin,key=category+":"+id;
-  // La sardina realista usa como icono la fotografía original completa,
-  // no una recreación del proyectil ni un emoji.
   if(id==="fish_realistic"){
    const img=document.createElement("img");
    img.src=REALISTIC_SARDINE_SOURCE;
    img.alt=el.getAttribute("aria-label")||"Sardina realista";
-   // Mantener la fotografía real, pero con la misma escala visual que los
-   // demás peces de la cuadrícula de cosméticos.
    img.width=88;img.height=52;
    img.style.width="88px";
    img.style.height="52px";
@@ -8627,7 +8330,6 @@ function paintCosmeticPreviews(){
  }
 }
 
-// v146: normalized vector artwork, drawn at the existing collision radius.
 function bossArt(type,r,poly=false){
 ctx.save();ctx.scale(r,r);ctx.shadowBlur=0;ctx.lineWidth=.035;ctx.lineJoin='round';ctx.lineCap='round';
 const ink=type==='demon'?'#54284f':type==='duck'?'#b27b36':'#65546c';ctx.strokeStyle=ink;
@@ -8698,7 +8400,6 @@ ctx.beginPath();ctx.ellipse(0,.25,.32,.25,0,0,Math.PI*2);ctx.fill();
 for(const [x,y,a] of [[-.42,-.1,-.4],[-.16,-.37,-.15],[.16,-.37,.15],[.42,-.1,.4]]){ctx.beginPath();ctx.ellipse(x,y,.12,.17,a,0,Math.PI*2);ctx.fill();}ctx.restore();
 }
 
-// Use the same authored currency emblem throughout the DOM, independently of emoji fonts.
 function decorateCoinText(root){
 if(!root||!root.isConnected)return;
 const walk=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const nodes=[];
@@ -8724,9 +8425,7 @@ runCosmeticSelections[cat]=pool.length?pool[Math.floor(Math.random()*pool.length
 document.getElementById("randomSkinsButton")?.addEventListener("click",()=>{randomSkinsEnabled=!randomSkinsEnabled;gameStorage.setItem("gatitos_random_skins",String(randomSkinsEnabled));updateRandomSkinsButton();});
 updateRandomSkinsButton();
 
-// v157: elapsed time counts active simulation only (menus and pause excluded).
 function formatRunTime(seconds){const n=Math.max(0,Math.floor(Number(seconds)||0));return `${Math.floor(n/60).toString().padStart(2,'0')}:${(n%60).toString().padStart(2,'0')}`;}
-// These HUD nodes are persistent: look them up once rather than every render.
 const runClockEl=document.getElementById('runClock');
 const runTimeEl=document.getElementById('runTime');
 const starCountdownEl=document.getElementById('starCountdown');
@@ -8747,7 +8446,6 @@ function updateRunIndicators(){
  }
 }
 
-// Local admin tools are available only for the reserved player name.
 let adminUnlocked=false,adminPreviousPause=false,adminExpanded=false,adminActiveTab="game";
 function normalizeAdminName(value){return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();}
 function updateAdminVisibility(){

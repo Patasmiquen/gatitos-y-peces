@@ -123,21 +123,13 @@ canvas{display:block;position:fixed;left:50%;top:50%;transform:translate(-50%,-5
 .pauseUpgradeDesc{font-size:13px;line-height:1.3;opacity:.9}
 .pauseFlipHint{margin-top:8px;font-size:11px;font-weight:900;opacity:.62;color:#4cc9f0}
 
-
-
-
-/* Limpieza de tienda: cartas más ligeras, sin etiquetas de categoría ni precios repetidos */
 .upgradeCard{min-height:170px}
 .upgradeBadges:empty{display:none}
 .upgradeDescMain{font-size:14px;line-height:1.36}
 @media(max-width:760px){#upgradeCards{grid-template-columns:1fr}.upgradeCard{min-height:auto}}
 
-
 .recommendedReason{font-size:12px;line-height:1.25;color:#8a315f;font-weight:800;background:rgba(255,122,168,.12);border:1px solid rgba(255,122,168,.25);border-radius:12px;padding:6px 8px;margin:7px 0 9px}
 
-
-
-/* === Cartas de mejoras/tienda: jerarquía visual más clara === */
 #upgradeCards{align-items:stretch}
 .upgradeCard{
   display:flex;
@@ -287,9 +279,6 @@ canvas{display:block;position:fixed;left:50%;top:50%;transform:translate(-50%,-5
 #message.dogSave small{font-size:17px;color:#ffe6f0;text-shadow:0 3px 12px rgba(0,0,0,.95)}
 .shopHint{display:none!important}
 
-/* Rendimiento: controles visuales más ligeros en PCs modestos */
-
-
 .shopCoinBadge{position:absolute;top:18px;right:22px;display:flex;align-items:center;gap:9px;background:linear-gradient(135deg,#ffd166,#ff9f1c);color:#4b2636;border:2px solid rgba(75,38,54,.18);border-radius:999px;padding:10px 17px;font-size:22px;font-weight:1000;box-shadow:0 12px 26px rgba(255,159,28,.34),inset 0 1px 0 rgba(255,255,255,.5)}
 .shopCoinBadge small{font-size:11px;text-transform:uppercase;letter-spacing:.8px;display:block;line-height:1;opacity:.78}
 #levelUpBox{position:relative}
@@ -313,7 +302,6 @@ canvas{display:block;position:fixed;left:50%;top:50%;transform:translate(-50%,-5
 #victoryStars{font-size:46px;letter-spacing:6px;margin-bottom:8px}
 @keyframes victoryPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
 
-
 #gameOverPanel{position:fixed;inset:0;background:linear-gradient(180deg,rgba(30,5,10,.97),rgba(60,10,20,.97));display:none;align-items:center;justify-content:center;z-index:41}
 #gameOverBox{width:min(660px,92vw);background:rgba(30,10,15,.97);color:#ffd6e0;padding:36px 38px;border-radius:32px;box-shadow:0 20px 60px rgba(0,0,0,.7);text-align:center;border:3px solid #c92a2a}
 #gameOverBox h1{font-size:40px;margin-bottom:8px;color:#ff6b6b}
@@ -334,8 +322,6 @@ canvas{display:block;position:fixed;left:50%;top:50%;transform:translate(-50%,-5
 .pStat .pStatLbl{font-size:11px;color:#ffb3c6;margin-top:4px;text-transform:uppercase;letter-spacing:.8px}
 #pauseRecordBadge{display:none;background:linear-gradient(90deg,#ffd166,#ff7aa8);color:#4b2636;font-size:13px;font-weight:900;padding:7px 16px;border-radius:999px;margin:6px auto 12px;text-align:center;max-width:max-content;box-shadow:0 10px 26px rgba(0,0,0,.16)}
 
-
-/* === Pulido visual añadido: UI más suave y lectura más limpia === */
 :root{
   --bg1:#171326;
   --bg2:#2b2144;
@@ -411,7 +397,6 @@ canvas{background:transparent;image-rendering:auto}
 .upgradeDesc{color:#5e4056;opacity:1}
 .upgradeLevelTag,
 
-/* Tiers visuales de mejora/fusión */
 .upgradeCard.upgradeTierBase{border-color:rgba(255,122,168,.42)}
 .upgradeCard.upgradeTierBoost{border-color:#63d7ff;box-shadow:0 18px 38px rgba(60,110,150,.16),0 0 18px rgba(99,215,255,.30),0 0 0 1px rgba(255,255,255,.55) inset}
 .upgradeCard.upgradeTierBoost:hover{box-shadow:0 20px 42px rgba(60,110,150,.22),0 0 24px rgba(99,215,255,.45),0 0 0 1px rgba(255,255,255,.62) inset}
@@ -431,7 +416,6 @@ canvas{background:transparent;image-rendering:auto}
 }
 #gameOverBox{background:linear-gradient(180deg,rgba(45,12,24,.97),rgba(20,8,14,.97));border:1px solid rgba(255,107,107,.55)}
 @media(max-width:760px){#hud{min-width:238px;font-size:13px}.barBox{width:180px}}
-
 
 .themeOptions{margin:12px auto 0;display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;color:#ffe6f0;font-weight:900}
 .themeChoice{border:1px solid rgba(255,194,209,.42);border-radius:999px;padding:8px 15px;background:rgba(255,255,255,.10);color:#ffe6f0;font-weight:1000;cursor:pointer;box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 8px 18px rgba(0,0,0,.18);transition:transform .14s ease,filter .14s ease,background .14s ease}
@@ -464,7 +448,6 @@ body.panel-theme-dark .upgradeCard.fusionCard.fusionTierBoost{background:linear-
 body.panel-theme-dark .upgradeCard.fusionCard.fusionTierMax{background:linear-gradient(rgba(43,28,59,.98),rgba(24,15,35,.97)) padding-box,linear-gradient(90deg,#9b5de5,#ff4d8d,#ffd166,#4cc9f0,#c77dff,#9b5de5) border-box;box-shadow:0 22px 48px rgba(0,0,0,.38),0 0 32px rgba(155,93,229,.38),0 0 20px rgba(255,209,102,.20),inset 0 1px 0 rgba(255,255,255,.08)}
 body.panel-theme-dark .shopCoinBadge{box-shadow:0 12px 28px rgba(255,159,28,.28),0 0 20px rgba(255,122,168,.14)}
 
-/* === Ranking online Firebase === */
 #playerSetup{margin:16px auto 8px;display:grid;gap:10px;justify-items:center}
 #playerNameInput{width:min(320px,86vw);border:2px solid rgba(255,194,209,.48);border-radius:999px;padding:12px 18px;font-size:17px;text-align:center;background:linear-gradient(180deg,rgba(255,230,240,.18),rgba(255,122,168,.12));color:#ffe6f0;font-weight:900;box-shadow:inset 0 1px 0 rgba(255,255,255,.14),0 8px 22px rgba(0,0,0,.22);outline:none;text-shadow:0 1px 2px rgba(0,0,0,.35)}
 #playerNameInput::placeholder{color:rgba(255,230,240,.68)}
@@ -506,7 +489,6 @@ body.panel-theme-dark .onlineRankBox{background:rgba(255,255,255,.06);border-col
 #startBox.nameError #playerNameInput{border-color:#ff6b6b;animation:nameShake .25s ease}
 @keyframes nameShake{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
 
-
 .autoBadge{
   position:fixed;
   right:18px;
@@ -538,14 +520,7 @@ body.panel-theme-dark .onlineRankBox{background:rgba(255,255,255,.06);border-col
   color:#123;
 }
 
-
-
-
-
-
-
 .panel-theme-dark 
-
 
 @media (max-width:720px){
   
@@ -597,8 +572,6 @@ body.panel-theme-dark .onlineRankBox{background:rgba(255,255,255,.06);border-col
   #startBox .compactControls{grid-template-columns:1fr !important;}
 }
 
-
-/* === v48 start screen cleanup === */
 #startBox{
   max-height:92vh;
   overflow:auto;
@@ -681,7 +654,6 @@ body.panel-theme-dark .onlineRankBox{background:rgba(255,255,255,.06);border-col
   }
 }
 
-/* === v49 clean start UI === */
 #startBox{
   position:relative !important;
 }
@@ -759,7 +731,6 @@ body.panel-theme-dark .onlineRankBox{background:rgba(255,255,255,.06);border-col
   }
 }
 
-/* === v50 dedication single line === */
 #startBox .dedicationText{
   max-width:none !important;
   width:100% !important;
@@ -776,8 +747,6 @@ body.panel-theme-dark .onlineRankBox{background:rgba(255,255,255,.06);border-col
   }
 }
 
-
-/* === v59: sin selector de tema === */
 #themeOptions,
 .themeOptions,
 #themeToggleButton,
@@ -785,7 +754,6 @@ body.panel-theme-dark .onlineRankBox{background:rgba(255,255,255,.06);border-col
   display:none !important;
 }
 
-/* Cursor visible en interfaces aunque el juego use Pointer Lock durante la partida. */
 #startPanel,#levelUpPanel,#pausePanel,#gameOverPanel,#victoryPanel,
 #startPanel *,#levelUpPanel *,#pausePanel *,#gameOverPanel *,#victoryPanel *{
   cursor:auto;
@@ -797,8 +765,6 @@ body.panel-theme-dark .onlineRankBox{background:rgba(255,255,255,.06);border-col
   cursor:not-allowed;
 }
 
-
-/* === Cosméticos === */
 #startBox{max-height:92vh;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,122,168,.75) rgba(255,255,255,.10)}
 .cosmeticsPanel{margin:16px auto 4px;max-width:660px;text-align:left}
 .cosmeticsPanel summary{list-style:none;display:flex;align-items:center;justify-content:center;gap:8px;margin:0 auto;padding:13px 24px;width:max-content;max-width:100%;border-radius:999px;background:linear-gradient(135deg,rgba(76,201,240,.96),rgba(155,93,229,.95));color:white;font-weight:900;cursor:pointer;box-shadow:0 12px 28px rgba(76,201,240,.22),inset 0 1px 0 rgba(255,255,255,.28);transition:transform .14s ease,filter .14s ease,box-shadow .14s ease}
@@ -809,10 +775,6 @@ body.panel-theme-dark .onlineRankBox{background:rgba(255,255,255,.06);border-col
 .cosmeticsContent{display:grid;gap:12px}.cosmeticCategoryTitle{font-weight:900;color:#ffd6e7;margin:8px 0 2px;text-align:left}.cosmeticGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px}.cosmeticCard{background:rgba(255,246,251,.96);color:#4b2636;border-radius:16px;padding:12px;text-align:left;border:2px solid rgba(255,194,209,.72);box-shadow:0 8px 18px rgba(0,0,0,.12)}.cosmeticCard.equipped{border-color:#4cc9f0;box-shadow:0 0 0 3px rgba(76,201,240,.18),0 8px 18px rgba(0,0,0,.12)}.cosmeticCard.owned{border-color:#80ed99}.cosmeticName{font-weight:900;font-size:15px;margin-bottom:4px}.cosmeticMeta{font-size:12px;opacity:.8;margin-bottom:9px;line-height:1.25}.cosmeticButton{background:#ff7aa8;color:#fff;font-size:13px;width:100%}.cosmeticButton.secondary{background:#4cc9f0;color:#1f1b2e}.cosmeticButton.owned{background:#80ed99;color:#1f3b24}.cosmeticButton:disabled{opacity:.55;cursor:not-allowed;transform:none;filter:none}.cosmeticPreview{font-size:24px;margin-bottom:6px}.cosmeticsNote{font-size:12px;opacity:.78;text-align:center;margin-top:10px;color:#ffe6f0}.packCard{background:linear-gradient(180deg,rgba(255,246,251,.98),rgba(255,230,240,.96));border:2px solid #ffd166}.packItems{font-size:12px;line-height:1.35;margin:8px 0;color:#6b4052}.packPriceLine{font-weight:900;color:#c2255c;margin:8px 0}
 @media(max-width:640px){#startBox{padding:22px}.cosmeticGrid{grid-template-columns:1fr}.cosmeticsHeader{justify-content:center;text-align:center}}
 
-
-
-
-/* === Panel de logros === */
 .achievementsPanel{margin:14px auto 6px;max-width:680px;text-align:left}
 .achievementsPanel summary{list-style:none;display:flex;align-items:center;justify-content:center;gap:8px;margin:0 auto;padding:13px 22px;width:max-content;max-width:100%;border-radius:999px;background:linear-gradient(135deg,rgba(255,209,102,.96),rgba(255,122,168,.92));color:#4b2636;font-weight:1000;cursor:pointer;box-shadow:0 12px 28px rgba(255,209,102,.25),inset 0 1px 0 rgba(255,255,255,.42);transition:transform .14s ease,filter .14s ease,box-shadow .14s ease}
 .achievementsPanel summary::-webkit-details-marker{display:none}
@@ -844,8 +806,6 @@ body.panel-theme-dark .onlineRankBox{background:rgba(255,255,255,.06);border-col
 @keyframes achievementDrop{from{opacity:0;transform:translate(-50%,-10px) scale(.96)}to{opacity:1;transform:translate(-50%,0) scale(1)}}
 @media(max-width:640px){.achievementsContent{grid-template-columns:1fr;max-height:390px}.achievementsHeader{justify-content:center;text-align:center}}
 
-
-/* === Fila de desplegables del menú inicial === */
 .startDropdownRow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;align-items:start;margin:14px auto 8px;max-width:1120px}
 .startDropdownRow>details{margin:0!important;max-width:none!important;width:100%;text-align:center}
 .startDropdownRow>details>summary{width:100%!important;min-width:0!important;min-height:56px;box-sizing:border-box;white-space:nowrap;margin:0!important;display:flex;align-items:center;justify-content:center}
@@ -858,7 +818,6 @@ body.panel-theme-dark .onlineRankBox{background:rgba(255,255,255,.06);border-col
 .onlineRankName.goldenName{color:#ffd166!important;text-shadow:0 0 7px rgba(255,209,102,.45);font-weight:1000}
 .achievementMeta .achievementReward{display:none}
 @media(max-width:760px){.startDropdownRow{grid-template-columns:1fr;gap:10px}.startDropdownRow>details>summary{min-height:52px}.startDropdownContentSlot{max-width:100%}}
-
 
 .musicMenuControls{
 display:grid;
@@ -894,7 +853,6 @@ box-shadow:0 7px 18px rgba(76,201,240,.24);
 
 .pauseMusicControls{margin:10px auto 14px;max-width:620px}
 
-
 #pauseBox .pauseMusicControls{
 display:grid!important;
 grid-template-columns:auto auto minmax(160px,260px) 54px;
@@ -909,8 +867,6 @@ font-size:15px;
 min-width:170px;
 }
 
-
-/* === Notas de parche === */
 .patchNotesPanel{margin:14px auto 6px;max-width:680px;text-align:left}
 .patchNotesPanel summary{list-style:none;display:flex;align-items:center;justify-content:center;gap:8px;margin:0 auto;padding:13px 22px;width:max-content;max-width:100%;border-radius:999px;background:linear-gradient(135deg,rgba(128,237,153,.95),rgba(76,201,240,.92));color:#173b32;font-weight:1000;cursor:pointer;box-shadow:0 12px 28px rgba(76,201,240,.22),inset 0 1px 0 rgba(255,255,255,.36);transition:transform .14s ease,filter .14s ease,box-shadow .14s ease}
 .patchNotesPanel summary::-webkit-details-marker{display:none}
@@ -933,12 +889,10 @@ min-width:170px;
 .patchNoteSource{margin-top:7px;font-size:10px;opacity:.55;font-weight:900}
 @media(max-width:760px){.patchNotesContent{max-height:390px}.patchNoteTop{flex-direction:column;gap:2px}.patchNoteDate{white-space:normal}}
 
-/* Accessibility without changing the existing visual design. */
 button:focus-visible,[role="button"]:focus-visible,summary:focus-visible{outline:3px solid #4cc9f0;outline-offset:3px}
 .storageNotice{color:#8b253d;background:#fff0cc;padding:10px;border-radius:12px;font-size:13px!important}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 
-/* v145 — calmer surfaces; the existing tier/type classes remain authoritative. */
 html,body{font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif}
 #hud,#message,#startBox,#levelUpBox,#pauseBox,#victoryBox,#gameOverBox{backdrop-filter:none;-webkit-backdrop-filter:none}
 #startPanel{background:rgba(22,17,36,.72)}
@@ -971,7 +925,7 @@ html,body{font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif}
 .upgradeDesc{font-size:14px;line-height:1.45}
 .upgradeLevelTag{box-shadow:none;font-size:12px;padding:4px 8px}
 .upgradeFusionBonus{box-shadow:none!important;border-radius:10px!important}
-/* Levels 1–2 rose, 3–4 cyan, evolution gold. Unique cards keep their own palettes. */
+
 body:not(.panel-theme-dark) .upgradeCard.upgradeTierBase:not(.fusionCard):not(.specialUpgrade):not(.darkUpgrade):not(.easterUpgrade){background:linear-gradient(160deg,#fffafd,#f9edf5);border-color:#e8b8d0}
 body:not(.panel-theme-dark) .upgradeCard.upgradeTierBoost:not(.fusionCard){background:linear-gradient(160deg,#f8fdff,#e9f5fa);border-color:#70c8e1}
 body:not(.panel-theme-dark) .upgradeCard.upgradeTierMax:not(.fusionCard):not(.specialUpgrade):not(.aimAssistUpgrade):not(.bigCursorUpgrade):not(.catInstinctUpgrade):not(.zoomiesUpgrade):not(.apoyoMoralUpgrade):not(.voluntadOscuraUpgrade){background:linear-gradient(160deg,#fffdf5,#fff1cc);border-color:#e8bf62}
@@ -990,7 +944,6 @@ body:not(.panel-theme-dark) .upgradeCard.upgradeTierMax:not(.fusionCard):not(.sp
 @media(max-width:760px){#hud{min-width:190px;font-size:12px;padding:9px 12px}.barBox{width:168px}#levelUpBox{padding:18px!important}#levelUpBox h2{font-size:23px}.upgradeTitle{font-size:17px}}
 @media(prefers-reduced-motion:reduce){.upgradeCard:hover,#startButton:hover{transform:none!important}}
 
-/* Native colour emoji first, bundled outline fallback when the system has no emoji font. */
 html,body,button,input{font-family:"Trebuchet MS","Segoe UI",Arial,sans-serif,"Segoe UI Emoji","Apple Color Emoji","Noto Emoji",sans-serif}
 body:has(#startPanel:not([style*="display: none"])) #hud,
 body:has(#startPanel:not([style*="display: none"])) #message,
@@ -1006,7 +959,6 @@ html,body,button,input{font-family:"Gatitos UI","Segoe UI",Arial,sans-serif,"Seg
 
 .randomSkinsControls{margin:12px 0;padding:12px;border:1px solid #a88ac0;border-radius:12px}.randomSkinsControls button{padding:9px 14px;border:0;border-radius:10px;background:#ded0ed;color:#41264d;cursor:pointer}.randomSkinsControls button[aria-pressed="true"]{background:#9de0bd;color:#204c39}.randomSkinsControls p{font-size:12px;line-height:1.4;margin-top:8px}
 
-/* Compact purchase previews, shared by level-up and shop cards. */
 .choicePreview{margin-top:12px;padding-top:10px;border-top:1px solid currentColor;font-size:12px;line-height:1.45;text-align:left;display:grid;gap:6px}
 .previewHeading{font-size:11px;font-weight:800;opacity:.8}
 .previewRow{display:flex;flex-wrap:wrap;justify-content:space-between;gap:3px 10px}
@@ -1021,7 +973,6 @@ html,body,button,input{font-family:"Gatitos UI","Segoe UI",Arial,sans-serif,"Seg
 
 .pauseLiveScore{flex:0 0 100%;padding:9px 12px;border-radius:12px;background:rgba(255,209,102,.12);color:#ffd166;text-align:center;font-size:18px}
 
-/* v157 status and administration */
 #runClock {position:fixed;right:16px;top:16px;padding:8px 14px;border-radius:16px;background:#281d3ce8;color:white;font:700 16px monospace;z-index:12;pointer-events:none}
 #starCountdown{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);padding:12px 24px;border:3px solid #ffe272;border-radius:20px;background:#2b203fee;color:#ffe272;font-size:20px;font-weight:900;z-index:15;pointer-events:none}
 #starCountdown.ending{color:#fff;background:#8b244c;border-color:#fff;box-shadow:0 0 24px #ffb3cc;animation:starPulse .7s ease-in-out infinite alternate}
@@ -1034,14 +985,12 @@ html,body,button,input{font-family:"Gatitos UI","Segoe UI",Arial,sans-serif,"Seg
 .adminBox button,.adminBox input,.adminBox select{padding:10px 12px;margin:5px 0;border-radius:10px;font:inherit;box-sizing:border-box}
 .adminBox button{background:#e5cff9;color:#281b3c;border:0;cursor:pointer}.adminBox input,.adminBox select{display:block;width:100%;background:#fff;color:#281b3c;border:1px solid #9370ba}.adminBox label{display:block;margin-top:14px}.adminBox p{font-size:14px;color:#e1d2ee}.adminGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}#adminError{color:#ffa5c0}
 
-/* In-game admin dropdown */
 #adminPanel{inset:auto;top:70px;right:16px;width:min(390px,calc(100vw - 32px));display:block;padding:0;background:transparent;pointer-events:none}
 #adminPanel>summary{pointer-events:auto;list-style:none;cursor:pointer;margin-left:auto;width:max-content;padding:8px 14px;border:1px solid #8c79aa;border-radius:12px;background:#30263e;color:#eee3fa;font:700 13px "Gatitos UI",sans-serif}
 #adminPanel>summary::-webkit-details-marker{display:none}
 #adminPanel>summary::after{content:" ▾"}#adminPanel[open]>summary::after{content:" ▴"}
 #adminPanel .adminBox{pointer-events:auto;box-sizing:border-box;width:100%;margin-top:8px;max-height:calc(100dvh - 135px);padding:18px;border-radius:16px}
 
-/* ===== v165 · Pulido visual (sin cambios de gameplay) ===== */
 #levelUpPanel{
   background:
     radial-gradient(circle at 50% 12%,rgba(58,161,216,.13),transparent 30%),
@@ -1294,7 +1243,6 @@ body.panel-theme-dark .upgradeIconBubble,
 .upgradeCard.locked .visualChooseButton{background:rgba(255,255,255,.07);color:rgba(255,255,255,.38);box-shadow:none}
 .upgradeCard.locked{opacity:.52!important;filter:saturate(.35)!important}
 
-
 .shopCoinBadge{
   border:1px solid rgba(255,214,107,.22)!important;
   background:rgba(9,13,31,.82)!important;
@@ -1328,7 +1276,6 @@ body.panel-theme-dark .upgradeIconBubble,
   .visualChooseButton{min-height:38px;margin-top:9px}
 }
 
-/* HUD y paneles secundarios: mismo lenguaje visual, sin alterar estructura */
 #hud{
   color:#f4efff;
   background:linear-gradient(180deg,rgba(16,21,48,.90),rgba(11,14,32,.88));
@@ -1353,7 +1300,6 @@ body.panel-theme-dark #pauseBox,body.panel-theme-dark #victoryBox,body.panel-the
 }
 #adminPanel>summary{background:linear-gradient(180deg,rgba(42,45,80,.96),rgba(24,27,55,.96));border-color:rgba(146,167,255,.26);box-shadow:0 8px 24px rgba(0,0,0,.22)}
 
-/* v166 - Pausa: 4 mejoras por fila en escritorio */
 #pauseBox{
   width:min(1220px,96vw);
 }
@@ -1371,12 +1317,9 @@ body.panel-theme-dark #pauseBox,body.panel-theme-dark #victoryBox,body.panel-the
   #pauseUpgradesList{grid-template-columns:1fr;}
 }
 
-
-
 .upgradeCard 
 .upgradeCard 
 
-/* === v168: Laboratorio gatuno actualizado al nuevo lenguaje visual === */
 #adminPanel{inset:auto!important;top:70px!important;right:16px!important;width:min(620px,calc(100vw - 32px))!important;display:block!important;padding:0!important;background:transparent!important;pointer-events:none!important;z-index:10000!important}
 #adminPanel[hidden]{display:none!important}
 #adminPanel>summary{pointer-events:auto!important;list-style:none!important;cursor:pointer!important;margin-left:auto!important;width:max-content!important;padding:9px 15px!important;border:1px solid rgba(122,190,255,.24)!important;border-radius:13px!important;background:linear-gradient(145deg,rgba(29,38,72,.97),rgba(20,22,48,.97))!important;color:#f5f4ff!important;font:800 13px "Gatitos UI",sans-serif!important;box-shadow:0 10px 28px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.06)!important}
@@ -1394,9 +1337,6 @@ body.panel-theme-dark #pauseBox,body.panel-theme-dark #victoryBox,body.panel-the
 .adminWaveStepper{display:grid;grid-template-columns:48px 1fr 48px;gap:8px;margin-bottom:9px}.adminWaveStepper button{margin:0!important;border:1px solid rgba(139,181,255,.16)!important;border-radius:12px!important;background:#303a68!important;color:#fff!important;font-size:22px!important;font-weight:900!important;cursor:pointer!important}.adminWaveStepper input{text-align:center!important;font-size:17px!important;font-weight:900!important}.adminPrimary{width:100%!important}
 @media(max-width:680px){#adminPanel{right:8px!important;width:calc(100vw - 16px)!important}#adminPanel .adminBox{max-height:calc(100dvh - 108px)!important;padding:14px!important}.adminQuickGrid{grid-template-columns:1fr 1fr}.adminSelection{align-items:stretch;flex-direction:column}.adminSelection button{width:100%!important}}
 
-/* ===== v169 · Tienda compacta =====
-   Conserva el rediseño visual, pero permite ver las seis opciones de la tienda
-   de un vistazo en pantallas de escritorio habituales. */
 #levelUpBox.shopMode,
 body.panel-theme-dark #levelUpBox.shopMode{
   width:min(1180px,96vw);
@@ -1449,7 +1389,6 @@ body.panel-theme-dark #levelUpBox.shopMode .upgradeDescMain{
   #levelUpBox.shopMode .upgradeDescMain,body.panel-theme-dark #levelUpBox.shopMode .upgradeDescMain{min-height:32px;padding:6px 8px}
 }
 
-/* ===== v170 · Cabecera y acciones de tienda limpias ===== */
 #levelUpBox.shopMode h2,
 body.panel-theme-dark #levelUpBox.shopMode h2{
   padding-left:0!important;
@@ -1467,13 +1406,9 @@ body.panel-theme-dark #levelUpBox.shopMode h2{
   letter-spacing:.15px;
   opacity:.76;
 }
-/* Las acciones de tienda no son ramas de mejora. Sin etiqueta de categoría. */
 
-
-/* v174: recarga de la habilidad activa */
 #hud .ramHud{color:#a5eaff;font-weight:900}#ramFishCooldown{color:#ffc98c}#ramFishCooldown.ready{color:#8dffcd;text-shadow:0 0 9px #3ce0b766}
 
-/* v176: fusion navigation stays accessible above the cards while scrolling. */
 .fusionTopControls[hidden]{display:none!important}
 .fusionTopControls{position:sticky;top:-1px;z-index:40;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:10px;margin:0 0 14px;padding:10px 8px;border:1px solid rgba(145,173,255,.2);border-radius:14px;background:linear-gradient(130deg,rgba(20,28,60,.98),rgba(34,25,65,.98));box-shadow:0 8px 20px rgba(0,0,0,.22)}
 .fusionTopPages:empty{display:none}
@@ -1482,7 +1417,6 @@ body.panel-theme-dark #levelUpBox.shopMode h2{
 .fusionTopControls .fusionPageBtn{padding:10px 14px}
 @media(max-width:520px){.fusionTopControls{gap:7px;padding:8px 5px}.fusionTopControls .fusionPageBtn{padding:9px 10px;font-size:12px}.fusionTopControls .fusionPageInfo{padding:8px 10px;font-size:11px}}
 
-/* v177.4: acciones fijas de la tienda, sin saltos cuando una fusion se desbloquea. */
 #levelUpBox.shopMode #upgradeCards.shopSplitRows{
   display:flex;
   flex-direction:column;
@@ -1513,9 +1447,6 @@ body.panel-theme-dark #levelUpBox.shopMode h2{
   #levelUpBox.shopMode .shopActionRow .upgradePrice{font-size:10px;padding:4px 5px!important;}
 }
 
-
-/* v177.8: el catálogo de fusiones usa tarjetas condensadas y como máximo
-   dos filas por página en escritorio, sin ocultar descripciones ni bonus. */
 #levelUpBox.fusionMode{width:min(1160px,96vw);padding:17px 21px!important}
 #levelUpBox.fusionMode h2{font-size:clamp(24px,2.4vw,31px);margin:0 0 4px}
 #levelUpBox.fusionMode #levelUpPhrase{margin:2px 0 5px;font-size:14px}
@@ -1561,9 +1492,6 @@ body.panel-theme-dark #levelUpBox.fusionMode .upgradeDescMain{
 @media(max-width:900px){#levelUpBox.fusionMode{padding:12px!important}#levelUpBox.fusionMode #upgradeCards{max-width:none;grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:720px){#levelUpBox.fusionMode #upgradeCards{grid-template-columns:1fr}#levelUpBox.fusionMode .upgradeCard{width:100%}}
 
-
-/* === v191: recomendación unificada ===
-   La única señal visual es un pequeño círculo 👍 en la esquina del botón de acción. */
 .visualChooseButton{
   position:relative;
   overflow:visible;
