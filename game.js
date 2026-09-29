@@ -483,6 +483,7 @@ const COSMETICS=[
   {id:"fish_elegant",name:"Peces · Sombrero de copa",category:"fish",price:250,preview:"🎩",pack:"elegant"},
   {id:"fish_pirate",name:"Peces · Corsarios",category:"fish",price:180,preview:"🏴‍☠️"},
   {id:"fish_heart",name:"Peces · Corazones",category:"fish",price:180,preview:"💖"},
+  {id:"fish_realistic",name:"Peces · Sardina realista",category:"fish",price:180,preview:"📷"},
   {id:"enemy_gray",name:"Enemigos · Tigres de plata",category:"enemy",price:150,preview:"🐱"},
   {id:"enemy_elegant",name:"Enemigos · Pajarita de gala",category:"enemy",price:250,preview:"🎀",pack:"elegant"},
   {id:"boss_duck_monocle",name:"Pato · Señor Monóculo",category:"boss_duck",price:250,preview:"🦆",pack:"elegant"},
@@ -679,6 +680,61 @@ if(s==='player_green'){
  ctx.fillStyle='#242b40';ctx.beginPath();ctx.roundRect(-19,-28,38,7,2);ctx.roundRect(-11,-44,23,19,3);ctx.fill();ctx.fillStyle='#d2a94f';ctx.fillRect(-11,-29,23,4);drawBowTieShape(0,18,11,'#273749','#344c65','#f4d477');
 }
 ctx.restore();
+}
+const REALISTIC_SARDINE_SOURCE="assets/sardina-realista.png";
+const realisticSardineImage=new Image();
+realisticSardineImage.decoding="async";
+realisticSardineImage.referrerPolicy="no-referrer";
+realisticSardineImage.src=REALISTIC_SARDINE_SOURCE;
+function getRealisticSardineTint(f={}){
+  const fusedCriticalBoomerang=!!(f.crit&&f.boomerang&&hasDoneFusionPair("boomerang+critChance"));
+  const goldenShield=!!(f.shieldShot&&effectLevel("shield")>=5);
+  if(fusedCriticalBoomerang||goldenShield)return {color:"#ffd43b",alpha:.54,glow:"#ffe066"};
+  if(f.crit)return {color:"#ff3b3b",alpha:.50,glow:"#ff6b6b"};
+  if(f.boomerang)return {color:"#35d06f",alpha:.48,glow:"#80ed99"};
+  return null;
+}
+function drawRealisticSardineLocal(f={}){
+  // Foto de dominio público: Sardina pilchardus, Alessandro Duci / Wikimedia Commons.
+  // Se usa un ejemplar lateral de la fotografía y se recorta con una silueta limpia
+  // para que a tamaño de proyectil siga leyéndose como una sardina.
+  const tint=getRealisticSardineTint(f);
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(1,0,16.2,6.7,0,0,Math.PI*2);
+  ctx.moveTo(-13.5,-3.7);ctx.lineTo(-23,-9);ctx.lineTo(-20,0);ctx.lineTo(-23,9);ctx.lineTo(-13.5,3.7);ctx.closePath();
+  ctx.clip();
+  if(realisticSardineImage.complete&&realisticSardineImage.naturalWidth>0){
+    // Recorte de un pez completo que nada hacia la derecha en la foto original 1682x868.
+    ctx.drawImage(realisticSardineImage,575,350,610,180,-23,-9,46,18);
+  }else{
+    // Fallback offline/carga lenta: nunca deja el proyectil invisible.
+    const g=ctx.createLinearGradient(0,-8,0,8);
+    g.addColorStop(0,"#36566a");g.addColorStop(.45,"#a9c6cf");g.addColorStop(1,"#eef4ef");
+    ctx.fillStyle=g;ctx.fillRect(-24,-10,48,20);
+  }
+  if(tint){
+    ctx.globalCompositeOperation="source-atop";
+    ctx.globalAlpha=tint.alpha;
+    ctx.fillStyle=tint.color;
+    ctx.fillRect(-25,-11,50,22);
+    ctx.globalCompositeOperation="source-over";
+    ctx.globalAlpha=1;
+  }
+  ctx.restore();
+  ctx.save();
+  ctx.strokeStyle=tint?.glow||"rgba(225,245,250,.62)";
+  ctx.lineWidth=tint?1.55:1.05;
+  ctx.shadowColor=tint?.glow||"transparent";
+  ctx.shadowBlur=lowPerfMode?0:(tint?7:0);
+  ctx.beginPath();ctx.ellipse(1,0,16.2,6.7,0,0,Math.PI*2);ctx.stroke();
+  ctx.restore();
+}
+function drawRealisticSardineWorld(f,x=f.x,y=f.y,angle=f.angle,scale=f.scale||1){
+  drawEntityShadow(x,y,18*scale,5*scale,.10);
+  ctx.save();ctx.translate(x,y);ctx.rotate(Number.isFinite(angle)?angle:0);ctx.scale(scale,scale);
+  drawRealisticSardineLocal(f);
+  ctx.restore();
 }
 function drawFishSkinDetails(f){
 const s=selectedCosmetic("fish");
@@ -1721,7 +1777,7 @@ if(gameStarted)rollRandomSkins();else runCosmeticSelections=null;
 saveAchievements();
 clearAllInputKeys();
 simulationMs=0;lastRamFishAt=-RAM_FISH_BASE_COOLDOWN;lastManualShotAt=-Infinity;frameAccumulator=0;
-xpRequirementPhase="main";autoRamNextEvaluationAt=0;autoDecisionCooldown=0;autoProjectileDirection=null;autoProjectileDirectionUntil=0;autoLastStuckCheckAt=0;
+xpRequirementPhase="main";autoRamNextEvaluationAt=0;autoLastResidualShotAt=-Infinity;autoResidualNextDecisionAt=0;autoDecisionCooldown=0;autoProjectileDirection=null;autoProjectileDirectionUntil=0;autoLastStuckCheckAt=0;
 selectedTarget=null;lastStarTrail=0;screenShake=0;screenShakeX=0;screenShakeY=0;
 if(autoChoiceTimer)clearTimeout(autoChoiceTimer);
 autoChoiceToken++;autoChoiceMenu=null;
@@ -6005,12 +6061,66 @@ function getRamTrailSlow(enemy){
   }
   return 1;
 }
+function drawRamTrailFish(x,y,angle,size,alpha){
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.rotate(angle);
+  ctx.scale(size,size);
+  ctx.globalAlpha=alpha;
+  ctx.lineJoin="round";
+  ctx.lineWidth=1.35;
+  ctx.strokeStyle="rgba(37,103,130,.72)";
+  // Cola.
+  ctx.fillStyle="rgba(78,194,215,.76)";
+  ctx.beginPath();
+  ctx.moveTo(-10,0);
+  ctx.quadraticCurveTo(-16,-4,-20,-7);
+  ctx.quadraticCurveTo(-22,-7,-20,-1.5);
+  ctx.lineTo(-18,0);
+  ctx.lineTo(-20,2.5);
+  ctx.quadraticCurveTo(-22,7,-19,7);
+  ctx.lineTo(-10,2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.stroke();
+  // Cuerpo: silueta de pez reconocible incluso cuando el rastro se desvanece.
+  ctx.fillStyle="rgba(126,245,255,.82)";
+  ctx.beginPath();
+  ctx.ellipse(0,0,12,6.5,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.stroke();
+  // Brillo y ojo.
+  ctx.fillStyle="rgba(255,255,255,.30)";
+  ctx.beginPath();
+  ctx.ellipse(-1.5,-2.7,5.5,1.35,-.12,0,Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle="rgba(35,52,72,.82)";
+  ctx.beginPath();
+  ctx.arc(6,-.8,1.45,0,Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
 function drawRamFishTrails(){
   if(!ramFishTrails.length)return;
-  ctx.save();ctx.lineCap="round";ctx.strokeStyle="#8de5e5";
+  ctx.save();
   for(const t of ramFishTrails){
-    ctx.globalAlpha=.16*t.life/1.6;ctx.lineWidth=t.r*2;
-    ctx.beginPath();ctx.moveTo(t.x,t.y);ctx.lineTo(t.x2,t.y2);ctx.stroke();
+    const dx=t.x2-t.x,dy=t.y2-t.y;
+    const dist=Math.hypot(dx,dy);
+    if(dist<.5)continue;
+    const angle=Math.atan2(dy,dx);
+    const fade=Math.max(0,Math.min(1,t.life/1.6));
+    // Una sucesión de peces pequeños ocupa la trayectoria que antes era una franja azul.
+    // La colisión/ralentización continúa usando el segmento completo.
+    // Dejamos aire suficiente entre siluetas para que cada pez se lea por separado.
+    // Antes (17–29 px) llegaban a solaparse visualmente; ahora son 42–58 px.
+    const spacing=Math.max(42,Math.min(58,t.r*3.4));
+    const count=Math.max(1,Math.ceil(dist/spacing));
+    for(let i=0;i<count;i++){
+      const u=(i+.5)/count;
+      const x=t.x+dx*u,y=t.y+dy*u;
+      const size=Math.max(.42,Math.min(.82,t.r/13));
+      drawRamTrailFish(x,y,angle,size,.12+.36*fade);
+    }
   }
   ctx.restore();
 }
@@ -6811,6 +6921,10 @@ if(selectedCosmetic("fish")==="fish_low_poly"){
   drawLowPolyFish({x,y,angle:a+Math.PI/2,scale:Math.max(.70,orbSize/16),shieldShot:true});
   continue;
 }
+if(selectedCosmetic("fish")==="fish_realistic"){
+  drawRealisticSardineWorld({shieldShot:true},x,y,a+Math.PI/2,orbSize/16);
+  continue;
+}
 ctx.save();ctx.translate(x,y);ctx.rotate(a+Math.PI/2);
 ctx.scale(orbSize/16,orbSize/16);
 softFishBody(shieldLvl>=5?"#ffd166":"#90e0ef",shieldLvl>=5?"#ffb703":"#48cae4");
@@ -6867,6 +6981,7 @@ ctx.save();try{ctx.filter="grayscale(1)";return drawFishArt(f);}finally{ctx.rest
 }
 function drawFishArt(f){
 if(selectedCosmetic("fish")==="fish_low_poly"){drawLowPolyFish(f);return;}
+if(selectedCosmetic("fish")==="fish_realistic"){drawRealisticSardineWorld(f);return;}
 
 drawEntityShadow(f.x,f.y,18*(f.scale||1),5*(f.scale||1),.10);
 ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.angle);ctx.scale(f.scale||1,f.scale||1);
@@ -7366,6 +7481,8 @@ let autoProjectileDirection=null;
 let autoProjectileDirectionUntil=0;
 let autoLastStuckCheckAt=0;
 let autoRamNextEvaluationAt=0;
+let autoLastResidualShotAt=-Infinity;
+let autoResidualNextDecisionAt=0;
 let autoStableTarget=null;
 let autoStableTargetUntil=0;
 const AUTO_MEMORY_KEY="gatitos_auto_ai_memory_v2";
@@ -7389,7 +7506,7 @@ let autoMemory=autoLoadMemory();
 
 function initAutoMode(){autoMode=false;autoModeUsedThisRun=false;}
 function markRankingInvalidByAI(){autoModeUsedThisRun=true;rankingEligibleThisRun=false;rankingDisabledReason="Partida de pruebas: ranking desactivado.";}
-function setAutoMode(value){if(!adminUnlocked)return;autoMode=!!value;if(autoMode){markRankingInvalidByAI();autoDecisionCooldown=0;autoRamNextEvaluationAt=0;autoStableTarget=null;autoStableTargetUntil=0;autoProjectileDirection=null;autoProjectileDirectionUntil=0;autoLastStuckCheckAt=0;if(autoChoiceMenu)autoScheduleChoice(autoChoiceMenu.choices,autoChoiceMenu.onPick,autoChoiceMenu.context);}else{keys.w=keys.a=keys.s=keys.d=false;autoStableTarget=null;autoProjectileDirection=null;autoProjectileDirectionUntil=0;}refreshAutoModeUI();}
+function setAutoMode(value){if(!adminUnlocked)return;autoMode=!!value;if(autoMode){markRankingInvalidByAI();autoDecisionCooldown=0;autoRamNextEvaluationAt=0;autoLastResidualShotAt=-Infinity;autoResidualNextDecisionAt=0;autoStableTarget=null;autoStableTargetUntil=0;autoProjectileDirection=null;autoProjectileDirectionUntil=0;autoLastStuckCheckAt=0;if(autoChoiceMenu)autoScheduleChoice(autoChoiceMenu.choices,autoChoiceMenu.onPick,autoChoiceMenu.context);}else{keys.w=keys.a=keys.s=keys.d=false;autoStableTarget=null;autoProjectileDirection=null;autoProjectileDirectionUntil=0;}refreshAutoModeUI();}
 function refreshAutoModeUI(){
   if(autoBadge)autoBadge.classList.remove("visible");
 }
@@ -7588,6 +7705,98 @@ function autoMoveKeysFromVector(v){
   const x=v.x/mag,y=v.y/mag;
   keys.a=x<-.24;keys.d=x>.24;keys.w=y<-.24;keys.s=y>.24;
 }
+const AUTO_RESIDUAL_HARD_INTERVAL_MS=500; // La IA nunca supera 2 residuales/s.
+function autoResidualThreatSnapshot(target){
+  const px=player.x,py=player.y;
+  const dist=target&&isFinitePos(target)?Math.hypot(target.x-px,target.y-py):Infinity;
+  let nearby=0,veryClose=0,specialPressure=0;
+  for(const c of cats){
+    if(!isCombatTargetAvailable(c)||!isCatOnScreen(c))continue;
+    const d=Math.hypot(c.x-px,c.y-py);
+    if(d<360)nearby++;
+    if(d<190)veryClose++;
+    if(d<420&&(c.type==="yarn"||c.type==="musician"||c.type==="student"||c.type==="thief"||c.type==="glutton"||isOctopusTentacle(c)))specialPressure++;
+  }
+  let projectileRisk=0;
+  for(const group of [quacks,yarnBalls,demonOrbs]){
+    for(const p of group){
+      if(!isFinitePos(p))continue;
+      const d=Math.hypot(p.x-px,p.y-py);
+      if(d>520)continue;
+      const risk=autoProjectileRisk(p,1.0,46);
+      if(risk)projectileRisk=Math.max(projectileRisk,risk.risk*(risk.t<.55?1.25:1));
+    }
+  }
+  return {dist,nearby,veryClose,specialPressure,projectileRisk};
+}
+function autoShouldUseResidualShot(target){
+  if(!isCombatTargetAvailable(target)||choosingUpgrade||paused||gameOver)return false;
+  const now=gameNow();
+  const cooldown=getRamFishCooldownMs();
+  const elapsed=now-lastRamFishAt;
+  // El Bloquito cargado se reserva para autoTryTacticalRamFish(), que analiza líneas,
+  // multigolpes y proyectiles. Esta función solo administra disparos residuales.
+  if(elapsed>=cooldown)return false;
+  if(now<autoResidualNextDecisionAt)return false;
+
+  const s=autoResidualThreatSnapshot(target);
+  const targetIsBoss=target===boss;
+  const tentacle=isOctopusTentacle(target);
+  const hpRatio=targetIsBoss&&boss.maxHp>0?boss.hp/boss.maxHp:1;
+  const lowLife=life<upgrades.maxLife*.38;
+  const bossFinisher=targetIsBoss&&hpRatio<.16;
+  const crowded=s.nearby>=5||s.veryClose>=2;
+  const dangerousSpecial=s.specialPressure>=1&&(s.dist<430||s.veryClose>0);
+  const urgentProjectile=s.projectileRisk>1.0;
+  const immediateTarget=s.dist<205;
+
+  // Un jefe por sí solo NO justifica ametrallar residuales. Solo se usan si hay
+  // presión real, peligro, proximidad extrema o si el jefe está a punto de caer.
+  let score=0;
+  if(tentacle)score+=4.2;
+  if(crowded)score+=2.4;
+  if(dangerousSpecial)score+=2.1;
+  if(urgentProjectile)score+=2.7;
+  if(immediateTarget)score+=1.8;
+  if(lowLife&&(crowded||urgentProjectile||immediateTarget))score+=1.6;
+  if(bossFinisher)score+=1.7;
+  if(targetIsBoss&&!tentacle&&!crowded&&!urgentProjectile&&!immediateTarget&&!bossFinisher)score-=6;
+
+  // En rondas normales puede ayudar a limpiar amenazas prioritarias, pero tampoco
+  // dispara por sistema contra un gato corriente que está lejos y bajo control.
+  if(!targetIsBoss&&!tentacle){
+    if(target.rainbow)score+=2.5;
+    if(target.type==="yarn"||target.type==="musician"||target.type==="student")score+=1.7;
+    if(s.dist>520&&!crowded)score-=2.5;
+  }
+
+  if(score<2.6){
+    autoResidualNextDecisionAt=now+180;
+    return false;
+  }
+
+  // Cadencia adaptativa. 2/s es un techo absoluto y solo se alcanza en emergencia.
+  // En combate normal queda alrededor de 0,8–1,4/s; contra un jefe aislado, 0/s.
+  let interval=1150;
+  if(score>=6.0)interval=500;
+  else if(score>=4.6)interval=700;
+  else if(score>=3.5)interval=900;
+  if(targetIsBoss&&!tentacle)interval=Math.max(interval,900);
+  if(!lowLife&&!urgentProjectile&&s.veryClose===0)interval=Math.max(interval,800);
+
+  if(now-autoLastResidualShotAt<Math.max(AUTO_RESIDUAL_HARD_INTERVAL_MS,interval)){
+    autoResidualNextDecisionAt=Math.min(now+150,autoLastResidualShotAt+interval);
+    return false;
+  }
+  autoResidualNextDecisionAt=now+Math.min(240,interval*.35);
+  return true;
+}
+function autoTrySmartResidualShot(target){
+  if(!autoShouldUseResidualShot(target))return false;
+  const fired=launchRamFish({x:mouse.x,y:mouse.y});
+  if(fired)autoLastResidualShotAt=gameNow();
+  return fired;
+}
 function autoUpdateAimAndShoot(target){
   if(target&&isFinitePos(target)){
     const lead=Math.min(.6,Math.hypot(target.x-player.x,target.y-player.y)/(585*Math.max(1,upgrades.fishSpeed)));
@@ -7599,8 +7808,7 @@ function autoUpdateAimAndShoot(target){
   }
   if(isCombatTargetAvailable(target)&&!choosingUpgrade&&!paused&&!gameOver){
     shootFish();
-    // Los residuales no gastan ni reinician la recarga del Bloquito táctico.
-    if(gameNow()-lastRamFishAt<getRamFishCooldownMs())launchRamFish({x:mouse.x,y:mouse.y});
+    autoTrySmartResidualShot(target);
   }
 }
 
@@ -7901,8 +8109,8 @@ function updateAutoPlayer(dt){
   // Ante una bala con trayectoria de colisión la IA reacciona casi al instante.
   autoDecisionCooldown=imminentProjectile?.045:(lowPerfMode?.16:.10);
   const target=autoFindBestTarget();
-  // La ráfaga lateral de Patita nerviosa también aprovecha el apuntado
-  // inteligente existente; los residuales respetan su propio límite de 10/s.
+  // El apuntado se mantiene fluido. Los residuales pasan por una decisión táctica
+  // independiente: la IA tiene un techo de 2/s y normalmente dispara bastante menos.
   autoUpdateAimAndShoot(target);
 
   const v={x:0,y:0};
@@ -8365,6 +8573,24 @@ function paintCosmeticPreviews(){
  if(!cosmeticsContentEl)return;
  for(const el of cosmeticsContentEl.querySelectorAll("[data-skin]")){
   const category=el.dataset.category,id=el.dataset.skin,key=category+":"+id;
+  // La sardina realista usa como icono la fotografía original completa,
+  // no una recreación del proyectil ni un emoji.
+  if(id==="fish_realistic"){
+   const img=document.createElement("img");
+   img.src=REALISTIC_SARDINE_SOURCE;
+   img.alt=el.getAttribute("aria-label")||"Sardina realista";
+   // Mantener la fotografía real, pero con la misma escala visual que los
+   // demás peces de la cuadrícula de cosméticos.
+   img.width=88;img.height=52;
+   img.style.width="88px";
+   img.style.height="52px";
+   img.style.maxWidth="46%";
+   img.style.objectFit="contain";
+   img.style.display="block";
+   img.style.margin="auto";
+   el.replaceChildren(img);
+   continue;
+  }
   if(!cosmeticPreviewCache.has(key)){
    const thumbnail=document.createElement("canvas");thumbnail.width=256;thumbnail.height=176;
    const saved={runCosmeticSelections,ctx,player:{...player},boss,selected:selectedCosmetics,starActive,starTime,sevenLivesTime,lowPerfMode,dogKidnapped};
