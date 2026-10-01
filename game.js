@@ -6714,41 +6714,71 @@ drawFishSkinDetails({shieldShot:true});ctx.restore()
 
 function drawLeviathanFish(f){
   const scale=f.scale||1;
-  ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.angle);ctx.scale(scale,scale);
-  ctx.lineJoin="round";ctx.lineWidth=.7;ctx.strokeStyle="#40215c";
-  const polygon=(points,color)=>{
-    ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(...points[0]);
-    for(let i=1;i<points.length;i++)ctx.lineTo(...points[i]);
-    ctx.closePath();ctx.fill();ctx.stroke();
+  ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.angle||0);ctx.scale(scale,scale);
+  ctx.lineJoin="round";ctx.lineCap="round";
+  const shape=(points,fill,stroke="#3a184d",width=.85)=>{
+    ctx.beginPath();ctx.moveTo(points[0][0],points[0][1]);
+    for(let i=1;i<points.length;i++)ctx.lineTo(points[i][0],points[i][1]);
+    ctx.closePath();ctx.fillStyle=fill;ctx.fill();
+    if(stroke){ctx.strokeStyle=stroke;ctx.lineWidth=width;ctx.stroke();}
   };
-  polygon([[-10,0],[-22,-10],[-19,0],[-22,10]],"#9262c4");
-  for(const side of [-1,1]){
-    for(let i=0;i<5;i++){
-      const x=-10+i*4,y=side*(i===0?5:8);
-      polygon([[x-2,y],[x-1,side*(13+(i%2)*3)],[x+3,y]],"#e4c8ff");
-    }
-  }
-  ctx.fillStyle="#ba8ce3";ctx.beginPath();ctx.ellipse(-1,0,15,9,0,0,Math.PI*2);ctx.fill();ctx.stroke();
-  ctx.fillStyle="#d9b8f4";ctx.beginPath();ctx.ellipse(-3,4,9,3,0,0,Math.PI*2);ctx.fill();
-  polygon([[-8,1],[-3,2],[-9,10],[-11,6]],"#9262c4");
-  ctx.fillStyle="#32123e";ctx.beginPath();ctx.moveTo(6,-2);
-  ctx.quadraticCurveTo(12,-5,16,-3);ctx.lineTo(15,6);
-  ctx.quadraticCurveTo(8,10,5,5);ctx.closePath();ctx.fill();ctx.stroke();
-  ctx.fillStyle="#b554a0";ctx.beginPath();ctx.ellipse(10,6,3,1,0,0,Math.PI*2);ctx.fill();
-  ctx.lineWidth=.3;
+  const line=(points,color,width)=>{
+    ctx.beginPath();ctx.moveTo(points[0][0],points[0][1]);
+    for(let i=1;i<points.length;i++)ctx.lineTo(points[i][0],points[i][1]);
+    ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();
+  };
+  shape([[-13,-2],[-23,-13],[-21,-3],[-25,0],[-21,3],[-23,13],[-13,4]],"#8050b0");
+  line([[-20,-9],[-14,0],[-20,9]],"#d3a3f3",.7);
+  shape([[-12,-8],[-13,-16],[-8,-11],[-6,-20],[-2,-11],[2,-19],[5,-10],[10,-14],[10,-6]],"#6e329d");
+  shape([[-11,8],[-11,16],[-6,11],[-3,19],[1,11],[6,16],[8,7]],"#7735a2");
   for(let i=0;i<4;i++){
-    const x=6+i*2.4;
-    polygon([[x,-2.5],[x+1.7,-2.5],[x+.8,.8+(i%2)*.7]],"#fff7ed");
-    polygon([[x,6],[x+1.7,6],[x+.9,3-(i%2)*.5]],"#fff7ed");
+    const x=-11+i*5;
+    shape([[x-2,-9],[x,-(16+(i%2)*3)],[x+3,-10]],"#dfb6fa","#5a247e",.65);
+    shape([[x-2,9],[x,15+(i%2)*3],[x+3,10]],"#c796ef","#5a247e",.65);
   }
-  ctx.lineWidth=.6;
-  polygon([[3,-7],[9,-5],[8,-2],[4,-3]],"#fff0a6");
-  ctx.fillStyle="#25122d";ctx.beginPath();ctx.ellipse(7,-4,0.8,1.4,0,0,Math.PI*2);ctx.fill();
-  ctx.strokeStyle="#40215c";ctx.lineWidth=1.3;ctx.beginPath();ctx.moveTo(2,-8);ctx.lineTo(10,-5);ctx.stroke();
-  ctx.lineWidth=.6;ctx.beginPath();ctx.moveTo(0,-3);ctx.quadraticCurveTo(-3,0,0,3);ctx.stroke();
+  const bodyGradient=ctx.createLinearGradient(-6,-12,6,12);
+  bodyGradient.addColorStop(0,"#dfb3ff");
+  bodyGradient.addColorStop(.35,"#ad69da");
+  bodyGradient.addColorStop(.76,"#8a42bb");
+  bodyGradient.addColorStop(1,"#67318e");
+  ctx.beginPath();ctx.ellipse(-2,0,16,11,0,0,Math.PI*2);
+  ctx.fillStyle=bodyGradient;ctx.fill();ctx.strokeStyle="#402055";ctx.lineWidth=1;ctx.stroke();
+  ctx.beginPath();ctx.ellipse(-5,5,9,4.2,-.12,0,Math.PI*2);
+  ctx.fillStyle="rgba(237,205,255,.65)";ctx.fill();
+  shape([[-9,0],[-14,11],[-3,7],[-2,2]],"#8d48b8");
+  line([[-10,3],[-5,5],[-4,7]],"#e5b9fa",.6);
+  ctx.beginPath();ctx.moveTo(2,-9);ctx.quadraticCurveTo(15,-13,20,-6);
+  ctx.quadraticCurveTo(22,-4,20,-1);ctx.lineTo(10,1);
+  ctx.quadraticCurveTo(6,-2,2,-9);ctx.closePath();
+  ctx.fillStyle="#a761d2";ctx.fill();ctx.strokeStyle="#4a225e";ctx.lineWidth=.9;ctx.stroke();
+  ctx.beginPath();ctx.moveTo(8,-1);ctx.quadraticCurveTo(15,-4,22,-2);
+  ctx.lineTo(21,10);ctx.quadraticCurveTo(14,14,8,6);
+  ctx.quadraticCurveTo(7,3,8,-1);ctx.closePath();
+  ctx.fillStyle="#290f39";ctx.fill();ctx.strokeStyle="#4b1b55";ctx.lineWidth=1.1;ctx.stroke();
+  ctx.beginPath();ctx.moveTo(11,5);ctx.quadraticCurveTo(17,8,21,8);
+  ctx.lineTo(20,10);ctx.quadraticCurveTo(15,11,11,7);ctx.closePath();
+  ctx.fillStyle="#a73378";ctx.fill();
+  for(let i=0;i<5;i++){
+    const x=10+i*2.5;
+    shape([[x,-1.7],[x+1.7,-1.7],[x+.8,2.3+(i%2)*.7]],"#fff9e9","#a18cba",.23);
+    shape([[x,7.5+(i%2)*.3],[x+1.8,7.8],[x+.9,3.4-(i%2)*.6]],"#fff9e9","#a18cba",.23);
+  }
+  ctx.beginPath();ctx.moveTo(8,6);ctx.quadraticCurveTo(15,13,21,10);
+  ctx.lineTo(19,12);ctx.quadraticCurveTo(13,16,7,8);ctx.closePath();
+  ctx.fillStyle="#b879d9";ctx.fill();ctx.strokeStyle="#4a225e";ctx.lineWidth=.9;ctx.stroke();
+  ctx.beginPath();ctx.ellipse(9,-6,2.7,2.4,-.25,0,Math.PI*2);
+  ctx.fillStyle="#ffe5a0";ctx.fill();ctx.strokeStyle="#4b225e";ctx.lineWidth=.55;ctx.stroke();
+  ctx.beginPath();ctx.ellipse(10,-5.8,1.05,1.55,-.3,0,Math.PI*2);
+  ctx.fillStyle="#25102e";ctx.fill();
+  ctx.beginPath();ctx.moveTo(4,-10);ctx.lineTo(14,-7.3);
+  ctx.strokeStyle="#341241";ctx.lineWidth=2.5;ctx.stroke();
+  line([[5,-8],[7,-7.7]],"#e5b5ff",.6);
+  ctx.beginPath();ctx.moveTo(3,-5);ctx.quadraticCurveTo(0,-2,3,1);
+  ctx.strokeStyle="#6c318a";ctx.lineWidth=.8;ctx.stroke();
+  ctx.beginPath();ctx.ellipse(18,-4.5,.7,.45,0,0,Math.PI*2);
+  ctx.fillStyle="#502060";ctx.fill();
   ctx.restore();
 }
-
 function drawFish(f){
 if(f.giantEaster)return drawLeviathanFish(f);
 const category="fish";
