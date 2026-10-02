@@ -1604,3 +1604,5 @@ button:active:not(:disabled){transform:translateY(1px) scale(.985)!important}
 .patchNotesPanel .patchNotesOlder>summary::after,.patchNotesPanel .patchNoteSources>summary::after{transform:none}
 .patchNotesPanel .patchNotesOlder[open]>summary::after{transform:rotate(180deg)}
 .patchNotesPanel .patchNotesOlder>summary:hover,.patchNotesPanel .patchNoteSources>summary:hover{transform:none;box-shadow:none;filter:none}
+
+.scoreBackupTools{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:7px;margin:8px auto 10px;font-size:12px}.scoreBackupCount{width:100%;text-align:center;opacity:.85}.scoreBackupTools button{border:1px solid rgba(255,255,255,.24);border-radius:12px;padding:7px 11px;background:rgba(120,78,139,.24);color:inherit;font:inherit;font-weight:700;cursor:pointer}.scoreBackupTools button:hover{filter:brightness(1.2)}
