@@ -667,7 +667,6 @@ updateRandomSkinsButton();
   requestAnimationFrame(()=>paintCosmeticPreviews(generation));
 }
 function earnScalesFromScore(finalScore){
-  if(window.coopTest?.inRun)return 0;
   const total=safeCount(finalScore?.total);
   const entitled=Math.floor(total<=30000?total/300:100*Math.sqrt(total/30000));
   const gained=Math.max(0,entitled-cosmeticScalesAwardedThisRun);
@@ -1025,8 +1024,8 @@ window.addEventListener("pagehide",saveAchievements);
 document.addEventListener("visibilitychange",()=>{if(document.hidden)saveAchievements()});
 
 function achievementValue(stat){return safeCount(achievementState.stats?.[stat])}
-function setAchievementStatMax(stat,value,opts={}){if(window.coopTest?.inRun)return;const v=Math.max(0,Math.floor(Number(value)||0));if(v>achievementValue(stat)){achievementState.stats[stat]=v;checkAchievements();}}
-function addAchievementStat(stat,amount=1,opts={}){if(window.coopTest?.inRun)return;const v=Math.max(0,Math.floor(Number(amount)||0));if(v<=0)return;achievementState.stats[stat]=achievementValue(stat)+v;checkAchievements();}
+function setAchievementStatMax(stat,value,opts={}){const v=Math.max(0,Math.floor(Number(value)||0));if(v>achievementValue(stat)){achievementState.stats[stat]=v;checkAchievements();}}
+function addAchievementStat(stat,amount=1,opts={}){const v=Math.max(0,Math.floor(Number(amount)||0));if(v<=0)return;achievementState.stats[stat]=achievementValue(stat)+v;checkAchievements();}
 function setAchievementFlag(stat,opts={}){setAchievementStatMax(stat,1,opts)}
 function getAchievementUnlockedLevel(def){return Math.max(0,Math.floor(Number(achievementState.levels?.[def.id]||0)))}
 function getAchievementTargetLevel(def){
@@ -1179,7 +1178,6 @@ function registerFinalScoreAchievement(finalScore){setAchievementStatMax("maxSco
 function registerScalesSpent(amount){addAchievementStat("scalesSpent",amount,{})}
 function registerShopCoinsSpent(amount){addAchievementStat("shopCoinsSpent",amount,{run:true})}
 function registerFusionAchievements(){
-  if(window.coopTest?.inRun)return;
   const created=new Set(achievementState.fusionCreatedPairs||[]);
   const maxed=new Set(achievementState.fusionMaxedPairs||[]);
   Object.keys(doneFusionPairs||{}).forEach(pair=>{
@@ -1318,9 +1316,7 @@ let demonSpawnPressure=0;
 let roundVariant="normal";
 let bossRewardUntil=0,bossRewardType="";
 let lastCriticalRippleAt=-Infinity;
-let lastGuestCriticalRippleAt=-Infinity;
 let lastSaltSpreadAt=-Infinity;
-let lastGuestSaltSpreadAt=-Infinity;
 const BOSS_REWARD_DURATION=20000;
 function bossRewardActive(type){return bossRewardType===type&&gameNow()<bossRewardUntil;}
 function giveBossReward(type,x,y){
@@ -1336,7 +1332,6 @@ function giveBossReward(type,x,y){
   const reward=rewards[type];
   if(!reward)return;
   coins+=reward.coins;
-  window.coopTest?.grantGuestCoins(reward.coins);
   if(runStats){runStats.coinsGenerated+=reward.coins;runStats.coinsCollected+=reward.coins;}
   if(floatingTexts.length<150)showFloatingText({x,y:y-105,text:reward.name+" · +"+reward.coins+" 🪙",life:2.4,maxLife:2.4,big:true,important:true});
   if(shockwaves.length<36)shockwaves.push({x,y,r:12,maxR:125,life:.6,maxLife:.6,color:reward.color,line:5});
@@ -1673,7 +1668,6 @@ function applyRecommendationsToChoices(choices,context="generic"){
 function playCuteMeow(){try{const ac=getAudioCtx(),g=ac.createGain();g.gain.setValueAtTime(.045,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.34);g.connect(ac.destination);const o1=ac.createOscillator();o1.type="sine";o1.frequency.setValueAtTime(760+Math.random()*60,ac.currentTime);o1.frequency.exponentialRampToValueAtTime(520+Math.random()*40,ac.currentTime+.14);o1.connect(g);o1.start();o1.stop(ac.currentTime+.16);const o2=ac.createOscillator();o2.type="triangle";o2.frequency.setValueAtTime(470+Math.random()*40,ac.currentTime+.13);o2.frequency.exponentialRampToValueAtTime(330+Math.random()*30,ac.currentTime+.34);o2.connect(g);o2.start(ac.currentTime+.12);o2.stop(ac.currentTime+.36)}catch(e){}}
 function playFishSound(type="bloop"){try{const ac=getAudioCtx(),o=ac.createOscillator(),g=ac.createGain();if(type==="fiu"){o.type="sine";o.frequency.setValueAtTime(900,ac.currentTime);o.frequency.exponentialRampToValueAtTime(360,ac.currentTime+.18);g.gain.setValueAtTime(.023,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.2)}else{o.type="sine";o.frequency.setValueAtTime(260+Math.random()*80,ac.currentTime);o.frequency.exponentialRampToValueAtTime(190+Math.random()*60,ac.currentTime+.11);g.gain.setValueAtTime(.021,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.13)}o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+.22)}catch(e){}}
 function startGame(){
-  if(!window.coopTest?.hostActive&&!window.coopTest?.guestActive)window.coopTest?.resetSolo();
   autoMode=false;
   gameStarted=true;
   startPanel.style.display="none";
@@ -1879,7 +1873,6 @@ startButton.addEventListener("click",()=>{
 });
 
 function returnToMainMenu(){
-  window.coopTest?.leave();
   closeAdmin();autoMode=false;adminUnlocked=false;updateAdminVisibility();
   clearAllInputKeys();
   stopAllMusic();
@@ -1944,7 +1937,7 @@ function restart(){
 if(gameStarted)rollRandomSkins();else runCosmeticSelections=null;
 saveAchievements();
 clearAllInputKeys();
-simulationMs=0;roundVariant="normal";bossRewardUntil=0;bossRewardType="";lastCriticalRippleAt=-Infinity;lastGuestCriticalRippleAt=-Infinity;lastSaltSpreadAt=-Infinity;lastGuestSaltSpreadAt=-Infinity;lastRamFishAt=-RAM_FISH_BASE_COOLDOWN;lastManualShotAt=-Infinity;manualShotsSinceBloquito=0;frameAccumulator=0;
+simulationMs=0;roundVariant="normal";bossRewardUntil=0;bossRewardType="";lastCriticalRippleAt=-Infinity;lastSaltSpreadAt=-Infinity;lastRamFishAt=-RAM_FISH_BASE_COOLDOWN;lastManualShotAt=-Infinity;manualShotsSinceBloquito=0;frameAccumulator=0;
 xpRequirementPhase="main";autoRamNextEvaluationAt=0;autoLastResidualShotAt=-Infinity;autoResidualNextDecisionAt=0;autoDecisionCooldown=0;autoProjectileDirection=null;autoProjectileDirectionUntil=0;autoLastStuckCheckAt=0;
 selectedTarget=null;lastStarTrail=0;screenShake=0;screenShakeX=0;screenShakeY=0;
 if(autoChoiceTimer)clearTimeout(autoChoiceTimer);
@@ -1957,13 +1950,13 @@ autoRunChoices=[];autoRunStartTime=performance.now();autoLastPlayerX=player.x;au
 resetUpgrades();
 runStartWave=1;
 autoModeUsedThisRun=!!autoMode;
-rankingEligibleThisRun=!autoModeUsedThisRun&&!window.coopTest?.inRun;
-rankingDisabledReason=window.coopTest?.inRun?"Partida cooperativa de prueba: ranking desactivado.":(rankingEligibleThisRun?"":"Ranking desactivado: la partida empezó con IA activada.");
+rankingEligibleThisRun=!autoModeUsedThisRun;
+rankingDisabledReason=rankingEligibleThisRun?"":"Ranking desactivado: la partida empezó con IA activada.";
 cosmeticAwardedThisRun=false;cosmeticScalesAwardedThisRun=0;
 currentWaveHadDamage=false;currentNoDamageStreak=0;
 score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";runScoreBackups=new Map();lastShot=-Infinity;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=1;thiefCoinsStolenThisWave=0;spawnCooldown=0;life=upgrades.maxLife;level=1;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;musicianSpawnedThisWave=false;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starSpawnTimer=12;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();bossEncounterCounts={giantCat:0,duck:0,seal:0,demon:0,octopus:0};bossVictoryAlreadyShown=false;bossVictoryScoreSaved="";bossVictoryPending=false;dogRelaxTime=0;fusionMoveXpTimer=0;lastFusionShieldGuard=0;enemyIntroSeen={};finalChoiceLocked=false;finalCompletionContinue=false;finalCompletionStartWave=0;demonSpawnPressure=0;perfFps=60;lowPerfMode=false;lowPerfTimer=0;
 powerStars.length=0;tunaDrops.length=0;
-player.x=canvas.width/2;player.y=canvas.height/2;player.angle=0;player.shootAnim=0;player.hurtAnim=0;if(window.coopTest?.hostActive)window.coopTest.resetPlayer();dogCompanion.x=player.x-50;dogCompanion.y=player.y+45;dogCompanion.shootCooldown=0;
+player.x=canvas.width/2;player.y=canvas.height/2;player.angle=0;player.shootAnim=0;player.hurtAnim=0;dogCompanion.x=player.x-50;dogCompanion.y=player.y+45;dogCompanion.shootCooldown=0;
 fishes.length=0;ramFishTrails.length=0;cats.length=0;hearts.length=0;smokes.length=0;floatingTexts.length=0;pawPrints.length=0;quacks.length=0;coinsDrops.length=0;dogBones.length=0;demonOrbs.length=0;yarnBalls.length=0;shockwaves.length=0;sparkles.length=0;
 canvas.style.cursor="crosshair";
 messageEl.classList.remove("dogSave");messageEl.style.display="none";levelUpPanel.style.display="none";gameOverPanel.style.display="none";victoryPanel.style.display="none";startWave();updateHud();syncMusic()
@@ -2038,7 +2031,7 @@ function collectAllMapLootAfterBoss(){
     healed+=Math.round(15+Math.random()*10)*stacks;
     collectedTuna+=stacks;
   }
-  if(healed>0){life=Math.min(upgrades.maxLife,life+healed);window.coopTest?.guestHeal(healed);}
+  if(healed>0)life=Math.min(upgrades.maxLife,life+healed);
 
   coinsDrops.length=0;
   tunaDrops.length=0;
@@ -3214,9 +3207,7 @@ maybeOpenShopOrFusion();
 function openUpgradeMenu(reason="level",opts={}){
 releaseGamePointer();
 const darkWave=reason==="wave"&&upgrades.darkPact;
-if(reason==="wave")window.coopTest?.prepareGuestUpgrade(reason);
 const choices=darkWave?getRandomScalableUpgradeChoices(1):getRandomUpgradeChoices(3);
-
 if(darkWave){
   choices.forEach(upgrade=>{
     if(!upgrade.key)return;
@@ -3240,20 +3231,15 @@ if(darkWave){
     }
   });
 }
-if(choices.length===0||(!window.coopTest?.hostActive&&allDirectUpgradesMaxed())){
-const completeEmptyChoice=()=>{
-choosingUpgrade=false;levelUpPanel.style.display="none";
+if(choices.length===0||allDirectUpgradesMaxed()){
 if(reason==="wave"&&waveUpgradePending){waveUpgradePending=false;recordNoDamageRoundIfClean();wave++;
-thiefCoinsStolenThisWave=0;life=Math.min(upgrades.maxLife,life+upgrades.healOnWave);window.coopTest?.guestWaveHeal();startWave()}
+thiefCoinsStolenThisWave=0;life=Math.min(upgrades.maxLife,life+upgrades.healOnWave);startWave()}
 giveLevelCoins("por tener mejoras al máximo");
 if(pendingUpgradeQueue.length)processPendingUpgradeQueue();
-};
-if(!window.coopTest?.waitGuestUpgrade(completeEmptyChoice))completeEmptyChoice();
 return
 }
 showCards(reason==="wave"?"🌊 ¡Ronda superada!":"⭐ ¡Subiste de nivel!",darkWave?"🖤 La Voluntad Oscura elige por ti":lovePhrases[Math.floor(Math.random()*lovePhrases.length)],darkWave?"":"Elige una mejora gatuna",choices,upgrade=>{
 upgrade.apply();
-window.coopTest?.markHostChoice(upgrade.key);
 if(darkWave){let bonusCoins=1+Math.floor(Math.random()*5);if(hasDoneFusionPair("coinMagnet+darkPact")){const fp=getFusionProgress("coinMagnet+darkPact");bonusCoins+=2+Math.floor(Math.random()*(3+fp));}coins+=bonusCoins;showFloatingText({x:player.x,y:player.y-105,text:`🖤 +${bonusCoins} monedas`,life:1.3,maxLife:1.3,big:false})}
 if(darkWave&&upgrade.key){
   let doubled=false;
@@ -3271,17 +3257,13 @@ if(darkWave&&upgrade.key){
   }
   if(doubled)showFloatingText({x:player.x,y:player.y-85,text:upgrade.fusion?"🖤 +2 niveles de fusión":"🖤 +2 niveles",life:1.4,maxLife:1.4,big:false})
 }
-const finishHostChoice=()=>{
 choosingUpgrade=false;levelUpPanel.style.display="none";canvas.style.cursor=upgrades.bigCursor?"none":"crosshair";
 syncGamePointerLock();
 showFloatingText({x:player.x,y:player.y-55,text:upgrade.title,life:1.5,maxLife:1.5,big:false});
 
-if(reason==="wave"&&waveUpgradePending){waveUpgradePending=false;recordNoDamageRoundIfClean();wave++;life=Math.min(upgrades.maxLife,life+upgrades.healOnWave);window.coopTest?.guestWaveHeal();startWave()}
+if(reason==="wave"&&waveUpgradePending){waveUpgradePending=false;recordNoDamageRoundIfClean();wave++;life=Math.min(upgrades.maxLife,life+upgrades.healOnWave);startWave()}
 updateHud();
 if(pendingUpgradeQueue.length)processPendingUpgradeQueue();else maybeOpenShopOrFusion()
-};
-levelUpPanel.style.display="none";
-if(!window.coopTest?.waitGuestUpgrade(finishHostChoice))finishHostChoice();
 },null,reason==="wave"?"wave":"level")
 }
 
@@ -3393,12 +3375,8 @@ function getEffectiveShopFusionPrice(){
   const normal=getShopFusionPrice();
   return isFusionOnlyShopDiscountActive()?Math.max(1,Math.ceil(normal/2)):normal;
 }
-function startShopSession(){shopAvailable=true;window.coopTest?.prepareGuestShop();openCoinShop()}
-function closeShopSession(){
-  const finish=()=>{shopAvailable=false;choosingUpgrade=false;levelUpPanel.style.display="none";syncGamePointerLock();updateHud()};
-  if(window.coopTest?.waitGuestShop(finish)){shopAvailable=false;levelUpPanel.style.display="none";syncGamePointerLock();return;}
-  finish();
-}
+function startShopSession(){shopAvailable=true;openCoinShop()}
+function closeShopSession(){shopAvailable=false;choosingUpgrade=false;levelUpPanel.style.display="none";syncGamePointerLock();updateHud()}
 
 function getFusionLockReason(cost=getEffectiveShopFusionPrice()){
 const keys=getMaxedFusionKeys();
@@ -4111,7 +4089,6 @@ const HS_KEY="gatitos_peces_hs";
 function getHighScore(){return safeCount(gameStorage.getItem(HS_KEY))}
 function saveHighScore(s){gameStorage.setItem(HS_KEY,String(s))}
 function checkAndSaveRecord(total){
-if(window.coopTest?.inRun)return false;
 const prev=getHighScore();
 if(total>prev){saveHighScore(total);return true;}
 return false;
@@ -4417,31 +4394,23 @@ checkGameCompletion();
 }
 
 function openRainbowLowestMenu(){
-window.coopTest?.prepareGuestUpgrade("rainbow");
 const choices=getRainbowLowestChoices(3);
 if(choices.length===0){
-  if(window.coopTest?.waitGuestUpgrade(()=>giveRainbowMaxedReward()))return;
-  giveRainbowMaxedReward();
-  return;
+giveRainbowMaxedReward();
+return;
 }
 showCards("🌈 ¡Gatito arcoíris!","Elige una mejora de las más bajas 💖","",choices,upgrade=>{
 upgrade.apply();
-const completeRainbow=()=>{
-  choosingUpgrade=false;
-  levelUpPanel.style.display="none";
-  canvas.style.cursor=upgrades.bigCursor?"none":"crosshair";
-  syncGamePointerLock();
-  showFloatingText({x:player.x,y:player.y-65,text:"🌈 "+upgrade.title,life:1.3,maxLife:1.3,big:false});
-  updateHud();checkGameCompletion();
-  processPendingUpgradeQueue();
-};
+choosingUpgrade=false;
 levelUpPanel.style.display="none";
-if(!window.coopTest?.waitGuestUpgrade(completeRainbow))completeRainbow();
+canvas.style.cursor=upgrades.bigCursor?"none":"crosshair";
+syncGamePointerLock();
+showFloatingText({x:player.x,y:player.y-65,text:"🌈 "+upgrade.title,life:1.3,maxLife:1.3,big:false});
+updateHud();checkGameCompletion();
 },null,"rainbow");
 }
 
 function grantFullLevel(){
-window.coopTest?.grantGuestBossLevel();
 syncXpRequirementPhase();
 level++;
 xpNeed=nextXpRequirement(xpNeed);
@@ -4586,7 +4555,6 @@ function collectCoinDrop(coin){
   const amount=safeCount(coin?.amount);
   if(!amount)return;
   coins+=amount;
-  window.coopTest?.guestCollectCoin(amount,coin?.pickups||1);
   if(runStats)runStats.coinsCollected+=amount;
   if(hasDoneFusionPair("coinMagnet+xpBoost"))gainXP(amount*(.25+.45*fusionStrength("coinMagnet+xpBoost")));
   if(hasDoneFusionPair("healOnWave+luck"))life=Math.min(upgrades.maxLife,life+amount*(2+4*fusionStrength("healOnWave+luck")));
@@ -4619,15 +4587,13 @@ function applySaltEffect(target,fish){
 if(!target||!isCombatTargetAvailable(target)||effectLevel("saltScales")<=0||!(fish?.damage>0))return;
 const duration=2.4+(hasDoneFusionPair("fireRate+saltScales")?.4:0);
 target.saltTime=Math.max(target.saltTime||0,duration);
-const nextSaltDps=getSaltDamagePerSecond(fish);
-if(nextSaltDps>=(target.saltDps||0))target.saltOwner=fish?.ownerId==="guest"?"guest":"host";
-target.saltDps=Math.max(target.saltDps||0,nextSaltDps);
+target.saltDps=Math.max(target.saltDps||0,getSaltDamagePerSecond(fish));
 target.saltInherited=false;
 }
 function spreadSaltOnDefeat(cat){
   if(!cat||!(cat.saltTime>0)||cat.saltInherited||!hasDoneFusionPair("catSlow+saltScales"))return;
-  if(gameNow()-(cat.saltOwner==="guest"?lastGuestSaltSpreadAt:lastSaltSpreadAt)<160)return;
-  if(cat.saltOwner==="guest")lastGuestSaltSpreadAt=gameNow();else lastSaltSpreadAt=gameNow();
+  if(gameNow()-lastSaltSpreadAt<160)return;
+  lastSaltSpreadAt=gameNow();
   const radius=88+22*fusionStrength("catSlow+saltScales");
   let affected=0;
   for(const other of cats){
@@ -4635,9 +4601,7 @@ function spreadSaltOnDefeat(cat){
     const d=Math.hypot(other.x-cat.x,other.y-cat.y);
     if(d>radius)continue;
     other.saltTime=Math.max(other.saltTime||0,1.1+.45*fusionStrength("catSlow+saltScales"));
-    const inheritedDps=Math.min(1.65,(cat.saltDps||0)*.42);
-    if(inheritedDps>=(other.saltDps||0))other.saltOwner=cat.saltOwner||"host";
-    other.saltDps=Math.max(other.saltDps||0,inheritedDps);
+    other.saltDps=Math.max(other.saltDps||0,Math.min(1.65,(cat.saltDps||0)*.42));
     other.saltInherited=true;
     affected++;
     if(affected>=3)break;
@@ -4646,8 +4610,8 @@ function spreadSaltOnDefeat(cat){
 }
 function criticalReturnRipple(fish,x,y,primary){
   if(!fish||!fish.crit||!fish.boomerang||!hasDoneFusionPair("boomerang+critChance"))return;
-  if(gameNow()-(fish.ownerId==="guest"?lastGuestCriticalRippleAt:lastCriticalRippleAt)<550)return;
-  if(fish.ownerId==="guest")lastGuestCriticalRippleAt=gameNow();else lastCriticalRippleAt=gameNow();
+  if(gameNow()-lastCriticalRippleAt<550)return;
+  lastCriticalRippleAt=gameNow();
   const radius=70+30*fusionStrength("boomerang+critChance");
   const damage=Math.min(3,Math.max(.3,(fish.damage||1)*(.13+.08*fusionStrength("boomerang+critChance"))));
   let affected=0;
@@ -4669,16 +4633,15 @@ target.saltTime=Math.max(0,target.saltTime-elapsed);
 const dealt=Math.min(Math.max(0,target.hp),Math.max(0,target.saltDps||0)*elapsed);
 if(dealt>0){
   let actual=dealt;
-  if(target===boss){const oldHp=target.hp;damageBoss(dealt,false,true,target.saltOwner==="guest"?"guest":"host");actual=Math.max(0,oldHp-target.hp);}
+  if(target===boss){const oldHp=target.hp;damageBoss(dealt,false,true);actual=Math.max(0,oldHp-target.hp);}
   else{target.hp-=dealt;target.hitAnim=Math.max(target.hitAnim||0,.055);}
-  if(target.saltOwner==="guest")window.coopTest?.guestSaltLifeSteal(actual);
-  else if(hasDoneFusionPair("lifeSteal+saltScales"))life=Math.min(upgrades.maxLife,life+actual*.12);
+  if(hasDoneFusionPair("lifeSteal+saltScales"))life=Math.min(upgrades.maxLife,life+actual*.12);
 }
-if(target.saltTime<=0){target.saltDps=0;target.saltOwner=null;}
+if(target.saltTime<=0)target.saltDps=0;
 if(target!==boss&&target.hp<=0){target.saltKill=true;const i=cats.indexOf(target);if(i>=0)killCat(i,target);return true;}
 return false;
 }
-function damageBoss(amount,leviathanKill=false,silent=false,ownerId="host"){
+function damageBoss(amount,leviathanKill=false,silent=false){
 if(!boss||(boss.type==="octopus"&&boss.state!=="surface"))return;
 let real=boss.type==="seal"&&boss.state!=="stunned"?amount*.35:amount;
 const diveThreshold=boss.type==="octopus"&&boss.dives<2?boss.maxHp*(boss.dives===0?.70:.35):0;
@@ -4687,10 +4650,7 @@ const healthLost=Math.min(Math.max(0,boss.hp),Math.max(0,real));
 if(runStats)runStats.bossDamage+=healthLost;
 boss.hp-=real;boss.hitAnim=.15;
 if(!silent){makeImpact(boss.x,boss.y,boss.type==="demon"?"#ff4d8d":"#ffd166",1.35);addScreenShake(boss.type==="demon"?5:3);playImpactSound();}
-if(!silent){
-if(ownerId==="guest")window.coopTest?.guestLifeSteal(healthLost);
-else if(upgrades.lifeSteal>0)life=Math.min(upgrades.maxLife,life+healthLost*getCurrentLifeSteal());
-}
+if(upgrades.lifeSteal>0)life=Math.min(upgrades.maxLife,life+healthLost*getCurrentLifeSteal());
 if(diveThreshold&&boss.hp<=diveThreshold+1e-7){beginOctopusDive(boss);return;}
 if(boss.hp<=0){
 const defeatedType=boss.type;
@@ -4725,7 +4685,6 @@ defeatedBossTypes.add(defeatedType);
 syncXpRequirementPhase();
 if(finalCompletionContinue||isGameCompleted()){
   level++;
-  window.coopTest?.grantGuestBossLevel();
   xpNeed=nextXpRequirement(xpNeed);
   shopBossPending=false;
   shopAvailable=false;
@@ -4863,7 +4822,6 @@ function getLeviathanTravelSpeed(angle){
   return Math.max(0,Math.min(tx,ty))/LEVIATHAN_CENTER_TRAVEL_SECONDS;
 }
 const LEVIATHAN_GIANT_FISH_CHANCE=0.00001;
-let coopActionOwner="host";
 function triggerLeviathanMassiveDamage(){
 addAchievementStat("leviathanAppearances",1,{run:true});
   const leviathanPower=1+Math.max(0,level-1)*.035+Math.max(0,upgrades.damage-1)*.22;
@@ -4880,7 +4838,7 @@ addAchievementStat("leviathanAppearances",1,{run:true});
   if(boss&&Number.isFinite(boss.hp)&&boss.hp>0){
     const desired=Math.max(boss.maxHp*Math.min(.80,.35+Math.max(0,level-1)*.006+Math.max(0,upgrades.damage-1)*.018),baseDamage*55*leviathanPower);
     const input=boss.type==="seal"&&boss.state!=="stunned"?desired/.35:desired;
-    damageBoss(input,true,false,coopActionOwner);
+    damageBoss(input,true);
   }
   for(let i=quacks.length-1;i>=0;i--){
     const q=quacks[i];
@@ -5100,16 +5058,15 @@ function playDemonShotSound(){
 function makeQuack(){
 if(!gameStarted||paused||gameOver||choosingUpgrade||!boss||boss.type!=="duck")return;
 if(quacks.length>=getProjectileCap("quack"))return;
-const duckTarget=window.coopTest?.targetFor(boss.x,boss.y)||player;const angle=Math.atan2(duckTarget.y-boss.y,duckTarget.x-boss.x),speed=boss.quackSpeed||190+wave*8,word=Math.random()<.5?"QUACK!":"QUACK?";
+const angle=Math.atan2(player.y-boss.y,player.x-boss.x),speed=boss.quackSpeed||190+wave*8,word=Math.random()<.5?"QUACK!":"QUACK?";
 quacks.push({x:boss.x+Math.cos(angle)*65,y:boss.y+Math.sin(angle)*65,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,r:24,life:4,text:word,hp:1+Math.max(0,boss.repeatLevel||0)})
 }
 
 function startSealJump(){
 if(!boss||boss.type!=="seal")return;
 const bounds=getBossArenaBounds(boss);
-const sealTarget=window.coopTest?.targetFor(boss.x,boss.y)||player;
-const tx=Math.max(bounds.minX,Math.min(bounds.maxX,sealTarget.x));
-const ty=Math.max(bounds.minY,Math.min(bounds.maxY,sealTarget.y));
+const tx=Math.max(bounds.minX,Math.min(bounds.maxX,player.x));
+const ty=Math.max(bounds.minY,Math.min(bounds.maxY,player.y));
 boss.state="jumping";
 boss.jumpDuration=Math.max(1.05,(boss.baseJumpDuration||1.05)+.55+Math.random()*.22);
 boss.jumpTimer=boss.jumpDuration;boss.startX=boss.x;boss.startY=boss.y;boss.targetX=tx;boss.targetY=ty;boss.shadowX=tx;boss.shadowY=ty
@@ -5164,8 +5121,7 @@ function beginOctopusDive(owner){
   const count=Math.min(8,2+owner.dives+(owner.extraTentacles||0)+Math.floor(owner.repeatLevel/2));
   const spots=[];
   for(let i=0;i<count;i++){
-    const octopusTarget=window.coopTest?.targetFor(owner.x,owner.y)||player;
-    let p=octopusArenaPoint(octopusTarget.x,octopusTarget.y);
+    let p=octopusArenaPoint(player.x,player.y);
     if(i>0){
       let best=null,bestDistance=-1;
       for(let trial=0;trial<12;trial++){
@@ -5189,14 +5145,13 @@ function killOctopusTentacle(index,tentacle){
   if(tentacle.owner?.attacks)tentacle.owner.attacks=tentacle.owner.attacks.filter(a=>a.source!==tentacle);
   if(tentacle.leviathanLoot)guaranteedLeviathanLoot(tentacle.x,tentacle.y);
   else dropCoins(tentacle.x,tentacle.y,.35);
-  makeSmoke(tentacle.x,tentacle.y);playSoftPop();gainXP(2);window.coopTest?.grantGuestXP(2);
+  makeSmoke(tentacle.x,tentacle.y);playSoftPop();gainXP(2);
   const actual=cats[index]===tentacle?index:cats.indexOf(tentacle);
   if(actual>=0)cats.splice(actual,1);
 }
 function resolveOctopusStrike(owner,attack){
   if(Math.hypot(player.x-attack.x,player.y-attack.y)<attack.r+player.r)
     takePlayerDamage(owner.tentacleDamage,"Te ha golpeado un tentáculo 🐙",.35);
-window.coopTest?.guestAreaHit(attack.x,attack.y,attack.r,owner.tentacleDamage);
   for(let i=cats.length-1;i>=0;i--){
     const cat=cats[i];
     if(isOctopusTentacle(cat)||!isFinitePos(cat)||cat.dead)continue;
@@ -5236,8 +5191,7 @@ function updateOctopusBoss(owner,dt){
       if(t.freezeTimer>0)continue;
       t.attackTimer-=dt;
       if(t.attackTimer<=0){
-        const tentacleTarget=window.coopTest?.targetFor(t.x,t.y)||player;
-        const dx=tentacleTarget.x-t.x,dy=tentacleTarget.y-t.y,d=Math.hypot(dx,dy)||1;
+        const dx=player.x-t.x,dy=player.y-t.y,d=Math.hypot(dx,dy)||1;
         const reach=Math.min(40,d);
         createOctopusStrike(owner,t.x+dx/d*reach,t.y+dy/d*reach,owner.strikeRadius,1.05,t);
         t.attackTimer=3.0;
@@ -5247,8 +5201,7 @@ function updateOctopusBoss(owner,dt){
   }
   owner.attackTimer-=dt;
   if(owner.attackTimer<=0){
-    const octopusAttackTarget=window.coopTest?.targetFor(owner.x,owner.y)||player;
-    const dx=octopusAttackTarget.x-owner.x,dy=octopusAttackTarget.y-owner.y,d=Math.hypot(dx,dy)||1;
+    const dx=player.x-owner.x,dy=player.y-owner.y,d=Math.hypot(dx,dy)||1;
     const reach=Math.min(d,Math.min(330,Math.max(140,Math.min(canvas.width,canvas.height)*.43)));
     const angle=Math.atan2(dy,dx),count=owner.salvoCount||1;
     for(let i=0;i<count;i++){
@@ -5272,8 +5225,7 @@ const trailSlow=getRamTrailSlow(boss);
 if(boss.knockVx||boss.knockVy){boss.x+=(boss.knockVx||0)*dt;boss.y+=(boss.knockVy||0)*dt;boss.knockVx=(boss.knockVx||0)*Math.pow(.12,dt);boss.knockVy=(boss.knockVy||0)*Math.pow(.12,dt);if(Math.abs(boss.knockVx)<8)boss.knockVx=0;if(Math.abs(boss.knockVy)<8)boss.knockVy=0;}
 constrainBossToArena(boss);
 if(boss.type==="giantCat"){
-const giantTarget=window.coopTest?.targetFor(boss.x,boss.y)||player;
-const dx=giantTarget.x-boss.x,dy=giantTarget.y-boss.y,dist=Math.hypot(dx,dy)||1;
+const dx=player.x-boss.x,dy=player.y-boss.y,dist=Math.hypot(dx,dy)||1;
 boss.x+=(dx/dist)*boss.speed*trailSlow*dt;boss.y+=(dy/dist)*boss.speed*trailSlow*dt;boss.summon-=dt;
 if(boss.summon<=0&&isCatOnScreen(boss)){boss.summon=boss.baseSummon||Math.max(.55,2.15-wave*.07);for(let i=0;i<(boss.summonCount||2);i++){
 if(i%2===1){
@@ -5305,7 +5257,6 @@ boss.y=boss.startY+(boss.targetY-boss.startY)*p-Math.sin(p*Math.PI)*140;
 if(boss.jumpTimer<=0){
 boss.x=boss.targetX;boss.y=boss.targetY;makeSmoke(boss.x,boss.y);
 if(Math.hypot(player.x-boss.x,player.y-boss.y)<boss.r+player.r+38){takePlayerDamage((boss.slamDamage||18),"La foca ha caído encima de ti 🦭",.2)}
-window.coopTest?.guestAreaHit(boss.x,boss.y,boss.r+38,boss.slamDamage||18);
 boss.jumps++;
 if(boss.jumps>=boss.jumpsBeforeRest){
 boss.state="stunned";boss.stunTimer=boss.stunDuration||2.4;boss.jumps=0;boss.jumpsBeforeRest=getSealJumpCount(wave,boss.repeatLevel||0);boss.hp-=Math.max(4,boss.maxHp*.055);if(boss.hp<=0){damageBoss(0);return;}showFloatingText({x:boss.x,y:boss.y-boss.r-25,text:"La foca se ha mareado",life:1.4,maxLife:1.4,big:false})
@@ -5319,9 +5270,8 @@ if(boss.stunTimer<=0)startSealJump()
 else if(boss.type==="demon"){
 boss.wobble+=dt*2.8;
 
-const demonTarget=window.coopTest?.targetFor(boss.x,boss.y)||player;
-const targetX=demonTarget.x+Math.cos(boss.wobble)*230;
-const targetY=demonTarget.y+Math.sin(boss.wobble*.8)*150-80;
+const targetX=player.x+Math.cos(boss.wobble)*230;
+const targetY=player.y+Math.sin(boss.wobble*.8)*150-80;
 const dx=targetX-boss.x;
 const dy=targetY-boss.y;
 const d=Math.hypot(dx,dy)||1;
@@ -5462,13 +5412,13 @@ if(index<0||index>=cats.length||cats[index]!==cat)return;
 if(isOctopusTentacle(cat)){killOctopusTentacle(index,cat);return;}
 cat.dead=true;
 if(cat.saltKill)addAchievementStat("saltKills",1,{run:true});
-if(cat.saltOwner==="guest"&&window.coopTest?.withFishOwner)window.coopTest.withFishOwner({ownerId:"guest"},()=>spreadSaltOnDefeat(cat));else spreadSaltOnDefeat(cat);
+spreadSaltOnDefeat(cat);
 dropRecoveredStolenCoins(cat);
 if(cat.type==="yarn")explodeYarnCat(cat);
 if(cat.type==="glutton"){const tunaCount=2+Math.floor(Math.random()*2);for(let t=0;t<tunaCount;t++){tunaDrops.push({x:cat.x+(Math.random()*44-22),y:cat.y+(Math.random()*44-22),r:16,life:16,wobble:0});showFloatingText({x:cat.x,y:cat.y-38-t*18,text:"🐟 ¡Lata!",life:1.0,maxLife:1.0,big:false});}}
 if(cat.leviathanLoot)guaranteedLeviathanLoot(cat.x,cat.y);
-if(cat.type==="mini"){const earned=2+Math.floor(wave/3);gainXP(earned);window.coopTest?.grantGuestXP(earned);}
-score++;if(runStats)runStats.kills++;addAchievementStat("cats",1,{run:true});gainXP(1+Math.floor(wave/4));window.coopTest?.grantGuestXP(1+Math.floor(wave/4));makeSmoke(cat.x,cat.y);playSoftPop();dropCoins(cat.x,cat.y,cat.rainbow?.25:.013);if(!cat.rainbow&&Math.random()<.10){tunaDrops.push({x:cat.x,y:cat.y+(Math.random()*20-10),r:16,life:16,wobble:0});showFloatingText({x:cat.x,y:cat.y-38,text:"🐟 ¡Lata!",life:1.0,maxLife:1.0,big:false});}
+if(cat.type==="mini")gainXP(2+Math.floor(wave/3));
+score++;if(runStats)runStats.kills++;addAchievementStat("cats",1,{run:true});gainXP(1+Math.floor(wave/4));makeSmoke(cat.x,cat.y);playSoftPop();dropCoins(cat.x,cat.y,cat.rainbow?.25:.013);if(!cat.rainbow&&Math.random()<.10){tunaDrops.push({x:cat.x,y:cat.y+(Math.random()*20-10),r:16,life:16,wobble:0});showFloatingText({x:cat.x,y:cat.y-38,text:"🐟 ¡Lata!",life:1.0,maxLife:1.0,big:false});}
 if(cat.rainbow){rainbowChanceLevel=1;rainbowPendingUntilKilled=false;rainbowSelectedThisWave=false;queueUpgradeMenus("rainbow",1)}
 else if(cat.type!=="thief")showFloatingText({x:cat.x,y:cat.y-30,text:"miau~",life:.8,maxLife:.8,big:false});
 if(cats[index]===cat)cats.splice(index,1);
@@ -6180,7 +6130,6 @@ simulationMs+=dt*1000;
 try{updateWorld(dt)}catch(err){if(err!==END_GAME_FRAME)throw err}
 finally{updatingWorld=false;}
 processPendingUpgradeQueue();
-window.coopTest?.offerQueuedGuest();
 checkGameCompletion();
 }
 function updateRamFishTrails(dt){
@@ -6267,7 +6216,6 @@ function updateWorld(dt){
 updateRamFishTrails(dt);
 starSpawnTimer-=dt;if(starSpawnTimer<=0){trySpawnPowerStar();starSpawnTimer=12+Math.random()*8;}
 if(autoMode)updateAutoPlayer(dt);
-if(window.coopTest?.hostActive)window.coopTest.update(dt);
 if(runStats){runStats.elapsed+=dt;if(life<upgrades.maxLife*.35)runStats.lowHpTime+=dt;}
 triggerCatInstinct();if(dogRelaxTime>0)dogRelaxTime=Math.max(0,dogRelaxTime-dt);updateAvalanche(dt);
 if(starActive){
@@ -6375,8 +6323,7 @@ if(fish.ramFish){fish.prevX=fish.x;fish.prevY=fish.y;}
 fish.age=(fish.age||0)+dt;
 if(fish.boomerang&&!fish.returning&&fish.age>(fish.turnTime||.95)){fish.returning=true;fish.pierce=true}
 if(fish.returning){
-const ownTarget=window.coopTest?.fishPlayer(fish)||player;
-let returnTarget={x:ownTarget.x,y:ownTarget.y};
+let returnTarget={x:player.x,y:player.y};
 let expireAtPlayer=true;
 if(hasDoneFusionPair("bigCursor+boomerang")){
   const lvl=getFusionProgress("bigCursor+boomerang");
@@ -6384,10 +6331,10 @@ if(hasDoneFusionPair("bigCursor+boomerang")){
   const nearby=marked&&isFinitePos(marked)?marked:getNearestCombatTargetFrom(fish.x,fish.y,520+lvl*95);
   if(nearby){returnTarget=nearby;expireAtPlayer=false;fish.pierce=true;}
 }
-const a=Math.atan2(returnTarget.y-fish.y,returnTarget.x-fish.x),speed=window.coopTest?.withFishOwner?window.coopTest.withFishOwner(fish,()=>690*upgrades.fishSpeed*(1+effectLevel("boomerang")*.05+(hasDoneFusionPair("bigCursor+boomerang")?getFusionProgress("bigCursor+boomerang")*.025:0))):690*upgrades.fishSpeed*(1+effectLevel("boomerang")*.05+(hasDoneFusionPair("bigCursor+boomerang")?getFusionProgress("bigCursor+boomerang")*.025:0));
+const a=Math.atan2(returnTarget.y-fish.y,returnTarget.x-fish.x),speed=690*upgrades.fishSpeed*(1+effectLevel("boomerang")*.05+(hasDoneFusionPair("bigCursor+boomerang")?getFusionProgress("bigCursor+boomerang")*.025:0));
 fish.vx=Math.cos(a)*speed;fish.vy=Math.sin(a)*speed;fish.angle=a;
-if(expireAtPlayer&&Math.hypot(ownTarget.x-fish.x,ownTarget.y-fish.y)<ownTarget.r+10)fish.life=0
-}else if(!fish.ramFish&&!fish.giantEaster){if(window.coopTest?.withFishOwner)window.coopTest.withFishOwner(fish,()=>applyAimAssist(fish));else applyAimAssist(fish);}
+if(expireAtPlayer&&Math.hypot(player.x-fish.x,player.y-fish.y)<player.r+10)fish.life=0
+}else if(!fish.ramFish&&!fish.giantEaster)applyAimAssist(fish);
 fish.x+=fish.vx*dt;fish.y+=fish.vy*dt;fish.life-=dt;
 addRamFishTrail(fish,dt);
 if(fish.ramFish&&fish.boomerang&&!fish.returning&&(fish.x<20||fish.x>canvas.width-20||fish.y<20||fish.y>canvas.height-20)){
@@ -6406,7 +6353,6 @@ if(breakProjectileWithRamFish(quack,prevX,prevY,activeRamFishShots,"#ffd166")){
   dropCoins(quack.x,quack.y,.3);quacks.splice(q,1);continue;
 }
 if(Math.hypot(player.x-quack.x,player.y-quack.y)<player.r+quack.r){takePlayerDamage(14,"Te ha dado un QUACK 🦆",.2);makeSmoke(quack.x,quack.y);quacks.splice(q,1);continue}
-if(window.coopTest?.guestProjectileHit(quack,14)){makeSmoke(quack.x,quack.y);quacks.splice(q,1);continue}
 if(quack.life<=0||quack.x<-100||quack.x>canvas.width+100||quack.y<-100||quack.y>canvas.height+100)quacks.splice(q,1)
 }
 
@@ -6425,7 +6371,6 @@ if(canDamage){
 }
 makeSmoke(orb.x,orb.y);demonOrbs.splice(i,1);continue
 }
-if(window.coopTest?.guestProjectileHit(orb,orb.damage)){makeSmoke(orb.x,orb.y);demonOrbs.splice(i,1);continue}
 for(let j=fishes.length-1;j>=0;j--){
 const fish=fishes[j];if(!isFinitePos(fish)||(fish.ramFish&&fish.ramFullyCharged!==true&&(orb.reinforced||orb.hitsLeft>1)))continue;
 if(Math.hypot(fish.x-orb.x,fish.y-orb.y)<orb.r+12*(fish.scale||1)){
@@ -6452,7 +6397,6 @@ if(Math.hypot(player.x-y.x,player.y-y.y)<player.r+y.r){
 takePlayerDamage(y.damage,"Los ovillos te han atrapado 🧶",.2);makeSmoke(y.x,y.y);yarnBalls.splice(i,1);
 showFloatingText({x:player.x,y:player.y-42,text:"¡ovillo!",life:.8,maxLife:.8,big:false});continue
 }
-if(window.coopTest?.guestProjectileHit(y,y.damage)){makeSmoke(y.x,y.y);yarnBalls.splice(i,1);continue;}
 if(y.life<=0||y.x<-100||y.x>canvas.width+100||y.y<-100||y.y>canvas.height+100)yarnBalls.splice(i,1)
 }
 
@@ -6464,7 +6408,7 @@ const pull=220+effectLevel("coinMagnet")*55+(effectLevel("coinMagnet")>=5?140:0)
 coin.x+=(dx/d)*pull*dt;coin.y+=(dy/d)*pull*dt;
 dx=player.x-coin.x;dy=player.y-coin.y;d=Math.hypot(dx,dy)
 }
-if(d<player.r+22||window.coopTest?.guestCanCollect(coin)){
+if(d<player.r+22){
 collectCoinDrop(coin);coinsDrops.splice(cd,1);
 if(!coin.recovered)showFloatingText({x:player.x,y:player.y-55,text:`+${coin.amount} moneda`,life:.9,maxLife:.9,big:false});
 updateHud();checkGameCompletion();maybeOpenShopOrFusion()
@@ -6504,8 +6448,7 @@ if(isOctopusTentacle(cat)){
   return;
 }
 if(cat.spawnAnim>0)cat.spawnAnim=Math.max(0,cat.spawnAnim-dt);
-const chaseTarget=window.coopTest?.targetFor(cat.x,cat.y)||player;
-let dx=chaseTarget.x-cat.x,dy=chaseTarget.y-cat.y,dist=Math.hypot(dx,dy)||1;
+let dx=player.x-cat.x,dy=player.y-cat.y,dist=Math.hypot(dx,dy)||1;
 cat.wobble+=dt*7;cat.damageCooldown=Math.max(0,cat.damageCooldown-dt);cat.hitAnim=Math.max(0,cat.hitAnim-dt);cat.stealCooldown=Math.max(0,(cat.stealCooldown||0)-dt);cat.fleeTimer=Math.max(0,(cat.fleeTimer||0)-dt);cat.freezeTimer=Math.max(0,(cat.freezeTimer||0)-dt);cat.musicImmuneTimer=Math.max(0,(cat.musicImmuneTimer||0)-dt);
 if(cat.freezeTimer>0){cat.hitAnim=Math.max(cat.hitAnim,.12);return;}
 if(isPowerStarActive()&&dist<player.r+cat.r+10){killCat(cats.indexOf(cat),cat);return;}
@@ -6521,7 +6464,7 @@ if(cat.type==="yarn"){
     const hpRatio=Math.max(0,Math.min(1,cat.hp/cat.maxHp));
     const rage=1+(1-hpRatio)*1.65;
     cat.yarnCooldown=Math.max(.42,(2.25-wave*.032)/rage);
-    const a=Math.atan2(chaseTarget.y-cat.y,chaseTarget.x-cat.x),spd=190+wave*7+(1-hpRatio)*70;
+    const a=Math.atan2(player.y-cat.y,player.x-cat.x),spd=190+wave*7+(1-hpRatio)*70;
     const burst=hpRatio<.35?2:1;
     for(let by=0;by<burst;by++){
       if(yarnBalls.length>=getProjectileCap("yarn"))break;
@@ -6619,8 +6562,8 @@ if(cat.type==="musician"&&(cat.musicImmuneTimer||0)>0){
 }
 const healthLost=Math.min(Math.max(0,cat.hp),Math.max(0,dealt));
 cat.hp-=dealt;
-if(cat.hp>0)window.coopTest?.withFishOwner?window.coopTest.withFishOwner(fish,()=>applySaltEffect(cat,fish)):applySaltEffect(cat,fish);
-if(window.coopTest?.withFishOwner)window.coopTest.withFishOwner(fish,()=>criticalReturnRipple(fish,hitX,hitY,cat));else criticalReturnRipple(fish,hitX,hitY,cat);
+if(cat.hp>0)applySaltEffect(cat,fish);
+criticalReturnRipple(fish,hitX,hitY,cat);
 if(runStats)runStats.fishHits++;
 cat.hitAnim=.15;
 if(cat.type==="musician"&&cat.hp>0)cat.musicImmuneTimer=1;
@@ -6629,7 +6572,7 @@ if(!fish.pierce)fishes.splice(j,1);else if(!fish.ramFish&&!fish.giantEaster)fish
 
 try{makeImpact(hitX,hitY,cat.type==="yarn"?"#b197fc":cat.type==="thief"?"#ffd166":cat.type==="sleepy"?"#c8b6e2":cat.type==="mini"?"#ffb347":cat.type==="glutton"?"#e8956d":cat.type==="musician"?"#d084c8":"#ffc2d1",.65)}catch(e){console.warn(e)}
 try{playImpactSoundThrottled()}catch(e){}
-try{if(window.coopTest?.withFishOwner)window.coopTest.withFishOwner(fish,()=>spawnYarnBounce(hitX,hitY,hitTargetId,fish.yarnVisitedIds||[]));else spawnYarnBounce(hitX,hitY,hitTargetId,fish.yarnVisitedIds||[])}catch(e){console.warn(e)}
+try{spawnYarnBounce(hitX,hitY,hitTargetId,fish.yarnVisitedIds||[])}catch(e){console.warn(e)}
 try{makeHearts(hitX,hitY)}catch(e){}
 try{playCuteMeowThrottled()}catch(e){}
 
@@ -6643,8 +6586,7 @@ cat.baseSpeed=cat.baseSpeed||cat.speed;
 shockwaves.push({x:cat.x,y:cat.y,r:6,maxR:85+Math.min(70,wave*2.2),life:.42,maxLife:.42,color:"#ff8fab",line:4});
 showFloatingText({x:cat.x,y:cat.y-48,text:"😤 ¡DESPERTÓ!",life:1.15,maxLife:1.15,big:false});
 }
-if(fish.ownerId==="guest")window.coopTest?.guestLifeSteal(healthLost);
-else if(upgrades.lifeSteal>0)life=Math.min(upgrades.maxLife,life+healthLost*getCurrentLifeSteal());
+if(upgrades.lifeSteal>0)life=Math.min(upgrades.maxLife,life+healthLost*getCurrentLifeSteal());
 if(cat.type!=="thief")showFloatingText({x:hitX,y:hitY-34,text:cat.rainbow?"🌈 miua!":Math.random()<.5?"miua!":"miau!",life:.65,maxLife:.65,big:false});
 if(fish.ramFish&&cat.hp>0){
   const direction=Math.atan2(fish.vy,fish.vx);
@@ -6672,12 +6614,12 @@ const hitX=fish.x, hitY=fish.y;
 const dealt=Number.isFinite(fish.damage)?fish.damage:1;
 if(runStats)runStats.fishHits++;
 const hitBoss=boss;
-damageBoss(dealt,!!fish.giantEaster,false,fish.ownerId);
-if(window.coopTest?.withFishOwner)window.coopTest.withFishOwner(fish,()=>criticalReturnRipple(fish,hitX,hitY,hitBoss));else criticalReturnRipple(fish,hitX,hitY,hitBoss);
-if(boss===hitBoss&&isCombatTargetAvailable(boss)){if(window.coopTest?.withFishOwner)window.coopTest.withFishOwner(fish,()=>applySaltEffect(boss,fish));else applySaltEffect(boss,fish);}
+damageBoss(dealt,!!fish.giantEaster);
+criticalReturnRipple(fish,hitX,hitY,hitBoss);
+if(boss===hitBoss&&isCombatTargetAvailable(boss))applySaltEffect(boss,fish);
 if(!fish.pierce){if(fishes[j]===fish)fishes.splice(j,1);}
 else if(!fish.ramFish&&!fish.giantEaster)fish.damage*=getPiercingDamageRetention();
-try{if(window.coopTest?.withFishOwner)window.coopTest.withFishOwner(fish,()=>spawnYarnBounce(hitX,hitY,bossYarnId,fish.yarnVisitedIds||[]));else spawnYarnBounce(hitX,hitY,bossYarnId,fish.yarnVisitedIds||[])}catch(e){console.warn(e)}
+try{spawnYarnBounce(hitX,hitY,bossYarnId,fish.yarnVisitedIds||[])}catch(e){console.warn(e)}
 }
 }
 }
@@ -7577,7 +7519,6 @@ dogBones.forEach(b=>{if(isFinitePos(b))drawDogBone(b)});
 hearts.forEach(h=>{if(isFinitePos(h))drawHeart(h)});
 floatingTexts.forEach(t=>{if(isFinitePos(t))drawFloatingText(t)});
 drawPlayer();
-if(window.coopTest?.hostActive||window.coopTest?.guestActive)window.coopTest.draw();
 drawPlayerLifeBar();
 drawStarAura();
 drawDog();
@@ -7587,164 +7528,6 @@ ctx.shadowBlur=0;
 drawReticle();
 }
 
-function coopFrameSnapshot(remotePlayer){
-  const names=["cats","fishes","coinsDrops","tunaDrops","powerStars","quacks","demonOrbs","yarnBalls","dogBones","hearts","smokes","sparkles","shockwaves","floatingTexts","pawPrints","ramFishTrails"];
-  const frame={gu:coopGuestBuild?.u||null,glv:coopGuestBuild?.lv||null,gm:coopGuestBuild?.mx||null,p:{...player},r:{x:remotePlayer.x,y:remotePlayer.y,r:remotePlayer.r,angle:remotePlayer.angle,shootAnim:remotePlayer.shootAnim,hurtAnim:remotePlayer.hurtAnim,speed:player.speed},ghp:remotePlayer.hp,gl:remotePlayer.level,gxp:remotePlayer.xp,gxn:remotePlayer.xpNeed,gco:remotePlayer.coins,gshop:remotePlayer.shopPurchases,w:wave,l:level,xp,xn:xpNeed,hp:life,co:coins,sc:score,tm:waveTime,wd:waveDuration,b:boss,seed:backgroundFishSeed,star:starActive,st:starTime,seven:sevenLivesTime,over:gameOver,paused:paused||choosingUpgrade,shop:shopAvailable,rv:roundVariant,sk:runCosmeticSelections?.player||selectedCosmetics.player||"default"};
-  for(const n of names)frame[n]=({cats,fishes,coinsDrops,tunaDrops,powerStars,quacks,demonOrbs,yarnBalls,dogBones,hearts,smokes,sparkles,shockwaves,floatingTexts,pawPrints,ramFishTrails})[n];
-  const seen=new WeakSet();return JSON.stringify(frame,(k,v)=>{
-    if(v instanceof Set)return [...v];
-    if(v instanceof WeakSet)return undefined;
-    if(v&&typeof v==="object"){if(seen.has(v))return undefined;seen.add(v)}
-    if(typeof v==="number"&&!Number.isFinite(v))return null;
-    return v;
-  });
-}
-function coopApplyFrame(frame){
-  if(!gameStarted){startGame();}
-  paused=true;choosingUpgrade=false;gameOver=!!frame.over;
-  Object.assign(player,frame.r||{});
-  life=frame.ghp??life;wave=frame.w??wave;level=frame.gl??level;xp=frame.gxp??xp;xpNeed=frame.gxn??xpNeed;coins=frame.gco??coins;score=frame.sc??score;
-  waveTime=frame.tm??waveTime;waveDuration=frame.wd??waveDuration;boss=frame.b||null;backgroundFishSeed=frame.seed??backgroundFishSeed;
-  starActive=!!frame.star;starTime=frame.st||0;sevenLivesTime=frame.seven||0;roundVariant=frame.rv||"normal";
-  const groups={cats,fishes,coinsDrops,tunaDrops,powerStars,quacks,demonOrbs,yarnBalls,dogBones,hearts,smokes,sparkles,shockwaves,floatingTexts,pawPrints,ramFishTrails};
-  for(const [k,a] of Object.entries(groups)){a.length=0;for(const v of frame[k]||[]){if(k==="fishes")v.hitIds=new Set(v.hitIds||[]);a.push(v)}}
-  if(frame.gu)Object.assign(upgrades,frame.gu);if(frame.glv)Object.assign(upgradeLevels,frame.glv);if(frame.gm)Object.assign(upgradeMaxLevels,frame.gm);
-  if(runCosmeticSelections)runCosmeticSelections.player="player_pink";
-  if(gameOverPanel.style.display==="flex")gameOverPanel.style.display="none";
-  levelUpPanel.style.display="none";pausePanel.style.display="none";victoryPanel.style.display="none";updateHud();
-}
-function coopDrawSecond(remotePlayer){
-  if(!remotePlayer||!Number.isFinite(remotePlayer.x))return;
-  const copy={...player};const prior=runCosmeticSelections?.player;
-  try{
-    Object.assign(player,{x:remotePlayer.x,y:remotePlayer.y,angle:remotePlayer.angle||0,shootAnim:remotePlayer.shootAnim||0,hurtAnim:remotePlayer.hurtAnim||0});
-    if(runCosmeticSelections)runCosmeticSelections.player=remotePlayer.skin||"player_pink";
-    ctx.save();drawPlayer();ctx.restore();
-    ctx.save();ctx.font="bold 13px Nunito,Arial";ctx.textAlign="center";ctx.lineWidth=3;ctx.strokeStyle="#342343";ctx.fillStyle="#fff";
-    ctx.strokeText(remotePlayer.label||"J2",player.x,player.y-player.r-18);ctx.fillText(remotePlayer.label||"J2",player.x,player.y-player.r-18);ctx.restore();
-  }finally{Object.assign(player,copy);if(runCosmeticSelections)runCosmeticSelections.player=prior;}
-}
-let coopGuestBuild=null;
-function coopCaptureBuild(){return {u:{...upgrades},lv:{...upgradeLevels},mx:{...upgradeMaxLevels},base:{...fusedBaseLevels},names:{...fusedUpgradeNames},done:{...doneFusionPairs},progress:{...fusionProgressLevels},wallet:coins,shopBuys:shopUpgradePurchases,fusionBuys:shopFusionPurchases};}
-function coopRestoreMap(obj,data){for(const k of Object.keys(obj))delete obj[k];Object.assign(obj,data||{});}
-function coopWithGuestBuild(fn,guestLife=null,restoreCats=true,guestLevel=null){
-  if(!coopGuestBuild)return fn();
-  const host=coopCaptureBuild(),priorLife=life,priorLevel=level;
-  const catSpeeds=restoreCats?cats.map(c=>[c,c.speed,c.baseSpeed]):[];
-  let completed=false;
-  try{
-    if(Number.isFinite(guestLife))life=guestLife;
-    if(Number.isFinite(guestLevel))level=guestLevel;
-    coopRestoreMap(upgrades,coopGuestBuild.u);coopRestoreMap(upgradeLevels,coopGuestBuild.lv);coopRestoreMap(upgradeMaxLevels,coopGuestBuild.mx);
-    coopRestoreMap(fusedBaseLevels,coopGuestBuild.base);fusedUpgradeNames={...coopGuestBuild.names};doneFusionPairs={...coopGuestBuild.done};fusionProgressLevels={...coopGuestBuild.progress};coins=coopGuestBuild.wallet;shopUpgradePurchases=coopGuestBuild.shopBuys;shopFusionPurchases=coopGuestBuild.fusionBuys;
-    const result=fn();
-    if(result&&typeof result.then==="function")throw new TypeError("Las operaciones de la build invitada deben ser síncronas.");
-    completed=true;
-    return result;
-  }finally{
-    if(completed)coopGuestBuild=coopCaptureBuild();
-    coopRestoreMap(upgrades,host.u);coopRestoreMap(upgradeLevels,host.lv);coopRestoreMap(upgradeMaxLevels,host.mx);
-    coopRestoreMap(fusedBaseLevels,host.base);fusedUpgradeNames=host.names;doneFusionPairs=host.done;fusionProgressLevels=host.progress;coins=host.wallet;shopUpgradePurchases=host.shopBuys;shopFusionPurchases=host.fusionBuys;
-    life=priorLife;level=priorLevel;
-    for(const [c,s,b] of catSpeeds){c.speed=s;c.baseSpeed=b;}
-  }
-}
-function coopResetGuestBuild(){coopGuestBuild=coopCaptureBuild();coopGuestBuild.wallet=0;coopGuestBuild.shopBuys=0;coopGuestBuild.fusionBuys=0;}
-function coopWithFishOwner(fish,fn){
-  if(fish?.ownerId!=="guest"||!coopGuestBuild)return fn();
-  const before=fishes.length;
-  const result=coopWithGuestBuild(fn);
-  for(let i=before;i<fishes.length;i++)if(fishes[i])fishes[i].ownerId="guest";
-  return result;
-}
-function coopGuestCoins(amount){if(coopGuestBuild&&Number.isFinite(amount)&&amount>0)coopGuestBuild.wallet+=Math.floor(amount);}
-function coopGuestWallet(){return coopGuestBuild?.wallet||0;}
-function coopGuestRainbowCompleted(){
-  if(!coopGuestBuild)return;
-  coopWithGuestBuild(()=>{if(getRainbowLowestChoices(1).length===0)coins+=12+Math.floor(Math.random()*9);});
-}
-function coopGuestChoices(reason,guestLife=null,guestLevel=null){
-  if(!coopGuestBuild)coopResetGuestBuild();
-  return coopWithGuestBuild(()=>{
-    const pool=reason==="rainbow"?getRainbowLowestChoices(3):(reason==="wave"&&upgrades.darkPact?getRandomScalableUpgradeChoices(24):getUpgradePool());
-    const arr=[];while(arr.length<(reason==="rainbow"?3:(upgrades.darkPact&&reason==="wave"?1:3))&&pool.length){const idx=Math.floor(Math.random()*pool.length);const x=pool.splice(idx,1)[0];arr.push({key:x.key,title:x.title,icon:x.icon,desc:x.desc,levelTag:x.levelTag});}
-    if(reason==="shop"&&coins>=getEffectiveShopFusionPrice()){
-      const ready=getMaxedFusionKeys();const pairs=[];
-      for(let i=0;i<ready.length;i++)for(let j=i+1;j<ready.length;j++)if(isFusionChoiceCompletionSafe(ready[i],ready[j]))pairs.push(sortedPair(ready[i],ready[j]));
-      if(pairs.length){const pair=pairs[Math.floor(Math.random()*pairs.length)],parts=pair.split("+");arr.push({key:"fusion:"+pair,title:getFusionNameFromPair(...parts),icon:"🔮",desc:"Bonus de fusión: "+getFusionDesc(...parts),levelTag:getEffectiveShopFusionPrice()+" monedas"});}
-    }
-    return arr;
-  },guestLife,false,guestLevel);
-}
-function coopGuestShopChoices(guestLife=null,guestLevel=null){
-  if(!coopGuestBuild)coopResetGuestBuild();
-  return coopWithGuestBuild(()=>{
-    const price=getShopUpgradePrice();
-    const upgradesOffered=getShopUpgradeChoices(6).slice(0,3);
-    const opts=upgradesOffered.map(c=>({key:c.key,title:c.title,icon:c.icon,desc:c.desc,levelTag:c.levelTag,price,locked:coins<price}));
-    const surprise=getRandomShopUpgradeChoice(upgradesOffered);
-    const surprisePrice=Math.max(1,Math.ceil(price/2));
-    if(surprise)opts.push({key:"shop:random",title:"Mejora aleatoria",icon:"🎲",desc:"Sorpresa · una mejora independiente para tu build",levelTag:"",price:surprisePrice,locked:coins<surprisePrice});
-    const pairs=getMaxedFusionKeys();
-    const fusionPrice=getEffectiveShopFusionPrice();
-    let fusionOptions=0;
-    for(let i=0;i<pairs.length&&fusionOptions<9;i++)for(let j=i+1;j<pairs.length&&fusionOptions<9;j++)if(isFusionChoiceCompletionSafe(pairs[i],pairs[j])){
-      const pair=sortedPair(pairs[i],pairs[j]),ab=pair.split("+");
-      opts.push({key:"fusion:"+pair,title:getFusionNameFromPair(...ab),icon:"🔮",desc:"Bonus de fusión: "+getFusionDesc(...ab),levelTag:fusionPrice+" monedas",price:fusionPrice,locked:coins<fusionPrice});
-      fusionOptions++;
-    }
-    opts.push({key:"shop:exit",title:"Salir de mi tienda",icon:"🚪",desc:"Conserva tus monedas y espera al compañero.",price:0,locked:false});
-    return opts;
-  },guestLife,false,guestLevel);
-}
-function coopApplyGuestChoice(key,reason,guestLife=null,guestLevel=null){
-  if(!coopGuestBuild)return false;
-  return coopWithGuestBuild(()=>{
-    if(key==="shop:exit")return reason==="shop";
-    if(key==="shop:random"){
-      if(reason!=="shop")return false;
-      const price=Math.max(1,Math.ceil(getShopUpgradePrice()/2));
-      if(coins<price)return false;
-      const random=getRandomShopUpgradeChoice(getShopUpgradeChoices(6).slice(0,3));
-      if(!random||typeof random.apply!=="function")return false;
-      coins-=price;shopUpgradePurchases++;random.apply();return true;
-    }
-    if(key.startsWith("fusion:")){
-      const pair=key.slice(7),parts=pair.split("+"),price=getEffectiveShopFusionPrice();if(reason!=="shop"||parts.length!==2||coins<price)return false;
-      const available=getMaxedFusionKeys();if(!parts.every(k=>available.includes(k))||!isFusionChoiceCompletionSafe(...parts))return false;
-      coins-=price;shopFusionPurchases++;doneFusionPairs[pair]=true;
-      const fusionFlags={"aimAssist+bigCursor":"perfectAim","bigCursor+moralSupport":"braveHeart","aimAssist+catInstinct":"reflexBurst","catInstinct+moralSupport":"valorCasa","catInstinct+darkPact":"cursedInstinct","catInstinct+zoomies":"zoomiesEscape","catInstinct+maxLife":"sevenLives","darkPact+moralSupport":"boyfriendDog","moveSpeed+zoomies":"zoomiesHyper","fireRate+zoomies":"zoomiesCannon","critChance+zoomies":"zoomiesCrit"};
-      if(fusionFlags[pair])upgrades[fusionFlags[pair]]=true;
-      for(const k of parts)if(Object.prototype.hasOwnProperty.call(upgradeLevels,k)){fusedBaseLevels[k]=(fusedBaseLevels[k]||0)+(upgradeLevels[k]||0);upgradeLevels[k]=0;upgradeMaxLevels[k]=5;}
-      fusionProgressLevels[pair]=0;setFusionProgress(pair,0);applyFusionBonus(pair,...parts);applyUpgradeStatsFromLevels();
-      const name=getFusionNameFromPair(...parts);for(const k of parts)fusedUpgradeNames[k]=name;
-      return true;
-    }
-    const option=reason==="shop"?(getShopEligibleUpgradeKeys().includes(key)?makeLevelUpgrade(key,true):null):reason==="rainbow"?getRainbowLowestChoices(32).find(x=>x.key===key):getUpgradePool().find(x=>x.key===key);if(!option)return false;
-    if(reason==="shop"){const price=getShopUpgradePrice();if(coins<price)return false;coins-=price;shopUpgradePurchases++;}
-    const dark=reason==="wave"&&upgrades.darkPact;
-    option.apply();if(dark&&key in upgradeLevels&&upgradeLevels[key]<upgradeMaxLevels[key])option.apply();
-    return true;
-  },guestLife,true,guestLevel);
-}
-function coopGuestShoot(remote,manual=false){
-  if(!coopGuestBuild)return false;
-  const firstFish=fishes.length,prevPlayer={...player},prevMouse={...mouse},prevLevel=level,prevShot=lastShot,prevManual=lastManualShotAt,prevRam=lastRamFishAt,prevCount=manualShotsSinceBloquito,prevLife=life,prevOwner=coopActionOwner,oldShots=shots;
-  try{
-    coopActionOwner="guest";
-    Object.assign(player,{x:remote.x,y:remote.y,angle:remote.angle,shootAnim:remote.shootAnim,hurtAnim:remote.hurtAnim});
-    mouse.x=remote.aimX;mouse.y=remote.aimY;level=remote.level;life=remote.hp;
-    lastShot=remote.lastShot;lastManualShotAt=remote.lastManual;lastRamFishAt=remote.lastBloquito;manualShotsSinceBloquito=remote.manualCount;
-    coopWithGuestBuild(()=>{if(manual)launchRamFish({x:remote.aimX,y:remote.aimY});else shootFish()});
-    for(let i=firstFish;i<fishes.length;i++)if(fishes[i])fishes[i].ownerId="guest";
-    remote.lastShot=lastShot;remote.lastManual=lastManualShotAt;remote.lastBloquito=lastRamFishAt;remote.manualCount=manualShotsSinceBloquito;remote.shootAnim=player.shootAnim;
-    return shots>oldShots;
-  }finally{
-    Object.assign(player,prevPlayer);Object.assign(mouse,prevMouse);coopActionOwner=prevOwner;level=prevLevel;lastShot=prevShot;lastManualShotAt=prevManual;lastRamFishAt=prevRam;manualShotsSinceBloquito=prevCount;life=prevLife;
-  }
-}
-window.coopBridge={capture:coopFrameSnapshot,apply:coopApplyFrame,drawSecond:coopDrawSecond ,resetGuestBuild:coopResetGuestBuild,guestChoices:coopGuestChoices,guestShopChoices:coopGuestShopChoices,applyGuestChoice:coopApplyGuestChoice,grantGuestCoins:coopGuestCoins,guestWallet:coopGuestWallet,guestRainbowCompleted:coopGuestRainbowCompleted,guestXpMultiplier:()=>coopGuestBuild?.u?.xpBoost||1,guestShopPurchases:()=>coopGuestBuild?.shopBuys||0,guestFusionPurchases:()=>coopGuestBuild?.fusionBuys||0,withGuestBuild:coopWithGuestBuild,guestMaxLife:()=>coopGuestBuild?.u.maxLife||100,guestShoot:coopGuestShoot,withFishOwner:coopWithFishOwner};
-
 let audioStateSignature="";
 function loop(now){
 try{
@@ -7752,7 +7535,7 @@ const safeNow=Number.isFinite(now)?now:performance.now();
 const rawDt=Math.max(0,Math.min((safeNow-lastFrame)/1000,.25));
 updatePerformanceMode(rawDt);
 lastFrame=safeNow;
-if(gameStarted&&!gameOver&&!choosingUpgrade&&!paused&&!window.coopTest?.guestActive){
+if(gameStarted&&!gameOver&&!choosingUpgrade&&!paused){
   frameAccumulator+=rawDt;
   let steps=0;
   while(frameAccumulator>=1/60&&steps++<5){
@@ -7762,11 +7545,10 @@ if(gameStarted&&!gameOver&&!choosingUpgrade&&!paused&&!window.coopTest?.guestAct
   }
   if(frameAccumulator>=1/60)frameAccumulator%=1/60;
 }else frameAccumulator=0;
-if(!window.coopTest?.guestActive)cleanBrokenEntities();
+cleanBrokenEntities();
 const audioState=[gameStarted,gameOver,paused,choosingUpgrade,boss?.type||"round",musicEnabled,musicVolume].join("|");
 if(audioState!==audioStateSignature){audioStateSignature=audioState;syncMusic();}
 render();
-if(window.coopTest?.hostActive)window.coopTest.sync();
 }catch(err){
 showSoftError(err);
 try{render()}catch(renderErr){console.error(renderErr)}

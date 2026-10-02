@@ -1606,23 +1606,3 @@ button:active:not(:disabled){transform:translateY(1px) scale(.985)!important}
 .patchNotesPanel .patchNotesOlder>summary:hover,.patchNotesPanel .patchNoteSources>summary:hover{transform:none;box-shadow:none;filter:none}
 
 .scoreBackupTools{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:7px;margin:8px auto 10px;font-size:12px}.scoreBackupCount{width:100%;text-align:center;opacity:.85}.scoreBackupTools button{border:1px solid rgba(255,255,255,.24);border-radius:12px;padding:7px 11px;background:rgba(120,78,139,.24);color:inherit;font:inherit;font-weight:700;cursor:pointer}.scoreBackupTools button:hover{filter:brightness(1.2)}
-
-.coopLobby{margin:12px auto;max-width:610px;text-align:left;border:1px solid rgba(255,194,209,.45);border-radius:16px;background:rgba(30,17,50,.28);color:#fff0f6}.coopLobby summary{padding:12px 18px;cursor:pointer;font-weight:850;text-align:center}.coopLobbyBody{padding:0 14px 14px}.coopLobbyBody p{font-size:13px!important;margin:8px 0!important}.coopActions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}.coopLobbyBody button{border:0;border-radius:12px;background:#9b5de5;color:white;font-weight:800;padding:10px 13px;cursor:pointer;margin:5px}.coopLobbyBody button:disabled{opacity:.5;cursor:default}.coopLobbyBody textarea{width:100%;min-height:65px;resize:vertical;display:block;user-select:text;padding:9px;border:1px solid #b79ae8;border-radius:9px;background:#fff;color:#251a32;font-family:monospace;font-size:11px}.coopLobbyBody label{font-size:12px;font-weight:bold;display:block;margin:7px 0}.coopLobbyBody #coopStatus{font-size:12px;line-height:1.45;padding:9px;border-radius:9px;background:rgba(9,15,25,.4);white-space:pre-wrap}.coopLobbyBody #coopHostStart{display:block;margin:9px auto;background:#2a9d8f}.coopLobbyBody [hidden]{display:none!important}#coopGuestView{position:fixed;inset:0;background:#101124;color:white;z-index:60;display:none;align-items:center;justify-content:center;flex-direction:column}#coopGuestVideo{max-width:100vw;max-height:calc(100vh - 60px);width:auto;height:auto;object-fit:contain;cursor:crosshair;background:#20243b}#coopGuestBar{position:absolute;left:8px;right:8px;top:5px;z-index:2;display:flex;justify-content:space-between;gap:8px;align-items:center;padding:6px 9px;background:#141124dd;border-radius:10px;font-size:12px;pointer-events:none}#coopGuestBar button{pointer-events:auto;border:0;border-radius:9px;padding:7px 10px;cursor:pointer;background:#9b5de5;color:white;font-weight:bold}#coopGuestPhase{position:absolute;bottom:9px;left:50%;transform:translateX(-50%);padding:9px 15px;border-radius:12px;background:#141124e8;font-weight:bold;font-size:13px;pointer-events:none;max-width:94%;text-align:center}@media(max-width:700px){.coopLobbyBody textarea{font-size:10px}#coopGuestBar{font-size:11px}}
-
-#startBox{max-height:95vh;overflow-y:auto;overscroll-behavior:contain}.coopLobby[open]{margin-bottom:12px}
-
-#coopGuestView{background:transparent;pointer-events:none;z-index:62;justify-content:initial}
-#coopGuestBar,#coopGuestChoices{pointer-events:auto}
-#coopGuestBar{left:50%;right:auto;transform:translateX(-50%);width:min(680px,95vw)}
-#coopGuestPhase{font-size:12px;background:rgba(22,13,37,.80)}
-#coopGuestChoices:not([hidden]){display:flex;position:absolute;inset:0;background:rgba(17,12,35,.85);align-items:center;justify-content:center;flex-direction:column;gap:16px;overflow:auto;padding:65px 16px 34px;z-index:65}
-#coopGuestChoiceTitle{font-size:clamp(19px,3vw,29px);font-weight:900;color:#fff5fd;text-align:center}
-#coopGuestChoiceCards{display:flex;gap:15px;justify-content:center;align-items:stretch;flex-wrap:wrap;width:min(1040px,100%)}
-.coopGuestUpgrade{flex:1 1 240px;max-width:330px;min-height:190px;border-radius:20px;border:2px solid #d6b1ff;background:linear-gradient(155deg,#342450,#201a38);color:#fff1ff;display:flex;align-items:center;text-align:center;flex-direction:column;gap:13px;justify-content:space-between;padding:20px 18px;cursor:pointer;box-shadow:0 12px 32px #100a224d;font:inherit}
-.coopGuestUpgrade:hover,.coopGuestUpgrade:focus-visible{outline:2px solid #fff1b6;transform:translateY(-3px)}
-.coopGuestUpgrade strong{font-size:19px}.coopGuestUpgrade span{font-size:14px;line-height:1.5}.coopGuestUpgrade small{font-size:13px;color:#ffd2ed}
-body.coopGuestRunning #coopGuestView{display:flex}
-body.coopGuestRunning #coopLobby,body.coopGuestRunning #startPanel{display:none!important}
-@media(max-width:650px){#coopGuestChoices:not([hidden]){justify-content:flex-start}.coopGuestUpgrade{min-height:130px;max-width:100%}}
-
-body:not(.coopGuestRunning) #coopGuestView{background:#101124}
