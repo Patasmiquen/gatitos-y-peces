@@ -1669,7 +1669,7 @@ function applyRecommendationsToChoices(choices,context="generic"){
 function playCuteMeow(){try{const ac=getAudioCtx(),g=ac.createGain();g.gain.setValueAtTime(.045,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.34);g.connect(ac.destination);const o1=ac.createOscillator();o1.type="sine";o1.frequency.setValueAtTime(760+Math.random()*60,ac.currentTime);o1.frequency.exponentialRampToValueAtTime(520+Math.random()*40,ac.currentTime+.14);o1.connect(g);o1.start();o1.stop(ac.currentTime+.16);const o2=ac.createOscillator();o2.type="triangle";o2.frequency.setValueAtTime(470+Math.random()*40,ac.currentTime+.13);o2.frequency.exponentialRampToValueAtTime(330+Math.random()*30,ac.currentTime+.34);o2.connect(g);o2.start(ac.currentTime+.12);o2.stop(ac.currentTime+.36)}catch(e){}}
 function playFishSound(type="bloop"){try{const ac=getAudioCtx(),o=ac.createOscillator(),g=ac.createGain();if(type==="fiu"){o.type="sine";o.frequency.setValueAtTime(900,ac.currentTime);o.frequency.exponentialRampToValueAtTime(360,ac.currentTime+.18);g.gain.setValueAtTime(.023,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.2)}else{o.type="sine";o.frequency.setValueAtTime(260+Math.random()*80,ac.currentTime);o.frequency.exponentialRampToValueAtTime(190+Math.random()*60,ac.currentTime+.11);g.gain.setValueAtTime(.021,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.13)}o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+.22)}catch(e){}}
 function startGame(){
-  if(!window.coopTest?.hostActive)window.coopTest?.resetSolo();
+  if(!window.coopTest?.hostActive&&!window.coopTest?.guestActive)window.coopTest?.resetSolo();
   autoMode=false;
   gameStarted=true;
   startPanel.style.display="none";
@@ -2852,7 +2852,7 @@ if(!upgrades.zoomies)arr.push({key:"zoomies",icon:"💨",title:"Zoomies",levelTa
 return arr
 }
 function getRandomUpgradeChoices(amount){
-const pool=getUpgradePool();
+const pool=getUpgradePool().filter(u=>!window.coopTest?.hostActive||window.coopTest.allowsHost(u.key));
 const choices=[];
 const missingUniques=pool.filter(u=>u.key&&uniqueFusionKeys.includes(u.key));
 if(missingUniques.length>0&&amount>0){
@@ -2866,7 +2866,7 @@ return choices
 }
 
 function getRandomScalableUpgradeChoices(amount){
-const pool=getLevelUpgradeKeys().map(k=>makeLevelUpgrade(k)),choices=[];
+const pool=getLevelUpgradeKeys().map(k=>makeLevelUpgrade(k)).filter(u=>!window.coopTest?.hostActive||window.coopTest.allowsHost(u.key)),choices=[];
 while(choices.length<amount&&pool.length>0){const index=Math.floor(Math.random()*pool.length);choices.push(pool.splice(index,1)[0])}
 return choices
 }
@@ -3209,7 +3209,9 @@ maybeOpenShopOrFusion();
 function openUpgradeMenu(reason="level",opts={}){
 releaseGamePointer();
 const darkWave=reason==="wave"&&upgrades.darkPact;
+window.coopTest?.prepareGuestUpgrade(reason);
 const choices=darkWave?getRandomScalableUpgradeChoices(1):getRandomUpgradeChoices(3);
+if(window.coopTest?.hostActive){for(let i=choices.length-1;i>=0;i--)if(!window.coopTest.allowsHost(choices[i].key))choices.splice(i,1);window.coopTest.noteHostOffers(choices.map(c=>c.key));}
 if(darkWave){
   choices.forEach(upgrade=>{
     if(!upgrade.key)return;
@@ -3233,7 +3235,7 @@ if(darkWave){
     }
   });
 }
-if(choices.length===0||allDirectUpgradesMaxed()){
+if(choices.length===0||(!window.coopTest?.hostActive&&allDirectUpgradesMaxed())){
 if(reason==="wave"&&waveUpgradePending){waveUpgradePending=false;recordNoDamageRoundIfClean();wave++;
 thiefCoinsStolenThisWave=0;life=Math.min(upgrades.maxLife,life+upgrades.healOnWave);startWave()}
 giveLevelCoins("por tener mejoras al máximo");
@@ -3242,6 +3244,7 @@ return
 }
 showCards(reason==="wave"?"🌊 ¡Ronda superada!":"⭐ ¡Subiste de nivel!",darkWave?"🖤 La Voluntad Oscura elige por ti":lovePhrases[Math.floor(Math.random()*lovePhrases.length)],darkWave?"":"Elige una mejora gatuna",choices,upgrade=>{
 upgrade.apply();
+window.coopTest?.markHostChoice(upgrade.key);
 if(darkWave){let bonusCoins=1+Math.floor(Math.random()*5);if(hasDoneFusionPair("coinMagnet+darkPact")){const fp=getFusionProgress("coinMagnet+darkPact");bonusCoins+=2+Math.floor(Math.random()*(3+fp));}coins+=bonusCoins;showFloatingText({x:player.x,y:player.y-105,text:`🖤 +${bonusCoins} monedas`,life:1.3,maxLife:1.3,big:false})}
 if(darkWave&&upgrade.key){
   let doubled=false;
@@ -3259,6 +3262,7 @@ if(darkWave&&upgrade.key){
   }
   if(doubled)showFloatingText({x:player.x,y:player.y-85,text:upgrade.fusion?"🖤 +2 niveles de fusión":"🖤 +2 niveles",life:1.4,maxLife:1.4,big:false})
 }
+const finishHostChoice=()=>{
 choosingUpgrade=false;levelUpPanel.style.display="none";canvas.style.cursor=upgrades.bigCursor?"none":"crosshair";
 syncGamePointerLock();
 showFloatingText({x:player.x,y:player.y-55,text:upgrade.title,life:1.5,maxLife:1.5,big:false});
@@ -3266,6 +3270,9 @@ showFloatingText({x:player.x,y:player.y-55,text:upgrade.title,life:1.5,maxLife:1
 if(reason==="wave"&&waveUpgradePending){waveUpgradePending=false;recordNoDamageRoundIfClean();wave++;life=Math.min(upgrades.maxLife,life+upgrades.healOnWave);startWave()}
 updateHud();
 if(pendingUpgradeQueue.length)processPendingUpgradeQueue();else maybeOpenShopOrFusion()
+};
+levelUpPanel.style.display="none";
+if(!window.coopTest?.waitGuestUpgrade(finishHostChoice))finishHostChoice();
 },null,reason==="wave"?"wave":"level")
 }
 
@@ -7523,7 +7530,7 @@ dogBones.forEach(b=>{if(isFinitePos(b))drawDogBone(b)});
 hearts.forEach(h=>{if(isFinitePos(h))drawHeart(h)});
 floatingTexts.forEach(t=>{if(isFinitePos(t))drawFloatingText(t)});
 drawPlayer();
-if(window.coopTest?.hostActive)window.coopTest.draw();
+if(window.coopTest?.hostActive||window.coopTest?.guestActive)window.coopTest.draw();
 drawPlayerLifeBar();
 drawStarAura();
 drawDog();
@@ -7533,6 +7540,109 @@ ctx.shadowBlur=0;
 drawReticle();
 }
 
+function coopFrameSnapshot(remotePlayer){
+  const names=["cats","fishes","coinsDrops","tunaDrops","powerStars","quacks","demonOrbs","yarnBalls","dogBones","hearts","smokes","sparkles","shockwaves","floatingTexts","pawPrints","ramFishTrails"];
+  const frame={gu:coopGuestBuild?.u||null,p:{...player},r:{x:remotePlayer.x,y:remotePlayer.y,r:remotePlayer.r,angle:remotePlayer.angle,shootAnim:remotePlayer.shootAnim,hurtAnim:remotePlayer.hurtAnim,speed:player.speed},ghp:remotePlayer.hp,gl:remotePlayer.level,w:wave,l:level,xp,xn:xpNeed,hp:life,co:coins,sc:score,tm:waveTime,wd:waveDuration,b:boss,seed:backgroundFishSeed,star:starActive,st:starTime,seven:sevenLivesTime,over:gameOver,paused:paused||choosingUpgrade,shop:shopAvailable,rv:roundVariant,sk:runCosmeticSelections?.player||selectedCosmetics.player||"default"};
+  for(const n of names)frame[n]=({cats,fishes,coinsDrops,tunaDrops,powerStars,quacks,demonOrbs,yarnBalls,dogBones,hearts,smokes,sparkles,shockwaves,floatingTexts,pawPrints,ramFishTrails})[n];
+  const seen=new WeakSet();return JSON.stringify(frame,(k,v)=>{
+    if(v instanceof Set)return [...v];
+    if(v instanceof WeakSet)return undefined;
+    if(v&&typeof v==="object"){if(seen.has(v))return undefined;seen.add(v)}
+    if(typeof v==="number"&&!Number.isFinite(v))return null;
+    return v;
+  });
+}
+function coopApplyFrame(frame){
+  if(!gameStarted){startGame();}
+  paused=true;choosingUpgrade=false;gameOver=!!frame.over;
+  Object.assign(player,frame.r||{});
+  life=frame.ghp??life;wave=frame.w??wave;level=frame.gl??level;xp=frame.xp??xp;xpNeed=frame.xn??xpNeed;coins=frame.co??coins;score=frame.sc??score;
+  waveTime=frame.tm??waveTime;waveDuration=frame.wd??waveDuration;boss=frame.b||null;backgroundFishSeed=frame.seed??backgroundFishSeed;
+  starActive=!!frame.star;starTime=frame.st||0;sevenLivesTime=frame.seven||0;roundVariant=frame.rv||"normal";
+  const groups={cats,fishes,coinsDrops,tunaDrops,powerStars,quacks,demonOrbs,yarnBalls,dogBones,hearts,smokes,sparkles,shockwaves,floatingTexts,pawPrints,ramFishTrails};
+  for(const [k,a] of Object.entries(groups)){a.length=0;for(const v of frame[k]||[]){if(k==="fishes")v.hitIds=new Set(v.hitIds||[]);a.push(v)}}
+  if(frame.gu)Object.assign(upgrades,frame.gu);
+  if(runCosmeticSelections)runCosmeticSelections.player="player_pink";
+  if(gameOverPanel.style.display==="flex")gameOverPanel.style.display="none";
+  levelUpPanel.style.display="none";pausePanel.style.display="none";victoryPanel.style.display="none";updateHud();
+}
+function coopDrawSecond(remotePlayer){
+  if(!remotePlayer||!Number.isFinite(remotePlayer.x))return;
+  const copy={...player};const prior=runCosmeticSelections?.player;
+  try{
+    Object.assign(player,{x:remotePlayer.x,y:remotePlayer.y,angle:remotePlayer.angle||0,shootAnim:remotePlayer.shootAnim||0,hurtAnim:remotePlayer.hurtAnim||0});
+    if(runCosmeticSelections)runCosmeticSelections.player=remotePlayer.skin||"player_pink";
+    ctx.save();drawPlayer();ctx.restore();
+    ctx.save();ctx.font="bold 13px Nunito,Arial";ctx.textAlign="center";ctx.lineWidth=3;ctx.strokeStyle="#342343";ctx.fillStyle="#fff";
+    ctx.strokeText(remotePlayer.label||"J2",player.x,player.y-player.r-18);ctx.fillText(remotePlayer.label||"J2",player.x,player.y-player.r-18);ctx.restore();
+  }finally{Object.assign(player,copy);if(runCosmeticSelections)runCosmeticSelections.player=prior;}
+}
+let coopGuestBuild=null;
+function coopCaptureBuild(){return {u:{...upgrades},lv:{...upgradeLevels},mx:{...upgradeMaxLevels},base:{...fusedBaseLevels},names:{...fusedUpgradeNames},done:{...doneFusionPairs},progress:{...fusionProgressLevels}};}
+function coopRestoreMap(obj,data){for(const k of Object.keys(obj))delete obj[k];Object.assign(obj,data||{});}
+function coopWithGuestBuild(fn){
+  const host=coopCaptureBuild(),priorLife=life;
+  const catSpeeds=cats.map(c=>[c,c.speed,c.baseSpeed]);
+  try{
+    coopRestoreMap(upgrades,coopGuestBuild.u);coopRestoreMap(upgradeLevels,coopGuestBuild.lv);coopRestoreMap(upgradeMaxLevels,coopGuestBuild.mx);
+    coopRestoreMap(fusedBaseLevels,coopGuestBuild.base);fusedUpgradeNames={...coopGuestBuild.names};doneFusionPairs={...coopGuestBuild.done};fusionProgressLevels={...coopGuestBuild.progress};
+    return fn();
+  }finally{
+    coopGuestBuild=coopCaptureBuild();coopRestoreMap(upgrades,host.u);coopRestoreMap(upgradeLevels,host.lv);coopRestoreMap(upgradeMaxLevels,host.mx);
+    coopRestoreMap(fusedBaseLevels,host.base);fusedUpgradeNames=host.names;doneFusionPairs=host.done;fusionProgressLevels=host.progress;
+    life=priorLife;for(const [c,s,b] of catSpeeds){c.speed=s;c.baseSpeed=b;}
+  }
+}
+function coopResetGuestBuild(){coopGuestBuild=coopCaptureBuild();}
+function coopGuestChoices(reason,allowed){
+  if(!coopGuestBuild)coopResetGuestBuild();
+  return coopWithGuestBuild(()=>{
+    const pool=(reason==="wave"&&upgrades.darkPact?getRandomScalableUpgradeChoices(24):getUpgradePool()).filter(c=>allowed(c.key));
+    const arr=[];while(arr.length<(upgrades.darkPact&&reason==="wave"?1:3)&&pool.length){const idx=Math.floor(Math.random()*pool.length);const x=pool.splice(idx,1)[0];arr.push({key:x.key,title:x.title,icon:x.icon,desc:x.desc,levelTag:x.levelTag});}
+    if(coins>=5){
+      const ready=getMaxedFusionKeys();const pairs=[];
+      for(let i=0;i<ready.length;i++)for(let j=i+1;j<ready.length;j++)if(isFusionChoiceCompletionSafe(ready[i],ready[j]))pairs.push(sortedPair(ready[i],ready[j]));
+      if(pairs.length){const pair=pairs[Math.floor(Math.random()*pairs.length)],parts=pair.split("+");arr.push({key:"fusion:"+pair,title:getFusionNameFromPair(...parts),icon:"🔮",desc:"Bonus de fusión: "+getFusionDesc(...parts),levelTag:"5 monedas"});}
+    }
+    return arr;
+  });
+}
+function coopApplyGuestChoice(key,reason){
+  if(!coopGuestBuild)return false;
+  return coopWithGuestBuild(()=>{
+    if(key.startsWith("fusion:")){
+      const pair=key.slice(7),parts=pair.split("+");if(parts.length!==2||coins<5)return false;
+      const available=getMaxedFusionKeys();if(!parts.every(k=>available.includes(k))||!isFusionChoiceCompletionSafe(...parts))return false;
+      coins-=5;shopFusionPurchases++;doneFusionPairs[pair]=true;
+      const fusionFlags={"aimAssist+bigCursor":"perfectAim","bigCursor+moralSupport":"braveHeart","aimAssist+catInstinct":"reflexBurst","catInstinct+moralSupport":"valorCasa","catInstinct+darkPact":"cursedInstinct","catInstinct+zoomies":"zoomiesEscape","catInstinct+maxLife":"sevenLives","darkPact+moralSupport":"boyfriendDog","moveSpeed+zoomies":"zoomiesHyper","fireRate+zoomies":"zoomiesCannon","critChance+zoomies":"zoomiesCrit"};
+      if(fusionFlags[pair])upgrades[fusionFlags[pair]]=true;
+      for(const k of parts)if(Object.prototype.hasOwnProperty.call(upgradeLevels,k)){fusedBaseLevels[k]=(fusedBaseLevels[k]||0)+(upgradeLevels[k]||0);upgradeLevels[k]=0;upgradeMaxLevels[k]=5;}
+      fusionProgressLevels[pair]=0;setFusionProgress(pair,0);applyFusionBonus(pair,...parts);applyUpgradeStatsFromLevels();
+      const name=getFusionNameFromPair(...parts);for(const k of parts)fusedUpgradeNames[k]=name;
+      return true;
+    }
+    const option=getUpgradePool().find(x=>x.key===key);if(!option)return false;
+    const dark=reason==="wave"&&upgrades.darkPact;
+    option.apply();if(dark&&key in upgradeLevels&&upgradeLevels[key]<upgradeMaxLevels[key])option.apply();
+    return true;
+  });
+}
+function coopGuestShoot(remote,manual=false){
+  if(!coopGuestBuild)return false;
+  const prevPlayer={...player},prevMouse={...mouse},prevLevel=level,prevShot=lastShot,prevManual=lastManualShotAt,prevRam=lastRamFishAt,prevCount=manualShotsSinceBloquito,prevLife=life,oldShots=shots;
+  try{
+    Object.assign(player,{x:remote.x,y:remote.y,angle:remote.angle,shootAnim:remote.shootAnim,hurtAnim:remote.hurtAnim});
+    mouse.x=remote.aimX;mouse.y=remote.aimY;level=remote.level;life=remote.hp;
+    lastShot=remote.lastShot;lastManualShotAt=remote.lastManual;lastRamFishAt=remote.lastBloquito;manualShotsSinceBloquito=remote.manualCount;
+    coopWithGuestBuild(()=>{if(manual)launchRamFish({x:remote.aimX,y:remote.aimY});else shootFish()});
+    remote.lastShot=lastShot;remote.lastManual=lastManualShotAt;remote.lastBloquito=lastRamFishAt;remote.manualCount=manualShotsSinceBloquito;remote.shootAnim=player.shootAnim;
+    return shots>oldShots;
+  }finally{
+    Object.assign(player,prevPlayer);Object.assign(mouse,prevMouse);level=prevLevel;lastShot=prevShot;lastManualShotAt=prevManual;lastRamFishAt=prevRam;manualShotsSinceBloquito=prevCount;life=prevLife;
+  }
+}
+window.coopBridge={capture:coopFrameSnapshot,apply:coopApplyFrame,drawSecond:coopDrawSecond ,resetGuestBuild:coopResetGuestBuild,guestChoices:coopGuestChoices,applyGuestChoice:coopApplyGuestChoice,withGuestBuild:coopWithGuestBuild,guestMaxLife:()=>coopGuestBuild?.u.maxLife||100,guestShoot:coopGuestShoot};
+
 let audioStateSignature="";
 function loop(now){
 try{
@@ -7540,7 +7650,7 @@ const safeNow=Number.isFinite(now)?now:performance.now();
 const rawDt=Math.max(0,Math.min((safeNow-lastFrame)/1000,.25));
 updatePerformanceMode(rawDt);
 lastFrame=safeNow;
-if(gameStarted&&!gameOver&&!choosingUpgrade&&!paused){
+if(gameStarted&&!gameOver&&!choosingUpgrade&&!paused&&!window.coopTest?.guestActive){
   frameAccumulator+=rawDt;
   let steps=0;
   while(frameAccumulator>=1/60&&steps++<5){
@@ -7550,7 +7660,7 @@ if(gameStarted&&!gameOver&&!choosingUpgrade&&!paused){
   }
   if(frameAccumulator>=1/60)frameAccumulator%=1/60;
 }else frameAccumulator=0;
-cleanBrokenEntities();
+if(!window.coopTest?.guestActive)cleanBrokenEntities();
 const audioState=[gameStarted,gameOver,paused,choosingUpgrade,boss?.type||"round",musicEnabled,musicVolume].join("|");
 if(audioState!==audioStateSignature){audioStateSignature=audioState;syncMusic();}
 render();
