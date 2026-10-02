@@ -1588,3 +1588,19 @@ button:active:not(:disabled){transform:translateY(1px) scale(.985)!important}
 @media(max-width:1100px){#pauseUpgradesList{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:780px){#pauseUpgradesList{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:540px){#pauseUpgradesList{grid-template-columns:1fr}#pauseButtons{gap:7px!important;padding:7px!important}#pauseButtons #resumeButton{padding:10px 13px;font-size:14px}#pauseButtons .pauseMoreOptions>summary{padding:9px 11px;font-size:13px}}
+
+.patchNotesSectionTitle{color:#ffe6f0;font-size:13px;font-weight:900;padding:2px 3px 0}
+.patchNotesOlder{min-width:0;border:1px solid rgba(255,255,255,.18);border-radius:13px;background:rgba(255,255,255,.06);padding:0 10px 10px}
+.patchNotesPanel .patchNotesOlder>summary{list-style:none;display:flex;justify-content:space-between;align-items:center;gap:10px;cursor:pointer;padding:12px 4px;color:#ffe6f0;background:none;box-shadow:none;border-radius:0;font-size:13px;font-weight:900;width:100%;max-width:none;transform:none}
+.patchNotesPanel .patchNotesOlder>summary::after{content:"▾";font-size:12px;transition:transform .16s ease}
+.patchNotesPanel .patchNotesOlder[open]>summary::after{transform:rotate(180deg)}
+.patchNotesPanel .patchNotesOlder>summary::-webkit-details-marker{display:none}
+.patchNotesOlderEntries{display:grid;gap:10px;padding:3px 0 2px}
+.patchNoteSources{margin-top:9px;padding-top:7px;border-top:1px solid rgba(41,65,54,.15)}
+.patchNotesPanel .patchNoteSources>summary{list-style:none;cursor:pointer;font-size:11px;color:#346e69;font-weight:800;background:none;border-radius:0;box-shadow:none;padding:2px 0;display:block;width:auto;max-width:100%;transform:none}
+.patchNotesPanel .patchNoteSources>summary::after{content:" ▾";font-size:10px}
+.patchNotesPanel .patchNoteSources[open]>summary::after{content:" ▴"}
+.patchNoteSources>div{font-size:11px;line-height:1.5;color:#426156;overflow-wrap:anywhere;margin-top:4px}
+.patchNotesPanel .patchNotesOlder>summary::after,.patchNotesPanel .patchNoteSources>summary::after{transform:none}
+.patchNotesPanel .patchNotesOlder[open]>summary::after{transform:rotate(180deg)}
+.patchNotesPanel .patchNotesOlder>summary:hover,.patchNotesPanel .patchNoteSources>summary:hover{transform:none;box-shadow:none;filter:none}

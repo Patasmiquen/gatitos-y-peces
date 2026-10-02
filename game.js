@@ -1198,6 +1198,25 @@ let lastFusionShieldGuard=0,zoomiesEscapeHits=0,forcedZoomiesUntil=0,safeTelepor
 let screenShake=0,screenShakeX=0,screenShakeY=0,lastStarTrail=0;
 const ramFishTrails=[];
 const fishes=[],cats=[],hearts=[],smokes=[],floatingTexts=[],pawPrints=[],quacks=[],coinsDrops=[],dogBones=[],demonOrbs=[],yarnBalls=[],powerStars=[],shockwaves=[],sparkles=[],tunaDrops=[];
+let lastImportantText="",lastImportantTextAt=-Infinity,lastMoralTextAt=-Infinity;
+function showFloatingText(entry){
+  if(!entry.important&&!entry.moral)return;
+  const now=gameNow();
+  if(entry.moral){
+    if(now>=lastMoralTextAt&&now-lastMoralTextAt<3500)return;
+    if(floatingTexts.length>=2&&floatingTexts.every(t=>t.important))return;
+    lastMoralTextAt=now;
+  }else{
+    if(entry.text===lastImportantText&&now>=lastImportantTextAt&&now-lastImportantTextAt<1800)return;
+    lastImportantText=entry.text;lastImportantTextAt=now;
+  }
+  if(floatingTexts.length>=2){
+    const moralIndex=floatingTexts.findIndex(t=>t.moral);
+    floatingTexts.splice(moralIndex>=0?moralIndex:0,1);
+  }
+  floatingTexts.push(entry);
+}
+
 let audioCtx=null;
 function getAudioCtx(){
   if(!audioCtx||audioCtx.state==="closed"){
@@ -1249,7 +1268,7 @@ function giveBossReward(type,x,y){
   if(!reward)return;
   coins+=reward.coins;
   if(runStats){runStats.coinsGenerated+=reward.coins;runStats.coinsCollected+=reward.coins;}
-  if(floatingTexts.length<150)floatingTexts.push({x,y:y-105,text:reward.name+" · +"+reward.coins+" 🪙",life:2.4,maxLife:2.4,big:true});
+  if(floatingTexts.length<150)showFloatingText({x,y:y-105,text:reward.name+" · +"+reward.coins+" 🪙",life:2.4,maxLife:2.4,big:true,important:true});
   if(shockwaves.length<36)shockwaves.push({x,y,r:12,maxR:125,life:.6,maxLife:.6,color:reward.color,line:5});
 }
 function getRoundVariant(){
@@ -1290,7 +1309,7 @@ shield:{icon:"🛡️",name:"Escudo de pececitos",desc:l=>"Añade peces guardian
 omniBurst:{icon:"💥",name:"Metralladora gatuna",desc:l=>"Disparas ráfagas circulares de peces periódicamente."},
 yarnBounce:{icon:"🧶",name:"Ovillo táctico",desc:l=>"Aumenta la probabilidad de que un pez rebote hacia otro enemigo."},
 saltScales:{icon:"🧂",name:"Escamas saladas",desc:l=>"Los impactos aplican daño salino durante 2,4 s. Otro golpe renueva el efecto sin acumularlo."},
-critChance:{icon:"💥",name:"Mimos críticos",desc:l=>"Aumenta la probabilidad de infligir daño crítico."}
+critChance:{icon:"⚡",name:"Mimos críticos",desc:l=>"Aumenta la probabilidad de infligir daño crítico."}
 };
 
 const RECOMMEND_DIMENSIONS=["damage","defense","healing","mobility","economy","control","consistency","automation","area","scaling"];
@@ -1761,7 +1780,7 @@ victoryContinueBtn.addEventListener("click",()=>{
     shopAvailable=false;
     fusionAvailable=false;
     wave++;
-    floatingTexts.push({x:canvas.width/2,y:130,text:"🐾 Modo infinito activado",life:2.5,maxLife:2.5,big:true});
+    showFloatingText({x:canvas.width/2,y:130,text:"🐾 Modo infinito activado",life:2.5,maxLife:2.5,big:true,important:true});
     startWave();
     updateHud();
     syncMusic();
@@ -1769,7 +1788,7 @@ victoryContinueBtn.addEventListener("click",()=>{
   }
   if(!bossVictoryAlreadyShown){
     bossVictoryAlreadyShown=true;
-    floatingTexts.push({x:canvas.width/2,y:130,text:"💪 ¡Sigue mejorando!",life:2.5,maxLife:2.5,big:true});
+    showFloatingText({x:canvas.width/2,y:130,text:"💪 ¡Sigue mejorando!",life:2.5,maxLife:2.5,big:true});
   }
   if(shopAvailable)openCoinShop();
   else maybeOpenShopOrFusion();
@@ -1956,7 +1975,7 @@ function collectAllMapLootAfterBoss(){
     const parts=[];
     if(collectedCoins>0)parts.push(`+${collectedCoins} 🪙`);
     if(collectedTuna>0)parts.push(`+${collectedTuna} 🐟`);
-    floatingTexts.push({x:canvas.width/2,y:150,text:`Recogido: ${parts.join(" · ")}`,life:1.7,maxLife:1.7,big:true});
+    showFloatingText({x:canvas.width/2,y:150,text:`Recogido: ${parts.join(" · ")}`,life:1.7,maxLife:1.7,big:true});
   }
   updateHud();
 }
@@ -1989,7 +2008,7 @@ starSpawnTimer=3+Math.random()*Math.min(10,waveDuration*.5);
 starSpawnedThisWave=false;
 if(wave%5===0)spawnBoss();
 const variantNames={invasion:"🐱 Invasión felina",sprinters:"⚡ Gatos veloces",specials:"✨ Ronda de especiales"};
-floatingTexts.push({x:canvas.width/2,y:115,text:variantNames[roundVariant]||(wave%5===0?`Jefe ronda ${wave}`:`Ronda ${wave}`),life:1.8,maxLife:1.8,big:true})
+if(roundVariant!=="normal"||wave%5===0)showFloatingText({x:canvas.width/2,y:115,text:variantNames[roundVariant]||(wave%5===0?`Jefe ronda ${wave}`:`Ronda ${wave}`),life:1.8,maxLife:1.8,big:true,important:true})
 }
 
 function getAvalancheConfig(){
@@ -2019,7 +2038,7 @@ avalancheActive=true;
 avalancheTime=cfg.duration;
 avalancheSpawnTimer=0;
 const label=wave<15?"⚠️ Mini avalancha de gatitos":wave<25?"⚠️ Avalancha de gatitos":"⚠️ ¡Gran avalancha felina!";
-floatingTexts.push({x:canvas.width/2,y:145,text:label,life:2,maxLife:2,big:true});
+showFloatingText({x:canvas.width/2,y:145,text:label,life:2,maxLife:2,big:true,important:true});
 }
 }
 
@@ -2039,7 +2058,7 @@ avalancheSpawnTimer=cfg.interval;
 if(avalancheTime<=0){
 avalancheActive=false;
 avalancheThisWave=false;
-floatingTexts.push({x:canvas.width/2,y:145,text:"La avalancha terminó 🐾",life:1.5,maxLife:1.5,big:false});
+showFloatingText({x:canvas.width/2,y:145,text:"La avalancha terminó 🐾",life:1.5,maxLife:1.5,big:false});
 }
 }
 
@@ -2051,7 +2070,7 @@ const margin=90;
 powerStars.push({x:margin+Math.random()*(canvas.width-margin*2),y:margin+Math.random()*(canvas.height-margin*2),r:18,life:14,maxLife:14,wobble:Math.random()*Math.PI*2,auraPhase:Math.random()*Math.PI*2});
 starSpawnedThisWave=true;
 starChanceLevel=1;
-floatingTexts.push({x:canvas.width/2,y:175,text:"⭐ ¡Ha aparecido una estrella!",life:2,maxLife:2,big:true});
+showFloatingText({x:canvas.width/2,y:175,text:"⭐ ¡Ha aparecido una estrella!",life:2,maxLife:2,big:true,important:true});
 }else starChanceLevel++;
 }
 
@@ -2154,7 +2173,7 @@ startPowerStarLoop();
 shockwaves.push({x:player.x,y:player.y,r:8,maxR:130,life:.55,maxLife:.55,color:"#ffd166",line:6});
 shockwaves.push({x:player.x,y:player.y,r:5,maxR:80,life:.38,maxLife:.38,color:"#fff176",line:4});
 makeSmoke(player.x,player.y);
-floatingTexts.push({x:player.x,y:player.y-80,text:"⭐ ¡Invencible!",life:1.8,maxLife:1.8,big:true});
+showFloatingText({x:player.x,y:player.y-80,text:"⭐ ¡Invencible!",life:1.8,maxLife:1.8,big:true,important:true});
 }
 
 function isPowerStarActive(){return starActive&&starTime>0}
@@ -2174,7 +2193,7 @@ function activateSevenLives(){
   shockwaves.push({x:player.x,y:player.y,r:8,maxR:170,life:.75,maxLife:.75,color:"#80ed99",line:7});
   shockwaves.push({x:player.x,y:player.y,r:5,maxR:105,life:.55,maxLife:.55,color:"#ffd166",line:5});
   for(let i=0;i<20;i++){const a=Math.random()*Math.PI*2,sp=80+Math.random()*190;sparkles.push({x:player.x,y:player.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,size:4+Math.random()*5,life:.7+Math.random()*.35,maxLife:1,color:i%2?"#80ed99":"#ffd166"});}
-  floatingTexts.push({x:player.x,y:player.y-92,text:"🐱 ¡Siete vidas!",life:1.8,maxLife:1.8,big:true});
+  showFloatingText({x:player.x,y:player.y-92,text:"🐱 ¡Siete vidas!",life:1.8,maxLife:1.8,big:true,important:true});
   return true;
 }
 function getDangerAtPoint(x,y){
@@ -2244,8 +2263,8 @@ player.hurtAnim=Math.max(player.hurtAnim,.35);
 makeSmoke(player.x,player.y);
 makeHearts(player.x,player.y);
 shockwaves.push({x:player.x,y:player.y,r:10,maxR:170,life:.58,maxLife:.58,color:"#9b5de5",line:6});
-floatingTexts.push({x:player.x,y:player.y-94,text:"💨 Huida felina",life:1.35,maxLife:1.35,big:false});
-floatingTexts.push({x:player.x,y:player.y-68,text:"1s invulnerable",life:.95,maxLife:.95,big:false});
+showFloatingText({x:player.x,y:player.y-94,text:"💨 Huida felina",life:1.35,maxLife:1.35,big:false,important:true});
+showFloatingText({x:player.x,y:player.y-68,text:"1s invulnerable",life:.95,maxLife:.95,big:false});
 
 triggerCatInstinct(true);
 return true;
@@ -2256,7 +2275,7 @@ if(!upgrades.zoomiesEscape&&!hasDoneFusionPair("catInstinct+zoomies"))return fal
 zoomiesEscapeHits=Math.min(5,zoomiesEscapeHits+1);
 const remaining=5-zoomiesEscapeHits;
 if(remaining>0){
-  floatingTexts.push({x:player.x,y:player.y-74,text:`💨 Huida felina ${zoomiesEscapeHits}/5`,life:.75,maxLife:.75,big:false});
+  showFloatingText({x:player.x,y:player.y-74,text:`💨 Huida felina ${zoomiesEscapeHits}/5`,life:.75,maxLife:.75,big:false});
   return false;
 }
 zoomiesEscapeHits=0;
@@ -2284,7 +2303,7 @@ amount=Number.isFinite(amount)?Math.max(0,amount):0;
 if(amount<=0)return false;
 if(isPlayerProtected()){
 player.hurtAnim=.08;
-if(Math.random()<.22)floatingTexts.push({x:player.x,y:player.y-56,text:isSevenLivesActive()?"🐱 protegido":"⭐ invulnerable",life:.65,maxLife:.65,big:false});
+if(Math.random()<.22)showFloatingText({x:player.x,y:player.y-56,text:isSevenLivesActive()?"🐱 protegido":"⭐ invulnerable",life:.65,maxLife:.65,big:false});
 return false;
 }
 if(hasDoneFusionPair("catInstinct+shield")&&upgrades.shield&&gameNow()-lastFusionShieldGuard>10000){
@@ -2292,7 +2311,7 @@ lastFusionShieldGuard=gameNow();
 amount*=0.35;
 shockwaves.push({x:player.x,y:player.y,r:8,maxR:150,life:.55,maxLife:.55,color:"#90e0ef",line:6});
 cats.forEach(cat=>{if(!isCombatTargetAvailable(cat))return;const dx=cat.x-player.x,dy=cat.y-player.y,d=Math.hypot(dx,dy)||1;if(d<330){cat.knockVx=(cat.knockVx||0)+(dx/d)*420;cat.knockVy=(cat.knockVy||0)+(dy/d)*420;cat.hitAnim=.18;}});
-floatingTexts.push({x:player.x,y:player.y-86,text:"🛡️ Guardia felina",life:1.1,maxLife:1.1,big:false});
+showFloatingText({x:player.x,y:player.y-86,text:"🛡️ Guardia felina",life:1.1,maxLife:1.1,big:false});
 }
 amount*=1-Math.min(.45,Math.max(0,upgrades.damageReduction||0));
 if(bossRewardActive("octopus"))amount*=.88;
@@ -2427,7 +2446,7 @@ function activateDogRescueRelax(){
   });
   [quacks,yarnBalls,demonOrbs].forEach(list=>list.forEach(o=>{const dx=o.x-player.x,dy=o.y-player.y,d=Math.hypot(dx,dy)||1;const speed=Math.max(260,Math.hypot(o.vx||0,o.vy||0));o.vx=(dx/d)*speed;o.vy=(dy/d)*speed;}));
   if(boss){const dx=boss.x-player.x,dy=boss.y-player.y,d=Math.hypot(dx,dy)||1;boss.knockVx=(boss.knockVx||0)+(dx/d)*260;boss.knockVy=(boss.knockVy||0)+(dy/d)*260;boss.relaxTimer=Math.max(boss.relaxTimer||0,2.0);}
-  floatingTexts.push({x:player.x,y:player.y-120,text:"🐶 Relax, yo te cubro",life:2,maxLife:2,big:true});
+  showFloatingText({x:player.x,y:player.y-120,text:"🐶 Relax, yo te cubro",life:2,maxLife:2,big:true,important:true});
 }
 
 function getSealJumpCount(round=wave,repeats=0){return Math.min(12,6+Math.floor(Math.max(0,round-10)/10)+Math.min(2,repeats));}
@@ -2463,7 +2482,7 @@ const hpScale=(firstBossIntro?.68:baseWaveBossScale)*endlessBossMul;
 const speedScale=(firstBossIntro?.78:1)*(phase==="main"?1:phase==="postBoss"?(1+getPostBossPressure()*.010):(1+getEndlessPressure()*.028));
 const damageScale=(firstBossIntro?.70:1)*(phase==="main"?1:phase==="postBoss"?(1+getPostBossPressure()*.012):(1+getEndlessPressure()*.038));
 if(bossRepeatLevel>0){
-  floatingTexts.push({x:canvas.width/2,y:205,text:"👑 Jefe reforzado",life:1.6,maxLife:1.6,big:false});
+  showFloatingText({x:canvas.width/2,y:205,text:"👑 Jefe reforzado",life:1.6,maxLife:1.6,big:false,important:true});
 }
 
 if(type==="demon"){
@@ -2491,7 +2510,7 @@ contactDamage:(20+wave*.45)*damageScale
 boss.repeatLevel=bossRepeatLevel;
 constrainBossToArena(boss);
 const demonMsg=hasDog?"😈 El demonio ha robado a tu perro":"😈 ¡El demonio ha llegado!";
-floatingTexts.push({x:canvas.width/2,y:170,text:demonMsg,life:2.6,maxLife:2.6,big:true});
+showFloatingText({x:canvas.width/2,y:170,text:demonMsg,life:2.6,maxLife:2.6,big:true,important:true});
 return;
 }
 
@@ -2500,7 +2519,7 @@ const hp=Math.round((115+wave*19)*hpScale);
 boss={type,x:canvas.width/2,y:canvas.height/2,r:62+Math.min(20,wave*.6),hp,maxHp:hp,
   state:"surface",dives:0,attackTimer:1.5,attacks:[],hitAnim:0,wobble:0,
   tentacleDamage:(12+wave*.32)*damageScale,strikeRadius:68*getOctopusGrowth().size,tentacleScale:getOctopusGrowth().size,salvoCount:getOctopusGrowth().salvo,extraTentacles:getOctopusGrowth().extra,repeatLevel:bossRepeatLevel};
-floatingTexts.push({x:boss.x,y:boss.y-boss.r-45,text:"🐙 ¡El pulpo emerge!",life:2,maxLife:2,big:true});
+showFloatingText({x:boss.x,y:boss.y-boss.r-45,text:"🐙 ¡El pulpo emerge!",life:2,maxLife:2,big:true,important:true});
 syncMusic();return;
 }
 if(type==="giantCat"){
@@ -2842,23 +2861,30 @@ function renderPatchNotes(){
   const content=document.getElementById("patchNotesContent");
   const count=document.getElementById("patchNotesCount");
   const notes=Array.isArray(window.PATCH_NOTES)?window.PATCH_NOTES:[];
-  if(count)count.textContent=`${notes.length} versiones`;
+  if(count)count.textContent=`${notes.length} hitos`;
   if(!content)return;
   if(!notes.length){
     content.innerHTML='<div class="patchNoteEntry"><div class="patchNoteTitle">No hay notas todavía.</div></div>';
     return;
   }
-  content.innerHTML=notes.map((note,index)=>{
+  const renderEntry=(note,index)=>{
     const changes=Array.isArray(note.changes)?note.changes:[];
     const list=changes.map(change=>`<li>${escapeHtml(change)}</li>`).join("");
-    const source=note.source?`<div class="patchNoteSource">Archivo base: ${escapeHtml(note.source)}</div>`:"";
+    const versions=Array.isArray(note.includedVersions)?note.includedVersions:[];
+    const sources=versions.length>1?`<details class="patchNoteSources"><summary>Actualizaciones agrupadas (${versions.length})</summary><div>${escapeHtml(versions.map(v=>v.replace(/^v\./,"v")).join(" · "))}</div></details>`:"";
+    const label=String(note.version||"v???").replace(/^v\./,"v");
+    const date=index<7?`<div class="patchNoteDate">${escapeHtml(note.date||"")}</div>`:"";
     return `<article class="patchNoteEntry ${index===0?"latest":""}">
-      <div class="patchNoteTop"><div class="patchNoteVersion">${escapeHtml(note.version||"v???")}</div><div class="patchNoteDate">${escapeHtml(note.date||"")}</div></div>
+      <div class="patchNoteTop"><div class="patchNoteVersion">${escapeHtml(label)}</div>${date}</div>
       <div class="patchNoteTitle">${escapeHtml(note.title||"Actualización")}</div>
       <ul>${list}</ul>
-      ${source}
+      ${sources}
     </article>`;
-  }).join("");
+  };
+  const recent=notes.slice(0,7).map(renderEntry).join("");
+  const older=notes.slice(7);
+  const archive=older.length?`<details class="patchNotesOlder"><summary>Historial anterior · ${older.length} hitos</summary><div class="patchNotesOlderEntries">${older.map((note,i)=>renderEntry(note,i+7)).join("")}</div></details>`:"";
+  content.innerHTML=`<div class="patchNotesSectionTitle">Actualizaciones recientes</div>${recent}${archive}`;
 }
 
 function formatCardText(str){
@@ -3108,7 +3134,7 @@ return allScalable&&allUnique;
 function giveLevelCoins(reason=""){
 const amount=2+Math.floor(Math.random()*3);
 coins+=amount;
-floatingTexts.push({x:player.x,y:player.y-70,text:`+${amount} monedas ${reason}`,life:1.4,maxLife:1.4,big:false});
+showFloatingText({x:player.x,y:player.y-70,text:`+${amount} monedas ${reason}`,life:1.4,maxLife:1.4,big:false});
 updateHud();
 maybeOpenShopOrFusion();
 }
@@ -3149,7 +3175,7 @@ return
 }
 showCards(reason==="wave"?"🌊 ¡Ronda superada!":"⭐ ¡Subiste de nivel!",darkWave?"🖤 La Voluntad Oscura elige por ti":lovePhrases[Math.floor(Math.random()*lovePhrases.length)],darkWave?"":"Elige una mejora gatuna",choices,upgrade=>{
 upgrade.apply();
-if(darkWave){let bonusCoins=1+Math.floor(Math.random()*5);if(hasDoneFusionPair("coinMagnet+darkPact")){const fp=getFusionProgress("coinMagnet+darkPact");bonusCoins+=2+Math.floor(Math.random()*(3+fp));}coins+=bonusCoins;floatingTexts.push({x:player.x,y:player.y-105,text:`🖤 +${bonusCoins} monedas`,life:1.3,maxLife:1.3,big:false})}
+if(darkWave){let bonusCoins=1+Math.floor(Math.random()*5);if(hasDoneFusionPair("coinMagnet+darkPact")){const fp=getFusionProgress("coinMagnet+darkPact");bonusCoins+=2+Math.floor(Math.random()*(3+fp));}coins+=bonusCoins;showFloatingText({x:player.x,y:player.y-105,text:`🖤 +${bonusCoins} monedas`,life:1.3,maxLife:1.3,big:false})}
 if(darkWave&&upgrade.key){
   let doubled=false;
   if(upgrade.fusion){
@@ -3164,11 +3190,11 @@ if(darkWave&&upgrade.key){
     upgrade.apply();
     doubled=(upgradeLevels[upgrade.key]||0)>before;
   }
-  if(doubled)floatingTexts.push({x:player.x,y:player.y-85,text:upgrade.fusion?"🖤 +2 niveles de fusión":"🖤 +2 niveles",life:1.4,maxLife:1.4,big:false})
+  if(doubled)showFloatingText({x:player.x,y:player.y-85,text:upgrade.fusion?"🖤 +2 niveles de fusión":"🖤 +2 niveles",life:1.4,maxLife:1.4,big:false})
 }
 choosingUpgrade=false;levelUpPanel.style.display="none";canvas.style.cursor=upgrades.bigCursor?"none":"crosshair";
 syncGamePointerLock();
-floatingTexts.push({x:player.x,y:player.y-55,text:upgrade.title,life:1.5,maxLife:1.5,big:false});
+showFloatingText({x:player.x,y:player.y-55,text:upgrade.title,life:1.5,maxLife:1.5,big:false});
 
 if(reason==="wave"&&waveUpgradePending){waveUpgradePending=false;recordNoDamageRoundIfClean();wave++;life=Math.min(upgrades.maxLife,life+upgrades.healOnWave);startWave()}
 updateHud();
@@ -3267,7 +3293,7 @@ return ranked.slice(0,amount).map(entry=>makeLevelUpgrade(entry.key,true));
 function maybeOpenShopOrFusion(){
 if(updatingWorld||pendingUpgradeQueue.length||bossVictoryPending||choosingUpgrade||gameOver||!gameStarted||paused)return;
 if(finalCompletionContinue||isGameCompleted()){shopBossPending=false;shopAvailable=false;fusionAvailable=false;return;}
-if(canFuse()&&!fusionAvailable){fusionAvailable=true;floatingTexts.push({x:player.x,y:player.y-70,text:"🔮 Fusión disponible",life:1.4,maxLife:1.4,big:false})}
+if(canFuse()&&!fusionAvailable){fusionAvailable=true;showFloatingText({x:player.x,y:player.y-70,text:"🔮 Fusión disponible",life:1.4,maxLife:1.4,big:false,important:true})}
 if(shopBossPending&&!shopAvailable){shopBossPending=false;startShopSession()}
 }
 
@@ -3355,7 +3381,7 @@ if(upgrade.randomShopUpgrade){
   if(!hidden||typeof hidden.apply!=="function"){openCoinShop();return}
   coins-=randomPrice;registerShopCoinsSpent(randomPrice);shopUpgradePurchases++;
   hidden.apply();playShopBuySound();
-  floatingTexts.push({x:player.x,y:player.y-65,text:`🎲 Sorpresa: ${hidden.title}`,life:1.3,maxLife:1.3,big:false});
+  showFloatingText({x:player.x,y:player.y-65,text:`🎲 Sorpresa: ${hidden.title}`,life:1.3,maxLife:1.3,big:false});
   updateHud();checkGameCompletion();
   if(isGameCompleted())return;
   openCoinShop();
@@ -3365,7 +3391,7 @@ if(upgrade.randomShopUpgrade){
 if(coins<upgradePrice){openCoinShop();return}
 coins-=upgradePrice;registerShopCoinsSpent(upgradePrice);shopUpgradePurchases++;
 upgrade.apply();playShopBuySound();
-floatingTexts.push({x:player.x,y:player.y-65,text:`Comprado por ${upgradePrice}🪙: ${upgrade.title}`,life:1.3,maxLife:1.3,big:false});
+showFloatingText({x:player.x,y:player.y-65,text:`Comprado por ${upgradePrice}🪙: ${upgrade.title}`,life:1.3,maxLife:1.3,big:false});
 updateHud();checkGameCompletion();
 if(isGameCompleted())return;
 openCoinShop();
@@ -4167,7 +4193,7 @@ victoryPanel.style.display="flex";
 playVictoryJingle();
 document.querySelector("#victoryBox h1").textContent="🌟 ¡Juego completado!";
 document.querySelector("#victoryBox .victoryMsg").innerHTML=`<span class="vLine vMain">Has fusionado las 28 mejoras y llevado las 14 fusiones al máximo.</span><span class="vLine vSub">Has alcanzado el poder absoluto gatuno. ✨🏆</span>`;
-floatingTexts.push({x:canvas.width/2,y:canvas.height/2-110,text:"¡FINAL COMPLETADO!",life:4,maxLife:4,big:true})
+showFloatingText({x:canvas.width/2,y:canvas.height/2-110,text:"¡FINAL COMPLETADO!",life:4,maxLife:4,big:true,important:true})
 }
 function checkGameCompletion(){if(!updatingWorld&&!pendingUpgradeQueue.length&&(!choosingUpgrade||shopAvailable)&&!gameOver&&!finalCompletionContinue&&isGameCompleted())finishGame()}
 
@@ -4219,22 +4245,22 @@ const pair=sortedPair(first.key,second.key);
 doneFusionPairs[pair]=true;
 registerFusionAchievements();
 const fusionName=getFusionNameFromPair(first.key,second.key);
-if(pair==="aimAssist+bigCursor"){upgrades.perfectAim=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🎯 Puntería perfecta",life:1.8,maxLife:1.8,big:false})}
-if(pair==="bigCursor+moralSupport"){upgrades.braveHeart=true;floatingTexts.push({x:player.x,y:player.y-95,text:"💗 Corazón valiente",life:1.8,maxLife:1.8,big:false})}
-if(pair==="aimAssist+catInstinct"){upgrades.reflexBurst=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🐱‍👤 Reflejos perfectos",life:1.8,maxLife:1.8,big:false})}
-if(pair==="catInstinct+moralSupport"){upgrades.valorCasa=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🏠 Valor de casa",life:1.8,maxLife:1.8,big:false})}
-if(pair==="catInstinct+darkPact"){upgrades.cursedInstinct=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🖤 Instinto maldito",life:1.8,maxLife:1.8,big:false})}
-if(pair==="catInstinct+zoomies"){upgrades.zoomiesEscape=true;zoomiesEscapeHits=0;floatingTexts.push({x:player.x,y:player.y-95,text:"💨 Huida felina",life:1.8,maxLife:1.8,big:false})}
-if(pair==="catInstinct+maxLife"){upgrades.sevenLives=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🐱 Siete vidas de gato",life:2,maxLife:2,big:false})}
-if(pair==="catInstinct+coinMagnet"){floatingTexts.push({x:player.x,y:player.y-95,text:"🧲 Instinto recolector",life:1.8,maxLife:1.8,big:false})}
-if(pair==="bigCursor+boomerang"){floatingTexts.push({x:player.x,y:player.y-95,text:"🪃 Retorno marcado",life:1.8,maxLife:1.8,big:false})}
-if(pair==="boomerang+catInstinct"){floatingTexts.push({x:player.x,y:player.y-95,text:"🥷 Reflejo circular",life:1.8,maxLife:1.8,big:false})}
-if(pair==="catInstinct+omniBurst"){floatingTexts.push({x:player.x,y:player.y-95,text:"💥 Ráfaga felina",life:1.8,maxLife:1.8,big:false})}
-if(pair==="coinMagnet+darkPact"){floatingTexts.push({x:player.x,y:player.y-95,text:"🖤 Codicia oscura",life:1.8,maxLife:1.8,big:false})}
-if(pair==="darkPact+moralSupport"){upgrades.boyfriendDog=true;upgrades.boyfriendDogSpirit=false;dogSacrificeUsed=false;forceDemonNextBoss=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🐶 Tu novio ha hecho este juego",life:2.3,maxLife:2.3,big:false});floatingTexts.push({x:player.x,y:player.y-125,text:"😈 El demonio te está buscando...",life:2,maxLife:2,big:false})}
-if(pair==="moveSpeed+zoomies"){upgrades.zoomiesHyper=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🐱💨 Hiperactividad",life:1.8,maxLife:1.8,big:false})}
-if(pair==="fireRate+zoomies"){upgrades.zoomiesCannon=true;floatingTexts.push({x:player.x,y:player.y-95,text:"🐱💨 Modo cañón",life:1.8,maxLife:1.8,big:false})}
-if(pair==="critChance+zoomies"){upgrades.zoomiesCrit=true;floatingTexts.push({x:player.x,y:player.y-95,text:"💥 Subidón crítico",life:1.8,maxLife:1.8,big:false})}
+if(pair==="aimAssist+bigCursor"){upgrades.perfectAim=true;showFloatingText({x:player.x,y:player.y-95,text:"🎯 Puntería perfecta",life:1.8,maxLife:1.8,big:false})}
+if(pair==="bigCursor+moralSupport"){upgrades.braveHeart=true;showFloatingText({x:player.x,y:player.y-95,text:"💗 Corazón valiente",life:1.8,maxLife:1.8,big:false})}
+if(pair==="aimAssist+catInstinct"){upgrades.reflexBurst=true;showFloatingText({x:player.x,y:player.y-95,text:"🐱‍👤 Reflejos perfectos",life:1.8,maxLife:1.8,big:false})}
+if(pair==="catInstinct+moralSupport"){upgrades.valorCasa=true;showFloatingText({x:player.x,y:player.y-95,text:"🏠 Valor de casa",life:1.8,maxLife:1.8,big:false})}
+if(pair==="catInstinct+darkPact"){upgrades.cursedInstinct=true;showFloatingText({x:player.x,y:player.y-95,text:"🖤 Instinto maldito",life:1.8,maxLife:1.8,big:false})}
+if(pair==="catInstinct+zoomies"){upgrades.zoomiesEscape=true;zoomiesEscapeHits=0;showFloatingText({x:player.x,y:player.y-95,text:"💨 Huida felina",life:1.8,maxLife:1.8,big:false})}
+if(pair==="catInstinct+maxLife"){upgrades.sevenLives=true;showFloatingText({x:player.x,y:player.y-95,text:"🐱 Siete vidas de gato",life:2,maxLife:2,big:false})}
+if(pair==="catInstinct+coinMagnet"){showFloatingText({x:player.x,y:player.y-95,text:"🧲 Instinto recolector",life:1.8,maxLife:1.8,big:false})}
+if(pair==="bigCursor+boomerang"){showFloatingText({x:player.x,y:player.y-95,text:"🪃 Retorno marcado",life:1.8,maxLife:1.8,big:false})}
+if(pair==="boomerang+catInstinct"){showFloatingText({x:player.x,y:player.y-95,text:"🥷 Reflejo circular",life:1.8,maxLife:1.8,big:false})}
+if(pair==="catInstinct+omniBurst"){showFloatingText({x:player.x,y:player.y-95,text:"💥 Ráfaga felina",life:1.8,maxLife:1.8,big:false})}
+if(pair==="coinMagnet+darkPact"){showFloatingText({x:player.x,y:player.y-95,text:"🖤 Codicia oscura",life:1.8,maxLife:1.8,big:false})}
+if(pair==="darkPact+moralSupport"){upgrades.boyfriendDog=true;upgrades.boyfriendDogSpirit=false;dogSacrificeUsed=false;forceDemonNextBoss=true;showFloatingText({x:player.x,y:player.y-95,text:"🐶 Tu novio ha hecho este juego",life:2.3,maxLife:2.3,big:false});showFloatingText({x:player.x,y:player.y-125,text:"😈 El demonio te está buscando...",life:2,maxLife:2,big:false})}
+if(pair==="moveSpeed+zoomies"){upgrades.zoomiesHyper=true;showFloatingText({x:player.x,y:player.y-95,text:"🐱💨 Hiperactividad",life:1.8,maxLife:1.8,big:false})}
+if(pair==="fireRate+zoomies"){upgrades.zoomiesCannon=true;showFloatingText({x:player.x,y:player.y-95,text:"🐱💨 Modo cañón",life:1.8,maxLife:1.8,big:false})}
+if(pair==="critChance+zoomies"){upgrades.zoomiesCrit=true;showFloatingText({x:player.x,y:player.y-95,text:"💥 Subidón crítico",life:1.8,maxLife:1.8,big:false})}
 [first.key,second.key].forEach(k=>{
   if(Object.prototype.hasOwnProperty.call(upgradeLevels,k)){
     fusedBaseLevels[k]=(fusedBaseLevels[k]||0)+(upgradeLevels[k]||0);
@@ -4251,7 +4277,7 @@ fusedUpgradeNames[first.key]=fusionName;
 fusedUpgradeNames[second.key]=fusionName;
 fusionAvailable=false;shopAvailable=false;choosingUpgrade=false;levelUpPanel.style.display="none";
 syncGamePointerLock();
-floatingTexts.push({x:player.x,y:player.y-75,text:`🔮 ${fusionName}`,life:1.8,maxLife:1.8,big:false});
+showFloatingText({x:player.x,y:player.y-75,text:`🔮 ${fusionName}`,life:1.8,maxLife:1.8,big:false});
 updateHud();checkGameCompletion();
 if(!gameOver&&wasShopOpen)openCoinShop();else maybeOpenShopOrFusion()
 },()=>{fusionBackBtn.style.display="none";openFusionChoice(cost)},"fusionPartner")
@@ -4291,8 +4317,8 @@ return choices;
 function giveRainbowMaxedReward(){
 const amount=12+Math.floor(Math.random()*9);
 coins+=amount;
-floatingTexts.push({x:player.x,y:player.y-82,text:`🌈 +${amount} monedas`,life:1.8,maxLife:1.8,big:true});
-floatingTexts.push({x:player.x,y:player.y-48,text:"Todo está al máximo",life:1.4,maxLife:1.4,big:false});
+showFloatingText({x:player.x,y:player.y-82,text:`🌈 +${amount} monedas`,life:1.8,maxLife:1.8,big:true});
+showFloatingText({x:player.x,y:player.y-48,text:"Todo está al máximo",life:1.4,maxLife:1.4,big:false});
 choosingUpgrade=false;
 levelUpPanel.style.display="none";
 canvas.style.cursor=upgrades.bigCursor?"none":"crosshair";
@@ -4314,7 +4340,7 @@ choosingUpgrade=false;
 levelUpPanel.style.display="none";
 canvas.style.cursor=upgrades.bigCursor?"none":"crosshair";
 syncGamePointerLock();
-floatingTexts.push({x:player.x,y:player.y-65,text:"🌈 "+upgrade.title,life:1.3,maxLife:1.3,big:false});
+showFloatingText({x:player.x,y:player.y-65,text:"🌈 "+upgrade.title,life:1.3,maxLife:1.3,big:false});
 updateHud();checkGameCompletion();
 },null,"rainbow");
 }
@@ -4572,19 +4598,19 @@ if(defeatedType==="demon"){
 demonOrbs.length=0;
 if(dogKidnapped){
 dogKidnapped=false;
-floatingTexts.push({x:boss.x,y:boss.y-80,text:"🐶 ¡Has recuperado a tu perro!",life:2,maxLife:2,big:true});
+showFloatingText({x:boss.x,y:boss.y-80,text:"🐶 ¡Has recuperado a tu perro!",life:2,maxLife:2,big:true,important:true});
 }else if(dogSacrificeUsed){
 upgrades.boyfriendDog=true;
 upgrades.boyfriendDogSpirit=false;
 upgrades.boyfriendDogReturned=true;
 dogSacrificeUsed=false;
-floatingTexts.push({x:boss.x,y:boss.y-100,text:"🐶 Te dije que seguiría contigo...",life:2.6,maxLife:2.6,big:true});
-floatingTexts.push({x:boss.x,y:boss.y-58,text:"💖 ¡El perro ha vuelto!",life:2,maxLife:2,big:false});
+showFloatingText({x:boss.x,y:boss.y-100,text:"🐶 Te dije que seguiría contigo...",life:2.6,maxLife:2.6,big:true,important:true});
+showFloatingText({x:boss.x,y:boss.y-58,text:"💖 ¡El perro ha vuelto!",life:2,maxLife:2,big:false});
 }else{
-floatingTexts.push({x:boss.x,y:boss.y-80,text:"😈 ¡Has derrotado al demonio!",life:2,maxLife:2,big:true});
+showFloatingText({x:boss.x,y:boss.y-80,text:"😈 ¡Has derrotado al demonio!",life:2,maxLife:2,big:true,important:true});
 }
 }else{
-floatingTexts.push({x:boss.x,y:boss.y-70,text:"¡Jefe mimado!",life:1.3,maxLife:1.3,big:true});
+showFloatingText({x:boss.x,y:boss.y-70,text:"¡Jefe mimado!",life:1.3,maxLife:1.3,big:true});
 }
 
 score+=5;
@@ -4686,7 +4712,7 @@ function launchRamFish(target=null){
   player.shootAnim=.12;
   if(fullyCharged){
   makeImpact(player.x+Math.cos(angle)*55,player.y+Math.sin(angle)*55,"#80eaff",1.6);
-  floatingTexts.push({x:player.x,y:player.y-75,text:"🐟 ¡BLOQUITO!",life:1,maxLife:1,big:true});
+  showFloatingText({x:player.x,y:player.y-75,text:"🐟 ¡BLOQUITO!",life:1,maxLife:1,big:true});
   }
   return true;
 }
@@ -4757,7 +4783,7 @@ addAchievementStat("leviathanAppearances",1,{run:true});
   }
   if(shockwaves.length<36)shockwaves.push({x:player.x,y:player.y,r:18,maxR:Math.max(canvas.width,canvas.height)*1.15,life:.9,maxLife:.9,color:"#b197fc",line:12});
   addScreenShake(18);
-  floatingTexts.push({x:player.x,y:player.y-120,text:"🌊 ¡LEVIATÁN! DAÑO MASIVO",life:2.2,maxLife:2.2,big:true});
+  showFloatingText({x:player.x,y:player.y-120,text:"🌊 ¡LEVIATÁN! DAÑO MASIVO",life:2.2,maxLife:2.2,big:true,important:true});
 }
 
 function getLeviathanGiantFishChance(){
@@ -4803,19 +4829,19 @@ if(!giantFishEasterEgg){
   else if(cadenceLevel>=3){addFish(.10,.32);}
 }
 if(giantFishEasterEgg){
-  floatingTexts.push({x:player.x,y:player.y-92,text:"🐟 EL GRAN PEZ",life:1.8,maxLife:1.8,big:true});
+  showFloatingText({x:player.x,y:player.y-92,text:"🐟 EL GRAN PEZ",life:1.8,maxLife:1.8,big:true});
   triggerLeviathanMassiveDamage();
 }
 if(!giantFishEasterEgg&&Math.random()<upgrades.doubleFishChance){addFish(.14,.6);addFish(-.14,.6)}
 if(!giantFishEasterEgg&&hasCardumenGiganteFusion()&&Math.random()<Math.min(.34,.16+effectLevel("bigFish")*.018+effectLevel("doubleFish")*.018)){
   addCardumenGiganteFish(.32);
   addCardumenGiganteFish(-.32);
-  floatingTexts.push({x:player.x,y:player.y-82,text:"🐟🐟 Cardumen Gigante",life:1.05,maxLife:1.05,big:false});
+  showFloatingText({x:player.x,y:player.y-82,text:"🐟🐟 Cardumen Gigante",life:1.05,maxLife:1.05,big:false});
   if(!lowPerfMode)shockwaves.push({x:player.x,y:player.y,r:8,maxR:95,life:.35,maxLife:.35,color:"#4cc9f0",line:4});
 }
 if(!lowPerfMode||Math.random()<.35)pawPrints.push({x:player.x+Math.cos(angle)*38,y:player.y+Math.sin(angle)*38,angle,life:.22,maxLife:.22});
-if(Math.random()<(lowPerfMode?.08:.18)){const phrases=["glugluglu","fiuuu","ñomñom","pez vaaa","blu blu","mimitos!"],phrase=phrases[Math.floor(Math.random()*phrases.length)];playFishSound(phrase.includes("fiu")?"fiu":"bloop");floatingTexts.push({x:player.x+Math.cos(angle)*58,y:player.y+Math.sin(angle)*58-14,text:phrase,life:.85,maxLife:.85,big:false})}
-if(upgrades.moralSupport&&Math.random()<.16)floatingTexts.push({x:player.x+Math.cos(angle)*75,y:player.y+Math.sin(angle)*75-38,text:lovePhrases[Math.floor(Math.random()*lovePhrases.length)],life:1.45,maxLife:1.45,big:false})
+if(Math.random()<(lowPerfMode?.08:.18)){const phrases=["glugluglu","fiuuu","ñomñom","pez vaaa","blu blu","mimitos!"],phrase=phrases[Math.floor(Math.random()*phrases.length)];playFishSound(phrase.includes("fiu")?"fiu":"bloop");showFloatingText({x:player.x+Math.cos(angle)*58,y:player.y+Math.sin(angle)*58-14,text:phrase,life:.85,maxLife:.85,big:false})}
+if(upgrades.moralSupport&&Math.random()<.16)showFloatingText({x:player.x+Math.cos(angle)*75,y:player.y+Math.sin(angle)*75-38,text:lovePhrases[Math.floor(Math.random()*lovePhrases.length)],life:1.45,maxLife:1.45,big:false,moral:true})
 }
 
 function getAutomaticFireMultiplier(){
@@ -5046,7 +5072,7 @@ function beginOctopusDive(owner){
       emergeTimer:1.25+Math.floor(i/(owner.salvoCount||1))*.18,emergeDuration:1.25+Math.floor(i/(owner.salvoCount||1))*.18,attackTimer:1.2,
       hitAnim:0,wobble:i,damageCooldown:0,freezeTimer:0,knockVx:0,knockVy:0});
   }
-  floatingTexts.push({x:owner.x,y:owner.y-owner.r-45,text:"🐙 ¡Destruye los tentáculos!",life:1.8,maxLife:1.8,big:true});
+  if(owner.dives===1)showFloatingText({x:owner.x,y:owner.y-owner.r-45,text:"🐙 ¡Destruye los tentáculos!",life:1.8,maxLife:1.8,big:true,important:true});
 }
 function killOctopusTentacle(index,tentacle){
   if(tentacle.dead)return;
@@ -5152,7 +5178,7 @@ boss.shoot-=dt;
 if(boss.shoot<=0){
 boss.shoot=boss.baseShoot||Math.max(.42,1.25-wave*.045);
 boss.pendingQuacks=Array.from({length:boss.burst||1},(_,i)=>gameNow()+i*130);
-floatingTexts.push({x:boss.x,y:boss.y-70,text:Math.random()<.5?"QUACK!":"QUACK?",life:.7,maxLife:.7,big:false})
+showFloatingText({x:boss.x,y:boss.y-70,text:Math.random()<.5?"QUACK!":"QUACK?",life:.7,maxLife:.7,big:false})
 }
 if(boss.pendingQuacks){
 while(boss.pendingQuacks.length&&boss.pendingQuacks[0]<=gameNow()){boss.pendingQuacks.shift();makeQuack();}
@@ -5168,7 +5194,7 @@ boss.x=boss.targetX;boss.y=boss.targetY;makeSmoke(boss.x,boss.y);
 if(Math.hypot(player.x-boss.x,player.y-boss.y)<boss.r+player.r+38){takePlayerDamage((boss.slamDamage||18),"La foca ha caído encima de ti 🦭",.2)}
 boss.jumps++;
 if(boss.jumps>=boss.jumpsBeforeRest){
-boss.state="stunned";boss.stunTimer=boss.stunDuration||2.4;boss.jumps=0;boss.jumpsBeforeRest=getSealJumpCount(wave,boss.repeatLevel||0);boss.hp-=Math.max(4,boss.maxHp*.055);if(boss.hp<=0){damageBoss(0);return;}floatingTexts.push({x:boss.x,y:boss.y-boss.r-25,text:"La foca se ha mareado",life:1.4,maxLife:1.4,big:false})
+boss.state="stunned";boss.stunTimer=boss.stunDuration||2.4;boss.jumps=0;boss.jumpsBeforeRest=getSealJumpCount(wave,boss.repeatLevel||0);boss.hp-=Math.max(4,boss.maxHp*.055);if(boss.hp<=0){damageBoss(0);return;}showFloatingText({x:boss.x,y:boss.y-boss.r-25,text:"La foca se ha mareado",life:1.4,maxLife:1.4,big:false})
 }else startSealJump()
 }
 }else{
@@ -5211,7 +5237,7 @@ damage:16+wave*.45
 };
 if(!applyFreshDemonOrbBodyHit(orb))demonOrbs.push(orb);
 }
-floatingTexts.push({x:boss.x,y:boss.y-boss.r-32,text:"círculo oscuro",life:.8,maxLife:.8,big:false});
+showFloatingText({x:boss.x,y:boss.y-boss.r-32,text:"círculo oscuro",life:.8,maxLife:.8,big:false});
 shockwaves.push({x:boss.x,y:boss.y,r:8,maxR:boss.r+90,life:.45,maxLife:.45,color:"#ff4d8d",line:6});
 makeImpact(boss.x,boss.y,"#9b5de5",1.2);
 addScreenShake(6);
@@ -5309,7 +5335,7 @@ for(let i=0;i<count;i++){
 }
 shockwaves.push({x:cat.x,y:cat.y,r:8,maxR:90,life:.42,maxLife:.42,color:"#b197fc",line:5});
 makeImpact(cat.x,cat.y,"#b197fc",1.1);
-floatingTexts.push({x:cat.x,y:cat.y-52,text:"¡explosión de lana!",life:1,maxLife:1,big:false});
+showFloatingText({x:cat.x,y:cat.y-52,text:"¡explosión de lana!",life:1,maxLife:1,big:false});
 }
 
 function killCat(index,cat=null){
@@ -5324,12 +5350,12 @@ if(cat.saltKill)addAchievementStat("saltKills",1,{run:true});
 spreadSaltOnDefeat(cat);
 dropRecoveredStolenCoins(cat);
 if(cat.type==="yarn")explodeYarnCat(cat);
-if(cat.type==="glutton"){const tunaCount=2+Math.floor(Math.random()*2);for(let t=0;t<tunaCount;t++){tunaDrops.push({x:cat.x+(Math.random()*44-22),y:cat.y+(Math.random()*44-22),r:16,life:16,wobble:0});floatingTexts.push({x:cat.x,y:cat.y-38-t*18,text:"🐟 ¡Lata!",life:1.0,maxLife:1.0,big:false});}}
+if(cat.type==="glutton"){const tunaCount=2+Math.floor(Math.random()*2);for(let t=0;t<tunaCount;t++){tunaDrops.push({x:cat.x+(Math.random()*44-22),y:cat.y+(Math.random()*44-22),r:16,life:16,wobble:0});showFloatingText({x:cat.x,y:cat.y-38-t*18,text:"🐟 ¡Lata!",life:1.0,maxLife:1.0,big:false});}}
 if(cat.leviathanLoot)guaranteedLeviathanLoot(cat.x,cat.y);
 if(cat.type==="mini")gainXP(2+Math.floor(wave/3));
-score++;if(runStats)runStats.kills++;addAchievementStat("cats",1,{run:true});gainXP(1+Math.floor(wave/4));makeSmoke(cat.x,cat.y);playSoftPop();dropCoins(cat.x,cat.y,cat.rainbow?.25:.013);if(!cat.rainbow&&Math.random()<.10){tunaDrops.push({x:cat.x,y:cat.y+(Math.random()*20-10),r:16,life:16,wobble:0});floatingTexts.push({x:cat.x,y:cat.y-38,text:"🐟 ¡Lata!",life:1.0,maxLife:1.0,big:false});}
+score++;if(runStats)runStats.kills++;addAchievementStat("cats",1,{run:true});gainXP(1+Math.floor(wave/4));makeSmoke(cat.x,cat.y);playSoftPop();dropCoins(cat.x,cat.y,cat.rainbow?.25:.013);if(!cat.rainbow&&Math.random()<.10){tunaDrops.push({x:cat.x,y:cat.y+(Math.random()*20-10),r:16,life:16,wobble:0});showFloatingText({x:cat.x,y:cat.y-38,text:"🐟 ¡Lata!",life:1.0,maxLife:1.0,big:false});}
 if(cat.rainbow){rainbowChanceLevel=1;rainbowPendingUntilKilled=false;rainbowSelectedThisWave=false;queueUpgradeMenus("rainbow",1)}
-else if(cat.type!=="thief")floatingTexts.push({x:cat.x,y:cat.y-30,text:"miau~",life:.8,maxLife:.8,big:false});
+else if(cat.type!=="thief")showFloatingText({x:cat.x,y:cat.y-30,text:"miau~",life:.8,maxLife:.8,big:false});
 if(cats[index]===cat)cats.splice(index,1);
 else{const i=cats.indexOf(cat);if(i!==-1)cats.splice(i,1)}
 maybeOpenShopOrFusion()
@@ -5384,7 +5410,7 @@ boomerang:false,
 yarnBounceShot:true,
 yarnVisitedIds:newVisited
 });
-floatingTexts.push({x:sourceX,y:sourceY-24,text:"rebote 🧶",life:.55,maxLife:.55,big:false});
+showFloatingText({x:sourceX,y:sourceY-24,text:"rebote 🧶",life:.55,maxLife:.55,big:false});
 return true;
 }
 
@@ -5422,7 +5448,7 @@ boomerang:false
 }
 makeSmoke(player.x,player.y);
 if(hasDoneFusionPair("omniBurst+xpBoost"))gainXP(1+Math.floor(lvl/3));
-floatingTexts.push({x:player.x,y:player.y-70,text:"💥 ¡Ráfaga gatuna!",life:1.05,maxLife:1.05,big:false});
+showFloatingText({x:player.x,y:player.y-70,text:"💥 ¡Ráfaga gatuna!",life:1.05,maxLife:1.05,big:false});
 }
 
 function updateOmniBurst(){
@@ -5461,7 +5487,7 @@ const d=Math.hypot(x-cat.x,y-cat.y);
 if(d<cat.r+22&&d<best){target=cat;best=d}
 });
 selectedTarget=target;
-floatingTexts.push({x:x,y:y-28,text:target?"🎯 Objetivo fijado":"Objetivo quitado",life:1,maxLife:1,big:false});
+showFloatingText({x:x,y:y-28,text:target?"🎯 Objetivo fijado":"Objetivo quitado",life:1,maxLife:1,big:false});
 }
 
 function drawTargetMarker(target){
@@ -5518,7 +5544,7 @@ if(enemy&&dogCompanion.shootCooldown<=0){
 const a=Math.atan2(enemy.y-dogCompanion.y,enemy.x-dogCompanion.x);
 dogBones.push({x:dogCompanion.x+Math.cos(a)*18,y:dogCompanion.y+Math.sin(a)*18,vx:Math.cos(a)*460,vy:Math.sin(a)*460,angle:a,life:1.4,damage:Math.max(.8,upgrades.damage*getZoomiesDamageMultiplier()*.55)});
 dogCompanion.shootCooldown=.75;
-floatingTexts.push({x:dogCompanion.x,y:dogCompanion.y-28,text:"guau!",life:.55,maxLife:.55,big:false})
+showFloatingText({x:dogCompanion.x,y:dogCompanion.y-28,text:"guau!",life:.55,maxLife:.55,big:false})
 }
 for(let i=dogBones.length-1;i>=0;i--){
 const b=dogBones[i];
@@ -5605,7 +5631,7 @@ function pullResourcesWithCatInstinct(){
     pulled++;
   });
   if(pulled>0){
-    floatingTexts.push({x:player.x,y:player.y-126,text:`🧲 Instinto recolector`,life:1.15,maxLife:1.15,big:false});
+    showFloatingText({x:player.x,y:player.y-126,text:`🧲 Instinto recolector`,life:1.15,maxLife:1.15,big:false});
     shockwaves.push({x:player.x,y:player.y,r:6,maxR:Math.min(range*.55,420),life:.65,maxLife:.65,color:"#4cc9f0",line:3});
   }
 }
@@ -5635,7 +5661,7 @@ function redirectBoomerangsWithCatInstinct(){
     fish.pierce=true;
     count++;
   });
-  if(count>0)floatingTexts.push({x:player.x,y:player.y-140,text:"🪃 Reflejo circular",life:1.05,maxLife:1.05,big:false});
+  if(count>0)showFloatingText({x:player.x,y:player.y-140,text:"🪃 Reflejo circular",life:1.05,maxLife:1.05,big:false});
 }
 function shootCatInstinctBurst(){
   const pair="catInstinct+omniBurst";
@@ -5647,7 +5673,7 @@ function shootCatInstinctBurst(){
     const a=(Math.PI*2/count)*i+Math.random()*.05;
     fishes.push({x:player.x+Math.cos(a)*50,y:player.y+Math.sin(a)*50,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,angle:a,damage:Math.max(.75,upgrades.damage*getZoomiesDamageMultiplier()*(.62+lvl*.06)),life:1.05+lvl*.05,scale:Math.max(.72,upgrades.fishSize*.75),pierce:Math.random()<Math.min(.65,upgrades.pierceChance*.35+lvl*.04),boomerang:false,returning:false,age:0,hitIds:new Set(),shieldShot:true});
   }
-  floatingTexts.push({x:player.x,y:player.y-154,text:"💥 Ráfaga felina",life:1.15,maxLife:1.15,big:false});
+  showFloatingText({x:player.x,y:player.y-154,text:"💥 Ráfaga felina",life:1.15,maxLife:1.15,big:false});
 }
 
 function triggerCatInstinct(forcedInstinct=false){
@@ -5679,9 +5705,9 @@ for(let i=0;i<12;i++){
 if(upgrades.valorCasa)life=Math.min(upgrades.maxLife,life+upgrades.maxLife*.12);
 if(upgrades.cursedInstinct){
   life=Math.min(upgrades.maxLife,life+upgrades.maxLife*.08);
-  floatingTexts.push({x:player.x,y:player.y-108,text:"🖤 Modo instinto maldito",life:1.4,maxLife:1.4,big:false});
+  showFloatingText({x:player.x,y:player.y-108,text:"🖤 Modo instinto maldito",life:1.4,maxLife:1.4,big:false});
 }
-floatingTexts.push({x:player.x,y:player.y-82,text:upgrades.valorCasa?"🏠 ¡Valor de casa!":"🥷 ¡Instinto gatuno!",life:1.35,maxLife:1.35,big:false});
+showFloatingText({x:player.x,y:player.y-82,text:upgrades.valorCasa?"🏠 ¡Valor de casa!":"🥷 ¡Instinto gatuno!",life:1.35,maxLife:1.35,big:false});
 pullResourcesWithCatInstinct();
 redirectBoomerangsWithCatInstinct();
 shootCatInstinctBurst();
@@ -6003,7 +6029,7 @@ function showSoftError(err){
   if(signature!==lastSoftErrorSignature||now-lastSoftErrorAt>30000){
     lastSoftErrorAt=now;
     lastSoftErrorSignature=signature;
-    if(gameStarted&&!gameOver)floatingTexts.push({x:canvas.width/2,y:110,text:"⚠️ Error recuperado",life:.9,maxLife:.9,big:false});
+    if(gameStarted&&!gameOver)showFloatingText({x:canvas.width/2,y:110,text:"⚠️ Error recuperado",life:.9,maxLife:.9,big:false});
   }
 }
 window.addEventListener('error',e=>{showSoftError(e.error||e.message)});
@@ -6134,17 +6160,17 @@ starTwinkleTimer-=dt;
 if(starTime>0&&starTwinkleTimer<=0){const sr=Math.max(0,Math.min(1,starTime/10));playStarTwinkle(sr);starTwinkleTimer=.18+(1-sr)*.30;}
 if(starTime>0&&starTime<=3&&!starWarningPlayed){
   starWarningPlayed=true;
-  floatingTexts.push({x:player.x,y:player.y-88,text:"⭐ ¡Se acaba!",life:1.2,maxLife:1.2,big:false});
+  showFloatingText({x:player.x,y:player.y-88,text:"⭐ ¡Se acaba!",life:1.2,maxLife:1.2,big:false});
   makeSmoke(player.x,player.y);
   playStarTwinkle(.28);
 }
 if(starTime<=0){
-  if(hasDoneFusionPair("damageReduction+luck")){safeTeleportInvulnUntil=Math.max(safeTeleportInvulnUntil,gameNow()+(800+1700*fusionStrength("damageReduction+luck")));floatingTexts.push({x:player.x,y:player.y-90,text:"🔰 Amuleto protector",life:1.2,maxLife:1.2,big:false});}
+  if(hasDoneFusionPair("damageReduction+luck")){safeTeleportInvulnUntil=Math.max(safeTeleportInvulnUntil,gameNow()+(800+1700*fusionStrength("damageReduction+luck")));showFloatingText({x:player.x,y:player.y-90,text:"🔰 Amuleto protector",life:1.2,maxLife:1.2,big:false});}
   stopPowerStarLoop();
   starActive=false;
   starTime=0;
   starWarningPlayed=false;
-  floatingTexts.push({x:player.x,y:player.y-65,text:"⭐ La estrella se apagó",life:1.1,maxLife:1.1,big:false});
+  showFloatingText({x:player.x,y:player.y-65,text:"⭐ La estrella se apagó",life:1.1,maxLife:1.1,big:false});
 }
 }
 
@@ -6152,10 +6178,10 @@ if(sevenLivesCooldown>0)sevenLivesCooldown=Math.max(0,sevenLivesCooldown-dt);
 if(sevenLivesTime>0){
   sevenLivesTime=Math.max(0,sevenLivesTime-dt);
   if(sevenLivesTime>0&&sevenLivesTime<=2.2&&Math.random()<.13){
-    floatingTexts.push({x:player.x,y:player.y-68,text:"🐱 protección acabando",life:.45,maxLife:.45,big:false});
+    showFloatingText({x:player.x,y:player.y-68,text:"🐱 protección acabando",life:.45,maxLife:.45,big:false});
   }
   if(sevenLivesTime<=0){
-    floatingTexts.push({x:player.x,y:player.y-62,text:"🐱 Siete vidas se apagó",life:1,maxLife:1,big:false});
+    showFloatingText({x:player.x,y:player.y-62,text:"🐱 Siete vidas se apagó",life:1,maxLife:1,big:false,important:true});
   }
 }
 
@@ -6215,8 +6241,8 @@ player.angle=Math.atan2(mouse.y-player.y,mouse.x-player.x);
 player.shootAnim=Math.max(0,player.shootAnim-dt);
 player.hurtAnim=Math.max(0,player.hurtAnim-dt);
 
-if(upgrades.braveHeart&&life<upgrades.maxLife*.35&&Math.random()<.025){floatingTexts.push({x:player.x,y:player.y-60,text:"💗 Corazón valiente",life:.75,maxLife:.75,big:false})}
-if(isZoomiesActive()&&Math.random()<.018){floatingTexts.push({x:player.x,y:player.y-72,text:"💨 ZOOMIES",life:.65,maxLife:.65,big:false})}
+if(upgrades.braveHeart&&life<upgrades.maxLife*.35&&Math.random()<.025){showFloatingText({x:player.x,y:player.y-60,text:"💗 Corazón valiente",life:.75,maxLife:.75,big:false})}
+if(isZoomiesActive()&&Math.random()<.018){showFloatingText({x:player.x,y:player.y-72,text:"💨 ZOOMIES",life:.65,maxLife:.65,big:false})}
 shootAutoFish();
 updateOmniBurst();
 updateDog(dt);
@@ -6304,7 +6330,7 @@ if(breakProjectileWithRamFish(y,prevX,prevY,activeRamFishShots,"#b197fc")){
 }
 if(Math.hypot(player.x-y.x,player.y-y.y)<player.r+y.r){
 takePlayerDamage(y.damage,"Los ovillos te han atrapado 🧶",.2);makeSmoke(y.x,y.y);yarnBalls.splice(i,1);
-floatingTexts.push({x:player.x,y:player.y-42,text:"¡ovillo!",life:.8,maxLife:.8,big:false});continue
+showFloatingText({x:player.x,y:player.y-42,text:"¡ovillo!",life:.8,maxLife:.8,big:false});continue
 }
 if(y.life<=0||y.x<-100||y.x>canvas.width+100||y.y<-100||y.y>canvas.height+100)yarnBalls.splice(i,1)
 }
@@ -6319,7 +6345,7 @@ dx=player.x-coin.x;dy=player.y-coin.y;d=Math.hypot(dx,dy)
 }
 if(d<player.r+22){
 collectCoinDrop(coin);coinsDrops.splice(cd,1);
-if(!coin.recovered)floatingTexts.push({x:player.x,y:player.y-55,text:`+${coin.amount} moneda`,life:.9,maxLife:.9,big:false});
+if(!coin.recovered)showFloatingText({x:player.x,y:player.y-55,text:`+${coin.amount} moneda`,life:.9,maxLife:.9,big:false});
 updateHud();checkGameCompletion();maybeOpenShopOrFusion()
 }else if(coin.life<=0){if(runStats)runStats.coinsMissed+=coin.amount||1;coinsDrops.splice(cd,1)}
 }
@@ -6332,7 +6358,7 @@ if(d<player.r+tuna.r+14){
 const heal=Math.round(15+Math.random()*10)*Math.max(1,Math.floor(tuna.stacks||1));
 life=Math.min(upgrades.maxLife,life+heal);
 tunaDrops.splice(td,1);
-floatingTexts.push({x:player.x,y:player.y-62,text:`🐟 +${heal} vida`,life:1.1,maxLife:1.1,big:false});
+showFloatingText({x:player.x,y:player.y-62,text:`🐟 +${heal} vida`,life:1.1,maxLife:1.1,big:false});
 updateHud();
 }else if(tuna.life<=0){tunaDrops.splice(td,1)}
 }
@@ -6343,7 +6369,7 @@ if(Math.hypot(player.x-star.x,player.y-star.y)<player.r+star.r+8){
 powerStars.splice(ps,1);activatePowerStar();
 }else if(star.life<=0){
 powerStars.splice(ps,1);
-floatingTexts.push({x:star.x,y:star.y-28,text:"⭐",life:.7,maxLife:.7,big:false});
+showFloatingText({x:star.x,y:star.y-28,text:"⭐",life:.7,maxLife:.7,big:false});
 }
 }
 
@@ -6380,7 +6406,7 @@ if(cat.type==="yarn"){
       const aa=a+(by===0?0:(Math.random()<.5?-.18:.18));
       yarnBalls.push({x:cat.x+Math.cos(aa)*cat.r,y:cat.y+Math.sin(aa)*cat.r,vx:Math.cos(aa)*spd,vy:Math.sin(aa)*spd,r:13,life:4.2,damage:8+wave*.28,spin:0});
     }
-    floatingTexts.push({x:cat.x,y:cat.y-38,text:hpRatio<.35?"🧶🧶":"🧶",life:.55,maxLife:.55,big:false});
+    showFloatingText({x:cat.x,y:cat.y-38,text:hpRatio<.35?"🧶🧶":"🧶",life:.55,maxLife:.55,big:false});
   }
   if(dist<260){cat.x-=(dx/dist)*cat.speed*.75*dt;cat.y-=(dy/dist)*cat.speed*.75*dt}else{cat.x+=(dx/dist)*cat.speed*.42*dt;cat.y+=(dy/dist)*cat.speed*.42*dt}
 }else if(cat.type==="thief"){
@@ -6411,7 +6437,7 @@ if(cat.type==="yarn"){
   else if(cat.sleepState==="awake"){
   const awakeSpeed=4.2+Math.min(2.4,wave*.045);
   cat.x+=(dx/dist)*cat.speed*awakeSpeed*dt;cat.y+=(dy/dist)*cat.speed*awakeSpeed*dt;
-  if(cat.rushTimer<=0){cat.sleepState="sleeping";floatingTexts.push({x:cat.x,y:cat.y-38,text:"💤 vuelve a dormir",life:.7,maxLife:.7,big:false});}
+  if(cat.rushTimer<=0){cat.sleepState="sleeping";showFloatingText({x:cat.x,y:cat.y-38,text:"💤 vuelve a dormir",life:.7,maxLife:.7,big:false});}
   }
 }else if(cat.type==="mini"){
   const perp=-Math.atan2(dx,dy);const zz=Math.sin((cat.zigzagPhase||0)+gameNow()*.005)*34;
@@ -6429,7 +6455,7 @@ if(musicianPositions.length>0&&cat.type!=="musician"){
     cat.x+=(dx/dist)*cat.speed*.52*dt;
     cat.y+=(dy/dist)*cat.speed*.52*dt;
     cat.damageCooldown=Math.max(0,cat.damageCooldown-dt*.35);
-    if(Math.random()<.006)floatingTexts.push({x:cat.x,y:cat.y-cat.r-12,text:"♪ rápido",life:.45,maxLife:.45,big:false});
+    if(Math.random()<.006)showFloatingText({x:cat.x,y:cat.y-cat.r-12,text:"♪ rápido",life:.45,maxLife:.45,big:false});
   }
 }
 cat.x=walkX+(cat.x-walkX)*trailSlow;cat.y=walkY+(cat.y-walkY)*trailSlow;
@@ -6439,7 +6465,7 @@ if(Math.hypot(player.x-cat.x,player.y-cat.y)<player.r+cat.r-4&&cat.damageCooldow
   const dmg=cat.type==="thief"?6:cat.type==="yarn"?8:cat.type==="glutton"?14:cat.type==="musician"?9:cat.type==="sleepy"&&cat.sleepState==="awake"?16:7;
   const hitTxt=cat.type==="yarn"?"¡lana!":cat.type==="glutton"?"¡ñam ñam! 🍽️":cat.type==="musician"?"¡mi música! 🎵":cat.type==="mini"?"¡ayy! 🐱":cat.type==="sleepy"&&cat.sleepState==="awake"?"¡rabia somnolienta! 😤":"auch, miau!";
   takePlayerDamage(dmg,"Te han invadido los gatitos 🐱",.18);cat.damageCooldown=.75;makeHearts(player.x,player.y);
-  if(cat.type!=="thief")floatingTexts.push({x:player.x,y:player.y-38,text:hitTxt,life:.9,maxLife:.9,big:false})
+  if(cat.type!=="thief")showFloatingText({x:player.x,y:player.y-38,text:hitTxt,life:.9,maxLife:.9,big:false})
 }
 });
 
@@ -6465,7 +6491,7 @@ if(cat.type==="musician"&&(cat.musicImmuneTimer||0)>0){
   if(runStats)runStats.fishHits++;
   cat.hitAnim=.12;
   makeImpact(hitX,hitY,"#d084c8",.45);
-  floatingTexts.push({x:hitX,y:hitY-32,text:"♪ protegido",life:.45,maxLife:.45,big:false});
+  showFloatingText({x:hitX,y:hitY-32,text:"♪ protegido",life:.45,maxLife:.45,big:false});
   if(!fish.pierce)fishes.splice(j,1);else if(!fish.ramFish&&!fish.giantEaster)fish.damage*=getPiercingDamageRetention();
   continue;
 }
@@ -6493,10 +6519,10 @@ cat.sleepAwakeDuration=Math.min(7.2,3.0+wave*.12);
 cat.rushTimer=cat.sleepAwakeDuration;
 cat.baseSpeed=cat.baseSpeed||cat.speed;
 shockwaves.push({x:cat.x,y:cat.y,r:6,maxR:85+Math.min(70,wave*2.2),life:.42,maxLife:.42,color:"#ff8fab",line:4});
-floatingTexts.push({x:cat.x,y:cat.y-48,text:"😤 ¡DESPERTÓ!",life:1.15,maxLife:1.15,big:false});
+showFloatingText({x:cat.x,y:cat.y-48,text:"😤 ¡DESPERTÓ!",life:1.15,maxLife:1.15,big:false});
 }
 if(upgrades.lifeSteal>0)life=Math.min(upgrades.maxLife,life+healthLost*getCurrentLifeSteal());
-if(cat.type!=="thief")floatingTexts.push({x:hitX,y:hitY-34,text:cat.rainbow?"🌈 miua!":Math.random()<.5?"miua!":"miau!",life:.65,maxLife:.65,big:false});
+if(cat.type!=="thief")showFloatingText({x:hitX,y:hitY-34,text:cat.rainbow?"🌈 miua!":Math.random()<.5?"miua!":"miau!",life:.65,maxLife:.65,big:false});
 if(fish.ramFish&&cat.hp>0){
   const direction=Math.atan2(fish.vy,fish.vx);
   const force=fish.ramKnockback||getRamFishKnockback();
@@ -6916,7 +6942,7 @@ drawFishSkinDetails({shieldShot:true});ctx.restore()
 }
 
 function drawLeviathanFish(f){
-  const scale=f.scale||1;
+  const scale=Math.min(f.scale||1,Math.max(1,Math.min(canvas.width*.66/47,canvas.height*.70/40)));
   ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.angle||0);ctx.scale(scale,scale);
   ctx.lineJoin="round";ctx.lineCap="round";
   const shape=(points,fill,stroke="#3a184d",width=.85)=>{
@@ -7525,7 +7551,7 @@ function autoTryPickChoice(force=false){
   if(!choice)return;
   autoChoiceMenu.picked=true;
   autoRememberChoice(choice,autoChoiceMenu.context);
-  floatingTexts.push({x:canvas.width/2,y:115,text:`🤖 elige: ${choice.title||"opción"}`,life:1.0,maxLife:1.0,big:false});
+  showFloatingText({x:canvas.width/2,y:115,text:`🤖 elige: ${choice.title||"opción"}`,life:1.0,maxLife:1.0,big:false});
   try{
     autoChoiceMenu.onPick(choice);
     checkGameCompletion();
