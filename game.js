@@ -667,6 +667,7 @@ updateRandomSkinsButton();
   requestAnimationFrame(()=>paintCosmeticPreviews(generation));
 }
 function earnScalesFromScore(finalScore){
+  if(window.coopTest?.inRun)return 0;
   const total=safeCount(finalScore?.total);
   const entitled=Math.floor(total<=30000?total/300:100*Math.sqrt(total/30000));
   const gained=Math.max(0,entitled-cosmeticScalesAwardedThisRun);
@@ -1668,6 +1669,7 @@ function applyRecommendationsToChoices(choices,context="generic"){
 function playCuteMeow(){try{const ac=getAudioCtx(),g=ac.createGain();g.gain.setValueAtTime(.045,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.34);g.connect(ac.destination);const o1=ac.createOscillator();o1.type="sine";o1.frequency.setValueAtTime(760+Math.random()*60,ac.currentTime);o1.frequency.exponentialRampToValueAtTime(520+Math.random()*40,ac.currentTime+.14);o1.connect(g);o1.start();o1.stop(ac.currentTime+.16);const o2=ac.createOscillator();o2.type="triangle";o2.frequency.setValueAtTime(470+Math.random()*40,ac.currentTime+.13);o2.frequency.exponentialRampToValueAtTime(330+Math.random()*30,ac.currentTime+.34);o2.connect(g);o2.start(ac.currentTime+.12);o2.stop(ac.currentTime+.36)}catch(e){}}
 function playFishSound(type="bloop"){try{const ac=getAudioCtx(),o=ac.createOscillator(),g=ac.createGain();if(type==="fiu"){o.type="sine";o.frequency.setValueAtTime(900,ac.currentTime);o.frequency.exponentialRampToValueAtTime(360,ac.currentTime+.18);g.gain.setValueAtTime(.023,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.2)}else{o.type="sine";o.frequency.setValueAtTime(260+Math.random()*80,ac.currentTime);o.frequency.exponentialRampToValueAtTime(190+Math.random()*60,ac.currentTime+.11);g.gain.setValueAtTime(.021,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.13)}o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+.22)}catch(e){}}
 function startGame(){
+  if(!window.coopTest?.hostActive)window.coopTest?.resetSolo();
   autoMode=false;
   gameStarted=true;
   startPanel.style.display="none";
@@ -1950,13 +1952,13 @@ autoRunChoices=[];autoRunStartTime=performance.now();autoLastPlayerX=player.x;au
 resetUpgrades();
 runStartWave=1;
 autoModeUsedThisRun=!!autoMode;
-rankingEligibleThisRun=!autoModeUsedThisRun;
-rankingDisabledReason=rankingEligibleThisRun?"":"Ranking desactivado: la partida empezó con IA activada.";
+rankingEligibleThisRun=!autoModeUsedThisRun&&!window.coopTest?.inRun;
+rankingDisabledReason=window.coopTest?.inRun?"Partida cooperativa de prueba: ranking desactivado.":(rankingEligibleThisRun?"":"Ranking desactivado: la partida empezó con IA activada.");
 cosmeticAwardedThisRun=false;cosmeticScalesAwardedThisRun=0;
 currentWaveHadDamage=false;currentNoDamageStreak=0;
 score=0;shots=0;runStats=freshRunStats();lastScoreUploadKey="";runScoreBackups=new Map();lastShot=-Infinity;lastFrame=performance.now();gameOver=false;choosingUpgrade=false;paused=false;waveUpgradePending=false;pendingUpgradeQueue=[];wave=1;thiefCoinsStolenThisWave=0;spawnCooldown=0;life=upgrades.maxLife;level=1;xp=0;xpNeed=getXpNeedForLevel(level);boss=null;shieldAngle=0;lastShieldHit=0;lastOmniBurst=0;rainbowChanceLevel=1;rainbowSelectedThisWave=false;rainbowSpawnedThisWave=false;catInstinctUsedThisWave=false;catInstinctUsesThisWave=0;dogSacrificeUsed=false;rainbowPendingUntilKilled=false;coins=0;musicianSpawnedThisWave=false;shopAvailable=false;firstShopReached=false;shopBossPending=false;fusionAvailable=false;lastBossType="";shopUpgradePurchases=0;shopFusionPurchases=0;dogKidnapped=false;avalancheActive=false;avalancheTime=0;avalancheDelay=999;avalancheThisWave=false;avalancheSpawnTimer=0;starSpawnTimer=12;starChanceLevel=1;starActive=false;starTime=0;starWarningPlayed=false;forceDemonNextBoss=false;sevenLivesTime=0;sevenLivesCooldown=0;sevenLivesUsedThisWave=false;defeatedBossTypes=new Set();bossEncounterCounts={giantCat:0,duck:0,seal:0,demon:0,octopus:0};bossVictoryAlreadyShown=false;bossVictoryScoreSaved="";bossVictoryPending=false;dogRelaxTime=0;fusionMoveXpTimer=0;lastFusionShieldGuard=0;enemyIntroSeen={};finalChoiceLocked=false;finalCompletionContinue=false;finalCompletionStartWave=0;demonSpawnPressure=0;perfFps=60;lowPerfMode=false;lowPerfTimer=0;
 powerStars.length=0;tunaDrops.length=0;
-player.x=canvas.width/2;player.y=canvas.height/2;player.angle=0;player.shootAnim=0;player.hurtAnim=0;dogCompanion.x=player.x-50;dogCompanion.y=player.y+45;dogCompanion.shootCooldown=0;
+player.x=canvas.width/2;player.y=canvas.height/2;player.angle=0;player.shootAnim=0;player.hurtAnim=0;if(window.coopTest?.hostActive)window.coopTest.resetPlayer();dogCompanion.x=player.x-50;dogCompanion.y=player.y+45;dogCompanion.shootCooldown=0;
 fishes.length=0;ramFishTrails.length=0;cats.length=0;hearts.length=0;smokes.length=0;floatingTexts.length=0;pawPrints.length=0;quacks.length=0;coinsDrops.length=0;dogBones.length=0;demonOrbs.length=0;yarnBalls.length=0;shockwaves.length=0;sparkles.length=0;
 canvas.style.cursor="crosshair";
 messageEl.classList.remove("dogSave");messageEl.style.display="none";levelUpPanel.style.display="none";gameOverPanel.style.display="none";victoryPanel.style.display="none";startWave();updateHud();syncMusic()
@@ -4089,6 +4091,7 @@ const HS_KEY="gatitos_peces_hs";
 function getHighScore(){return safeCount(gameStorage.getItem(HS_KEY))}
 function saveHighScore(s){gameStorage.setItem(HS_KEY,String(s))}
 function checkAndSaveRecord(total){
+if(window.coopTest?.inRun)return false;
 const prev=getHighScore();
 if(total>prev){saveHighScore(total);return true;}
 return false;
@@ -6216,6 +6219,7 @@ function updateWorld(dt){
 updateRamFishTrails(dt);
 starSpawnTimer-=dt;if(starSpawnTimer<=0){trySpawnPowerStar();starSpawnTimer=12+Math.random()*8;}
 if(autoMode)updateAutoPlayer(dt);
+if(window.coopTest?.hostActive)window.coopTest.update(dt);
 if(runStats){runStats.elapsed+=dt;if(life<upgrades.maxLife*.35)runStats.lowHpTime+=dt;}
 triggerCatInstinct();if(dogRelaxTime>0)dogRelaxTime=Math.max(0,dogRelaxTime-dt);updateAvalanche(dt);
 if(starActive){
@@ -7519,6 +7523,7 @@ dogBones.forEach(b=>{if(isFinitePos(b))drawDogBone(b)});
 hearts.forEach(h=>{if(isFinitePos(h))drawHeart(h)});
 floatingTexts.forEach(t=>{if(isFinitePos(t))drawFloatingText(t)});
 drawPlayer();
+if(window.coopTest?.hostActive)window.coopTest.draw();
 drawPlayerLifeBar();
 drawStarAura();
 drawDog();
@@ -7549,6 +7554,7 @@ cleanBrokenEntities();
 const audioState=[gameStarted,gameOver,paused,choosingUpgrade,boss?.type||"round",musicEnabled,musicVolume].join("|");
 if(audioState!==audioStateSignature){audioStateSignature=audioState;syncMusic();}
 render();
+if(window.coopTest?.hostActive)window.coopTest.sync();
 }catch(err){
 showSoftError(err);
 try{render()}catch(renderErr){console.error(renderErr)}

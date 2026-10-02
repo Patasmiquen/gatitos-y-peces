@@ -1,4 +1,5 @@
 window.PATCH_NOTES = [
+  {"version":"v211","date":"02/10/2026","title":"Cooperativo online experimental","changes":["Partidas de prueba para dos personas mediante WebRTC y códigos de invitación, sin servidor ni cambios en Firebase.","Dos gatitos, disparos y movimiento independientes con vida, experiencia y mejoras compartidas. El anfitrión elige las mejoras; sin ranking ni récords."],"includedVersions":["v211"]},
   {"version":"v210","date":"02/10/2026","title":"Puntuaciones protegidas y recuperación","changes":["Cada puntuación se respalda localmente antes de subirla al ranking y se conserva si Firebase falla.","Botones para reintentar las subidas pendientes y descargar un respaldo JSON de las partidas registradas."],"includedVersions":["v210"]},
   {
     "version": "v209",

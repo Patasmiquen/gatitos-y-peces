@@ -8,7 +8,7 @@
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="shortcut icon" href="favicon.ico">
 <link rel="apple-touch-icon" href="favicon.png">
-<link rel="stylesheet" href="style.css?v=210">
+<link rel="stylesheet" href="style.css?v=211">
 </head>
 <body>
 <canvas id="game"></canvas>
@@ -26,6 +26,13 @@
 </div>
 
 <button id="startButton">Empezar 💖</button>
+<details id="coopLobby" class="coopLobby"><summary>🐱🐱 Cooperativo online · prueba</summary><div class="coopLobbyBody">
+<p>Dos gatitos en la misma partida. El invitado juega con WASD o flechas, apunta con el ratón y dispara con clic. Vida, experiencia y mejoras compartidas; el anfitrión elige. Sin ranking, récords ni recompensas de escamas.</p>
+<div class="coopActions"><button id="coopCreate" type="button">Crear partida</button><button id="coopJoin" type="button">Unirme</button><button id="coopClose" type="button" hidden>Cancelar conexión</button></div>
+<div id="coopSignal" hidden><label id="coopCodeLabel" for="coopCodeOut">Código para compartir</label><textarea id="coopCodeOut" rows="3" readonly spellcheck="false"></textarea><button id="coopCopy" type="button">Copiar código</button><label id="coopInputLabel" for="coopCodeIn">Código del otro jugador</label><textarea id="coopCodeIn" rows="3" spellcheck="false" placeholder="Pega aquí el código"></textarea><button id="coopNext" type="button" hidden>Continuar</button></div>
+<div id="coopStatus" role="status" aria-live="polite">Comparte los códigos de forma privada. Requiere HTTPS o localhost y conexión WebRTC.</div>
+<button id="coopHostStart" type="button" hidden>▶ Empezar partida cooperativa</button>
+</div></details>
 <div id="themeOptions" class="themeOptions iconThemeOptions" aria-label="Tema visual de menús">
   <button type="button" class="themeChoice active" data-theme="light" aria-label="Tema claro">☀️</button>
   <button type="button" class="themeChoice" data-theme="dark" aria-label="Tema oscuro">🌙</button>
@@ -177,8 +184,9 @@
 <button class="victoryBtn continue" id="gameOverMenu" style="margin-top:12px;background:#4cc9f0;color:#fff">Volver al menú 🏠</button>
 </div>
 </div>
-<script src="game-version.js?v=210"></script>
-<script src="patch-notes.js?v=210"></script>
-<script src="game.js?v=210"></script>
+<script src="game-version.js?v=211"></script>
+<script src="patch-notes.js?v=211"></script>
+<script src="game.js?v=211"></script>
+<script src="coop.js?v=211"></script>
 </body>
 </html>
