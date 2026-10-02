@@ -2974,7 +2974,7 @@ const iconHTML=isComboIcon?iconParts.slice(0,2).map(i=>`<span class="miniIcon">$
 const showTypeTag=!(upgrade?.randomShopUpgrade||upgrade?.skipShop);
 const priceExtra=upgrade?.priceMeta?`<small class="upgradePriceMeta">${escapeHtml(upgrade.priceMeta)}</small>`:"";
 const recommendationMark=upgrade.recommended?`<span class="recommendThumb" aria-hidden="true">👍</span>`:"";
-return `${showTypeTag?`<div class="visualTypeTag visualType-${visualGroup}">${getUpgradeVisualGroupLabel(visualGroup)}</div>`:""}<div class="upgradeCardTop"><div class="upgradeIconBubble${isComboIcon?" comboIconBubble":""}">${iconHTML}</div><div class="upgradeBadges">${Number.isFinite(upgrade.price)?`<span class="upgradePrice" aria-label="${upgrade.price} monedas">🪙 ${upgrade.price}${priceExtra}</span>`:""}</div></div><div class="upgradeTitle">${escapeHtml(upgrade.title)}</div>${buildVisualLevelDots(upgrade)}<div class="upgradeDesc"><span class="upgradeDescMain">${formatCardText(desc)}</span>${bonus?`<span class="upgradeFusionBonus">${formatCardText(bonus)}</span>`:""}${upgrade.lockReason?`<span class="upgradeLockedReason">🔒 ${formatCardText(upgrade.lockReason)}</span>`:""}</div>${buildChoicePreviewHTML(upgrade)}<span class="visualChooseButton">${getVisualActionLabel(upgrade,context)}${recommendationMark}</span>`;
+return `${showTypeTag?`<div class="visualTypeTag visualType-${visualGroup}">${getUpgradeVisualGroupLabel(visualGroup)}</div>`:""}<div class="upgradeCardTop"><div class="upgradeIconBubble${isComboIcon?" comboIconBubble":""}">${iconHTML}</div><div class="upgradeBadges">${Number.isFinite(upgrade.price)?`<span class="upgradePrice" aria-label="${upgrade.price} monedas">🪙 ${upgrade.price}${priceExtra}</span>`:""}</div></div><div class="upgradeTitle">${escapeHtml(upgrade.title)}</div>${buildVisualLevelDots(upgrade)}<div class="upgradeDesc">${desc?`<span class="upgradeDescMain">${formatCardText(desc)}</span>`:""}${bonus?`<span class="upgradeFusionBonus">${formatCardText(bonus)}</span>`:""}${upgrade.lockReason?`<span class="upgradeLockedReason">🔒 ${formatCardText(upgrade.lockReason)}</span>`:""}</div>${buildChoicePreviewHTML(upgrade)}<span class="visualChooseButton">${getVisualActionLabel(upgrade,context)}${recommendationMark}</span>`;
 }
 function showCards(title,phrase,subtitle,choices,onPick,onBack,context="generic"){
 choices=applyRecommendationsToChoices(choices,context);
@@ -4205,7 +4205,7 @@ const allPartners=[...allCompatibleKeys]
   .map(k=>({
     icon:getAnyIcon(k),key:k,title:getAnyName(k),
     levelTag:isUniqueKey(k)?"1/1":`${upgradeLevels[k]||0}/${upgradeMaxLevels[k]||5}`,
-    desc:getFusionDesc(first.key,k),special:true,locked:false,fusion:true,
+    desc:`Bonus de fusión: ${getFusionDesc(first.key,k)}`,special:true,locked:false,fusion:true,
     easter:sortedPair(first.key,k)==="darkPact+moralSupport",
     first:first.key,fusionCost:cost
   }));
