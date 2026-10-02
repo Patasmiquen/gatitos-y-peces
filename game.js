@@ -465,6 +465,29 @@ const COSMETIC_KEYS={scales:"gatitos_cosmetic_scales",owned:"gatitos_cosmetic_ow
 const cosmeticPanel=document.getElementById("cosmeticsPanel"),scaleBalanceEl=document.getElementById("scaleBalance"),cosmeticsContentEl=document.getElementById("cosmeticsContent"),cosmeticsSkinsTab=document.getElementById("cosmeticsSkinsTab"),cosmeticsPacksTab=document.getElementById("cosmeticsPacksTab"),cosmeticsResetBtn=document.getElementById("cosmeticsResetBtn");
 const COSMETIC_CATEGORIES={player:"Jugador",fish:"Peces",enemy:"Enemigos",boss_giant:"Jefe gato gigante",boss_duck:"Jefe pato",boss_seal:"Jefe foca",boss_demon:"Jefe demonio",boss_octopus:"Jefe pulpo"};
 const COSMETICS=[
+  {id:"player_pirate",name:"Capitana Patita",category:"player",price:190,preview:"🏴‍☠️",pack:"pirate"},
+  {id:"enemy_pirate",name:"Gatos de cubierta",category:"enemy",price:220,preview:"🏴‍☠️",pack:"pirate"},
+  {id:"boss_giant_pirate",name:"Almirante Bigotes",category:"boss_giant",price:290,preview:"🏴‍☠️",pack:"pirate"},
+  {id:"boss_duck_pirate",name:"Pato bucanero",category:"boss_duck",price:270,preview:"🏴‍☠️",pack:"pirate"},
+  {id:"boss_seal_pirate",name:"Foca navegante",category:"boss_seal",price:270,preview:"🏴‍☠️",pack:"pirate"},
+  {id:"boss_demon_pirate",name:"Demonio del abordaje",category:"boss_demon",price:300,preview:"🏴‍☠️",pack:"pirate"},
+  {id:"boss_octopus_pirate",name:"Pulpo de los siete mares",category:"boss_octopus",price:300,preview:"🏴‍☠️",pack:"pirate"},
+  {id:"player_biolum",name:"Gato luciérnaga",category:"player",price:190,preview:"🪼",pack:"biolum"},
+  {id:"fish_biolum",name:"Pez abisal",category:"fish",price:210,preview:"🪼",pack:"biolum"},
+  {id:"enemy_biolum",name:"Gatos de marea",category:"enemy",price:220,preview:"🪼",pack:"biolum"},
+  {id:"boss_giant_biolum",name:"Coloso fosforescente",category:"boss_giant",price:290,preview:"🪼",pack:"biolum"},
+  {id:"boss_duck_biolum",name:"Pato medusa",category:"boss_duck",price:270,preview:"🪼",pack:"biolum"},
+  {id:"boss_seal_biolum",name:"Foca aurora",category:"boss_seal",price:270,preview:"🪼",pack:"biolum"},
+  {id:"boss_demon_biolum",name:"Demonio de las profundidades",category:"boss_demon",price:300,preview:"🪼",pack:"biolum"},
+  {id:"boss_octopus_biolum",name:"Pulpo de luz abisal",category:"boss_octopus",price:300,preview:"🪼",pack:"biolum"},
+  {id:"player_celestial",name:"Gato estelar",category:"player",price:190,preview:"🌙",pack:"celestial"},
+  {id:"fish_celestial",name:"Pez cometa",category:"fish",price:210,preview:"🌙",pack:"celestial"},
+  {id:"enemy_celestial",name:"Gatos de constelación",category:"enemy",price:220,preview:"🌙",pack:"celestial"},
+  {id:"boss_giant_celestial",name:"Titán solar",category:"boss_giant",price:290,preview:"🌙",pack:"celestial"},
+  {id:"boss_duck_celestial",name:"Pato lunático",category:"boss_duck",price:270,preview:"🌙",pack:"celestial"},
+  {id:"boss_seal_celestial",name:"Foca de luna",category:"boss_seal",price:270,preview:"🌙",pack:"celestial"},
+  {id:"boss_demon_celestial",name:"Demonio eclipsado",category:"boss_demon",price:300,preview:"🌙",pack:"celestial"},
+  {id:"boss_octopus_celestial",name:"Pulpo del firmamento",category:"boss_octopus",price:300,preview:"🌙",pack:"celestial"},
   {id:"boss_octopus_elegant",name:"Pulpo · Almirante de marfil",category:"boss_octopus",price:280,preview:"🐙",pack:"elegant"},
   {id:"boss_octopus_low_poly",name:"Pulpo · Octágono abisal",category:"boss_octopus",price:280,preview:"🐙",pack:"low_poly"},
   {id:"boss_octopus_grayscale",name:"Pulpo · Tinta de plata",category:"boss_octopus",price:280,preview:"◐",pack:"grayscale"},
@@ -472,7 +495,7 @@ const COSMETICS=[
   {id:"player_pink",name:"Jugador · Flor de cerezo",category:"player",price:100,preview:"🌸"},
   {id:"player_elegant",name:"Jugador · Gala de marfil",category:"player",price:200,preview:"🎀",pack:"elegant"},
   {id:"fish_elegant",name:"Peces · Sombrero de copa",category:"fish",price:250,preview:"🎩",pack:"elegant"},
-  {id:"fish_pirate",name:"Peces · Corsarios",category:"fish",price:180,preview:"🏴‍☠️"},
+  {id:"fish_pirate",name:"Peces · Corsarios",category:"fish",price:180,preview:"🏴‍☠️",pack:"pirate"},
   {id:"fish_heart",name:"Peces · Corazones",category:"fish",price:180,preview:"💖"},
   {id:"fish_realistic",name:"Peces · Sardina realista",category:"fish",price:180,preview:"📷"},
   {id:"enemy_gray",name:"Enemigos · Tigres de plata",category:"enemy",price:150,preview:"🐱"},
@@ -499,7 +522,12 @@ const COSMETICS=[
 const COSMETIC_PACKS=[{id:"elegant",name:"Pack Elegante",discount:.20,items:["player_elegant","fish_elegant","enemy_elegant","boss_giant_elegant","boss_duck_monocle","boss_seal_tie","boss_demon_cape","boss_octopus_elegant"],desc:"Marfil, pajaritas, sombreros, monóculos, coronas, perlas, capas y gorra de almirante."},{id:"low_poly",name:"Pack Low Poly",discount:.25,items:["player_low_poly","fish_low_poly","enemy_low_poly","boss_giant_low_poly","boss_duck_low_poly","boss_seal_low_poly","boss_demon_low_poly","boss_octopus_low_poly"],desc:"Personajes y proyectiles facetados, con siluetas propias y reconocibles."}];
 COSMETIC_PACKS.push({"id": "grayscale", "name": "Pack Escala de grises", "discount": 0.25, "items": ["player_grayscale", "fish_grayscale", "enemy_grayscale", "boss_giant_grayscale", "boss_duck_grayscale", "boss_seal_grayscale", "boss_demon_grayscale", "boss_octopus_grayscale"], "desc": "Ocho skins en blanco y negro. Las variantes se distinguen por sus formas y accesorios."});
 
+COSMETIC_PACKS.push({id:"pirate",name:"Pack Pirata",discount:0.23,items:["player_pirate", "fish_pirate", "enemy_pirate", "boss_giant_pirate", "boss_duck_pirate", "boss_seal_pirate", "boss_demon_pirate", "boss_octopus_pirate"],desc:"Sombreros, pañuelos, parches y detalles marineros diferentes en cada personaje."});
+COSMETIC_PACKS.push({id:"biolum",name:"Pack Bioluminiscente",discount:0.25,items:["player_biolum", "fish_biolum", "enemy_biolum", "boss_giant_biolum", "boss_duck_biolum", "boss_seal_biolum", "boss_demon_biolum", "boss_octopus_biolum"],desc:"Marcas luminiscentes marinas, aletas y tentáculos con puntos de luz suaves."});
+COSMETIC_PACKS.push({id:"celestial",name:"Pack Celestial",discount:0.25,items:["player_celestial", "fish_celestial", "enemy_celestial", "boss_giant_celestial", "boss_duck_celestial", "boss_seal_celestial", "boss_demon_celestial", "boss_octopus_celestial"],desc:"Coronas astrales, lunas, estrellas y constelaciones adaptadas a cada silueta."});
 let cosmeticTab="skins";
+let cosmeticFilter="all";
+let cosmeticPreviewGeneration=0;
 let randomSkinsEnabled=gameStorage.getItem("gatitos_random_skins")==="true";
 let runCosmeticSelections=null;
 let cosmeticScales=0,ownedCosmetics=new Set(),selectedCosmetics={player:"default",fish:"default",enemy:"default",boss_giant:"default",boss_duck:"default",boss_seal:"default",boss_demon:"default",boss_octopus:"default"};
@@ -542,21 +570,24 @@ function renderCosmeticCard(c){
   const btn=equipped?`<button class="cosmeticButton owned" disabled>Equipada</button>`:owned?`<button class="cosmeticButton secondary" onclick="equipCosmetic('${c.id}')">Equipar</button>`:`<button class="cosmeticButton" ${cosmeticScales<c.price?"disabled":""} onclick="buyCosmetic('${c.id}')">Comprar ${c.price} escamas</button>`;
   return `<div class="cosmeticCard ${equipped?"equipped":owned?"owned":""}"><div class="cosmeticPreview" data-skin="${c.id}" data-category="${c.category}" aria-label="${escapeHtml(c.name)}"></div><div class="cosmeticName">${escapeHtml(c.name)}</div><div class="cosmeticMeta">${escapeHtml(COSMETIC_CATEGORIES[c.category]||c.category)}</div>${btn}</div>`;
 }
+function cosmeticVisible(c){return cosmeticFilter==="all"||(cosmeticFilter==="owned"?isCosmeticOwned(c.id):!isCosmeticOwned(c.id));}
+function setCosmeticFilter(filter){if(!["all","owned","locked"].includes(filter))return;cosmeticFilter=filter;renderCosmetics();}
 function renderSkinsTab(){
   const cats=Object.keys(COSMETIC_CATEGORIES);
   return cats.map(cat=>{
-    const items=COSMETICS.filter(c=>c.category===cat);
+    const items=COSMETICS.filter(c=>c.category===cat&&cosmeticVisible(c));
+    if(!items.length&&cosmeticFilter==="locked")return "";
     const normal=`<div class="cosmeticCard ${selectedCosmetic(cat)==="default"?"equipped":"owned"}"><div class="cosmeticPreview" data-skin="default" data-category="${cat}" aria-label="Aspecto normal"></div><div class="cosmeticName">Aspecto normal</div><div class="cosmeticMeta">${escapeHtml(COSMETIC_CATEGORIES[cat]||cat)} · Gratis</div>${selectedCosmetic(cat)==="default"?`<button class="cosmeticButton owned" disabled>Equipada</button>`:`<button class="cosmeticButton secondary" onclick="selectedCosmetics['${cat}']='default';saveCosmetics();renderCosmetics()">Equipar</button>`}</div>`;
-    return `<div><div class="cosmeticCategoryTitle">${escapeHtml(COSMETIC_CATEGORIES[cat]||cat)}</div><div class="cosmeticGrid">${normal}${items.map(renderCosmeticCard).join("")}</div></div>`;
+    return `<section class="cosmeticSection"><div class="cosmeticCategoryTitle">${escapeHtml(COSMETIC_CATEGORIES[cat]||cat)}</div><div class="cosmeticGrid">${cosmeticFilter!=="locked"?normal:""}${items.map(renderCosmeticCard).join("")}</div></section>`;
   }).join("");
 }
 function renderPacksTab(){
   return COSMETIC_PACKS.map(pack=>{
     const info=getPackInfo(pack);
     const discount=Math.round(pack.discount*100);
-    const itemNames=info.items.map(i=>`${ownedCosmetics.has(i.id)?"✅":"⬜"} ${escapeHtml(i.name)} (${i.price})`).join("<br>");
+    const gallery=info.items.map(i=>`<div class="packSkin"><div class="cosmeticPreview" data-skin="${i.id}" data-category="${i.category}" aria-label="${escapeHtml(i.name)}"></div><span>${ownedCosmetics.has(i.id)?"✓ ":""}${escapeHtml(COSMETIC_CATEGORIES[i.category])}</span></div>`).join("");
     const action=info.complete?`<button class="cosmeticButton secondary" onclick="equipPack('${pack.id}')">Equipar pack</button>`:`<button class="cosmeticButton" ${cosmeticScales<info.price?"disabled":""} onclick="buyPack('${pack.id}')">Comprar pack por ${info.price} escamas</button>`;
-    return `<div class="cosmeticCard packCard"><div class="cosmeticPreview">${pack.id==="grayscale"?"◐":pack.id==="low_poly"?"◇":"🎩"}</div><div class="cosmeticName">${escapeHtml(pack.name)}</div><div class="cosmeticMeta">${escapeHtml(pack.desc)} · Descuento ${discount}%</div><div class="packItems">${itemNames}</div><div class="packPriceLine">Ya tienes ${info.owned.length}/${info.items.length} · Restante suelto: ${info.missingValue} · Pack: ${info.complete?"completo":info.price+" escamas"}</div>${action}</div>`;
+    return `<div class="cosmeticCard packCard"><div class="cosmeticName">${escapeHtml(pack.name)}</div><div class="cosmeticMeta">${escapeHtml(pack.desc)} · Descuento ${discount}%</div><div class="packGallery">${gallery}</div><div class="packPriceLine">Ya tienes ${info.owned.length}/${info.items.length} · Restante suelto: ${info.missingValue} · Pack: ${info.complete?"completo":info.price+" escamas"}</div>${action}</div>`;
   }).join("");
 }
 function renderCosmetics(){
@@ -564,8 +595,11 @@ updateRandomSkinsButton();
   updateScaleBalance();
   if(cosmeticsSkinsTab)cosmeticsSkinsTab.classList.toggle("active",cosmeticTab==="skins");
   if(cosmeticsPacksTab)cosmeticsPacksTab.classList.toggle("active",cosmeticTab==="packs");
+  const filters=document.getElementById("cosmeticsFilters");
+  if(filters){filters.hidden=cosmeticTab!=="skins";for(const b of filters.querySelectorAll("[data-filter]")){b.classList.toggle("active",b.dataset.filter===cosmeticFilter);b.setAttribute("aria-pressed",String(b.dataset.filter===cosmeticFilter));}}
   if(cosmeticsContentEl)cosmeticsContentEl.innerHTML=cosmeticTab==="packs"?renderPacksTab():renderSkinsTab();
-  requestAnimationFrame(paintCosmeticPreviews);
+  const generation=++cosmeticPreviewGeneration;
+  requestAnimationFrame(()=>paintCosmeticPreviews(generation));
 }
 function earnScalesFromScore(finalScore){
   const total=safeCount(finalScore?.total);
@@ -576,7 +610,7 @@ function earnScalesFromScore(finalScore){
 }
 
 function cosmeticRewardRow(gained){return gained>0?`<div class="sRow" style="color:#4cc9f0"><span>🫧 Escamas ganadas</span><span>+${gained.toLocaleString()} · Total ${cosmeticScales.toLocaleString()}</span></div>`:""}
-function getPlayerSkinColor(defaultColor){const s=selectedCosmetic("player");if(s==="player_green")return "#55c271";if(s==="player_pink")return "#ff8fab";if(s==="player_elegant")return "#fff0ca";if(s==="player_low_poly")return "#4dabf7";return defaultColor}
+function getPlayerSkinColor(defaultColor){const s=selectedCosmetic("player");if(s==="player_green")return "#55c271";if(s==="player_pink")return "#ff8fab";if(s==="player_elegant")return "#fff0ca";if(s==="player_low_poly")return "#4dabf7";if(s==="player_pirate")return "#e6b989";if(s==="player_biolum")return "#438eac";if(s==="player_celestial")return "#a5a3e9";return defaultColor}
 function drawLowPolyCube(size,fill="#74c0fc",stroke="#1c2b36",accent="#d0ebff"){
   const s=size;
   ctx.save();
@@ -654,7 +688,42 @@ function drawLowPolyFish(f){
 function drawLowPolyBoss(type,r){bossArt(type,r,true);}
 function drawHeartShape(x,y,size,color){ctx.save();ctx.translate(x,y);ctx.fillStyle=color;ctx.beginPath();ctx.moveTo(0,size*.92);ctx.bezierCurveTo(size*.92,size*.30,size*.98,-size*.46,0,-size*.12);ctx.bezierCurveTo(-size*.98,-size*.46,-size*.92,size*.30,0,size*.92);ctx.closePath();ctx.fill();ctx.restore()}
 function drawBowTieShape(x,y,size,leftColor="#ff7aa8",rightColor=leftColor,knotColor="#ffd166"){ctx.save();ctx.translate(x,y);ctx.fillStyle=leftColor;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(-size*1.16,-size*.64);ctx.quadraticCurveTo(-size*1.46,0,-size*1.16,size*.64);ctx.closePath();ctx.fill();ctx.fillStyle=rightColor;ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(size*1.16,-size*.64);ctx.quadraticCurveTo(size*1.46,0,size*1.16,size*.64);ctx.closePath();ctx.fill();ctx.fillStyle=knotColor;ctx.beginPath();ctx.roundRect(-size*.30,-size*.34,size*.60,size*.68,size*.20);ctx.fill();ctx.restore()}
-function getEnemySkinBaseColor(cat){if(selectedCosmetic("enemy")==="enemy_gray"&&(!cat.type||cat.type==="normal")){if(!cat.grayTone){const tones=["#b7bcc2","#9ea4ab","#878d95","#c7ccd1"];const seed=Math.abs(Math.round((cat.x||0)*17+(cat.y||0)*11+(cat.r||0)*13+(cat.hp||0)));cat.grayTone=tones[seed%tones.length]}return cat.grayTone}if(selectedCosmetic("enemy")==="enemy_elegant"&&(!cat.type||cat.type==="normal"))return "#e8e2d2";return cat.color}
+function getEnemySkinBaseColor(cat){if(selectedCosmetic("enemy")==="enemy_gray"&&(!cat.type||cat.type==="normal")){if(!cat.grayTone){const tones=["#b7bcc2","#9ea4ab","#878d95","#c7ccd1"];const seed=Math.abs(Math.round((cat.x||0)*17+(cat.y||0)*11+(cat.r||0)*13+(cat.hp||0)));cat.grayTone=tones[seed%tones.length]}return cat.grayTone}if(selectedCosmetic("enemy")==="enemy_elegant"&&(!cat.type||cat.type==="normal"))return "#e8e2d2";if(!cat.type||cat.type==="normal"){const theme=getThemeSkin("enemy");if(theme==="pirate")return "#dbad83";if(theme==="biolum")return "#559aa9";if(theme==="celestial")return "#b0a5e5";}return cat.color}
+
+function getThemeSkin(category){const id=selectedCosmetic(category);return id.endsWith("_pirate")?"pirate":id.endsWith("_biolum")?"biolum":id.endsWith("_celestial")?"celestial":"";}
+function drawThemeSkinDetails(category,r){
+ const theme=getThemeSkin(category);if(!theme||(theme==="pirate"&&category==="fish"))return;
+ ctx.save();ctx.scale(r,r);ctx.shadowBlur=0;ctx.lineJoin="round";ctx.lineCap="round";
+ const fish=category==="fish",oct=category==="boss_octopus",duck=category==="boss_duck",seal=category==="boss_seal",demon=category==="boss_demon";
+ const hx=fish?-.06:duck?-.32:0,hy=fish?-.40:oct?-1.01:seal?-.78:demon?-.88:-.95;
+ if(theme==="pirate"){
+  ctx.fillStyle="#34273c";ctx.strokeStyle="#c6a36e";ctx.lineWidth=.065;
+  ctx.beginPath();ctx.moveTo(hx-.68,hy+.07);ctx.quadraticCurveTo(hx-.46,hy-.07,hx-.35,hy-.38);ctx.quadraticCurveTo(hx,hy-.55,hx+.35,hy-.38);ctx.quadraticCurveTo(hx+.46,hy-.07,hx+.68,hy+.07);ctx.quadraticCurveTo(hx,hy-.05,hx-.68,hy+.07);ctx.fill();ctx.stroke();
+  ctx.fillStyle="#f5d79a";ctx.beginPath();ctx.arc(hx,hy-.23,.10,0,Math.PI*2);ctx.fill();
+  if(!fish){ctx.strokeStyle="#39283a";ctx.lineWidth=.055;ctx.beginPath();ctx.moveTo(-.52,-.14);ctx.lineTo(.02,-.06);ctx.stroke();ctx.fillStyle="#39283a";ctx.beginPath();ctx.ellipse(-.30,-.13,.18,.14,-.15,0,Math.PI*2);ctx.fill();}
+  if(oct){ctx.strokeStyle="#f3dba6";ctx.lineWidth=.055;for(let i=0;i<3;i++){ctx.beginPath();ctx.arc(-.82+i*.76,.66,.08,0,Math.PI*2);ctx.stroke();}}
+  else if(fish){ctx.fillStyle="#bb4254";ctx.beginPath();ctx.moveTo(-.58,.30);ctx.lineTo(-.10,.30);ctx.lineTo(-.43,.55);ctx.closePath();ctx.fill();}
+  else if(seal){ctx.fillStyle="#bb4254";ctx.beginPath();ctx.moveTo(-.50,.55);ctx.lineTo(.46,.55);ctx.lineTo(.34,.70);ctx.lineTo(-.40,.70);ctx.closePath();ctx.fill();}
+  else if(demon){ctx.fillStyle="#bb4254";ctx.beginPath();ctx.moveTo(-.64,.35);ctx.lineTo(.66,.35);ctx.lineTo(.28,.64);ctx.lineTo(-.25,.64);ctx.closePath();ctx.fill();}
+  else {ctx.fillStyle="#bb4254";ctx.fillRect(-.35,.48,.7,.12);}
+ }else if(theme==="biolum"){
+  ctx.strokeStyle="#4ce9d9";ctx.fillStyle="#b8fff1";ctx.lineWidth=.052;
+  const dots=fish?[[-.43,-.08],[-.13,.08],[.20,-.10],[.45,.07]]:oct?[[-.45,-.55],[.04,-.78],[.43,-.50],[-.67,.40],[.69,.44]]:[[-.49,-.42],[0,-.65],[.49,-.42],[-.62,.35],[.62,.35]];
+  for(const [x,y] of dots){ctx.beginPath();ctx.arc(x,y,.07,0,Math.PI*2);ctx.fill();ctx.beginPath();ctx.arc(x,y,.13,0,Math.PI*2);ctx.stroke();}
+  ctx.beginPath();ctx.moveTo(-.44,.10);ctx.quadraticCurveTo(0,.38,.43,.12);ctx.stroke();
+  if(oct){for(const x of [-1.0,-.7,.7,1.0]){ctx.beginPath();ctx.arc(x,.63,.06,0,Math.PI*2);ctx.fill();}}
+  else if(fish){ctx.beginPath();ctx.moveTo(-.55,-.17);ctx.lineTo(-.73,-.55);ctx.lineTo(-.18,-.24);ctx.closePath();ctx.fill();}
+  else{ctx.beginPath();ctx.moveTo(-.32,hy-.09);ctx.quadraticCurveTo(0,hy-.35,.32,hy-.09);ctx.stroke();}
+ }else{
+  ctx.fillStyle="#f6d77c";ctx.strokeStyle="#fff0b5";ctx.lineWidth=.04;
+  ctx.beginPath();ctx.arc(hx,hy-.19,.24,-Math.PI*.42,Math.PI*.75);ctx.arc(hx+.12,hy-.26,.20,Math.PI*.83,-Math.PI*.40,true);ctx.closePath();ctx.fill();
+  const stars=fish?[[.38,-.15,.13],[-.40,.12,.10]]:oct?[[-.42,-.53,.13],[.46,-.52,.12],[-.65,.38,.08]]:[[-.51,.08,.11],[.47,.20,.10]];
+  for(const [x,y,size] of stars){ctx.beginPath();for(let i=0;i<8;i++){const a=i*Math.PI/4-Math.PI/2,d=i%2?size*.44:size;if(i===0)ctx.moveTo(x+Math.cos(a)*d,y+Math.sin(a)*d);else ctx.lineTo(x+Math.cos(a)*d,y+Math.sin(a)*d);}ctx.closePath();ctx.fill();}
+  if(oct){ctx.beginPath();ctx.arc(0,.58,.14,0,Math.PI*2);ctx.stroke();}
+  else if(demon){ctx.strokeStyle="#d5b2f8";ctx.beginPath();ctx.arc(0,.45,.35,0,Math.PI);ctx.stroke();}
+ }
+ ctx.restore();
+}
 function drawPlayerSkinDetails(){
 const s=selectedCosmetic('player');ctx.save();ctx.shadowBlur=0;
 if(s==='player_green'){
@@ -665,6 +734,7 @@ if(s==='player_green'){
 }else if(s==='player_elegant'){
  ctx.fillStyle='#242b40';ctx.beginPath();ctx.roundRect(-19,-28,38,7,2);ctx.roundRect(-11,-44,23,19,3);ctx.fill();ctx.fillStyle='#d2a94f';ctx.fillRect(-11,-29,23,4);drawBowTieShape(0,18,11,'#273749','#344c65','#f4d477');
 }
+drawThemeSkinDetails("player",24);
 ctx.restore();
 }
 const REALISTIC_SARDINE_SOURCE="assets/sardina-realista.png";
@@ -781,7 +851,7 @@ if(s==="fish_pirate"){
 if(s==="fish_heart"){
  drawHeartShape(-5,0,9,'#bd3167');drawHeartShape(8,-2,3,'#bd3167');
 }
-
+drawThemeSkinDetails("fish",20);
 ctx.restore();
 }
 function drawEnemySkinDetails(cat){
@@ -793,6 +863,7 @@ if(s==='enemy_gray'&&(!cat.type||cat.type==='normal')){
 }else if(s==='enemy_elegant'){
  ctx.fillStyle='#23354c';ctx.beginPath();ctx.moveTo(-18,12);ctx.lineTo(-14,25);ctx.lineTo(14,25);ctx.lineTo(18,12);ctx.lineTo(0,20);ctx.closePath();ctx.fill();drawBowTieShape(0,17,11,'#dbab49','#f0cc77','#fff0c3');
 }
+drawThemeSkinDetails("enemy",cat.r);
 ctx.restore();
 }
 function drawBossSkinUnderlay(type,r){
@@ -825,11 +896,14 @@ ctx.save();ctx.shadowBlur=0;ctx.strokeStyle='#9d8b91';ctx.lineWidth=Math.max(1,r
 for(let i=0;i<11;i++){const t=i/10,x=(-.53+t*1.08)*r,y=(.37+Math.sin(t*Math.PI)*.19)*r;ctx.fillStyle='#fff8e8';ctx.beginPath();ctx.arc(x,y,r*.044,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(x-r*.013,y-r*.013,r*.012,0,Math.PI*2);ctx.fill();}
 drawBowTieShape(r*.45,r*.40,r*.14,'#9a6cb5','#bb92d0','#ffe3a2');ctx.restore();
 }
+ const category={giantCat:"boss_giant",duck:"boss_duck",seal:"boss_seal",demon:"boss_demon"}[type];
+ if(category)drawThemeSkinDetails(category,r);
 }
 loadCosmetics();
 cosmeticsSkinsTab?.addEventListener("click",()=>{cosmeticTab="skins";renderCosmetics()});
 cosmeticsPacksTab?.addEventListener("click",()=>{cosmeticTab="packs";renderCosmetics()});
 cosmeticsResetBtn?.addEventListener("click",resetCosmeticSelections);
+document.getElementById("cosmeticsFilters")?.addEventListener("click",e=>{const b=e.target.closest("[data-filter]");if(b)setCosmeticFilter(b.dataset.filter);});
 cosmeticPanel?.addEventListener("toggle",()=>{if(cosmeticPanel.open)renderCosmetics()});
 renderCosmetics();
 
@@ -848,6 +922,9 @@ const ACHIEVEMENTS=[
   {id:"fusions_created",icon:"🔮",name:"Alquimia gatuna",stat:"fusionsCreated",desc:"Crea fusiones diferentes durante tus partidas.",phases:[{target:1,label:"1 fusión",reward:0},{target:5,label:"5 fusiones",reward:0},{target:15,label:"15 fusiones",reward:0},{target:30,label:"30 fusiones",reward:0}]},
   {id:"fusions_maxed",icon:"💎",name:"Fusión definitiva",stat:"fusionsMaxed",desc:"Sube fusiones al máximo.",phases:[{target:1,label:"1 fusión máxima",reward:0},{target:5,label:"5 fusiones máximas",reward:0},{target:15,label:"15 fusiones máximas",reward:0}]},
   {id:"shop_spender",icon:"🪙",name:"Compradora gatuna",stat:"shopCoinsSpent",desc:"Gasta monedas en la tienda de mejoras.",phases:[{target:25,label:"25 monedas gastadas",reward:0},{target:100,label:"100 monedas gastadas",reward:0},{target:250,label:"250 monedas gastadas",reward:0},{target:500,label:"500 monedas gastadas",reward:0}]},
+  {id:"flawless_bosses",icon:"🛡️",name:"Jefes sin un rasguño",stat:"flawlessBosses",desc:"Derrota jefes sin recibir daño durante su ronda.",phases:[{target:1,label:"1 jefe impecable",reward:0},{target:5,label:"5 jefes impecables",reward:0}]},
+  {id:"salt_kills",icon:"🧂",name:"Marea salada",stat:"saltKills",desc:"Derrota enemigos mediante el daño continuo de Escamas saladas.",phases:[{target:25,label:"25 bajas por sal",reward:0},{target:150,label:"150 bajas por sal",reward:0}]},
+  {id:"leviathan_sightings",icon:"🐋",name:"Leyenda del Leviatán",stat:"leviathanAppearances",desc:"Consigue que aparezca el Gran Pez de Leviatán.",phases:[{target:1,label:"Primera aparición",reward:0},{target:5,label:"5 apariciones",reward:0}]},
   {id:"all_achievements",icon:"👑",name:"Lo has conseguido todo",stat:"allAchievements",final:true,desc:"Completa todos los demás logros y vuelve dorado tu nombre.",phases:[{target:1,label:"Todos los logros",reward:0}]}
 ];
 let achievementState={stats:{},levels:{},rewarded:{},fusionCreatedPairs:[],fusionMaxedPairs:[],legacyFusionCreated:0,legacyFusionMaxed:0};
@@ -1150,6 +1227,37 @@ let finalChoiceLocked=false;
 let finalCompletionContinue=false;
 let finalCompletionStartWave=0;
 let demonSpawnPressure=0;
+let roundVariant="normal";
+let bossRewardUntil=0,bossRewardType="";
+let lastCriticalRippleAt=-Infinity;
+let lastSaltSpreadAt=-Infinity;
+const BOSS_REWARD_DURATION=20000;
+function bossRewardActive(type){return bossRewardType===type&&gameNow()<bossRewardUntil;}
+function giveBossReward(type,x,y){
+  bossRewardType=type;
+  bossRewardUntil=gameNow()+BOSS_REWARD_DURATION;
+  const rewards={
+    giantCat:{name:"🐱 Cofre ratonero: cadencia +12 %",coins:2,color:"#ffd166"},
+    duck:{name:"🦆 Cofre del pato: más monedas",coins:7,color:"#ffe066"},
+    seal:{name:"🦭 Cofre de la foca: velocidad +14 %",coins:3,color:"#80ed99"},
+    octopus:{name:"🐙 Cofre del pulpo: daño recibido -12 %",coins:3,color:"#b197fc"},
+    demon:{name:"😈 Cofre del demonio: daño +12 %",coins:4,color:"#ff6b9c"}
+  };
+  const reward=rewards[type];
+  if(!reward)return;
+  coins+=reward.coins;
+  if(runStats){runStats.coinsGenerated+=reward.coins;runStats.coinsCollected+=reward.coins;}
+  if(floatingTexts.length<150)floatingTexts.push({x,y:y-105,text:reward.name+" · +"+reward.coins+" 🪙",life:2.4,maxLife:2.4,big:true});
+  if(shockwaves.length<36)shockwaves.push({x,y,r:12,maxR:125,life:.6,maxLife:.6,color:reward.color,line:5});
+}
+function getRoundVariant(){
+  if(!finalCompletionContinue||wave%5===0||wave%5===1)return "normal";
+  if(wave%9===2)return "invasion";
+  if(wave%9===4)return "sprinters";
+  if(wave%9===7)return "specials";
+  return "normal";
+}
+
 let thiefCoinsStolenThisWave=0;
 perfFps=60;lowPerfMode=false;lowPerfTimer=0;
 
@@ -1159,28 +1267,28 @@ const upgradeMaxLevels={damageReduction:5,luck:5,moveSpeed:5,fireRate:5,fishSpee
 const fusedBaseLevels={};
 
 const UPGRADE_META={
-damageReduction:{icon:"🔰",name:"Pelaje protector",desc:l=>"Recibes menos daño."},
-luck:{icon:"🍀",name:"Trébol gatuno",desc:l=>"Aumenta tu suerte."},
-maxLife:{icon:"❤️",name:"Corazón de atún",desc:l=>"Aguantas más golpes."},
-moveSpeed:{icon:"👟",name:"Zapatillas blanditas",desc:l=>"Te mueves más rápido."},
-fireRate:{icon:"🐾",name:"Patita nerviosa",desc:l=>"Aumenta la cadencia de disparo un 19 % por nivel, hasta un 95 % antes de fusionar. A niveles 3 y 5 añade peces laterales de daño reducido."},
-fishSpeed:{icon:"🐟",name:"Pez cohete",desc:l=>"Tus peces van más rápido."},
-bigFish:{icon:"💙",name:"Pez grandote",desc:l=>"A veces lanzas peces enormes."},
-doubleFish:{icon:"🐠",name:"Banco de peces",desc:l=>"A veces lanzas 2 peces extra al 60 % de daño."},
-pierce:{icon:"✨",name:"Pez brillante",desc:l=>"Algunos peces atraviesan enemigos."},
-damage:{icon:"💪",name:"Mimos potentes",desc:l=>"Tus peces hacen más daño."},
-catSlow:{icon:"🧊",name:"Arena fresquita",desc:l=>"Los gatitos se acercan más lento."},
-healOnWave:{icon:"🍣",name:"Sushi de descanso",desc:l=>"Te curas al superar rondas."},
-fishSize:{icon:"🫧",name:"Peces esponjosos",desc:l=>"Tus peces son más grandes."},
-lifeSteal:{icon:"🩸",name:"Besito vampiro",desc:l=>"Atacar también te cura un poco."},
-xpBoost:{icon:"📚",name:"Aprendizaje gatuno",desc:l=>"Subes de nivel más rápido."},
-boomerang:{icon:"🪃",name:"Pez boomerang",desc:l=>"Algunos peces vuelven hacia ti."},
-coinMagnet:{icon:"🧲",name:"Imán de monedas",desc:l=>"Las monedas vienen hacia ti."},
-shield:{icon:"🛡️",name:"Escudo de pececitos",desc:l=>"Peces guardianes giran a tu alrededor."},
-omniBurst:{icon:"💥",name:"Metralladora gatuna",desc:l=>"De vez en cuando disparas en círculo."},
-yarnBounce:{icon:"🧶",name:"Ovillo táctico",desc:l=>"Algunos peces rebotan a otro enemigo."},
-saltScales:{icon:"🧂",name:"Escamas saladas",desc:l=>"Los peces dejan sal que daña poco a poco durante 2,4 segundos. Los golpes renuevan el efecto, pero no lo acumulan."},
-critChance:{icon:"💥",name:"Mimos críticos",desc:l=>"A veces haces daño doble."}
+damageReduction:{icon:"🔰",name:"Pelaje protector",desc:l=>"Reduce el daño que recibes."},
+luck:{icon:"🍀",name:"Trébol gatuno",desc:l=>"Aumenta los eventos raros y la posibilidad de duplicar monedas."},
+maxLife:{icon:"❤️",name:"Corazón de atún",desc:l=>"Aumenta tu vida máxima y te cura al adquirirla."},
+moveSpeed:{icon:"👟",name:"Zapatillas blanditas",desc:l=>"Aumenta tu velocidad de movimiento."},
+fireRate:{icon:"🐾",name:"Patita nerviosa",desc:l=>"Disparas un 19 % más rápido por nivel. En los niveles 3 y 5 añades peces laterales más débiles."},
+fishSpeed:{icon:"🐟",name:"Pez cohete",desc:l=>"Aumenta la velocidad de tus peces."},
+bigFish:{icon:"💙",name:"Pez grandote",desc:l=>"Aumenta la probabilidad de lanzar peces gigantes."},
+doubleFish:{icon:"🐠",name:"Banco de peces",desc:l=>"Puedes disparar dos peces laterales extra con un 60 % de daño."},
+pierce:{icon:"✨",name:"Pez brillante",desc:l=>"Aumenta la probabilidad de que tus peces atraviesen enemigos."},
+damage:{icon:"💪",name:"Mimos potentes",desc:l=>"Aumenta el daño de tus peces."},
+catSlow:{icon:"🧊",name:"Arena fresquita",desc:l=>"Reduce la velocidad de los enemigos."},
+healOnWave:{icon:"🍣",name:"Sushi de descanso",desc:l=>"Recuperas vida al superar cada ronda."},
+fishSize:{icon:"🫧",name:"Peces esponjosos",desc:l=>"Aumenta el tamaño y el área de impacto de los peces."},
+lifeSteal:{icon:"🩸",name:"Besito vampiro",desc:l=>"Recuperas una parte del daño que infliges."},
+xpBoost:{icon:"📚",name:"Aprendizaje gatuno",desc:l=>"Aumenta la experiencia que consigues."},
+boomerang:{icon:"🪃",name:"Pez boomerang",desc:l=>"Aumenta la probabilidad de que los peces regresen."},
+coinMagnet:{icon:"🧲",name:"Imán de monedas",desc:l=>"Atraes monedas desde una distancia mayor."},
+shield:{icon:"🛡️",name:"Escudo de pececitos",desc:l=>"Añade peces guardianes que giran a tu alrededor y golpean enemigos."},
+omniBurst:{icon:"💥",name:"Metralladora gatuna",desc:l=>"Disparas ráfagas circulares de peces periódicamente."},
+yarnBounce:{icon:"🧶",name:"Ovillo táctico",desc:l=>"Aumenta la probabilidad de que un pez rebote hacia otro enemigo."},
+saltScales:{icon:"🧂",name:"Escamas saladas",desc:l=>"Los impactos aplican daño salino durante 2,4 s. Otro golpe renueva el efecto sin acumularlo."},
+critChance:{icon:"💥",name:"Mimos críticos",desc:l=>"Aumenta la probabilidad de infligir daño crítico."}
 };
 
 const RECOMMEND_DIMENSIONS=["damage","defense","healing","mobility","economy","control","consistency","automation","area","scaling"];
@@ -1743,7 +1851,7 @@ function restart(){
 if(gameStarted)rollRandomSkins();else runCosmeticSelections=null;
 saveAchievements();
 clearAllInputKeys();
-simulationMs=0;lastRamFishAt=-RAM_FISH_BASE_COOLDOWN;lastManualShotAt=-Infinity;frameAccumulator=0;
+simulationMs=0;roundVariant="normal";bossRewardUntil=0;bossRewardType="";lastCriticalRippleAt=-Infinity;lastSaltSpreadAt=-Infinity;lastRamFishAt=-RAM_FISH_BASE_COOLDOWN;lastManualShotAt=-Infinity;frameAccumulator=0;
 xpRequirementPhase="main";autoRamNextEvaluationAt=0;autoLastResidualShotAt=-Infinity;autoResidualNextDecisionAt=0;autoDecisionCooldown=0;autoProjectileDirection=null;autoProjectileDirectionUntil=0;autoLastStuckCheckAt=0;
 selectedTarget=null;lastStarTrail=0;screenShake=0;screenShakeX=0;screenShakeY=0;
 if(autoChoiceTimer)clearTimeout(autoChoiceTimer);
@@ -1868,15 +1976,18 @@ else rainbowChanceLevel++;
 avalancheActive=false;
 avalancheTime=0;
 avalancheSpawnTimer=0;
+roundVariant=getRoundVariant();
 const avalancheCfg=getAvalancheConfig();
 const forcedPostBossAvalanche=wave>=6&&wave%5===1;
 const randomAvalanche=wave>=14&&wave%5!==0&&Math.random()<avalancheCfg.chance;
 avalancheThisWave=forcedPostBossAvalanche||randomAvalanche;
+if(avalancheThisWave)roundVariant="normal";
 avalancheDelay=avalancheThisWave?Math.max(2.8,waveDuration*(.58-avalancheCfg.intensity*.14)):999;
 starSpawnTimer=3+Math.random()*Math.min(10,waveDuration*.5);
 starSpawnedThisWave=false;
 if(wave%5===0)spawnBoss();
-floatingTexts.push({x:canvas.width/2,y:115,text:wave%5===0?`Jefe ronda ${wave}`:`Ronda ${wave}`,life:1.8,maxLife:1.8,big:true})
+const variantNames={invasion:"🐱 Invasión felina",sprinters:"⚡ Gatos veloces",specials:"✨ Ronda de especiales"};
+floatingTexts.push({x:canvas.width/2,y:115,text:variantNames[roundVariant]||(wave%5===0?`Jefe ronda ${wave}`:`Ronda ${wave}`),life:1.8,maxLife:1.8,big:true})
 }
 
 function getAvalancheConfig(){
@@ -2182,6 +2293,7 @@ cats.forEach(cat=>{if(!isCombatTargetAvailable(cat))return;const dx=cat.x-player
 floatingTexts.push({x:player.x,y:player.y-86,text:"🛡️ Guardia felina",life:1.1,maxLife:1.1,big:false});
 }
 amount*=1-Math.min(.45,Math.max(0,upgrades.damageReduction||0));
+if(bossRewardActive("octopus"))amount*=.88;
 if(hasDoneFusionPair("damageReduction+shield")&&gameNow()-lastOrbitalGuard>=(8-3*fusionStrength("damageReduction+shield"))*1000){
  lastOrbitalGuard=gameNow();const force=160+140*fusionStrength("damageReduction+shield");
  cats.forEach(c=>{const dx=c.x-player.x,dy=c.y-player.y,d=Math.hypot(dx,dy);if(d>0&&d<190){c.knockVx=(c.knockVx||0)+dx/d*force;c.knockVy=(c.knockVy||0)+dy/d*force;}});
@@ -2643,12 +2755,12 @@ return {previewLevel:true,icon:meta.icon,key,title:makeUpgradeTitle(key),levelTa
 
 function getUpgradePool(){
 const arr=getLevelUpgradeKeys().map(k=>makeLevelUpgrade(k));
-if(!upgrades.aimAssist)arr.push({key:"aimAssist",icon:"🎯",title:"Peces listillos",levelTag:"1/1",desc:"Los peces giran hacia enemigos cercanos.",apply:()=>{upgrades.aimAssist=true}});
-if(!upgrades.bigCursor)arr.push({key:"bigCursor",icon:"🌈",title:"Mirilla brillante",levelTag:"1/1",desc:"La mirilla se ve mucho mejor.",apply:()=>{upgrades.bigCursor=true}});
-if(!upgrades.moralSupport)arr.push({key:"moralSupport",icon:"💛",title:"Apoyo Moral",levelTag:"1/1",desc:"Tu novio te anima durante la partida.",special:true,apply:()=>{upgrades.moralSupport=true}});
-if(!upgrades.darkPact)arr.push({key:"darkPact",icon:"🖤",title:"Voluntad Oscura",levelTag:"1/1",desc:"Menos opciones, pero más poder.",dark:true,apply:()=>{upgrades.darkPact=true}});
-if(!upgrades.catInstinct)arr.push({key:"catInstinct",icon:"🥷",title:"Instinto gatuno",levelTag:"1/1",desc:"Te ayuda cuando estás en peligro.",special:true,apply:()=>{upgrades.catInstinct=true}});
-if(!upgrades.zoomies)arr.push({key:"zoomies",icon:"💨",title:"Zoomies",levelTag:"1/1",desc:"Durante Zoomies ganas velocidad y un 35 % de daño.",special:true,apply:()=>{upgrades.zoomies=true}});
+if(!upgrades.aimAssist)arr.push({key:"aimAssist",icon:"🎯",title:"Peces listillos",levelTag:"1/1",desc:getUpgradeDisplayDesc("aimAssist",1),apply:()=>{upgrades.aimAssist=true}});
+if(!upgrades.bigCursor)arr.push({key:"bigCursor",icon:"🌈",title:"Mirilla brillante",levelTag:"1/1",desc:getUpgradeDisplayDesc("bigCursor",1),apply:()=>{upgrades.bigCursor=true}});
+if(!upgrades.moralSupport)arr.push({key:"moralSupport",icon:"💛",title:"Apoyo Moral",levelTag:"1/1",desc:getUpgradeDisplayDesc("moralSupport",1),special:true,apply:()=>{upgrades.moralSupport=true}});
+if(!upgrades.darkPact)arr.push({key:"darkPact",icon:"🖤",title:"Voluntad Oscura",levelTag:"1/1",desc:getUpgradeDisplayDesc("darkPact",1),dark:true,apply:()=>{upgrades.darkPact=true}});
+if(!upgrades.catInstinct)arr.push({key:"catInstinct",icon:"🥷",title:"Instinto gatuno",levelTag:"1/1",desc:getUpgradeDisplayDesc("catInstinct",1),special:true,apply:()=>{upgrades.catInstinct=true}});
+if(!upgrades.zoomies)arr.push({key:"zoomies",icon:"💨",title:"Zoomies",levelTag:"1/1",desc:getUpgradeDisplayDesc("zoomies",1),special:true,apply:()=>{upgrades.zoomies=true}});
 return arr
 }
 function getRandomUpgradeChoices(amount){
@@ -2809,7 +2921,7 @@ function getUpgradePreviewRows(upgrade){
 }
 function buildChoicePreviewHTML(upgrade){
   if(upgrade.first){
-    return `<div class="choicePreview fusionPreview"><span class="previewResult">${escapeHtml(getFusionNameFromPair(upgrade.first,upgrade.key))}</span><span aria-label="${Number(upgrade.fusionCost)} monedas">🪙 ${Number(upgrade.fusionCost)}</span></div>`;
+    return "";
   }
   const rows=getUpgradePreviewRows(upgrade);
   if(!rows.length)return "";
@@ -2864,6 +2976,10 @@ return `${showTypeTag?`<div class="visualTypeTag visualType-${visualGroup}">${ge
 }
 function showCards(title,phrase,subtitle,choices,onPick,onBack,context="generic"){
 choices=applyRecommendationsToChoices(choices,context);
+if(context==="fusionFirst"||context==="fusionPartner"){
+  choices=[...choices].sort((a,b)=>Number(!!b.recommended)-Number(!!a.recommended)||
+    (a.recommended&&b.recommended?(Number(b.recommendScore)||0)-(Number(a.recommendScore)||0):0));
+}
 const pick=onPick;
 let resolved=false;
 onPick=upgrade=>{
@@ -3256,12 +3372,12 @@ openCoinShop();
 
 const uniqueFusionKeys=["aimAssist","bigCursor","moralSupport","darkPact","catInstinct","zoomies"];
 const uniqueFusionMeta={
-aimAssist:{icon:"🎯",name:"Peces listillos",desc:"Los peces se curvan hacia enemigos cercanos."},
-bigCursor:{icon:"🌈",name:"Mirilla brillante",desc:"Hace la mirilla más visible."},
-moralSupport:{icon:"💛",name:"Apoyo Moral",desc:"Tu novio te anima de vez en cuando."},
-darkPact:{icon:"🖤",name:"Voluntad Oscura",desc:"La mejora maldita: menos elección, más potencia."},
-catInstinct:{icon:"🥷",name:"Instinto gatuno",desc:"Te salva cuando estás en peligro."},
-zoomies:{icon:"💨",name:"Zoomies",desc:"A veces ganas velocidad y un 35 % de daño."}
+aimAssist:{icon:"🎯",name:"Peces listillos",desc:"Los peces corrigen su trayectoria hacia enemigos cercanos."},
+bigCursor:{icon:"🌈",name:"Mirilla brillante",desc:"Hace la mirilla más visible y facilita marcar objetivos."},
+moralSupport:{icon:"💛",name:"Apoyo Moral",desc:"Tu novio te anima de vez en cuando durante la partida."},
+darkPact:{icon:"🖤",name:"Voluntad Oscura",desc:"Reduce las opciones de mejora, pero aumenta el poder de tu progreso."},
+catInstinct:{icon:"🥷",name:"Instinto gatuno",desc:"Activa una defensa de emergencia cuando tienes poca vida."},
+zoomies:{icon:"💨",name:"Zoomies",desc:"Activa períodos de mayor velocidad y un 35 % más de daño."}
 };
 
 const fusionPairs={
@@ -3606,8 +3722,9 @@ Object.assign(fusionEffectDescMap,{
 });
 for(const pair of ["damageReduction+shield","damageReduction+lifeSteal","damageReduction+luck","damage+luck","critChance+luck","healOnWave+luck","damageReduction+maxLife","damageReduction+healOnWave","coinMagnet+luck","luck+xpBoost"])fusionShortDescMap[pair]=fusionEffectDescMap[pair];
 fusionNameMap["boomerang+critChance"]="Retorno crítico";
-fusionShortDescMap["boomerang+critChance"]="Los peces y Bloquito pueden combinar boomerang y crítico: se vuelven amarillos. Ambos atributos suben del 65 % al 75 %, con +2 puntos por nivel de fusión.";
+fusionShortDescMap["boomerang+critChance"]="Los peces y Bloquito combinan boomerang y crítico (amarillo, hasta el 75 %). Un impacto que tenga ambos atributos genera una onda dorada limitada a 3 gatos cercanos cada 0,55 segundos.";
 fusionEffectDescMap["boomerang+critChance"]=fusionShortDescMap["boomerang+critChance"];
+fusionEffectDescMap["catSlow+saltScales"]="Salmuera helada: cuando un gato afectado directamente por la sal muere, puede contagiar una sal debilitada a un máximo de 3 gatos cercanos. Los contagios no se propagan de nuevo.";
 for(const pair of ["damage+saltScales","fireRate+saltScales","boomerang+saltScales","catSlow+saltScales","lifeSteal+saltScales","omniBurst+saltScales"])fusionShortDescMap[pair]=fusionEffectDescMap[pair];
 ensureFusionCatalogueComplete();
 auditFusionDefinitions();
@@ -3627,69 +3744,115 @@ function rebuildFusionDataCatalogue(){
   FUSION_BY_PAIR=Object.fromEntries(FUSION_DATA.map(f=>[f.pair,f]));
 }
 rebuildFusionDataCatalogue();
-
-const fusionSignatureBonuses={
-  "boomerang+critChance":"permite aplicar boomerang y daño crítico al mismo pez, incluido Bloquito; ambas probabilidades progresan 67 %, 69 %, 71 %, 73 % y 75 % en los niveles 1 a 5.",
-  "bigFish+damage":"los peces gigantes hacen entre un 10 % y un 35 % más de daño.",
-  "fireRate+fishSpeed":"todos los peces ganan entre un 4 % y un 16 % de velocidad adicional.",
-  "critChance+damage":"aumenta entre ×0,08 y ×0,30 el multiplicador de daño crítico.",
-  "maxLife+shield":"los golpes del escudo hacen entre un 8 % y un 28 % más de daño.",
-  "damage+pierce":"los peces perforantes infligen entre un 8 % y un 25 % más de daño.",
-  "damage+doubleFish":"los peces laterales infligen entre un 10 % y un 35 % más de daño.",
-  "fishSpeed+pierce":"los peces perforantes vuelan entre un 8 % y un 28 % más rápido.",
-  "boomerang+doubleFish":"aumenta la probabilidad de boomerang hasta el límite del 95 % y potencia entre un 8 % y un 20 % el daño de los boomerangs laterales.",
-  "critChance+doubleFish":"los peces laterales ganan probabilidad crítica (máx. 95 %) y sus críticos hacen entre un 6 % y un 20 % más de daño.",
-  "fishSize+shield":"los orbes del escudo ganan entre 3 y 9 píxeles de radio de impacto.",
-  "damage+omniBurst":"cada pez de la ráfaga inflige entre un 12 % y un 40 % más de daño.",
-  "fireRate+omniBurst":"la ráfaga se recarga entre un 7 % y un 22 % antes, respetando el mínimo.",
-  "coinMagnet+xpBoost":"cada moneda recogida también concede experiencia adicional.",
-  "damageReduction+shield":"al recibir daño, repele enemigos cercanos; más empuje y menos espera al progresar.",
-  "damageReduction+lifeSteal":"con menos de media vida, aumenta el robo de vida entre un 10 % y un 50 %.",
-  "damageReduction+luck":"al terminar la estrella, prolonga la invulnerabilidad de 0,8 a 2,5 segundos.",
-  "damage+luck":"entre un 8 % y un 20 % de los disparos hacen un 25 % de daño extra.",
-  "critChance+luck":"eleva el multiplicador de los críticos de ×2,1 a ×2,4.",
-  "healOnWave+luck":"cada moneda recogida cura entre 2 y 6 puntos por unidad.",
-  "darkPact+moralSupport":"invoca al perrito protector, que puede salvarte una vez.",
-  "catInstinct+maxLife":"con poca vida, activa una protección de emergencia temporal.",
-  "catInstinct+coinMagnet":"al activarse el instinto, atrae monedas y latas de una zona ampliada.",
-  "bigCursor+boomerang":"los boomerangs corrigen el retorno hacia el objetivo marcado.",
-  "boomerang+catInstinct":"el instinto redirige los boomerangs activos hacia enemigos cercanos.",
-  "catInstinct+omniBurst":"al activarse el instinto, dispara una ráfaga circular defensiva.",
-  "catInstinct+zoomies":"permite la recolocación de emergencia durante Zoomies.",
-  "coinMagnet+darkPact":"Voluntad Oscura concede monedas adicionales.",
-  "bigCursor+moralSupport":"aumenta el daño cuando te queda poca vida.",
-  "catInstinct+darkPact":"el instinto aumenta el daño cuando te queda poca vida.",
-  "catInstinct+moralSupport":"permite usar el instinto dos veces por ronda.",
-  "lifeSteal+shield":"los golpes del escudo también recuperan vida.",
-  "catSlow+coinMagnet":"los enemigos tienen más probabilidad de soltar monedas.",
-  "coinMagnet+healOnWave":"recoger monedas también cura una pequeña cantidad.",
-  "moveSpeed+xpBoost":"moverte concede experiencia periódicamente.",
-  "omniBurst+xpBoost":"cada ráfaga concede experiencia adicional.",
-  "bigFish+doubleFish":"puede lanzar dos peces gigantes extra con una probabilidad limitada.",
-  "bigFish+fishSize":"amplía aún más los peces y permite invocar excepcionalmente al Leviatán.",
-  "fishSpeed+omniBurst":"los peces de la ráfaga viajan un 35 % más rápido.",
-  "catInstinct+shield":"el instinto puede absorber un golpe y empujar enemigos.",
-  "aimAssist+bigCursor":"amplía el guiado de los peces hacia el objetivo marcado.",
-  "bigFish+fireRate":"acelera la cadencia de disparo y conserva la posibilidad de peces gigantes.",
-  "bigFish+pierce":"combina la probabilidad de pez grande con la perforación mejorada.",
-  "fishSize+pierce":"amplía el área de impacto de los peces perforantes.",
-  "critChance+zoomies":"Zoomies aumenta la probabilidad de golpes críticos.",
-  "fireRate+zoomies":"Zoomies activa una bonificación especial de cadencia.",
-  "moveSpeed+zoomies":"Zoomies aumenta todavía más la velocidad de movimiento."
+const fusionReadableDescMap={
+  "damage+saltScales": "La sal inflige un 20 % más de daño continuo. Los impactos renuevan su duración, sin acumular el daño.",
+  "fireRate+saltScales": "Disparas más rápido y la sal dura 2,8 s. Los impactos renuevan el efecto, sin acumularlo.",
+  "boomerang+saltScales": "Los boomerangs aplican sal un 20 % más intensa. Al volver a impactar, renuevan su duración.",
+  "catSlow+saltScales": "La sal ralentiza otro 8 %. Si un gato muere con sal directa, contagia sal debilitada a un máximo de 3 gatos; no se propaga otra vez.",
+  "lifeSteal+saltScales": "El daño continuo de la sal también te cura un 12 % del daño que causa realmente.",
+  "omniBurst+saltScales": "Los peces de las ráfagas aplican sal un 15 % más intensa. Los impactos renuevan el efecto.",
+  "damageReduction+shield": "El escudo te protege y, al recibir daño, repele a los enemigos cercanos. Al mejorar la fusión, empuja más y se recarga antes.",
+  "damageReduction+lifeSteal": "Recibes menos daño y recuperas vida al atacar. Con menos de media vida, el robo de vida aumenta hasta un 50 % adicional.",
+  "damageReduction+luck": "Recibes menos daño y tienes más suerte. Tras agotarse la estrella, conservas entre 0,8 y 2,5 s de invulnerabilidad.",
+  "damage+luck": "Haces más daño y tienes más suerte. Entre el 8 % y el 20 % de los disparos infligen un 25 % de daño extra.",
+  "critChance+luck": "Aumentan tu suerte y los críticos. El multiplicador crítico progresa de ×2,1 a ×2,4.",
+  "healOnWave+luck": "Recuperas vida al terminar rondas. Cada moneda recogida también te cura entre 2 y 6 puntos.",
+  "damageReduction+maxLife": "Aumentan tu vida máxima y tu resistencia. Al fusionar, también recuperas vida.",
+  "damageReduction+healOnWave": "Recibes menos daño y recuperas más vida al superar cada ronda.",
+  "coinMagnet+luck": "Atraes monedas desde más lejos y aumentas la suerte y la posibilidad de duplicarlas.",
+  "luck+xpBoost": "Ganas más experiencia y tienes más suerte, con mayor frecuencia de eventos raros.",
+  "damage+pierce": "Los peces hacen más daño y atraviesan enemigos. Los perforantes obtienen hasta un 25 % de daño adicional.",
+  "bigFish+damage": "Lanzas peces gigantes con más daño. Los gigantes infligen entre un 10 % y un 35 % de daño adicional.",
+  "damage+doubleFish": "Disparas peces laterales extra con más daño. Su bonificación progresa hasta un 35 %.",
+  "doubleFish+fireRate": "Disparas más rápido y tienes más probabilidades de lanzar dos peces laterales extra.",
+  "fireRate+fishSpeed": "Disparas con mayor cadencia y los peces vuelan más rápido. La fusión añade hasta un 16 % de velocidad.",
+  "boomerang+fireRate": "Disparas más rápido y lanzas más peces que regresan hacia ti.",
+  "fishSpeed+pierce": "Los peces vuelan más rápido y atraviesan enemigos. Los perforantes ganan hasta un 28 % de velocidad.",
+  "boomerang+fishSpeed": "Los boomerangs regresan y vuelan más rápido, facilitando que vuelvan a impactar.",
+  "boomerang+pierce": "Los peces pueden regresar o atravesar enemigos. Ambas probabilidades mejoran al subir la fusión.",
+  "boomerang+doubleFish": "Lanzas peces laterales y más boomerangs. Los boomerangs laterales ganan hasta un 20 % de daño.",
+  "damage+lifeSteal": "Tus peces hacen más daño y recuperas una parte del daño que infligen.",
+  "lifeSteal+maxLife": "Aumenta tu vida máxima y recuperas más vida al golpear enemigos.",
+  "healOnWave+lifeSteal": "Recuperas vida al golpear enemigos y al superar cada ronda.",
+  "healOnWave+maxLife": "Aumenta tu vida máxima y recuperas más vida al terminar cada ronda.",
+  "catSlow+shield": "Los enemigos se acercan más despacio mientras tus peces guardianes giran y los golpean.",
+  "fishSize+shield": "Tus peces son más grandes y el escudo gana hasta 9 px de radio de impacto.",
+  "damage+shield": "Tus peces infligen más daño y el escudo golpea a los enemigos que se acercan.",
+  "coinMagnet+xpBoost": "Atraes monedas desde más lejos y ganas más experiencia. Cada moneda recogida también concede experiencia.",
+  "catInstinct+coinMagnet": "Al activarse el instinto, atraes monedas y latas desde una zona ampliada.",
+  "bigCursor+boomerang": "La mirilla marca mejor al objetivo y los boomerangs corrigen su regreso hacia él.",
+  "boomerang+catInstinct": "Cuando se activa el instinto, redirige los boomerangs activos hacia enemigos cercanos.",
+  "catInstinct+omniBurst": "Al activarse el instinto, disparas una ráfaga circular defensiva.",
+  "coinMagnet+darkPact": "Atraes monedas desde más lejos. Voluntad Oscura también te concede monedas adicionales.",
+  "healOnWave+xpBoost": "Ganas más experiencia y recuperas vida al superar cada ronda.",
+  "coinMagnet+moveSpeed": "Te mueves más rápido y atraes monedas desde una distancia mayor.",
+  "fireRate+omniBurst": "Disparas más rápido y las ráfagas circulares se recargan hasta un 22 % antes.",
+  "damage+omniBurst": "Tus peces hacen más daño. Cada pez de la ráfaga obtiene hasta un 40 % de daño adicional.",
+  "boomerang+omniBurst": "Combinas ráfagas circulares periódicas con peces que pueden regresar.",
+  "aimAssist+bigCursor": "La mirilla marca objetivos y los peces reciben un guiado más preciso hacia ellos.",
+  "bigCursor+moralSupport": "La mirilla es más visible y el apoyo moral aumenta tu daño cuando te queda poca vida.",
+  "darkPact+moralSupport": "Invocas al perro protector, que ataca y puede salvarte una vez. El Demonio será el siguiente jefe.",
+  "boomerang+yarnBounce": "Los peces pueden regresar como boomerangs o rebotar hacia otro enemigo.",
+  "pierce+yarnBounce": "Los peces pueden atravesar enemigos y rebotar hacia otros objetivos.",
+  "fishSpeed+yarnBounce": "Los peces vuelan más rápido y pueden rebotar hacia otro enemigo.",
+  "doubleFish+yarnBounce": "Puedes disparar dos peces laterales extra; cada uno puede rebotar hacia otro enemigo.",
+  "bigFish+yarnBounce": "Los peces gigantes pueden rebotar hacia otro enemigo después de impactar.",
+  "fishSize+yarnBounce": "Los peces son más grandes y pueden rebotar hacia otro enemigo.",
+  "omniBurst+yarnBounce": "Las ráfagas circulares lanzan peces que también pueden rebotar hacia otros enemigos.",
+  "damage+yarnBounce": "Tus peces hacen más daño y pueden rebotar hacia otro enemigo.",
+  "aimAssist+catInstinct": "Los peces corrigen su trayectoria. El instinto activa una respuesta defensiva guiada al estar en peligro.",
+  "catInstinct+moralSupport": "El apoyo moral acompaña a tu defensa de emergencia. Puedes activar el instinto dos veces por ronda.",
+  "catInstinct+darkPact": "El instinto te protege en peligro y aumenta el daño cuando te queda poca vida.",
+  "critChance+damage": "Tus peces hacen más daño y los críticos son más potentes. Su multiplicador gana hasta ×0,30.",
+  "critChance+doubleFish": "Los peces laterales pueden causar críticos. Sus críticos ganan hasta un 20 % de daño.",
+  "moveSpeed+zoomies": "Te mueves más rápido y los períodos de Zoomies aumentan todavía más tu velocidad.",
+  "fireRate+zoomies": "Disparas más rápido y Zoomies activa una bonificación especial de cadencia.",
+  "critChance+zoomies": "Aumenta tu probabilidad crítica. Durante Zoomies, consigues aún más críticos.",
+  "catInstinct+zoomies": "El instinto te protege cuando estás en peligro y permite una recolocación de emergencia durante Zoomies.",
+  "aimAssist+damage": "Los peces se guían hacia enemigos cercanos e infligen más daño.",
+  "aimAssist+pierce": "Los peces corrigen su trayectoria y tienen más probabilidades de atravesar enemigos.",
+  "aimAssist+fishSpeed": "Los peces vuelan más rápido y corrigen su trayectoria hacia enemigos cercanos.",
+  "aimAssist+boomerang": "Los boomerangs corrigen su trayectoria hacia enemigos cercanos durante el vuelo y el regreso.",
+  "aimAssist+critChance": "Los peces se guían hacia enemigos cercanos y tienen mayor probabilidad de causar críticos.",
+  "bigCursor+damage": "La mirilla facilita marcar objetivos y tus peces hacen más daño.",
+  "bigCursor+pierce": "La mirilla es más visible y los peces tienen mayor probabilidad de atravesar enemigos.",
+  "bigCursor+critChance": "La mirilla facilita apuntar y los peces tienen mayor probabilidad de causar críticos.",
+  "bigCursor+fishSize": "La mirilla es más visible y los peces son más grandes, con mayor área de impacto.",
+  "healOnWave+moralSupport": "El apoyo moral te acompaña y recuperas más vida al superar rondas.",
+  "moralSupport+xpBoost": "El apoyo moral te acompaña y ganas más experiencia.",
+  "moralSupport+moveSpeed": "El apoyo moral te acompaña y te mueves más rápido.",
+  "damage+darkPact": "Voluntad Oscura reduce las opciones, pero potencia tu progreso. Tus peces infligen más daño.",
+  "critChance+darkPact": "Voluntad Oscura reduce las opciones, pero potencia tu progreso y tus golpes críticos.",
+  "darkPact+lifeSteal": "Voluntad Oscura potencia tu progreso y recuperas vida al infligir daño.",
+  "darkPact+xpBoost": "Voluntad Oscura reduce las opciones, pero potencia tu progreso y la experiencia que ganas.",
+  "darkPact+omniBurst": "Voluntad Oscura potencia tu progreso y conservas las ráfagas circulares periódicas.",
+  "catInstinct+maxLife": "Tienes más vida máxima. Si te queda muy poca vida, el instinto activa una protección temporal de emergencia.",
+  "catInstinct+catSlow": "Los enemigos se mueven más despacio y el instinto te protege cuando estás en peligro.",
+  "catInstinct+moveSpeed": "Te mueves más rápido y el instinto activa una defensa cuando te queda poca vida.",
+  "catInstinct+healOnWave": "El instinto te protege cuando estás en peligro y recuperas vida al superar rondas.",
+  "fishSpeed+zoomies": "Los peces vuelan más rápido y Zoomies aumenta temporalmente tu velocidad y daño.",
+  "doubleFish+zoomies": "Puedes lanzar dos peces laterales extra. Zoomies aumenta temporalmente tu velocidad y daño.",
+  "boomerang+zoomies": "Los boomerangs regresan y Zoomies aumenta temporalmente tu velocidad y daño.",
+  "bigFish+doubleFish": "Puedes disparar dos peces gigantes extra, con una probabilidad limitada.",
+  "bigFish+fireRate": "Disparas más rápido y tienes más probabilidades de lanzar peces gigantes.",
+  "bigFish+fishSize": "Tus peces crecen y puedes invocar al Leviatán, un pez gigante que atraviesa enemigos y los aparta al aparecer.",
+  "bigFish+pierce": "Puedes lanzar peces gigantes y tus disparos tienen más probabilidades de atravesar enemigos.",
+  "catInstinct+shield": "Los peces guardianes te protegen. El instinto puede absorber un golpe y empujar enemigos cercanos.",
+  "catSlow+coinMagnet": "Los enemigos se mueven más despacio y tienen más probabilidades de soltar monedas, que atraes desde lejos.",
+  "catSlow+fishSize": "Tus peces son más grandes y los enemigos se acercan más despacio.",
+  "catSlow+maxLife": "Aumenta tu vida máxima y reduce la velocidad de los enemigos.",
+  "catSlow+moveSpeed": "Te mueves más rápido mientras los enemigos se desplazan más despacio.",
+  "coinMagnet+healOnWave": "Atraes monedas desde más lejos. Recogerlas también te cura un poco y recuperas vida al superar rondas.",
+  "doubleFish+omniBurst": "Puedes disparar dos peces laterales extra y lanzar ráfagas circulares periódicas.",
+  "fishSize+pierce": "Tus peces son más grandes y tienen más probabilidades de atravesar enemigos.",
+  "fishSpeed+omniBurst": "Los peces de las ráfagas circulares viajan un 35 % más rápido.",
+  "lifeSteal+shield": "Los peces guardianes golpean enemigos y sus impactos también te recuperan vida.",
+  "maxLife+moralSupport": "Aumenta tu vida máxima y conservas el apoyo moral durante la partida.",
+  "maxLife+shield": "Aumenta tu vida máxima y el escudo gana hasta un 28 % de daño al golpear enemigos.",
+  "moveSpeed+xpBoost": "Te mueves más rápido y ganas experiencia periódicamente al desplazarte.",
+  "omniBurst+xpBoost": "Lanzas ráfagas circulares periódicas. Cada ráfaga también te concede experiencia.",
+  "boomerang+critChance": "Los peces y Bloquito pueden ser boomerangs y críticos a la vez (máx. 75 %). Los impactos dobles crean una onda que alcanza hasta 3 gatos cada 0,55 s."
 };
-normalizeFusionMap(fusionSignatureBonuses);
-const fusionBonusComponentNames={saltScales:"las escamas saladas",damageReduction:"la protección",luck:"la suerte",bigFish:"los peces gigantes",boomerang:"los boomerangs",aimAssist:"el guiado",bigCursor:"la mirilla",moralSupport:"el apoyo moral",darkPact:"Voluntad Oscura",catInstinct:"el instinto",zoomies:"Zoomies"};
-const fusionBonusStatLabels={saltScales:"el daño salino",damage:"el daño",fireRate:"la cadencia",fishSpeed:"la velocidad de los peces",doubleFish:"la probabilidad de peces adicionales",pierce:"la perforación",fishSize:"el tamaño de los peces",shield:"el nivel del escudo",lifeSteal:"el robo de vida",maxLife:"la vida máxima",healOnWave:"la curación por ronda",moveSpeed:"la velocidad de movimiento",xpBoost:"la experiencia obtenida",coinMagnet:"el radio del imán",catSlow:"la ralentización enemiga",omniBurst:"la potencia de la ráfaga",yarnBounce:"la probabilidad de rebote",critChance:"la probabilidad de crítico"};
-function getFusionExtraBonusDesc(pair){
-  pair=sortedPair(...String(pair).split("+"));
-  if(fusionSignatureBonuses[pair])return "Bonus de fusión: "+fusionSignatureBonuses[pair];
-  const keys=getFusionBonusKeys(pair);
-  const stats=[...new Set(keys)].map(k=>fusionBonusStatLabels[k]||k);
-  const withPrep=t=>t.startsWith("el ")?"al "+t.slice(3):"a "+t;
-  if(stats.length===2)return `Bonus de fusión: +1 nivel efectivo inicial ${withPrep(stats[0])} y ${stats[1]}; ambos siguen progresando al mejorar esta fusión.`;
-  if(stats.length===1){const other=pair.split("+").find(k=>!keys.includes(k));const otherName=fusionBonusComponentNames[other]||fusionBonusStatLabels[other]||other;return `Bonus de fusión: +1 nivel efectivo inicial ${withPrep(stats[0])}; se combina con ${otherName} y sigue progresando al mejorar la fusión.`;}
-  return "Bonus de fusión: combina las dos habilidades; sus efectos originales permanecen activos.";
-}
 
 function addFusionLevelBonus(key,amount=1){
   if(!Object.prototype.hasOwnProperty.call(upgradeLevels,key))return;
@@ -3747,15 +3910,11 @@ return getFusionName(key)||getAnyMeta(key)?.name||key
 }
 function getFusionEffectDesc(a,b){
  const pair=sortedPair(a,b);
- const data=FUSION_BY_PAIR[pair];
- let desc=data?.shortDesc||fusionShortDescMap[pair]||`Combina ${getOriginalUpgradeName(a)} y ${getOriginalUpgradeName(b)}.`;
- const redundant=new Set(["damageReduction+shield","damageReduction+lifeSteal","damageReduction+luck","damage+luck","critChance+luck","healOnWave+luck"]);
- if(redundant.has(pair))desc=`Combina ${getOriginalUpgradeName(a)} y ${getOriginalUpgradeName(b)}.`;
  if(pair==="darkPact+moralSupport"){
-   if(upgrades.boyfriendDogReturned)desc="El perro ha vuelto y puede salvarte otra vez.";
-   else if(upgrades.boyfriendDogSpirit)desc="El perro ya te salvó una vez. Su espíritu sigue contigo.";
+   if(upgrades.boyfriendDogReturned)return "El perro ha vuelto: ataca y puede salvarte otra vez.";
+   if(upgrades.boyfriendDogSpirit)return "El perro ya te salvó una vez. Su espíritu sigue contigo.";
  }
- return `${desc} ${getFusionExtraBonusDesc(pair)}`;
+ return fusionReadableDescMap[pair]||FUSION_BY_PAIR[pair]?.shortDesc||"Efectos de ambas mejoras combinados.";
 }
 
 function getUpgradeDisplayDesc(key,lvl){
@@ -4106,12 +4265,12 @@ const level=pair?getFusionProgress(pair):(upgradeLevels[key]||0);
 pool.push({key,level,upgrade:makeLevelUpgrade(key)});
 });
 
-if(!upgrades.aimAssist)pool.push({key:"aimAssist",level:0,upgrade:{key:"aimAssist",icon:"🎯",title:"Peces listillos",levelTag:"1/1",desc:"Los peces giran hacia enemigos cercanos.",apply:()=>{upgrades.aimAssist=true}}});
-if(!upgrades.bigCursor)pool.push({key:"bigCursor",level:0,upgrade:{key:"bigCursor",icon:"🌈",title:"Mirilla brillante",levelTag:"1/1",desc:"La mirilla se ve mucho mejor.",apply:()=>{upgrades.bigCursor=true}}});
-if(!upgrades.moralSupport)pool.push({key:"moralSupport",level:0,upgrade:{key:"moralSupport",icon:"💛",title:"Apoyo Moral",levelTag:"1/1",desc:"Tu novio te anima durante la partida.",special:true,apply:()=>{upgrades.moralSupport=true}}});
-if(!upgrades.darkPact)pool.push({key:"darkPact",level:0,upgrade:{key:"darkPact",icon:"🖤",title:"Voluntad Oscura",levelTag:"1/1",desc:"Menos opciones, pero más poder.",dark:true,apply:()=>{upgrades.darkPact=true}}});
-if(!upgrades.catInstinct)pool.push({key:"catInstinct",level:0,upgrade:{key:"catInstinct",icon:"🥷",title:"Instinto gatuno",levelTag:"1/1",desc:"Te ayuda cuando estás en peligro.",special:true,apply:()=>{upgrades.catInstinct=true}}});
-if(!upgrades.zoomies)pool.push({key:"zoomies",level:0,upgrade:{key:"zoomies",icon:"💨",title:"Zoomies",levelTag:"1/1",desc:"A veces ganas velocidad y un 35 % de daño.",special:true,apply:()=>{upgrades.zoomies=true}}});
+if(!upgrades.aimAssist)pool.push({key:"aimAssist",level:0,upgrade:{key:"aimAssist",icon:"🎯",title:"Peces listillos",levelTag:"1/1",desc:getUpgradeDisplayDesc("aimAssist",1),apply:()=>{upgrades.aimAssist=true}}});
+if(!upgrades.bigCursor)pool.push({key:"bigCursor",level:0,upgrade:{key:"bigCursor",icon:"🌈",title:"Mirilla brillante",levelTag:"1/1",desc:getUpgradeDisplayDesc("bigCursor",1),apply:()=>{upgrades.bigCursor=true}}});
+if(!upgrades.moralSupport)pool.push({key:"moralSupport",level:0,upgrade:{key:"moralSupport",icon:"💛",title:"Apoyo Moral",levelTag:"1/1",desc:getUpgradeDisplayDesc("moralSupport",1),special:true,apply:()=>{upgrades.moralSupport=true}}});
+if(!upgrades.darkPact)pool.push({key:"darkPact",level:0,upgrade:{key:"darkPact",icon:"🖤",title:"Voluntad Oscura",levelTag:"1/1",desc:getUpgradeDisplayDesc("darkPact",1),dark:true,apply:()=>{upgrades.darkPact=true}}});
+if(!upgrades.catInstinct)pool.push({key:"catInstinct",level:0,upgrade:{key:"catInstinct",icon:"🥷",title:"Instinto gatuno",levelTag:"1/1",desc:getUpgradeDisplayDesc("catInstinct",1),special:true,apply:()=>{upgrades.catInstinct=true}}});
+if(!upgrades.zoomies)pool.push({key:"zoomies",level:0,upgrade:{key:"zoomies",icon:"💨",title:"Zoomies",levelTag:"1/1",desc:getUpgradeDisplayDesc("zoomies",1),special:true,apply:()=>{upgrades.zoomies=true}}});
 
 if(pool.length===0)return [];
 
@@ -4253,6 +4412,8 @@ if(!small&&!rainbow){
   const musicChance=wave>=12?Math.min(phase==="main"?.055:.09,(.018+(wave-12)*.005)*visualMul):0;
   const miniChance=wave>=7?Math.min(phase==="main"?.09:.13,(.035+(wave-7)*.007)*specialMul):0;
   let acc=0,roll=Math.random();
+  if(roundVariant==="invasion")roll=1;
+  if(roundVariant==="specials")roll*=.75;
   if(roll<(acc+=thiefChance))catType="thief";
   else if(roll<(acc+=yarnChance))catType="yarn";
   else if(roll<(acc+=sleepyChance))catType="sleepy";
@@ -4281,6 +4442,7 @@ if(catType==="sleepy"){color="#c8b6e2";r=28;hp+=3;speed*=.34;}
 if(catType==="mini"){color="#ffb347";r=12;hp=1;speed*=1.65;}
 if(catType==="glutton"){color="#e8956d";r=34;hp+=6;speed*=.38;}
 if(catType==="musician"){color="#d084c8";r=26;hp+=2;speed*=.78;}
+if(roundVariant==="sprinters"&&!rainbow&&!small&&catType==="normal"){speed*=1.28;hp=Math.max(1,Math.ceil(hp*.82));}
 const musicianImmune=catType==="musician"?1:0;
 cats.push({x,y,r,speed,hp,maxHp:hp,damageCooldown:0,hitAnim:0,wobble:Math.random()*Math.PI*2,color,rainbow,small,type:catType,yarnCooldown:1.2+Math.random()*1.1,stealCooldown:0,fleeTimer:0,spawnAnim:.32,maxSpawnAnim:.32,sleepState:catType==="sleepy"?"sleeping":null,wakeTimer:0,rushTimer:0,sleepAwakeDuration:0,baseSpeed:speed,zigzagPhase:Math.random()*Math.PI*2,musicImmuneTimer:musicianImmune,stolenCoins:0,freezeTimer:0})
 if(catType==="musician")musicianSpawnedThisWave=true;
@@ -4313,6 +4475,7 @@ function refundRemovedThief(cat){
 }
 function dropCoins(x,y,chance=.013){
 chance*=1+(upgrades.luck||0);
+if(bossRewardActive("duck"))chance*=1.35;
 if(hasDoneFusionPair("catSlow+coinMagnet"))chance*=1.75;
 if(Math.random()>chance)return;
 const amount=Math.random()<(upgrades.luck||0)*.5?2:1;
@@ -4332,6 +4495,43 @@ if(!target||!isCombatTargetAvailable(target)||effectLevel("saltScales")<=0||!(fi
 const duration=2.4+(hasDoneFusionPair("fireRate+saltScales")?.4:0);
 target.saltTime=Math.max(target.saltTime||0,duration);
 target.saltDps=Math.max(target.saltDps||0,getSaltDamagePerSecond(fish));
+target.saltInherited=false;
+}
+function spreadSaltOnDefeat(cat){
+  if(!cat||!(cat.saltTime>0)||cat.saltInherited||!hasDoneFusionPair("catSlow+saltScales"))return;
+  if(gameNow()-lastSaltSpreadAt<160)return;
+  lastSaltSpreadAt=gameNow();
+  const radius=88+22*fusionStrength("catSlow+saltScales");
+  let affected=0;
+  for(const other of cats){
+    if(other===cat||!isCombatTargetAvailable(other)||other.rainbow)continue;
+    const d=Math.hypot(other.x-cat.x,other.y-cat.y);
+    if(d>radius)continue;
+    other.saltTime=Math.max(other.saltTime||0,1.1+.45*fusionStrength("catSlow+saltScales"));
+    other.saltDps=Math.max(other.saltDps||0,Math.min(1.65,(cat.saltDps||0)*.42));
+    other.saltInherited=true;
+    affected++;
+    if(affected>=3)break;
+  }
+  if(affected&&!lowPerfMode&&shockwaves.length<36)shockwaves.push({x:cat.x,y:cat.y,r:8,maxR:radius,life:.32,maxLife:.32,color:"#80ed99",line:3});
+}
+function criticalReturnRipple(fish,x,y,primary){
+  if(!fish||!fish.crit||!fish.boomerang||!hasDoneFusionPair("boomerang+critChance"))return;
+  if(gameNow()-lastCriticalRippleAt<550)return;
+  lastCriticalRippleAt=gameNow();
+  const radius=70+30*fusionStrength("boomerang+critChance");
+  const damage=Math.min(3,Math.max(.3,(fish.damage||1)*(.13+.08*fusionStrength("boomerang+critChance"))));
+  let affected=0;
+  for(let i=cats.length-1;i>=0;i--){
+    const other=cats[i];
+    if(other===primary||!isCombatTargetAvailable(other)||Math.hypot(other.x-x,other.y-y)>radius)continue;
+    other.hp-=damage;
+    other.hitAnim=Math.max(other.hitAnim||0,.12);
+    if(other.hp<=0)killCat(i,other);
+    affected++;
+    if(affected>=3)break;
+  }
+  if(affected&&!lowPerfMode&&shockwaves.length<36)shockwaves.push({x,y,r:7,maxR:radius,life:.27,maxLife:.27,color:"#ffe066",line:3});
 }
 function tickSaltEffect(target,dt){
 if(!target||!(target.saltTime>0)||!isCombatTargetAvailable(target))return false;
@@ -4345,7 +4545,7 @@ if(dealt>0){
   if(hasDoneFusionPair("lifeSteal+saltScales"))life=Math.min(upgrades.maxLife,life+actual*.12);
 }
 if(target.saltTime<=0)target.saltDps=0;
-if(target!==boss&&target.hp<=0){const i=cats.indexOf(target);if(i>=0)killCat(i,target);return true;}
+if(target!==boss&&target.hp<=0){target.saltKill=true;const i=cats.indexOf(target);if(i>=0)killCat(i,target);return true;}
 return false;
 }
 function damageBoss(amount,leviathanKill=false,silent=false){
@@ -4386,6 +4586,8 @@ floatingTexts.push({x:boss.x,y:boss.y-70,text:"¡Jefe mimado!",life:1.3,maxLife:
 }
 
 score+=5;
+if(!currentWaveHadDamage)addAchievementStat("flawlessBosses",1,{run:true});
+giveBossReward(defeatedType,boss.x,boss.y);
 defeatedBossTypes.add(defeatedType);
 syncXpRequirementPhase();
 if(finalCompletionContinue||isGameCompleted()){
@@ -4526,6 +4728,7 @@ function getLeviathanTravelSpeed(angle){
 }
 const LEVIATHAN_GIANT_FISH_CHANCE=0.00001;
 function triggerLeviathanMassiveDamage(){
+addAchievementStat("leviathanAppearances",1,{run:true});
   const leviathanPower=1+Math.max(0,level-1)*.035+Math.max(0,upgrades.damage-1)*.22;
   const baseDamage=Math.max(1,upgrades.damage*getZoomiesDamageMultiplier());
   for(let i=cats.length-1;i>=0;i--){
@@ -4534,7 +4737,7 @@ function triggerLeviathanMassiveDamage(){
     const dealt=Math.max(cat.maxHp*(1.15+Math.min(1.2,(leviathanPower-1)*.25)),baseDamage*38*leviathanPower);
     cat.hp-=dealt;
     cat.hitAnim=.35;
-    try{makeImpact(cat.x,cat.y,"#4cc9f0",1.15)}catch(e){}
+    if(!lowPerfMode&&i<18)makeImpact(cat.x,cat.y,"#b197fc",.85);
     if(cat.hp<=0){cat.leviathanLoot=true;killCat(i,cat);}
   }
   if(boss&&Number.isFinite(boss.hp)&&boss.hp>0){
@@ -4548,7 +4751,7 @@ function triggerLeviathanMassiveDamage(){
     q.hp-=Math.max((q.maxHp||q.hp)*.90,baseDamage*20);
     if(q.hp<=0){guaranteedLeviathanLoot(q.x,q.y);try{makeSmoke(q.x,q.y)}catch(e){} quacks.splice(i,1);}
   }
-  shockwaves.push({x:player.x,y:player.y,r:18,maxR:Math.max(canvas.width,canvas.height)*1.15,life:.9,maxLife:.9,color:"#4cc9f0",line:12});
+  if(shockwaves.length<36)shockwaves.push({x:player.x,y:player.y,r:18,maxR:Math.max(canvas.width,canvas.height)*1.15,life:.9,maxLife:.9,color:"#b197fc",line:12});
   addScreenShake(18);
   floatingTexts.push({x:player.x,y:player.y-120,text:"🌊 ¡LEVIATÁN! DAÑO MASIVO",life:2.2,maxLife:2.2,big:true});
 }
@@ -4582,7 +4785,7 @@ const piercingVelocity=canPierce&&hasDoneFusionPair("fishSpeed+pierce")?1.08+.20
 const burstVelocity=hasDoneFusionPair("fireRate+fishSpeed")?1.04+.12*fusionStrength("fireRate+fishSpeed"):1;
 const spawnOffset=giantFishEasterEgg?0:62;
 const speed=giantFishEasterEgg?getLeviathanTravelSpeed(finalAngle):610*upgrades.fishSpeed*boomerangRangeBonus*piercingVelocity*burstVelocity;
-fishes.push({x:player.x+Math.cos(finalAngle)*spawnOffset,y:player.y+Math.sin(finalAngle)*spawnOffset,vx:Math.cos(finalAngle)*speed,vy:Math.sin(finalAngle)*speed,angle:finalAngle,damage:fishDamage*damageMultiplier*piercingStrike*extraFishStrike*lateralBoomerangStrike*lateralCritStrike*(critRoll?getCriticalDamageMultiplier():1),life:giantFishEasterEgg?LEVIATHAN_VISIBLE_SECONDS:(boomerang?3.35+boomerangLvl*.18:1.45),scale:fishScale,pierce:canPierce,boomerang,crit:critRoll,giantEaster:giantFishEasterEgg,returning:false,age:0,turnTime:boomerang?0.95+boomerangLvl*.06:0,hitIds:new Set()})
+fishes.push({x:player.x+Math.cos(finalAngle)*spawnOffset,y:player.y+Math.sin(finalAngle)*spawnOffset,vx:Math.cos(finalAngle)*speed,vy:Math.sin(finalAngle)*speed,angle:finalAngle,damage:fishDamage*damageMultiplier*piercingStrike*extraFishStrike*lateralBoomerangStrike*lateralCritStrike*(bossRewardActive("demon")?1.12:1)*(critRoll?getCriticalDamageMultiplier():1),life:giantFishEasterEgg?LEVIATHAN_VISIBLE_SECONDS:(boomerang?3.35+boomerangLvl*.18:1.45),scale:fishScale,pierce:canPierce,boomerang,crit:critRoll,giantEaster:giantFishEasterEgg,returning:false,age:0,turnTime:boomerang?0.95+boomerangLvl*.06:0,hitIds:new Set()})
 }
 function addCardumenGiganteFish(offsetAngle){
 const finalAngle=angle+offsetAngle;
@@ -4615,7 +4818,7 @@ function getAutomaticFireMultiplier(){
 return upgrades.braveHeart&&life<upgrades.maxLife*.35?1.08:1;
 }
 function getShotInterval(){
-const rate=Math.max(1,upgrades.fireRate)*getAutomaticFireMultiplier()*getZoomiesFireMultiplier();
+const rate=Math.max(1,upgrades.fireRate)*(bossRewardActive("giantCat")?1.12:1)*getAutomaticFireMultiplier()*getZoomiesFireMultiplier();
 return Math.max(110,600/rate);
 }
 function shootAutoFish(){shootFish();}
@@ -5113,6 +5316,8 @@ if(realIndex!==-1)index=realIndex;
 if(index<0||index>=cats.length||cats[index]!==cat)return;
 if(isOctopusTentacle(cat)){killOctopusTentacle(index,cat);return;}
 cat.dead=true;
+if(cat.saltKill)addAchievementStat("saltKills",1,{run:true});
+spreadSaltOnDefeat(cat);
 dropRecoveredStolenCoins(cat);
 if(cat.type==="yarn")explodeYarnCat(cat);
 if(cat.type==="glutton"){const tunaCount=2+Math.floor(Math.random()*2);for(let t=0;t<tunaCount;t++){tunaDrops.push({x:cat.x+(Math.random()*44-22),y:cat.y+(Math.random()*44-22),r:16,life:16,wobble:0});floatingTexts.push({x:cat.x,y:cat.y-38-t*18,text:"🐟 ¡Lata!",life:1.0,maxLife:1.0,big:false});}}
@@ -5544,7 +5749,6 @@ function getScalableDetail(key){
   const shownMax=fusedPair?5:max;
   const p=getPauseActualPercent(key);
   const lines=[];
-  lines.push(`${fusedPair?`Fusión ${shownLevel}/${shownMax}`:`Mejora ${shownLevel}/${shownMax}`}.`);
 
   const detail={
     luck:`Probabilidades de eventos ×${(1+upgrades.luck).toFixed(2)}; ${(upgrades.luck*50).toFixed(1)} % de duplicar monedas.`,
@@ -5567,42 +5771,24 @@ function getScalableDetail(key){
     coinMagnet:`Radio base del imán: ${Math.round(upgrades.coinMagnetRange)} píxeles.`,
     omniBurst:`${10+Math.min(14,effectLevel("omniBurst")*2)} peces por ráfaga, potencia ×${getOmniBurstPowerMultiplier().toFixed(2)}, cada ${(getOmniBurstCooldownMs()/1000).toFixed(2)} s.`,
     yarnBounce:`Probabilidad de rebote: ${getPauseActualPercent("yarnBounce")}%.`,
-    saltScales:`La sal causa ${coreUpgradeStat("saltScales").toFixed(2)} de daño/s durante ${hasDoneFusionPair("fireRate+saltScales")?"2,8":"2,4"} s. Los impactos renuevan la duración, sin acumular daño.`,
+    saltScales:`Daño salino actual: ${coreUpgradeStat("saltScales").toFixed(2)} daño/s durante ${hasDoneFusionPair("fireRate+saltScales")?"2,8":"2,4"} s.`,
     critChance:`Tienes un ${p}% de probabilidad de crítico.`
   };
   lines.push(detail[key]||`Potencia actual: ${shownLevel}/${shownMax}.`);
-  if(shownLevel>=shownMax)lines.push(fusedPair?"Fusión al máximo.":"Mejora al máximo.");
   return lines.join(" ");
+}
+function getUniqueDetail(key){
+ return getUpgradeDisplayDesc(key,1);
 }
 
-function getUniqueDetail(key){
-  const owned=hasUniqueUpgrade(key);
-  const base=uniqueFusionMeta[key]?.desc||"Mejora única.";
-  const extra={
-    aimAssist:"Hace que los peces corrijan su trayectoria hacia objetivos cercanos.",
-    bigCursor:"Hace más visible la mirilla y abre fusiones relacionadas con marcas/objetivos.",
-    moralSupport:"Activa apoyo ocasional y desbloquea fusiones defensivas o emocionales.",
-    darkPact:"Reduce elección pero potencia el progreso oscuro.",
-    catInstinct:"Activa una respuesta defensiva cuando la vida está baja.",
-    zoomies:"Activa periódicamente velocidad alta y un 35 % más de daño.",
-  }[key]||"";
-  return `${owned?"Conseguida":"Bloqueada todavía"}. ${base} ${extra}`.trim();
-}
 function getFusionDetail(pair){
-  pair=sortedPair(...String(pair||"").split("+"));
-  const [a,b]=pair.split("+");
-  const base=getFusionEffectDesc(a,b);
-  const level=getFusionProgress(pair);
-  const hasScalable=pair.split("+").some(k=>Object.prototype.hasOwnProperty.call(upgradeLevels,k));
-  const lines=[base];
-  if(hasScalable){
-    lines.push(`Nivel ${level}/5. Conserva las mejoras base y sus bonus.`);
-  }else{
-    lines.push("Fusión única completa.");
-  }
-  for(const key of [a,b])if(Object.prototype.hasOwnProperty.call(upgradeLevels,key))lines.push(getScalableDetail(key));
-  if(pair==="darkPact+moralSupport")lines.push("El perro puede salvarte una vez.");
-  return lines.join(" ");
+ pair=sortedPair(...String(pair||"").split("+"));
+ const [a,b]=pair.split("+");
+ const lines=[getFusionEffectDesc(a,b)];
+ for(const key of [a,b]){
+   if(Object.prototype.hasOwnProperty.call(upgradeLevels,key))lines.push(getScalableDetail(key));
+ }
+ return lines.join("\n");
 }
 
 function makePauseRowId(r,idx){
@@ -5716,7 +5902,7 @@ return `
     <div class="pauseUpgradeFace pauseUpgradeBack">
       <div class="pauseUpgradeName">📖 ${r.name}</div>
       <div class="pauseUpgradeLevel">Detalle</div>
-      <div class="pauseUpgradeDesc">${r.detail||r.desc}</div>
+      <div class="pauseUpgradeDesc">${escapeHtml(r.detail||r.desc)}</div>
       <div class="pauseFlipHint">Click: volver</div>
     </div>
   </div>
@@ -5734,7 +5920,12 @@ pauseUpgradesList?.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" 
 pauseUpgradesList?.addEventListener("click",togglePauseUpgradeCard);
 pauseUpgradesList?.addEventListener("contextmenu",togglePauseUpgradeCard);
 
+const pauseMoreOptions=document.getElementById("pauseMoreOptions");
+document.addEventListener("pointerdown",e=>{
+  if(pauseMoreOptions?.open&&!pauseMoreOptions.contains(e.target))pauseMoreOptions.open=false;
+});
 function openPause(){
+if(pauseMoreOptions)pauseMoreOptions.open=false;
 clearAllInputKeys();
 paused=true;
 releaseGamePointer();
@@ -5744,6 +5935,7 @@ pauseAllMusic();
 }
 
 function closePause(){
+if(pauseMoreOptions)pauseMoreOptions.open=false;
 clearAllInputKeys();
 paused=false;
 pausePanel.style.display="none";
@@ -5993,14 +6185,19 @@ if(waveTime<=0&&!boss){
 if(waveTime<=0&&boss)waveTime=0;
 
 spawnCooldown-=dt;
-if(spawnCooldown<=0&&!boss){spawnCat();spawnCooldown=Math.max(getGamePhase()==="endless"?.075:.20,Math.max(.28,1.10-wave*.033)/getEndlessSpawnMultiplier())}
+if(spawnCooldown<=0&&!boss){
+  spawnCat();
+  if(roundVariant==="invasion"&&cats.length<getActiveCatCap()&&Math.random()<.65)spawnCat();
+  const interval=Math.max(getGamePhase()==="endless"?.075:.20,Math.max(.28,1.10-wave*.033)/getEndlessSpawnMultiplier());
+  spawnCooldown=roundVariant==="invasion"?Math.max(.075,interval*.83):interval;
+}
 if(spawnCooldown<=0&&boss&&boss.type!=="giantCat"){spawnCat();spawnCooldown=getBossReinforcementInterval()}
 
 let mx=0,my=0;
 if(keys.w||keys.arrowup)my--;if(keys.s||keys.arrowdown)my++;if(keys.a||keys.arrowleft)mx--;if(keys.d||keys.arrowright)mx++;
 const movementLen=Math.hypot(mx,my);
 const moveStartX=player.x,moveStartY=player.y;
-if(movementLen>0){mx/=movementLen;my/=movementLen;player.x+=mx*player.speed*upgrades.moveSpeed*getZoomiesMoveMultiplier()*getStarSpeedMultiplier()*dt;player.y+=my*player.speed*upgrades.moveSpeed*getZoomiesMoveMultiplier()*getStarSpeedMultiplier()*dt;
+if(movementLen>0){mx/=movementLen;my/=movementLen;player.x+=mx*player.speed*upgrades.moveSpeed*(bossRewardActive("seal")?1.14:1)*getZoomiesMoveMultiplier()*getStarSpeedMultiplier()*dt;player.y+=my*player.speed*upgrades.moveSpeed*(bossRewardActive("seal")?1.14:1)*getZoomiesMoveMultiplier()*getStarSpeedMultiplier()*dt;
 }
 
 player.x=Math.max(player.r,Math.min(canvas.width-player.r,player.x));
@@ -6271,6 +6468,7 @@ if(cat.type==="musician"&&(cat.musicImmuneTimer||0)>0){
 const healthLost=Math.min(Math.max(0,cat.hp),Math.max(0,dealt));
 cat.hp-=dealt;
 if(cat.hp>0)applySaltEffect(cat,fish);
+criticalReturnRipple(fish,hitX,hitY,cat);
 if(runStats)runStats.fishHits++;
 cat.hitAnim=.15;
 if(cat.type==="musician"&&cat.hp>0)cat.musicImmuneTimer=1;
@@ -6322,6 +6520,7 @@ const dealt=Number.isFinite(fish.damage)?fish.damage:1;
 if(runStats)runStats.fishHits++;
 const hitBoss=boss;
 damageBoss(dealt,!!fish.giantEaster);
+criticalReturnRipple(fish,hitX,hitY,hitBoss);
 if(boss===hitBoss&&isCombatTargetAvailable(boss))applySaltEffect(boss,fish);
 if(!fish.pierce){if(fishes[j]===fish)fishes.splice(j,1);}
 else if(!fish.ramFish&&!fish.giantEaster)fish.damage*=getPiercingDamageRetention();
@@ -6791,7 +6990,7 @@ if(selectedCosmetic("fish")==="fish_realistic"){drawRealisticSardineWorld(f);ret
 
 drawEntityShadow(f.x,f.y,18*(f.scale||1),5*(f.scale||1),.10);
 ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.angle);ctx.scale(f.scale||1,f.scale||1);
-const skinPalette={fish_elegant:["#fff0c7","#c99b45"],fish_pirate:["#ecac58","#a9503f"],fish_heart:["#ff9bbd","#cf4a86"]}[selectedCosmetic("fish")];
+const skinPalette={fish_pirate:["#e9b87e","#a05e51"],fish_biolum:["#4fbbbc","#216a88"],fish_celestial:["#b6a8e9","#6c68b2"],fish_elegant:["#fff0c7","#c99b45"],fish_heart:["#ff9bbd","#cf4a86"]}[selectedCosmetic("fish")];
 const body=f.boomerang&&f.crit&&hasDoneFusionPair("boomerang+critChance")?"#ffe066":f.giantEaster?"#ffd166":f.ramFish?(f.boomerang?"#80ed99":f.crit?"#ff6b6b":"#7ef5ff"):f.cardumenGigante?"#80d8ff":f.boomerang?"#80ed99":f.crit?"#ff6b6b":f.shieldShot?"#6ed7ed":(skinPalette?.[0]||"#6ed7ed");
 const tail=f.boomerang&&f.crit&&hasDoneFusionPair("boomerang+critChance")?"#e0a800":f.giantEaster?"#fb8500":f.ramFish?(f.boomerang?"#57cc99":f.crit?"#e03131":"#169fcb"):f.cardumenGigante?"#00b4d8":f.boomerang?"#57cc99":f.crit?"#e03131":f.shieldShot?"#45aecd":(skinPalette?.[1]||"#45aecd");
 ctx.shadowColor=body;ctx.shadowBlur=lowPerfMode?0:(f.giantEaster?12:f.crit?7:0);
@@ -6880,6 +7079,9 @@ function getOctopusPalette(){
  const id=selectedCosmetic("boss_octopus");
  if(id==="boss_octopus_elegant")return {top:"#fff4d8",bottom:"#c6ad7b",arm:"#6286aa",outline:"#304a65",sucker:"#ffdf99",elegant:true};
  if(id==="boss_octopus_low_poly")return {top:"#8ceadd",bottom:"#277e99",arm:"#42b8b8",outline:"#18475f",sucker:"#c7fff2",poly:true};
+ if(id==="boss_octopus_biolum")return {top:"#3c8f9e",bottom:"#174c69",arm:"#296d8c",outline:"#193950",sucker:"#85f8df"};
+ if(id==="boss_octopus_pirate")return {top:"#a65e88",bottom:"#6d416e",arm:"#845478",outline:"#4c3159",sucker:"#edc9af"};
+ if(id==="boss_octopus_celestial")return {top:"#b0a4ed",bottom:"#5b4b9e",arm:"#8674c2",outline:"#473e83",sucker:"#f5d58b"};
  if(id==="boss_octopus_grayscale")return {top:"#e5e5e5",bottom:"#818181",arm:"#ababab",outline:"#414141",sucker:"#eeeeee",gray:true};
  return {top:"#f1b1d8",bottom:"#b863ac",arm:"#d889c0",outline:"#713a83",sucker:"#f5cbdf"};
 }
@@ -6926,6 +7128,7 @@ function drawOctopusTentacleArt(t){
   ctx.strokeStyle=t.hitAnim>0?"#fff0fa":palette.arm;ctx.lineWidth=17;ctx.stroke();
   ctx.fillStyle=palette.sucker;
   for(let i=0;i<5;i++){ctx.beginPath();ctx.ellipse(2+Math.sin(i*.9)*6+sway*.4,4-i*10,3.5,2.6,-.3,0,Math.PI*2);ctx.fill();}
+  if(getThemeSkin("boss_octopus")==="biolum"){ctx.fillStyle="#c0fff2";for(let i=0;i<4;i++){ctx.beginPath();ctx.arc(7+Math.sin(i*.9)*4+sway*.4,-6-i*10,2,0,Math.PI*2);ctx.fill();}}
   ctx.restore();
   ctx.fillStyle="#291d35";ctx.fillRect(t.x-24,t.y+22,48,5);
   ctx.fillStyle=palette.arm;ctx.fillRect(t.x-24,t.y+22,48*Math.max(0,t.hp/t.maxHp),5);
@@ -6968,6 +7171,7 @@ function drawOctopusBossArt(owner){
     ctx.beginPath();ctx.arc(0,-1.20,.075,0,Math.PI*2);ctx.fill();
     drawBowTieShape(0,.58,.23,"#d4ac48","#ffe6a4",palette.outline);
   }
+  drawThemeSkinDetails("boss_octopus",1);
   ctx.restore();
 }
 function getOctopusAreaDanger(x,y,padding=0){
@@ -7029,7 +7233,7 @@ if((boss.type==="giantCat"&&selectedCosmetic("boss_giant")==="boss_giant_low_pol
 drawBossSkinUnderlay(boss.type,r);
 
 bossArt(boss.type,r);
-if(boss.type!=="demon")drawBossSkinDetails(boss.type,r);
+drawBossSkinDetails(boss.type,r);
 if(boss.type==="demon"&&dogKidnapped){ctx.fillStyle="#ffd6e7";ctx.font="bold 14px 'Gatitos UI'";ctx.textAlign="center";ctx.fillText("PERRO ROBADO",0,r+30);}
 ctx.restore();drawBossHealthBar();
 }
@@ -8288,9 +8492,15 @@ async function loadRankingDependencies(){
 loadRankingDependencies();
 
 const cosmeticPreviewCache=new Map();
-function paintCosmeticPreviews(){
- if(!cosmeticsContentEl)return;
- for(const el of cosmeticsContentEl.querySelectorAll("[data-skin]")){
+function paintCosmeticPreviews(generation){
+ if(!cosmeticsContentEl||generation!==cosmeticPreviewGeneration)return;
+ const elements=Array.from(cosmeticsContentEl.querySelectorAll("[data-skin]"));
+ let cursor=0;
+ function paintBatch(){
+ if(generation!==cosmeticPreviewGeneration)return;
+ let budget=6;
+ while(cursor<elements.length&&budget-->0){
+ const el=elements[cursor++];if(!el.isConnected)continue;
   const category=el.dataset.category,id=el.dataset.skin,key=category+":"+id;
   if(id==="fish_realistic"){
    const img=document.createElement("img");
@@ -8321,8 +8531,10 @@ function paintCosmeticPreviews(){
   }
   const img=document.createElement("img");img.src=cosmeticPreviewCache.get(key);img.alt=el.getAttribute("aria-label")||"Vista de skin";img.width=128;img.height=88;el.replaceChildren(img);
  }
+ if(cursor<elements.length)requestAnimationFrame(paintBatch);
+ }
+ paintBatch();
 }
-
 function bossArt(type,r,poly=false){
 ctx.save();ctx.scale(r,r);ctx.shadowBlur=0;ctx.lineWidth=.035;ctx.lineJoin='round';ctx.lineCap='round';
 const ink=type==='demon'?'#54284f':type==='duck'?'#b27b36':'#65546c';ctx.strokeStyle=ink;
