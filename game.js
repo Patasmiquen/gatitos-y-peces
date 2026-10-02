@@ -1181,8 +1181,10 @@ function getRamFishScale(playerLevel=level){
 }
 let lastRamFishAt=-RAM_FISH_BASE_COOLDOWN;
 let lastManualShotAt=-Infinity;
+let manualShotsSinceBloquito=0;
 let lastDemonOrbDamageAt=-Infinity;
 const MANUAL_SHOT_INTERVAL_MS=100;
+const MAX_MANUAL_SHOTS_PER_BLOQUITO=100;
 let starSpawnTimer=12;
 let starSpawnedThisWave=false;
 let backgroundFishSeed=Math.floor(Math.random()*1000000);
@@ -1851,7 +1853,7 @@ function restart(){
 if(gameStarted)rollRandomSkins();else runCosmeticSelections=null;
 saveAchievements();
 clearAllInputKeys();
-simulationMs=0;roundVariant="normal";bossRewardUntil=0;bossRewardType="";lastCriticalRippleAt=-Infinity;lastSaltSpreadAt=-Infinity;lastRamFishAt=-RAM_FISH_BASE_COOLDOWN;lastManualShotAt=-Infinity;frameAccumulator=0;
+simulationMs=0;roundVariant="normal";bossRewardUntil=0;bossRewardType="";lastCriticalRippleAt=-Infinity;lastSaltSpreadAt=-Infinity;lastRamFishAt=-RAM_FISH_BASE_COOLDOWN;lastManualShotAt=-Infinity;manualShotsSinceBloquito=0;frameAccumulator=0;
 xpRequirementPhase="main";autoRamNextEvaluationAt=0;autoLastResidualShotAt=-Infinity;autoResidualNextDecisionAt=0;autoDecisionCooldown=0;autoProjectileDirection=null;autoProjectileDirectionUntil=0;autoLastStuckCheckAt=0;
 selectedTarget=null;lastStarTrail=0;screenShake=0;screenShakeX=0;screenShakeY=0;
 if(autoChoiceTimer)clearTimeout(autoChoiceTimer);
@@ -2618,7 +2620,7 @@ if(pair){
 }
 const n=nextLevel(key),displayName=getUpgradeDisplayName(key);
 if(isPercentLimitedKey(key)&&nextLevel(key)>=upgradeMaxLevels[key])return `${displayName} DEFINITIVA`;
-if(n===5)return `${displayName} EVOLUCIÓN`;
+if(n===5)return `${displayName} DEFINITIVA`;
 return `${displayName} Nv.${n}`
 }
 function upgradeDesc(key){return getUpgradeDisplayDesc(key,nextLevel(key))}
@@ -3133,7 +3135,7 @@ if(darkWave){
       const current=upgradeLevels[upgrade.key]||0;
       const target=Math.min(max,current+2);
       upgrade.previewSteps=target-current;
-      upgrade.title=`${getUpgradeDisplayName(upgrade.key)} ${target>=max?"EVOLUCIÓN":`Nv.${target}`}`;
+      upgrade.title=`${getUpgradeDisplayName(upgrade.key)} ${target>=max?"DEFINITIVA":`Nv.${target}`}`;
       upgrade.levelTag=`${target}/${max}`;
     }
   });
@@ -4659,6 +4661,7 @@ function launchRamFish(target=null){
   if(now-lastManualShotAt+1e-7<MANUAL_SHOT_INTERVAL_MS)return false;
   const remaining=Math.max(0,(getRamFishCooldownMs()-(now-lastRamFishAt))/1000);
   const fullyCharged=remaining<=0;
+  if(!fullyCharged&&manualShotsSinceBloquito>=MAX_MANUAL_SHOTS_PER_BLOQUITO)return false;
   const damageFraction=1/Math.max(1,remaining);
   const aim=target||mouse;
   const angle=Math.atan2(aim.y-player.y,aim.x-player.x);
@@ -4677,7 +4680,8 @@ function launchRamFish(target=null){
     ramFish:true,ramFullyCharged:fullyCharged,ramDamageFraction:damageFraction,ramKnockback:getRamFishKnockback()*damageFraction,
     returning:false,age:0,hitIds:new Set()});
   lastManualShotAt=now;
-  if(fullyCharged)lastRamFishAt=now;
+  if(fullyCharged){lastRamFishAt=now;manualShotsSinceBloquito=0;}
+  else manualShotsSinceBloquito++;
   shots++;if(runStats)runStats.shotsFired++;addAchievementStat("shots",1,{run:true});
   player.shootAnim=.12;
   if(fullyCharged){
